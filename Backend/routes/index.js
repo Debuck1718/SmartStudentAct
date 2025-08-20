@@ -33,7 +33,8 @@ const validate = (schema) => (req, res, next) => {
 const advancedGoalsRouter = require('./advancedGoals');
 const essayRouter = require('./essay');
 const budgetRouter = require('./budget');
-
+const schoolRouter = require('./schoolRoutes'); // 🆕 Import the school router
+const uploadRouter = require('./uploadRoutes'); // 🆕 Import the upload router
 
 // --- Models ---
 const User = require('../models/User');
@@ -44,6 +45,12 @@ const Submission = require('../models/Submission');
 const PushSub = require('../models/PushSub');
 const School = require('../models/School');
 const SchoolCalendar = require('../models/SchoolCalendar');
+
+// --- Services & Utilities ---
+const { getUserPrice } = require('../services/pricingService');
+const { initFlutterwavePayment } = require('../services/flutterwaveService');
+const { initPaystackPayment } = require('../services/paystackService');
+
 
 /**
  * SMS Helper
@@ -172,6 +179,8 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
     app.use('/api/rewards', advancedGoalsRouter);
     app.use('/api/budget', budgetRouter);
     app.use('/api/essay', essayRouter);
+    app.use('/api/schools', schoolRouter); // 🆕 Use the school router
+    app.use('/api/uploads', uploadRouter); // 🆕 Use the upload router
 
     router.use(authenticateJWT, checkSubscription);
 
@@ -193,7 +202,7 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
             res.status(500).json({ success: false, message: "Failed to upload image." });
         }
     });
-    
+
     // --- Your existing local upload endpoint, now using 'localUpload' ---
     router.post("/upload/local", localUpload.single("file"), (req, res) => {
         try {
@@ -219,10 +228,10 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
             const filePath = path.join(dirs.submissions, filename);
             const userId = req.user.id;
             const userRole = req.user.role;
-            
+
             // Check if the file exists
             await fs.access(filePath);
-            
+
             // Authorization logic
             let isAuthorized = false;
             if (userRole === 'global_overseer' || userRole === 'admin') {
@@ -261,9 +270,9 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
             const filePath = path.join(dirs.assignments, filename);
             const userId = req.user.id;
             const userRole = req.user.role;
-            
+
             await fs.access(filePath);
-            
+
             let isAuthorized = false;
             if (userRole === 'global_overseer' || userRole === 'admin') {
                 isAuthorized = true;
@@ -292,7 +301,7 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
             }
         }
     });
-    
+
     // 🆕 New route for securely serving feedback files
     router.get('/teacher/feedback/:filename', authenticateJWT, hasRole('student', 'teacher', 'admin', 'global_overseer'), async (req, res) => {
         try {
@@ -300,16 +309,16 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
             const filePath = path.join(dirs.feedback, filename);
             const userId = req.user.id;
             const userRole = req.user.role;
-            
+
             await fs.access(filePath);
-            
+
             let isAuthorized = false;
             if (userRole === 'global_overseer' || userRole === 'admin') {
                 isAuthorized = true;
             } else {
                 const submission = await Submission.findOne({ feedback_file: `/uploads/feedback/${filename}` });
                 if (submission) {
-                     if (userRole === 'teacher') {
+                    if (userRole === 'teacher') {
                         const assignment = await Assignment.findById(submission.assignment_id);
                         if (assignment && assignment.created_by.toString() === userId) {
                             isAuthorized = true;
@@ -363,7 +372,7 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         email: Joi.string().email().required(),
         password: Joi.string().required()
     });
-    
+
     const forgotPasswordSchema = Joi.object({
         email: Joi.string().email().required(),
     });
@@ -440,7 +449,7 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
             endDate: Joi.date().iso().required()
         })).min(1).required()
     });
-    
+
     // ✅ New Joi Schema for the user settings update
     const settingsSchema = Joi.object({
         firstname: Joi.string().min(2).max(50).optional(),
@@ -463,27 +472,27 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         currentPassword: Joi.string().required(),
         newPassword: Joi.string().min(8).required()
     });
-    
+
     /* ──────────── Auth Routes ──────────── */
     router.post('/users/signup-otp',
-      rateLimit({ windowMs: 5 * 60 * 1000, max: 3 }),
-      validate(signupOtpSchema),
-      (req, res) => {
-          const { phone, email, firstname } = req.body;
-          const code = process.env.NODE_ENV === 'production'
-              ? Math.floor(100000 + Math.random() * 900000).toString()
-              : '1234';
-          req.session.signup = { ...req.body, code, timestamp: Date.now() };
-          logger.debug('[OTP] Generated OTP for %s: %s', phone, code);
+        rateLimit({ windowMs: 5 * 60 * 1000, max: 3 }),
+        validate(signupOtpSchema),
+        (req, res) => {
+            const { phone, email, firstname } = req.body;
+            const code = process.env.NODE_ENV === 'production'
+                ? Math.floor(100000 + Math.random() * 900000).toString()
+                : '1234';
+            req.session.signup = { ...req.body, code, timestamp: Date.now() };
+            logger.debug('[OTP] Generated OTP for %s: %s', phone, code);
 
-          sendEmail( // ✅ Corrected function name
-              email,
-              'Your SmartStudentAct OTP Code',
-              `<p>Hello ${firstname},</p><p>Your OTP code is: <strong>${code}</strong></p><p>This code will expire in 10 minutes.</p>`
-          );
+            sendEmail( // ✅ Corrected function name
+                email,
+                'Your SmartStudentAct OTP Code',
+                `<p>Hello ${firstname},</p><p>Your OTP code is: <strong>${code}</strong></p><p>This code will expire in 10 minutes.</p>`
+            );
 
-          res.json({ step: 'verify', message: 'OTP sent' });
-      }
+            res.json({ step: 'verify', message: 'OTP sent' });
+        }
     );
 
     router.post('/users/verify-otp', validate(verifyOtpSchema), async (req, res) => {
@@ -712,38 +721,111 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         }
     });
 
-  /**
-     * @route PATCH /api/profile
-     * @desc Update user profile picture
-     * @access Private (Authenticated User)
-     */
-    router.patch('/profile', authenticateJWT, profileUpload.single('profilePicture'), async (req, res) => {
-        const userId = req.user.id;
-        let profile_picture_url = null;
-        try {
-            if (req.file) {
-                profile_picture_url = req.file.path;
-            }
-            const updateData = {};
-            if (profile_picture_url) {
-                updateData.profile_picture_url = profile_picture_url;
-            }
-            if (req.body.firstname) updateData.firstname = req.body.firstname;
-            if (req.body.lastname) updateData.lastname = req.body.lastname;
-            if (Object.keys(updateData).length === 0) {
-                return res.status(400).json({ message: 'No data to update.' });
-            }
-            const result = await User.updateOne({ _id: userId }, updateData);
-            if (result.modifiedCount > 0) {
-                res.status(200).json({ message: 'Profile updated successfully.', profile_picture_url });
-            } else {
-                res.status(200).json({ message: 'No changes were made.' });
-            }
-        } catch (error) {
-            logger.error('Error updating user profile:', error);
-            res.status(500).json({ message: 'Server error', error: error.message });
+/**
+ * @route GET /api/profile
+ * @desc Get user profile data
+ * @access Private (Authenticated User)
+ * This route is crucial for the front-end to load the existing user data
+ * and populate the form fields when the page loads.
+ */
+router.get('/profile', authenticateJWT, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const user = await User.findById(userId).select('-password'); // Exclude password for security
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
         }
-    });
+        res.status(200).json(user);
+    } catch (error) {
+        logger.error('Error fetching user profile:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+/**
+ * @route PATCH /api/profile
+ * @desc Update general user profile information (excluding the photo)
+ * @access Private (Authenticated User)
+ * This route is now a single, comprehensive endpoint for all profile data updates.
+ * It does NOT handle file uploads.
+ */
+router.patch('/profile', authenticateJWT, validate(settingsSchema), async (req, res) => {
+    const userId = req.user.id;
+    const updateData = req.body;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        // IMPORTANT: Prevent email or other sensitive fields from being updated here if needed.
+        // For this example, we'll allow all fields from the schema.
+        
+        // The front-end sends a single object with all fields; let's update all of them
+        const result = await User.updateOne({ _id: userId }, { $set: updateData });
+        
+        if (result.modifiedCount > 0) {
+            // Fetch the updated user document to send back to the client
+            const updatedUser = await User.findById(userId).select('-password');
+            res.status(200).json({ 
+                message: 'Profile updated successfully.', 
+                updatedFields: updateData,
+                user: updatedUser
+            });
+        } else {
+            res.status(200).json({ message: 'No changes were made.' });
+        }
+    } catch (error) {
+        // Handle MongoDB duplicate key error (e.g., if a unique field like 'phone' is duplicated)
+        if (error.code === 11000) {
+            return res.status(409).json({ message: 'A user with this data already exists.' });
+        }
+        logger.error('Error updating user profile:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+
+/**
+ * @route POST /api/profile/upload-photo
+ * @desc Update user profile picture via a dedicated endpoint.
+ * @access Private (Authenticated User)
+ * This is a new route specifically for the photo upload, which aligns with the
+ * front-end's `handlePhotoUpload` function.
+ */
+router.post('/profile/upload-photo', authenticateJWT, profileUpload.single('profilePhoto'), async (req, res) => {
+    const userId = req.user.id;
+    
+    // Check if a file was uploaded by multer
+    if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded.' });
+    }
+
+    try {
+        // Get the URL from the uploaded file's path (e.g., from Cloudinary)
+        const photoUrl = req.file.path;
+
+        // Update the user's profile_picture_url in the database
+        const result = await User.updateOne(
+            { _id: userId }, 
+            { $set: { profile_picture_url: photoUrl } }
+        );
+
+        if (result.modifiedCount > 0) {
+            res.status(200).json({
+                message: 'Profile picture updated successfully.',
+                photoUrl: photoUrl
+            });
+        } else {
+            res.status(200).json({ message: 'No changes were made.' });
+        }
+    } catch (error) {
+        logger.error('Error uploading profile picture:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 
     /* ──────────── Admin Routes ──────────── */
 
@@ -987,6 +1069,98 @@ router.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole(['global
     }
 });
 
+/* ──────────── Payment & Pricing Routes ──────────── */
+    
+    // Get the user's current price based on their role and school
+    router.get('/pricing', authenticateJWT, async (req, res) => {
+        const { occupation, school, grade } = req.user;
+        const user = await User.findById(req.user.id).select('country');
+
+        if (!user || !user.country) {
+            return res.status(400).json({ error: 'User country not found.' });
+        }
+
+        try {
+            const price = await getUserPrice(user.country, occupation, school);
+            res.json(price);
+        } catch (err) {
+            logger.error('Error getting user price:', err);
+            res.status(500).json({ error: 'Failed to retrieve pricing information.' });
+        }
+    });
+
+    // Initiate a payment transaction
+    router.post('/payment/initiate', authenticateJWT, validate(paymentSchema), async (req, res) => {
+        const { gateway } = req.body;
+        const { email, id, occupation, school } = req.user;
+        const user = await User.findById(id).select('country');
+
+        if (!user || !user.country) {
+            return res.status(400).json({ error: 'User country not found.' });
+        }
+
+        // Users who don't pay shouldn't initiate payments.
+        if (['student', 'overseer', 'global_overseer'].includes(occupation)) {
+            return res.status(403).json({ error: 'Forbidden: This role does not require payment.' });
+        }
+
+        try {
+            const priceInfo = await getUserPrice(user.country, occupation, school);
+            const amount = priceInfo.localPrice;
+            const currency = priceInfo.currency;
+
+            if (amount <= 0) {
+                return res.status(400).json({ error: 'Invalid payment amount.' });
+            }
+
+            let paymentData;
+            if (gateway === 'flutterwave') {
+                paymentData = await initFlutterwavePayment(email, amount, currency);
+            } else if (gateway === 'paystack') {
+                paymentData = await initPaystackPayment(email, amount, currency);
+            }
+
+            if (paymentData) {
+                res.json({ message: 'Payment initiated successfully.', data: paymentData });
+            } else {
+                res.status(500).json({ error: 'Failed to initiate payment.' });
+            }
+        } catch (err) {
+            logger.error('Error initiating payment:', err);
+            res.status(500).json({ error: 'Failed to initiate payment.' });
+        }
+    });
+    
+    // Start a free trial for a user
+    router.post('/trial/start', authenticateJWT, async (req, res) => {
+        const userId = req.user.id;
+        try {
+            const user = await User.findById(userId);
+
+            if (!user) {
+                return res.status(404).json({ error: 'User not found.' });
+            }
+
+            if (user.is_on_trial || user.has_used_trial) {
+                return res.status(400).json({ error: 'Trial has already been used or is currently active.' });
+            }
+
+            // Set trial flags
+            user.is_on_trial = true;
+            user.trial_starts_at = new Date();
+            user.has_used_trial = true;
+            await user.save();
+
+            // Schedule an Agenda job to end the trial after 14 days
+            agenda.schedule('in 14 days', 'end-trial', { userId: user._id });
+
+            logger.info('Free trial started for user:', userId);
+            res.json({ message: 'Free trial started successfully. It will end in 14 days.' });
+        } catch (err) {
+            logger.error('Error starting free trial:', err);
+            res.status(500).json({ error: 'Failed to start free trial.' });
+        }
+    });
     
 /* ──────────── Teacher Routes ──────────── */
 /**

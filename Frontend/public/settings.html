@@ -378,457 +378,198 @@
         </div>
 
         <!-- Footer -->
-        <p class="footer">© 2024 SmartStudentAct</p>
+        <p class="footer">© 2025 SmartStudentAct</p>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- State Variables (Mimicking React's useState) ---
-            let userData = {
-                firstName: '',
-                lastName: '',
-                occupation: '',
-                educationLevel: '',
-                grade: '',
-                schoolName: '',
-                university: '',
-                uniLevel: '',
-                program: '',
-                teacherSchool: '',
-                teacherGrade: '',
-                phone: '',
-                email: '',
-            };
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- State Variables (Mimicking React's useState) ---
+        let userData = {}; // Will be populated by the API call
 
-            let isEditingPassword = false;
-            let currentPassword = '';
-            let newPassword = '';
-            let confirmNewPassword = '';
+        // --- DOM Elements ---
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const profileForm = document.getElementById('profile-form');
+        const saveProfileButton = document.getElementById('save-profile-button');
+        const studentFields = document.getElementById('student-fields');
+        const teacherFields = document.getElementById('teacher-fields');
+        const schoolLevelFields = document.getElementById('school-level-fields');
+        const universityLevelFields = document.getElementById('university-level-fields');
+        const educationLevelSelect = document.getElementById('educationLevel');
+        const backButton = document.getElementById('back-button');
+        const modal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
 
-            let isLoading = true;
-            let isSavingProfile = false;
-            let isChangingPassword = false;
+        // --- Custom Alert/Modal Functionality ---
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+        }
 
-            let errors = {};
-
-            // --- DOM Elements ---
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const profileForm = document.getElementById('profile-form');
-            const passwordForm = document.getElementById('password-form');
-            const changePasswordButton = document.getElementById('change-password-button');
-            const saveProfileButton = document.getElementById('save-profile-button');
-            const submitPasswordButton = document.getElementById('submit-password-button');
-            const cancelButton = document.getElementById('cancel-password-button');
-            const studentFields = document.getElementById('student-fields');
-            const teacherFields = document.getElementById('teacher-fields');
-            const schoolLevelFields = document.getElementById('school-level-fields');
-            const universityLevelFields = document.getElementById('university-level-fields');
-            const educationLevelSelect = document.getElementById('educationLevel');
-            const backButton = document.getElementById('back-button');
-            const modal = document.getElementById('custom-modal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalMessage = document.getElementById('modal-message');
-
-            // --- Custom Alert/Modal Functionality ---
-            function showModal(title, message) {
-                modalTitle.textContent = title;
-                modalMessage.textContent = message;
-                modal.style.display = 'flex';
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+        window.closeModal = closeModal; // Make it globally accessible for onclick
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
             }
+        };
 
-            function closeModal() {
-                modal.style.display = 'none';
-            }
+        // --- Helper Functions ---
+        const setUIState = (isLoading = false, isSaving = false) => {
+            loadingOverlay.classList.toggle('hidden', !isLoading);
+            saveProfileButton.disabled = isSaving;
+            saveProfileButton.innerHTML = isSaving ? '<div class="spinner-sm"></div>' : 'Save Profile Changes';
+        };
 
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    closeModal();
+        const displayErrors = (fieldErrors) => {
+            document.querySelectorAll('.error-text').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+            
+            Object.keys(fieldErrors).forEach(key => {
+                const errorElement = document.getElementById(`${key}-error`);
+                const inputElement = document.getElementById(key);
+
+                if (errorElement) {
+                    errorElement.textContent = fieldErrors[key];
+                    errorElement.classList.remove('hidden');
                 }
+                if (inputElement) {
+                    inputElement.classList.add('input-error');
+                }
+            });
+        };
+
+        const updateFormWithData = (data) => {
+            userData = data; // Store the fetched data
+            document.getElementById('firstName').value = userData.firstName || '';
+            document.getElementById('lastName').value = userData.lastName || '';
+            document.getElementById('email').value = userData.email || '';
+            document.getElementById('phone').value = userData.phone || '';
+            document.getElementById('occupation').value = userData.occupation ? userData.occupation.charAt(0).toUpperCase() + userData.occupation.slice(1) : '';
+
+            // Conditionally show/hide occupation-specific fields
+            const isStudent = userData.occupation === 'student';
+            const isTeacher = userData.occupation === 'teacher';
+            studentFields.classList.toggle('hidden', !isStudent);
+            teacherFields.classList.toggle('hidden', !isTeacher);
+            
+            if (isStudent) {
+                document.getElementById('educationLevel').value = userData.educationLevel || '';
+                const isSchoolStudent = ['junior', 'high'].includes(userData.educationLevel);
+                const isUniversityStudent = userData.educationLevel === 'university';
+                
+                schoolLevelFields.classList.toggle('hidden', !isSchoolStudent);
+                universityLevelFields.classList.toggle('hidden', !isUniversityStudent);
+
+                if (isSchoolStudent) {
+                    document.getElementById('grade').value = userData.grade || '';
+                    document.getElementById('schoolName').value = userData.schoolName || '';
+                } else if (isUniversityStudent) {
+                    document.getElementById('university').value = userData.university || '';
+                    document.getElementById('uniLevel').value = userData.uniLevel || '';
+                    document.getElementById('program').value = userData.program || '';
+                }
+            } else if (isTeacher) {
+                document.getElementById('teacherSchool').value = userData.teacherSchool || '';
+                document.getElementById('teacherGrade').value = userData.teacherGrade || '';
+            }
+        };
+
+        // --- Fetch and Populate Data on Page Load ---
+        async function fetchUserProfile() {
+            setUIState(true);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html'; // Redirect if not authenticated
+                return;
             }
 
-            // --- Helper Functions ---
-            const updateUI = () => {
-                // Show/hide loading overlay
-                if (isLoading) {
-                    loadingOverlay.classList.remove('hidden');
+            try {
+                const response = await fetch('/api/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateFormWithData(data);
                 } else {
-                    loadingOverlay.classList.add('hidden');
+                    showModal('Error', `Failed to load profile: ${data.message}`);
                 }
+            } catch (error) {
+                console.error('Fetch profile error:', error);
+                showModal('Error', 'An unexpected error occurred while loading your profile.');
+            } finally {
+                setUIState(false);
+            }
+        }
 
-                // Update form fields with userData
-                document.getElementById('firstName').value = userData.firstName || '';
-                document.getElementById('lastName').value = userData.lastName || '';
-                document.getElementById('email').value = userData.email || '';
-                document.getElementById('phone').value = userData.phone || '';
-                document.getElementById('occupation').value = userData.occupation ? userData.occupation.charAt(0).toUpperCase() + userData.occupation.slice(1) : '';
+        // --- Event Listeners ---
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            setUIState(false, true); // Set saving state
 
-                // Conditionally show/hide occupation-specific fields
-                studentFields.classList.toggle('hidden', userData.occupation !== 'student');
-                teacherFields.classList.toggle('hidden', userData.occupation !== 'teacher');
-                
-                if (userData.occupation === 'student') {
-                    educationLevelSelect.value = userData.educationLevel || '';
-                    schoolLevelFields.classList.toggle('hidden', !['junior', 'high'].includes(userData.educationLevel));
-                    universityLevelFields.classList.toggle('hidden', userData.educationLevel !== 'university');
-                }
-                
-                // Update password form state
-                document.getElementById('password-change-toggle').classList.toggle('hidden', isEditingPassword);
-                passwordForm.classList.toggle('hidden', !isEditingPassword);
-
-                // Update button loading states
-                saveProfileButton.innerHTML = isSavingProfile ? '<div class="spinner-sm"></div>' : 'Save Profile Changes';
-                saveProfileButton.disabled = isSavingProfile;
-                submitPasswordButton.innerHTML = isChangingPassword ? '<div class="spinner-sm"></div>' : 'Submit New Password';
-                submitPasswordButton.disabled = isChangingPassword;
-                cancelButton.disabled = isChangingPassword;
+            const token = localStorage.getItem('token');
+            const updateData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                phone: document.getElementById('phone').value,
             };
 
-            const displayErrors = (fieldErrors) => {
-                Object.keys(fieldErrors).forEach(key => {
-                    const errorElement = document.getElementById(`${key}-error`);
-                    const inputElement = document.getElementById(key);
-
-                    if (errorElement) {
-                        if (fieldErrors[key]) {
-                            errorElement.textContent = fieldErrors[key];
-                            errorElement.classList.remove('hidden');
-                            if (inputElement) {
-                                inputElement.classList.add('input-error');
-                            }
-                        } else {
-                            errorElement.textContent = '';
-                            errorElement.classList.add('hidden');
-                            if (inputElement) {
-                                inputElement.classList.remove('input-error');
-                            }
-                        }
-                    }
-                });
-            };
-
-            // --- Mock API Fetcher ---
-            const mockAPI = async (url, options = {}) => {
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        console.log(`Mock API call to: ${url}`);
-                        // Mock session check
-                        if (url.includes('/api/session')) {
-                            resolve({
-                                ok: true,
-                                json: () => Promise.resolve({ loggedIn: true, user: { id: 1 } })
-                            });
-                            return;
-                        }
-
-                        // Mock user profile fetch
-                        if (url.includes('/api/user/profile') && options.method !== 'PUT') {
-                            const mockProfileData = {
-                                firstName: 'John',
-                                lastName: 'Doe',
-                                occupation: 'student',
-                                educationLevel: 'university',
-                                university: 'University of ABC',
-                                uniLevel: 'Year 2',
-                                program: 'Computer Science',
-                                phone: '+1234567890',
-                                email: 'john.doe@example.com',
-                            };
-                            resolve({
-                                ok: true,
-                                json: () => Promise.resolve(mockProfileData)
-                            });
-                            return;
-                        }
-
-                        // Mock profile update
-                        if (url.includes('/api/user/profile') && options.method === 'PUT') {
-                            const updatedData = JSON.parse(options.body);
-                            Object.assign(userData, updatedData);
-                            resolve({
-                                ok: true,
-                                json: () => Promise.resolve({ message: 'Profile updated successfully!' })
-                            });
-                            return;
-                        }
-
-                        // Mock password change
-                        if (url.includes('/api/user/change-password')) {
-                            // In a real app, you'd check the currentPassword against a hashed password
-                            // Here, we just simulate success.
-                            resolve({
-                                ok: true,
-                                json: () => Promise.resolve({ message: 'Password changed successfully!' })
-                            });
-                            return;
-                        }
-
-                        resolve({
-                            ok: false,
-                            json: () => Promise.resolve({ message: 'Mock API endpoint not found.' })
-                        });
-
-                    }, 1500); // Simulate network delay
-                });
-            };
-
-            // --- Data Fetching Effect (on DOMContentLoaded) ---
-            const loadUserProfile = async () => {
-                isLoading = true;
-                updateUI();
-                try {
-                    const sessionRes = await mockAPI('/api/session');
-                    const sessionData = await sessionRes.json();
-                    
-                    if (!sessionData.loggedIn) {
-                        showModal('Authentication Required', 'Please log in to view your settings.');
-                        // In a real app: window.location.href = '/login.html';
-                        return;
-                    }
-                    
-                    const profileRes = await mockAPI('/api/user/profile');
-                    const profileData = await profileRes.json();
-                    
-                    userData = {
-                        firstName: profileData.firstName || '',
-                        lastName: profileData.lastName || '',
-                        occupation: profileData.occupation || '',
-                        educationLevel: profileData.educationLevel || '',
-                        grade: profileData.grade || '',
-                        schoolName: profileData.schoolName || '',
-                        university: profileData.university || '',
-                        uniLevel: profileData.uniLevel || '',
-                        program: profileData.program || '',
-                        teacherSchool: profileData.teacherSchool || '',
-                        teacherGrade: profileData.teacherGrade || '',
-                        phone: profileData.phone || '',
-                        email: profileData.email || '',
-                    };
-
-                } catch (err) {
-                    console.error('Failed to load user profile:', err);
-                    showModal('Error', 'Failed to load your profile data. Please try again.');
-                } finally {
-                    isLoading = false;
-                    updateUI();
+            // Conditionally add student/teacher data
+            const occupation = userData.occupation;
+            if (occupation === 'student') {
+                updateData.educationLevel = document.getElementById('educationLevel').value;
+                if (['junior', 'high'].includes(updateData.educationLevel)) {
+                    updateData.grade = document.getElementById('grade').value;
+                    updateData.schoolName = document.getElementById('schoolName').value;
+                } else if (updateData.educationLevel === 'university') {
+                    updateData.university = document.getElementById('university').value;
+                    updateData.uniLevel = document.getElementById('uniLevel').value;
+                    updateData.program = document.getElementById('program').value;
                 }
-            };
-            
-            // --- Validation Logic ---
-            const validateField = (key, value) => {
-                let error;
-                switch (key) {
-                    case 'firstName':
-                    case 'lastName':
-                        if (!value.trim()) error = `${key.replace(/([A-Z])/g, ' $1').trim()} is required.`;
-                        break;
-                    case 'currentPassword':
-                        if (isEditingPassword && !value.trim()) error = 'Current password is required.';
-                        break;
-                    case 'newPassword':
-                        if (isEditingPassword) {
-                            if (!value.trim()) error = 'New password is required.';
-                            else if (value.length < 8) error = 'New password must be at least 8 characters.';
-                            else if (!/[A-Z]/.test(value)) error = 'New password needs an uppercase letter.';
-                            else if (!/[a-z]/.test(value)) error = 'New password needs a lowercase letter.';
-                            else if (!/[0-9]/.test(value)) error = 'New password needs a number.';
-                            else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) error = 'New password needs a special character.';
-                            else if (value === currentPassword) error = 'New password cannot be the same as current password.';
-                        }
-                        break;
-                    case 'confirmNewPassword':
-                        if (isEditingPassword && value !== newPassword) error = 'New passwords do not match.';
-                        break;
-                    case 'phone':
-                        if (!value.trim()) error = 'Phone number is required.';
-                        else if (!/^\+?[0-9]{7,15}$/.test(value)) error = 'Invalid phone number format.';
-                        break;
-                    case 'educationLevel':
-                        if (userData.occupation === 'student' && !value) error = 'Education Level is required.';
-                        break;
-                    case 'grade':
-                    case 'schoolName':
-                        if (['junior', 'high'].includes(userData.educationLevel) && !value.trim()) error = `${key.replace(/([A-Z])/g, ' $1').trim()} is required.`;
-                        break;
-                    case 'university':
-                    case 'uniLevel':
-                    case 'program':
-                        if (userData.educationLevel === 'university' && !value.trim()) error = `${key.replace(/([A-Z])/g, ' $1').trim()} is required.`;
-                        break;
-                    case 'teacherSchool':
-                    case 'teacherGrade':
-                        if (userData.occupation === 'teacher' && !value.trim()) error = `${key.replace(/([A-Z])/g, ' $1').trim()} is required.`;
-                        break;
-                }
-                
-                errors[key] = error;
-                displayErrors(errors);
-                return !error;
-            };
+            } else if (occupation === 'teacher') {
+                updateData.teacherSchool = document.getElementById('teacherSchool').value;
+                updateData.teacherGrade = document.getElementById('teacherGrade').value;
+            }
 
-            const validateAllProfileFields = () => {
-                let isValid = true;
-                const fieldsToValidate = ['firstName', 'lastName', 'phone'];
-
-                if (userData.occupation === 'student') {
-                    fieldsToValidate.push('educationLevel');
-                    if (['junior', 'high'].includes(userData.educationLevel)) {
-                        fieldsToValidate.push('grade', 'schoolName');
-                    } else if (userData.educationLevel === 'university') {
-                        fieldsToValidate.push('university', 'uniLevel', 'program');
-                    }
-                } else if (userData.occupation === 'teacher') {
-                    fieldsToValidate.push('teacherSchool', 'teacherGrade');
-                }
-                
-                fieldsToValidate.forEach(key => {
-                    if (!validateField(key, userData[key] || '')) {
-                        isValid = false;
-                    }
+            try {
+                const response = await fetch('/api/profile', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updateData)
                 });
 
-                return isValid;
-            };
-
-            const validatePasswordFields = () => {
-                let isValid = true;
-                if (!validateField('currentPassword', currentPassword)) isValid = false;
-                if (!validateField('newPassword', newPassword)) isValid = false;
-                if (!validateField('confirmNewPassword', confirmNewPassword)) isValid = false;
-                return isValid;
-            };
-
-            // --- Event Listeners and Handlers ---
-            
-            backButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                history.back(); // Simulates back button in a browser
-            });
-
-            profileForm.addEventListener('input', (e) => {
-                const { name, value } = e.target;
-                if (userData.hasOwnProperty(name)) {
-                    userData[name] = value;
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showModal('Success', data.message);
+                    // Update the form with the new data from the backend
+                    updateFormWithData(data.user);
+                } else {
+                    displayErrors(data.errors || {});
+                    showModal('Error', data.message || 'Failed to update profile.');
                 }
-                // Clear the error on input
-                errors[name] = undefined;
-                displayErrors(errors);
-            });
-
-            profileForm.addEventListener('change', (e) => {
-                const { name, value } = e.target;
-                if (name === 'educationLevel') {
-                    userData.educationLevel = value;
-                    // Reset conditional fields on level change
-                    userData.grade = '';
-                    userData.schoolName = '';
-                    userData.university = '';
-                    userData.uniLevel = '';
-                    userData.program = '';
-                    updateUI(); // Re-render the form fields based on new selection
-                }
-            });
-
-            profileForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!validateAllProfileFields()) {
-                    showModal('Validation Error', 'Please correct the errors in your profile information.');
-                    return;
-                }
-
-                isSavingProfile = true;
-                updateUI();
-                try {
-                    const profileToUpdate = {};
-                    Object.keys(userData).forEach(key => {
-                        // Only send keys that are present in the form and not email/id/occupation
-                        if (key !== 'email' && key !== 'id' && key !== 'occupation') {
-                            profileToUpdate[key] = userData[key];
-                        }
-                    });
-
-                    const res = await mockAPI('/api/user/profile', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(profileToUpdate),
-                    });
-
-                    const result = await res.json();
-                    if (res.ok) {
-                        showModal('Success', 'Profile updated successfully!');
-                    } else {
-                        showModal('Error', result.message || 'Failed to update profile.');
-                    }
-                } catch (err) {
-                    showModal('Network Error', 'Could not save profile changes.');
-                } finally {
-                    isSavingProfile = false;
-                    updateUI();
-                }
-            });
-
-            changePasswordButton.addEventListener('click', () => {
-                isEditingPassword = true;
-                updateUI();
-            });
-
-            passwordForm.addEventListener('input', (e) => {
-                const { name, value } = e.target;
-                if (name === 'currentPassword') currentPassword = value;
-                if (name === 'newPassword') newPassword = value;
-                if (name === 'confirmNewPassword') confirmNewPassword = value;
-                // Clear the error on input
-                errors[name] = undefined;
-                displayErrors(errors);
-            });
-
-            passwordForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!validatePasswordFields()) {
-                    showModal('Validation Error', 'Please correct the errors in your password fields.');
-                    return;
-                }
-
-                isChangingPassword = true;
-                updateUI();
-                try {
-                    const res = await mockAPI('/api/user/change-password', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ currentPassword, newPassword }),
-                    });
-                    
-                    const result = await res.json();
-                    if (res.ok) {
-                        showModal('Success', 'Password changed successfully!');
-                        isEditingPassword = false;
-                        currentPassword = '';
-                        newPassword = '';
-                        confirmNewPassword = '';
-                        errors = {};
-                    } else {
-                        showModal('Error', result.message || 'Failed to change password.');
-                    }
-                } catch (err) {
-                    showModal('Network Error', 'Could not change password.');
-                } finally {
-                    isChangingPassword = false;
-                    updateUI();
-                }
-            });
-            
-            cancelButton.addEventListener('click', () => {
-                isEditingPassword = false;
-                currentPassword = '';
-                newPassword = '';
-                confirmNewPassword = '';
-                errors = {};
-                updateUI();
-            });
-
-            // Initial data load on page load
-            loadUserProfile();
+            } catch (error) {
+                console.error('Update profile error:', error);
+                showModal('Error', 'An unexpected error occurred. Please try again.');
+            } finally {
+                setUIState(false, false); // Reset state
+            }
         });
-    </script>
-</body>
-</html>
+        
+        // --- Initialization ---
+        fetchUserProfile();
+    });
+
+    // The rest of your existing JS logic for password change etc.
+    // can be placed here, but it's not directly related to the new API changes.
+</script>
