@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 
-// Routes that don't need authentication
+// ✅ Routes that don’t require authentication
 const PUBLIC_ROUTES = [
     '/api/users/login',
     '/api/users/signup',
@@ -13,8 +13,12 @@ const PUBLIC_ROUTES = [
     '/api/auth/reset-password',
 ];
 
+/**
+ * Middleware to authenticate a user using a JWT.
+ * Skips PUBLIC_ROUTES (whitelisted).
+ */
 const authenticateJWT = (req, res, next) => {
-    // Use originalUrl so it includes /api prefix
+    // Use originalUrl (includes /api prefix)
     if (PUBLIC_ROUTES.includes(req.originalUrl)) {
         return next();
     }
@@ -36,4 +40,29 @@ const authenticateJWT = (req, res, next) => {
     }
 };
 
-module.exports = { authenticateJWT };
+/**
+ * Middleware factory to enforce role-based access control.
+ * Should be used after authenticateJWT.
+ */
+const hasRole = (requiredRole) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            logger.error('hasRole middleware used without authenticateJWT.');
+            return res.status(500).json({ message: 'Authentication not processed.' });
+        }
+
+        if (req.user.role === requiredRole) {
+            next();
+        } else {
+            logger.warn(
+                `Access denied for user ${req.user.userId}. Required role: ${requiredRole}, User role: ${req.user.role}`
+            );
+            res.status(403).json({ message: 'You do not have the required permissions to access this resource.' });
+        }
+    };
+};
+
+module.exports = {
+    authenticateJWT,
+    hasRole,
+};
