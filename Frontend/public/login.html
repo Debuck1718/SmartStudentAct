@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <!-- Include Tailwind CSS from CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles to match the original React Native design */
@@ -131,7 +130,6 @@
         <div class="form-container max-w-sm mx-auto">
             <h1 class="title">SmartStudentAct Login</h1>
 
-            <!-- Email Input -->
             <div class="input-group">
                 <input
                     id="emailInput"
@@ -143,7 +141,6 @@
                 <p id="emailError" class="error-text hidden"></p>
             </div>
 
-            <!-- Password Input -->
             <div class="input-group">
                 <div class="password-input-container">
                     <input
@@ -160,15 +157,12 @@
                 <p id="passwordError" class="error-text hidden"></p>
             </div>
 
-            <!-- Login Button -->
             <button id="loginButton" class="button">
                 <p class="button-text">Login</p>
             </button>
 
-            <!-- Sign Up Link -->
             <a href="#" id="signupLink" class="link-text">Don’t have an account? Sign up</a>
 
-            <!-- Forgot Password Link -->
             <a href="#" id="forgotPasswordLink" class="link-text">Forgot Password?</a>
         </div>
     </div>
@@ -366,9 +360,53 @@
         
         loginButton.addEventListener('click', handleLogin);
 
+        // --- NEW CODE ADDED TO MANAGE TOKENS FOR PROTECTED PAGES ---
+        // This function is the key to fixing your "Authentication token missing" error.
+        async function fetchProtectedData(path) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // If there's no token, redirect to login page.
+                window.location.href = "/login.html";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/${path}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}` // ✅ Attach the stored token to the Authorization header
+                    }
+                });
+
+                if (response.status === 401) {
+                    // Token is invalid or expired. Clear it and redirect to login.
+                    localStorage.removeItem('token');
+                    window.location.href = "/login.html";
+                    return null;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching protected data:', error);
+                return null;
+            }
+        }
+
+        // Example Usage (for pages that require a token)
+        // If this page was the student dashboard (students.html)
+        // and you wanted to fetch the user's profile data, you would call:
+        // fetchProtectedData('users/profile').then(data => {
+        //     if (data) {
+        //         console.log('Fetched profile data:', data);
+        //         // Now you can display the data on the page
+        //     }
+        // });
+
     </script>
 </body>
 </html>
-
 
 
