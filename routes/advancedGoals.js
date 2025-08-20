@@ -1,0 +1,436 @@
+// smartstudent-backend/routes/advancedGoals.js
+
+const express = require('express');
+const router = express.Router();
+const Joi = require('joi'); 
+const logger = require('../utils/logger');
+const geminiClient = require('../utils/geminiClient');
+const eventBus = require('../utils/eventBus');
+
+// Import models and middlewares
+const StudentRewards = require('../models/StudentRewards');
+const User = require('../models/User'); 
+const BudgetEntry = require('../models/BudgetEntry');
+// 🐛 FIX: Import hasRole along with authenticateJWT
+const { authenticateJWT, hasRole } = require('../middlewares/auth');
+const checkSubscription = require('../middlewares/checkSubscription');
+
+
+/**
+ * Joi Validation Schemas
+ */
+const studentGoalSchema = Joi.object({
+    description: Joi.string().required(),
+    target_date: Joi.date().iso().required(),
+    progress: Joi.number().min(0).max(100).required(),
+    type: Joi.string().valid('academic', 'personal', 'extracurricular').required(),
+    is_completed: Joi.boolean().default(false),
+    points: Joi.number().integer().min(0).default(0)
+});
+
+const goalUpdateSchema = Joi.object({
+    description: Joi.string().optional(),
+    target_date: Joi.date().iso().optional(),
+    progress: Joi.number().min(0).max(100).optional(),
+    type: Joi.string().valid('academic', 'personal', 'extracurricular').optional(),
+    is_completed: Joi.boolean().optional(),
+    points: Joi.number().integer().min(0).optional()
+});
+
+
+// This object defines the tangible, premium rewards and their associated milestones.
+const PREMIUM_MILESTONES = {
+    '10-goals-in-a-month': {
+        name: 'The Productivity Pro',
+        description: 'Completed 10 goals in a single month.',
+        reward: 'Party/Social Mixer Invitation'
+    },
+    '5-assignments-graded-100': {
+        name: 'Top Scholar',
+        description: 'Achieved a perfect score on 5 consecutive assignments.',
+        reward: 'Movie Ticket Voucher'
+    },
+    '6-months-of-consistency': {
+        name: 'Consistency Champ',
+        description: 'Maintained a goal streak for six consecutive months.',
+        reward: 'Lunch Treat'
+    },
+    'student-of-the-year': {
+        name: 'Student of the Year',
+        description: 'Voted top student by your peers and teachers.',
+        reward: 'Trip to a Historical Place'
+    }
+};
+
+// A function to determine both basic and premium rewards based on the student's data.
+const calculateAllRewards = (student, user) => {
+    // Basic Rewards Logic (from rewards.js)
+    const badges = [];
+    if (student.weeklyGoalsAchieved) badges.push('🏅 Goal Crusher');
+    if (student.weeklyBudgetMet) badges.push('💰 Budget Boss');
+    if (student.weeklyAssignmentsDone) badges.push('📘 Assignment Ace');
+    if (student.termPercentage >= 90) badges.push('🎓 Top Scholar');
+    if (student.consistentMonths >= 6) badges.push('🔥 Consistency Champ');
+
+    let termSummary = '';
+    let termRewards = [];
+    if (student.level === 'High School' && student.termPercentage >= 80) {
+        termSummary = `Your term performance is ${student.termPercentage}%. 🎉 You're eligible for end-of-term rewards!`;
+        termRewards = ['🏖️ Vacation Package', '📜 Certificate of Excellence', '🍕 Pizza Treat'];
+    } else if ((student.level === 'University' || student.level === 'Worker') && student.consistentMonths >= 6) {
+        termSummary = `👏 You've consistently achieved your goals for ${student.consistentMonths} months!`;
+        termRewards = ['🎁 Surprise Gift or Brunch', '🎬 Movie Pass', '🏅 Special Recognition Badge'];
+    } else {
+        termSummary = `You're on the path to rewards! Stay consistent to unlock treats and recognition.`;
+    }
+
+    const treatSuggestions = [
+        '🌴 Vacation trip to historical or beach resorts',
+        '🍽️ Weekend Date Treats at student-friendly restaurants',
+        '🎓 Certificates of Achievement',
+        '🎬 Movie night or amusement park visit',
+        '🎉 Hangouts & Social mixers for consistent achievers',
+        '🏅 Badges: "Goal Crusher", "Budget Boss", "Assignment Ace"',
+        '🎨 Buy art supplies for a new hobby',
+        '💻 A new video game or console accessory',
+        '📚 A subscription to an online learning platform',
+        '🎧 A premium music streaming subscription',
+    ];
+
+    // Premium Rewards Logic (from premiumRewards.js)
+    const premiumRewards = [];
+    if (user && user.earnedBadges) {
+        user.earnedBadges.forEach(badgeId => {
+            const badgeDetails = PREMIUM_MILESTONES[badgeId];
+            if (badgeDetails) {
+                premiumRewards.push({
+                    id: badgeId,
+                    name: badgeDetails.name,
+                    description: badgeDetails.description,
+                    reward: badgeDetails.reward
+                });
+            }
+        });
+    }
+
+    return { badges, termSummary, termRewards, treatSuggestions, premiumRewards };
+};
+
+//-----------------------------------------------------------------------------------------------------------------------
+
+// New function to generate advice using the Gemini API
+const generateGeminiAdvice = async (student, budgetEntries) => {
+    // 1. Prepare the prompt with all relevant user data
+    const studentInfo = `Student Name: ${student.name}
+    Term Percentage: ${student.termPercentage}%
+    Consistent Months: ${student.consistentMonths}
+    Weekly Goals Achieved: ${student.weeklyGoalsAchieved}
+    Current Goals: ${student.goals.map(g => g.description).join(', ')}`;
+    
+    // Calculate total expenses and group them by category
+    const spendingByCategory = {};
+    budgetEntries.filter(e => e.type === 'expense').forEach(entry => {
+        spendingByCategory[entry.category] = (spendingByCategory[entry.category] || 0) + entry.amount;
+    });
+
+    const budgetInfo = `Budgeting Data (past month):
+    Total Expenses: $${budgetEntries.reduce((sum, entry) => entry.type === 'expense' ? sum + entry.amount : sum, 0)}
+    Spending by Category: ${JSON.stringify(spendingByCategory, null, 2)}`;
+
+    const prompt = `Based on the following user data, provide concise and actionable advice on their goals and spending habits.
+    
+    Student Data:
+    ${studentInfo}
+
+    Budget Data:
+    ${budgetInfo}
+
+    Please provide a short, encouraging message for their study goals and a clear, helpful tip for their financial habits. Format the response as a JSON object with two keys: "studyAdvice" and "spendingAdvice". Example: {"studyAdvice": "...", "spendingAdvice": "..."}
+    `;
+
+    try {
+        const geminiResponse = await geminiClient.generateContent(prompt);
+        return JSON.parse(geminiResponse.text);
+
+    } catch (error) {
+        logger.error('Error with Gemini API:', error);
+        return {
+            studyAdvice: "Keep working hard on your goals!",
+            spendingAdvice: "Track your expenses to stay on top of your budget."
+        };
+    }
+};
+
+// New Endpoint to get personalized advice
+router.get('/advice/:studentId', authenticateJWT, checkSubscription, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const studentId = req.params.studentId;
+
+        // Fetch both goal and budget data
+        const studentData = await StudentRewards.findOne({ studentId });
+        const budgetData = await BudgetEntry.find({ userId }); // Fetch budget data
+
+        if (!studentData) {
+            return res.status(404).json({ message: 'Student data not found.' });
+        }
+
+        // Generate personalized advice using the combined data
+        const advice = await generateGeminiAdvice(studentData, budgetData);
+
+        res.status(200).json({ advice });
+
+    } catch (error) {
+        logger.error('Error fetching personalized advice:', error);
+        res.status(500).json({ message: 'Failed to fetch advice.' });
+    }
+});
+//-----------------------------------------------------------------------------------------------------------------------
+
+// Route for a teacher/admin to add points to a student (Basic)
+// 🆕 Updated path to match frontend
+router.post('/teacher/add-points', authenticateJWT, hasRole('teacher'), async (req, res) => {
+    try {
+        const { studentEmail, points, reason } = req.body;
+        if (!studentEmail || points === undefined || !reason) {
+            return res.status(400).json({ message: 'Missing required fields.' });
+        }
+
+        const student = await User.findOne({ email: studentEmail });
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found.' });
+        }
+        
+        const updatedPoints = (student.smart_points || 0) + parseInt(points, 10);
+        await User.findByIdAndUpdate(student._id, { smart_points: updatedPoints });
+
+        // Add a log of the points to the student's rewards document
+        const studentRewards = await StudentRewards.findOne({ studentId: student._id });
+        if (studentRewards) {
+             studentRewards.pointsLog.push({ 
+                 points, 
+                 source: 'Teacher', 
+                 description: reason,
+                 date: new Date()
+             });
+             await studentRewards.save();
+        }
+
+        res.status(200).json({ message: `Successfully added ${points} points to ${student.firstname}.` });
+    } catch (error) {
+        logger.error('Error adding points:', error);
+        res.status(500).json({ message: 'Server error occurred while adding points.' });
+    }
+});
+
+// Route to check for and award a premium milestone
+router.post('/milestone-completed', authenticateJWT, checkSubscription, async (req, res) => {
+    try {
+        const { milestoneId } = req.body;
+        const userId = req.user.userId;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        if (!PREMIUM_MILESTONES[milestoneId]) {
+            return res.status(400).json({ message: 'Invalid milestone ID.' });
+        }
+
+        if (user.earnedBadges.includes(milestoneId)) {
+            return res.status(200).json({ message: 'Badge already earned.' });
+        }
+
+        user.earnedBadges.push(milestoneId);
+        await user.save();
+
+        logger.info(`User ${userId} earned premium badge: ${milestoneId}`);
+        const badgeName = PREMIUM_MILESTONES[milestoneId].name;
+        const reward = PREMIUM_MILESTONES[milestoneId].reward;
+
+        res.status(200).json({
+            message: `Congratulations! You earned the "${badgeName}" badge and a "${reward}" reward.`,
+            newReward: { id: milestoneId, name: badgeName, reward: reward }
+        });
+
+    } catch (error) {
+        logger.error('Error processing premium milestone:', error);
+        res.status(500).json({ message: 'Server error occurred while processing milestone.' });
+    }
+});
+
+/**
+ * @route POST /api/rewards/goals
+ * @desc Allows a student to add a new goal.
+ * @access Private
+ */
+router.post('/goals', authenticateJWT, async (req, res) => {
+    // Validate the incoming request body using Joi
+    const { error, value } = studentGoalSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
+    }
+
+    try {
+        const userId = req.user.id;
+
+        // Find the user's goals document or create a new one
+        let studentGoals = await StudentRewards.findOne({ studentId: userId });
+        if (!studentGoals) {
+            studentGoals = new StudentRewards({ studentId: userId, name: req.user.firstname });
+        }
+
+        // Add the new goal from the validated value
+        studentGoals.goals.push(value);
+        await studentGoals.save();
+        
+        eventBus.emit('goal_notification', {
+            userId,
+            message: `New goal created: ${value.description}`
+        });
+
+        res.status(201).json({ message: 'Goal added successfully!', goal: value });
+
+    } catch (error) {
+        logger.error('Error adding new goal:', error);
+        res.status(500).json({ message: 'Failed to add goal.' });
+    }
+});
+
+/**
+ * @route GET /api/rewards/goals
+ * @desc Gets all goals for the authenticated user.
+ * @access Private
+ */
+router.get('/goals', authenticateJWT, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const studentGoals = await StudentRewards.findOne({ studentId: userId });
+
+        if (!studentGoals) {
+            return res.status(200).json({ goals: [] });
+        }
+
+        res.status(200).json({ goals: studentGoals.goals });
+
+    } catch (error) {
+        logger.error('Error fetching goals:', error);
+        res.status(500).json({ message: 'Failed to fetch goals.' });
+    }
+});
+
+/**
+ * @route PUT /api/rewards/goals/:goalId
+ * @desc Updates a specific goal for the authenticated user.
+ * @access Private
+ */
+router.put('/goals/:goalId', authenticateJWT, async (req, res) => {
+    // Validate the incoming request body using the update schema
+    const { error, value } = goalUpdateSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
+    }
+
+    try {
+        const userId = req.user.id;
+        const { goalId } = req.params;
+
+        const studentGoals = await StudentRewards.findOne({ studentId: userId });
+        if (!studentGoals) {
+            return res.status(404).json({ message: 'Student goals not found.' });
+        }
+
+        const goal = studentGoals.goals.id(goalId);
+        if (!goal) {
+            return res.status(404).json({ message: 'Goal not found.' });
+        }
+
+        // Update the goal fields with the validated data
+        Object.assign(goal, value);
+        
+        await studentGoals.save();
+
+        res.status(200).json({ message: 'Goal updated successfully!', goal });
+
+    } catch (error) {
+        logger.error('Error updating goal:', error);
+        res.status(500).json({ message: 'Failed to update goal.' });
+    }
+});
+
+/**
+ * @route DELETE /api/rewards/goals/:goalId
+ * @desc Deletes a specific goal for the authenticated user.
+ * @access Private
+ */
+router.delete('/goals/:goalId', authenticateJWT, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { goalId } = req.params;
+
+        const studentGoals = await StudentRewards.findOne({ studentId: userId });
+        if (!studentGoals) {
+            return res.status(404).json({ message: 'Student goals not found.' });
+        }
+
+        const goalIndex = studentGoals.goals.findIndex(g => g._id.toString() === goalId);
+        if (goalIndex === -1) {
+            return res.status(404).json({ message: 'Goal not found.' });
+        }
+
+        studentGoals.goals.splice(goalIndex, 1);
+        await studentGoals.save();
+        
+        eventBus.emit('goal_notification', {
+            userId,
+            message: `Goal deleted.`
+        });
+
+        res.status(200).json({ message: 'Goal deleted successfully.' });
+
+    } catch (error) {
+        logger.error('Error deleting goal:', error);
+        res.status(500).json({ message: 'Failed to delete goal.' });
+    }
+});
+/**
+ * @route GET /api/rewards/:studentId
+ * @desc Get a student's combined rewards (basic + premium)
+ * @access Private
+ * ⚠️ Must be placed LAST so it doesn’t override other routes like /advice/:studentId or /goals
+ */
+router.get('/:studentId', authenticateJWT, checkSubscription, async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const student = await StudentRewards.findOne({ studentId });
+        const user = await User.findById(req.user.userId);
+
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found.' });
+        }
+
+        // Pass both the StudentRewards and the User model data to the calculation function
+        const { badges, termSummary, termRewards, treatSuggestions, premiumRewards } = calculateAllRewards(student, user);
+        const weeklyMessage = `Keep pushing ${student.name}! You're closer to your next badge. 💪`;
+
+        res.status(200).json({
+            name: student.name,
+            weeklyMessage,
+            badges,
+            termSummary,
+            termRewards,
+            treatSuggestions,
+            premiumRewards
+        });
+
+    } catch (error) {
+        logger.error('Error fetching combined rewards:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
+module.exports = router;
