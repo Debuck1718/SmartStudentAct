@@ -1,0 +1,23 @@
+# Node dependencies
+node_modules/
+  
+# Environment variables
+.env
+
+# OS and editor junk
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Render build output (if any)
+public.zip
+
+# Database files
+smartstudent.db
+*.sqlite
+
+#render
+render-build.sh

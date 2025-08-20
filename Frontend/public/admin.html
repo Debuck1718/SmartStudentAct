@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLp3wz/zQv2gC6P6Zg6xQ8zI+8U9l0s6fGzUfR6v6V6n6V6x6V6p6G6x6V6v6p6g6w6a6p6p6n6w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Custom styles to mimic React Native's StyleSheet.create */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .container {
+            padding: 20px;
+            background-color: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f7fa;
+        }
+        
+        /* Mimic the behavior of touchable elements */
+        .action-button:active, .logout-button:active, .header-icon:active {
+            transform: scale(0.98);
+        }
+
+        .picker-container {
+            border-width: 1px;
+            border-color: #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .picker-container::after {
+            content: '\f078'; /* Font Awesome down arrow */
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #4b5563;
+        }
+
+        .picker {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            height: 50px;
+            width: 100%;
+            background-color: transparent;
+            padding: 0 15px;
+            font-size: 16px;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 antialiased">
+
+    <!-- Main App Container -->
+    <div id="app-container" class="container">
+        <!-- The UI will be rendered here by the JavaScript -->
+    </div>
+
+    <!-- Custom Alert/Modal Box -->
+    <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+            <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
+            <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
+            <div class="flex justify-end space-x-2">
+                <button id="alert-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300">Cancel</button>
+                <button id="alert-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Mocking React Native/Expo dependencies for the browser environment
+        const API_BASE = 'http://localhost:3000';
+
+        // --- Mock Router & Navigation ---
+        const router = {
+            replace: (path) => window.location.href = path,
+            push: (path) => window.location.href = path,
+        };
+
+        // --- Mock API Responses and Data ---
+        // We've added a few more users to better demonstrate the filtering.
+        const mockUsers = [
+            { id: 1, firstname: 'John', lastname: 'Doe', email: 'john.doe@example.com', occupation: 'teacher', school: 'Central High School' },
+            { id: 2, firstname: 'Jane', lastname: 'Smith', email: 'jane.smith@example.com', occupation: 'student', school: 'Central High School' },
+            { id: 3, firstname: 'Peter', lastname: 'Jones', email: 'peter.jones@example.com', occupation: 'admin', school: 'Northside Academy' },
+            { id: 4, firstname: 'Lisa', lastname: 'Davis', email: 'lisa.davis@example.com', occupation: 'student', school: 'Central High School' },
+            { id: 5, firstname: 'Mike', lastname: 'Johnson', email: 'mike.johnson@example.com', occupation: 'teacher', school: 'Northside Academy' },
+            { id: 6, firstname: 'Alice', lastname: 'Williams', email: 'alice.w@example.com', occupation: 'student', school: 'Eastside Middle School' },
+            { id: 7, firstname: 'Bob', lastname: 'Brown', email: 'bob.b@example.com', occupation: 'admin', school: 'Central High School' },
+        ];
+
+        // The current logged-in user, who is an admin for 'Central High School'.
+        let currentUser = { id: 100, firstname: 'Admin', lastname: 'User', occupation: 'admin', school: 'Central High School' };
+        
+        const fetchAPI = async (url, options = {}) => {
+            try {
+                // Mocking API endpoints
+                if (url === '/api/session') {
+                    return {
+                        ok: true,
+                        json: () => Promise.resolve({ loggedIn: true, user: currentUser })
+                    };
+                }
+                
+                // IMPORTANT: This is where we implement the new backend logic.
+                // Instead of returning all users, we now filter them based on the current user's school.
+                if (url === '/api/admin/users') {
+                    // Filter the mock users to only include those from the current admin's school.
+                    // This simulates the backend database query where a `where` clause would be used.
+                    const filteredUsers = mockUsers.filter(user => user.school === currentUser.school);
+
+                    return {
+                        ok: true,
+                        json: () => Promise.resolve(filteredUsers)
+                    };
+                }
+
+                if (url === '/api/logout') {
+                    return { ok: true, json: () => Promise.resolve({ success: true }) };
+                }
+                
+                if (url === '/api/admin/manage') {
+                    const { userId, action } = JSON.parse(options.body);
+                    return {
+                        ok: true,
+                        json: () => Promise.resolve({ success: true, message: `Successfully ${action}d user ${userId}.` })
+                    };
+                }
+                
+                // Fallback for other URLs
+                return {
+                    ok: false,
+                    status: 404,
+                    statusText: 'Not Found',
+                    json: () => Promise.resolve({ message: 'Mock API endpoint not found.' })
+                };
+            } catch (error) {
+                showCustomAlert('Network Error', `Could not connect to the server or process request for ${url.split('?')[0]}.`);
+                throw error;
+            }
+        };
+
+        // --- Custom Alert/Modal Logic ---
+        const showCustomAlert = (title, message, options) => {
+            const modal = document.getElementById('alert-modal');
+            const titleEl = document.getElementById('alert-title');
+            const messageEl = document.getElementById('alert-message');
+            const confirmBtn = document.getElementById('alert-confirm');
+            const cancelBtn = document.getElementById('alert-cancel');
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            
+            confirmBtn.onclick = () => {
+                if (options && options.length > 1 && options[1].onPress) {
+                    options[1].onPress();
+                }
+                modal.classList.add('hidden');
+            };
+
+            if (options && options.length > 0 && options[0].text === 'Cancel') {
+                cancelBtn.textContent = options[0].text;
+                cancelBtn.onclick = () => modal.classList.add('hidden');
+                cancelBtn.classList.remove('hidden');
+            } else {
+                cancelBtn.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        };
+
+        // --- State Management ---
+        const state = {
+            users: [],
+            filteredUsers: [],
+            // No need for a schools array or selectedSchool state, as the backend now handles school filtering.
+            roleFilter: 'all',
+            isLoadingUsers: true,
+            isManagingUser: false,
+        };
+
+        // --- UI Rendering ---
+        const render = () => {
+            const container = document.getElementById('app-container');
+            container.innerHTML = ''; // Clear existing content
+
+            if (state.isLoadingUsers) {
+                container.innerHTML = `
+                    <div class="loading-container">
+                        <i class="fas fa-spinner fa-spin text-blue-500 text-5xl"></i>
+                        <p class="mt-4 text-base text-gray-600">Loading users...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Main Dashboard UI
+            const dashboardHtml = `
+                <div class="flex flex-row justify-between items-center mb-5 pb-2 border-b border-gray-200">
+                    <div class="flex items-center space-x-4">
+                        <img src="https://placehold.co/40x40/94a3b8/ffffff?text=U" alt="Profile Picture" class="rounded-full w-10 h-10 shadow-md"/>
+                        <button onclick="router.push('/(app)/profile')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
+                            <i class="fas fa-user-circle text-2xl"></i>
+                        </button>
+                        <button onclick="router.push('/(app)/settings')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
+                            <i class="fas fa-cog text-2xl"></i>
+                        </button>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex-1 text-center">Admin Dashboard</h1>
+                    <button id="logout-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-300">
+                        Logout
+                    </button>
+                </div>
+
+                <!-- Removed the school filter since the backend now handles it. -->
+                <div class="bg-white rounded-xl shadow-md p-4 mb-5">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-800">Filters</h2>
+                    <div class="mt-4">
+                        <label for="role-filter" class="block text-gray-700 font-bold mb-2">Filter by Role:</label>
+                        <div class="picker-container">
+                            <select id="role-filter" class="picker">
+                                <option value="all">All Roles</option>
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Users (${state.filteredUsers.length})</h2>
+                <div id="users-list">
+                    ${state.filteredUsers.length === 0 ? 
+                        `<p class="text-center italic text-gray-500 py-5">No users found matching filters.</p>`
+                        : state.filteredUsers.map(u => `
+                        <div class="bg-white rounded-xl shadow-md p-4 mb-3 relative">
+                            <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">
+                                ${u.firstname} ${u.lastname} (<span class="text-gray-600 font-normal">${u.email}</span>)
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-3">Role: ${u.occupation} | School: ${u.school}</p>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="manageUser(${u.id}, 'promote')" class="action-button flex-1 bg-green-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-600 transition duration-300">Promote</button>
+                                <button onclick="manageUser(${u.id}, 'demote')" class="action-button flex-1 bg-yellow-500 text-gray-900 font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-300">Demote</button>
+                                <button onclick="manageUser(${u.id}, 'suspend')" class="action-button flex-1 bg-cyan-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-cyan-600 transition duration-300">Suspend</button>
+                                <button onclick="confirmDelete(${u.id}, '${u.firstname} ${u.lastname}')" class="action-button flex-1 bg-red-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition duration-300">Delete</button>
+                            </div>
+                            <div id="spinner-${u.id}" class="absolute right-4 top-4 hidden">
+                                <i class="fas fa-spinner fa-spin text-blue-500"></i>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="mt-6 p-4 bg-gray-200 rounded-lg border-l-4 border-gray-500">
+                    <h4 class="font-bold text-base text-gray-900 mb-1">Note:</h4>
+                    <p class="text-sm text-gray-700">You can only manage users from your school unless you are a global overseer.</p>
+                </div>
+            `;
+            container.innerHTML = dashboardHtml;
+            
+            // Re-attach event listeners
+            document.getElementById('logout-button').addEventListener('click', handleLogout);
+            document.getElementById('role-filter').addEventListener('change', (e) => {
+                state.roleFilter = e.target.value;
+                filterUsers();
+            });
+        };
+        
+        // --- Core Functions ---
+        const filterUsers = () => {
+            let result = state.users;
+            // The school filter is now handled on the server side (or mock server side).
+            if (state.roleFilter !== 'all') {
+                result = result.filter(u => u.occupation === state.roleFilter);
+            }
+            state.filteredUsers = result;
+            render();
+        };
+
+        const loadUsers = async () => {
+            state.isLoadingUsers = true;
+            render();
+            try {
+                const res = await fetchAPI('/api/admin/users');
+                const data = await res.json();
+                state.users = data;
+                filterUsers(); // Initial filter
+            } catch (err) {
+                console.error('Failed to load users', err);
+                showCustomAlert('Error', 'Failed to load user data.');
+            } finally {
+                state.isLoadingUsers = false;
+                render();
+            }
+        };
+
+        const handleLogout = () => {
+            showCustomAlert('Logout', 'Are you sure you want to log out?', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Logout', onPress: async () => {
+                    try {
+                        await fetchAPI('/api/logout', { method: 'POST' });
+                        router.replace('/(public)/login');
+                    } catch (error) {
+                        console.error('Logout failed:', error);
+                        showCustomAlert('Logout Error', 'Failed to log out. Please try again.');
+                    }
+                }},
+            ]);
+        };
+
+        const manageUser = async (userId, action) => {
+            // Show loading spinner for the specific user card
+            const spinner = document.getElementById(`spinner-${userId}`);
+            if (spinner) spinner.classList.remove('hidden');
+
+            try {
+                const res = await fetchAPI('/api/admin/manage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, action }),
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showCustomAlert('Success', result.message);
+                    await loadUsers(); // Reload users after a successful action
+                } else {
+                    showCustomAlert('Error', result.message || `Failed to ${action} user.`);
+                }
+            } catch (err) {
+                console.error(`Error managing user (${action}):`, err);
+                showCustomAlert('Error', `Something went wrong while trying to ${action} the user.`);
+            } finally {
+                // Hide spinner
+                if (spinner) spinner.classList.add('hidden');
+            }
+        };
+
+        const confirmDelete = (userId, userName) => {
+            showCustomAlert('Confirm Delete', `Are you sure you want to delete ${userName}? This action cannot be undone.`, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', onPress: () => manageUser(userId, 'delete') },
+            ]);
+        };
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetchAPI('/api/session');
+                const data = await res.json();
+                if (!data.loggedIn || data.user.occupation !== 'admin') {
+                    showCustomAlert('Access Denied', 'You must be logged in as an administrator to access this page.');
+                    router.replace('/(public)/login');
+                } else {
+                    // Update the currentUser with the mock session data
+                    currentUser = data.user;
+                    loadUsers();
+                }
+            } catch (err) {
+                console.error('Session check failed:', err);
+                showCustomAlert('Session Error', 'Could not verify session. Please log in again.');
+                router.replace('/(public)/login');
+            }
+        });
+    </script>
+</body>
+</html>

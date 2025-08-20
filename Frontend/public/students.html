@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartStudentAct - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; background:#f4f4f4; padding-bottom:70px; }
+    .modal-overlay { background: rgba(0,0,0,.6); display:none; }
+    .modal-overlay.active { display:flex; }
+    .tab-active { color:#3498db; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <!-- Top Navigation Bar -->
+  <header class="bg-[#2c3e50] text-white p-4 flex justify-between items-center rounded-b-xl shadow-lg">
+    <button id="menu-btn" class="p-2 text-2xl" aria-label="Open navigation menu"><i class="fas fa-bars"></i></button>
+    <span class="text-xl font-bold flex-1 text-center">📘 SmartStudentAct</span>
+    <button id="logout-btn" class="bg-[#e74c3c] py-2 px-4 rounded-lg font-bold shadow-md hover:bg-[#c0392b] transition-colors">Logout</button>
+  </header>
+
+  <!-- Main -->
+  <main class="p-4 sm:p-6 lg:p-8">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 my-4">Welcome to SmartStudentAct</h1>
+    <p class="text-lg text-center text-gray-600 mb-8">Your learning & financial companion</p>
+
+    <!-- ASSIGNMENTS -->
+    <section class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">📚 Assignments</h2>
+      <button id="add-assignment-btn" class="bg-[#2ecc71] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#27a760] transition-colors">+ Add Assignment</button>
+      <div id="assignments-list" class="space-y-4">
+        <p class="italic text-gray-500 text-center">No assignments added yet.</p>
+      </div>
+      <div id="assignments-loading" class="text-center mt-4 hidden"><i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i></div>
+    </section>
+
+    <!-- BUDGET -->
+    <section class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">💰 Budget</h2>
+      <button id="add-budget-btn" class="bg-[#2ecc71] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#27a760] transition-colors">+ Add Expense</button>
+      <div id="budget-list" class="space-y-4">
+        <p class="italic text-gray-500 text-center">No budget entries yet.</p>
+      </div>
+      <div id="budget-loading" class="text-center mt-4 hidden"><i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i></div>
+    </section>
+
+    <!-- WEEKLY GOAL -->
+    <section class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">🎯 Weekly Goal</h2>
+      <div class="space-y-4">
+        <input id="goal-input" type="text" placeholder="Your weekly goal" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base">
+        <p id="goal-error" class="text-red-500 text-sm hidden"></p>
+        <button id="save-goal-btn" class="bg-[#3498db] text-white py-3 px-6 rounded-lg font-bold w-full hover:bg-[#2980b9] transition-colors">Save Goal</button>
+        <p id="saved-goal-text" class="text-green-600 font-bold text-center mt-2 hidden"></p>
+      </div>
+    </section>
+
+    <!-- AI INSIGHTS -->
+    <section class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">🤖 AI Insights</h2>
+        <div class="flex items-center">
+          <label for="subscription-toggle" class="text-sm text-gray-500 mr-2">Subscribed?</label>
+          <input type="checkbox" id="subscription-toggle" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+        </div>
+      </div>
+      <button id="generate-insights-btn" class="bg-[#1abc9c] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#16a085] transition-colors">Generate Insights</button>
+      <div id="insights-container" class="space-y-4">
+        <p id="insights-placeholder" class="italic text-gray-500 text-center">Click "Generate Insights" to get personalized feedback on your academic and financial goals.</p>
+        <div id="insights-loading" class="text-center mt-4 hidden"><i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i></div>
+        <div id="insights-content" class="bg-gray-50 p-4 rounded-lg shadow-sm hidden"></div>
+      </div>
+    </section>
+
+    <section id="feedback" class="hidden p-6">
+  <h2 class="text-xl font-bold mb-4">My Assignment Feedback</h2>
+  <div id="feedback-list" class="space-y-4"></div>
+</section>
+
+    <!-- REWARDS -->
+    <section class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">🏆 Rewards</h2>
+      <div id="rewards-wrap" class="space-y-4">
+        <p class="italic text-gray-500 text-center">No rewards yet. Keep up the great work!</p>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">📊 Analytics</h2>
+      <div class="w-full h-64">
+        <canvas id="analytics-chart"></canvas>
+      </div>
+    </section>
+
+    <footer class="text-center text-gray-500 text-sm mt-8 mb-4">&copy; 2025 SmartStudentAct – Empowering Students Globally.</footer>
+  </main>
+
+  <!-- Bottom Tab Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] py-2 px-4 rounded-t-xl z-40">
+    <div class="flex justify-around items-center h-full">
+      <a href="/public/students.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors tab-active"><i class="fas fa-home text-2xl mb-1"></i><span class="text-xs font-medium">Dashboard</span></a>
+      <a href="/public/completed-assignment.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"><i class="fas fa-check-circle text-2xl mb-1"></i><span class="text-xs font-medium">Completed</span></a>
+      <a href="/public/teachers-list.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"><i class="fas fa-chalkboard-teacher text-2xl mb-1"></i><span class="text-xs font-medium">Teachers</span></a>
+      <a href="/public/financial.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"><i class="fas fa-wallet text-2xl mb-1"></i><span class="text-xs font-medium">Financial</span></a>
+      <a href="/public/AI Essay Checker.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"><i class="fas fa-robot text-2xl mb-1"></i><span class="text-xs font-medium"> 🤖AI Checker</span></a>
+      <a href="/public/profile.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"><i class="fas fa-user-circle text-2xl mb-1"></i><span class="text-xs font-medium">👤Profile</span></a>
+    </div>
+  </nav>
+
+  <!-- Modals -->
+  <div id="assignment-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
+      <h3 class="text-2xl font-bold text-center mb-6">Add Assignment</h3>
+      <div class="space-y-4">
+        <input id="assignment-title-input" placeholder="Assignment Title" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base">
+        <p id="assignment-title-error" class="text-red-500 text-sm hidden"></p>
+        <input id="assignment-subject-input" placeholder="Subject (e.g., Math, History)" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base">
+        <p id="assignment-subject-error" class="text-red-500 text-sm hidden"></p>
+        <div class="flex space-x-4 mt-6">
+          <button id="save-assignment-btn" class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors">Save</button>
+          <button id="cancel-assignment-btn" class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="budget-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
+      <h3 class="text-2xl font-bold text-center mb-6">Add Budget Entry</h3>
+      <div class="space-y-4">
+        <input id="budget-title-input" placeholder="Expense/Income Title" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base">
+        <p id="budget-title-error" class="text-red-500 text-sm hidden"></p>
+        <input id="budget-amount-input" placeholder="Amount (GHS)" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base">
+        <p id="budget-amount-error" class="text-red-500 text-sm hidden"></p>
+        <div class="flex space-x-4 mt-6">
+          <button id="save-budget-btn" class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors">Save</button>
+          <button id="cancel-budget-btn" class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="menu-modal" class="modal-overlay fixed inset-0 z-50 flex p-4">
+    <div id="menu-content" class="bg-white w-full max-w-[280px] h-full shadow-2xl p-6 transition-transform duration-300 -translate-x-full">
+      <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <h3 class="text-2xl font-bold">SmartStudent Navigation</h3>
+        <button id="close-menu-btn" class="text-4xl text-gray-600">&times;</button>
+      </div>
+      <nav>
+        <a href="/students.html" class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">🏠 Dashboard</a>
+        <a href="/financial.html" class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">💰 Financial</a>
+        <a href="/AI-Essay-Checker.html" class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">🤖 AI Essay Checker</a>
+        <a href="/rewards.html" class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">🏆 Rewards</a>
+        <a href="/settings.html" class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">⚙️ Settings</a>
+        <a href="/profile.html" class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">👤 Profile</a>
+        <div class="h-px bg-gray-200 my-4"></div>
+        <button id="menu-logout-btn" class="bg-red-100 text-red-700 font-bold py-3 px-6 rounded-lg w-full text-lg mt-4 hover:bg-red-200 transition-colors">👋 Logout</button>
+      </nav>
+    </div>
+  </div>
+
+  <div id="alert-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
+      <h3 id="alert-title" class="text-2xl font-bold text-center mb-4"></h3>
+      <p id="alert-message" class="text-lg text-center text-gray-600 mb-6"></p>
+      <div class="flex justify-around space-x-4">
+        <button id="alert-confirm-btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-green-600 transition-colors hidden">Confirm</button>
+        <button id="alert-cancel-btn" class="bg-gray-500 text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-gray-600 transition-colors">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script>
+    // ---------- CONFIG ----------
+    const BASE_URL = 'http://172.20.10.10:4000/api';
+    const TOKEN_KEYS = ['jwt','jwtToken','token','authToken'];
+    const ID_KEYS = ['studentId','userId','id'];
+
+    const token = getFirst(localStorage, TOKEN_KEYS);
+    const storedId = getFirst(localStorage, ID_KEYS);
+    const userFromJWT = parseJwt(token);
+    const studentId = storedId || userFromJWT?.userId || userFromJWT?.id;
+    const firstname = localStorage.getItem('firstname') || userFromJWT?.firstname || 'Student';
+
+    function getFirst(storage, keys){ for(const k of keys){const v=storage.getItem(k); if(v) return v;} return null; }
+    function parseJwt(t){
+      try { if(!t) return null; const p=t.split('.')[1]; return JSON.parse(atob(p.replace(/-/g,'+').replace(/_/g,'/'))); }
+      catch { return null; }
+    }
+
+    // ---------- DOM REFS ----------
+    const menuBtn = document.getElementById('menu-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const addAssignmentBtn = document.getElementById('add-assignment-btn');
+    const addBudgetBtn = document.getElementById('add-budget-btn');
+    const saveGoalBtn = document.getElementById('save-goal-btn');
+    const goalInput = document.getElementById('goal-input');
+    const goalErrorEl = document.getElementById('goal-error');
+    const savedGoalText = document.getElementById('saved-goal-text');
+    const assignmentsList = document.getElementById('assignments-list');
+    const budgetList = document.getElementById('budget-list');
+    const assignmentsLoading = document.getElementById('assignments-loading');
+    const budgetLoading = document.getElementById('budget-loading');
+    const assignmentModal = document.getElementById('assignment-modal');
+    const budgetModal = document.getElementById('budget-modal');
+    const menuModal = document.getElementById('menu-modal');
+    const alertModal = document.getElementById('alert-modal');
+    const saveAssignmentBtn = document.getElementById('save-assignment-btn');
+    const cancelAssignmentBtn = document.getElementById('cancel-assignment-btn');
+    const assignmentTitleInput = document.getElementById('assignment-title-input');
+    const assignmentSubjectInput = document.getElementById('assignment-subject-input');
+    const assignmentTitleError = document.getElementById('assignment-title-error');
+    const assignmentSubjectError = document.getElementById('assignment-subject-error');
+    const saveBudgetBtn = document.getElementById('save-budget-btn');
+    const cancelBudgetBtn = document.getElementById('cancel-budget-btn');
+    const budgetTitleInput = document.getElementById('budget-title-input');
+    const budgetAmountInput = document.getElementById('budget-amount-input');
+    const budgetTitleError = document.getElementById('budget-title-error');
+    const budgetAmountError = document.getElementById('budget-amount-error');
+    const closeMenuBtn = document.getElementById('close-menu-btn');
+    const menuContent = document.getElementById('menu-content');
+    const menuLogoutBtn = document.getElementById('menu-logout-btn');
+    const alertTitleEl = document.getElementById('alert-title');
+    const alertMessageEl = document.getElementById('alert-message');
+    const alertConfirmBtn = document.getElementById('alert-confirm-btn');
+    const alertCancelBtn = document.getElementById('alert-cancel-btn');
+    const generateInsightsBtn = document.getElementById('generate-insights-btn');
+    const insightsLoading = document.getElementById('insights-loading');
+    const insightsContent = document.getElementById('insights-content');
+    const insightsPlaceholder = document.getElementById('insights-placeholder');
+    const subscriptionToggle = document.getElementById('subscription-toggle');
+    const rewardsWrap = document.getElementById('rewards-wrap');
+
+    // ---------- MODALS ----------
+    const showModal = el => el.classList.add('active');
+    const hideModal = el => el.classList.remove('active');
+
+    // ---------- ALERT ----------
+    let alertConfirmAction = null;
+    const showAlert = (title, message, onConfirm=null) => {
+      alertTitleEl.textContent = title;
+      alertMessageEl.textContent = message;
+      alertConfirmAction = onConfirm;
+      alertConfirmBtn.classList.toggle('hidden', !onConfirm);
+      showModal(alertModal);
+    };
+    const closeAlert = () => { hideModal(alertModal); alertConfirmAction=null; };
+    alertConfirmBtn.addEventListener('click',()=>{ if(alertConfirmAction) alertConfirmAction(); closeAlert(); });
+    alertCancelBtn.addEventListener('click', closeAlert);
+
+    // ---------- API ----------
+    const authHeaders = () => token ? { 'Authorization': `Bearer ${token}` } : {};
+    const get = async (p) => {
+      const res = await fetch(`${BASE_URL}${p}`, { headers: { ...authHeaders() }});
+      if(!res.ok) throw await res.json().catch(()=>({message:res.statusText}));
+      return res.json();
+    };
+    const post = async (p, body) => {
+      const res = await fetch(`${BASE_URL}${p}`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json', ...authHeaders()},
+        body: JSON.stringify(body)
+      });
+      if(!res.ok) throw await res.json().catch(()=>({message:res.statusText}));
+      return res.json();
+    };
+
+    // ---------- ASSIGNMENTS ----------
+    const fetchAssignments = async () => {
+      assignmentsLoading.classList.remove('hidden');
+      assignmentsList.innerHTML='';
+      try {
+        // GET /api/student/assignments/:studentId  (adjust to your real route)
+        const resp = await get(`/student/assignments/${studentId}`);
+        const assignments = resp.assignments || resp || [];
+        if(assignments.length===0){
+          assignmentsList.innerHTML = '<p class="italic text-gray-500 text-center">No assignments added yet.</p>';
+        } else {
+          assignments.forEach(a=>{
+            const due = a.dueDate ? new Date(a.dueDate).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '—';
+            const div = document.createElement('div');
+            div.className='bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm';
+            div.innerHTML = `
+              <div>
+                <h4 class="font-semibold text-lg">${a.title || 'Untitled'}</h4>
+                <p class="text-sm text-gray-600">Subject: ${a.class || a.subject || '—'}</p>
+              </div>
+              <span class="text-xs text-gray-400">Due: ${due}</span>`;
+            assignmentsList.appendChild(div);
+          });
+        }
+      } catch(e){
+        assignmentsList.innerHTML = `<p class="text-red-500 text-center">Failed to load assignments.</p>`;
+        console.error(e);
+      } finally {
+        assignmentsLoading.classList.add('hidden');
+      }
+    };
+
+    saveAssignmentBtn.addEventListener('click', async () => {
+      let ok=true;
+      if(!assignmentTitleInput.value.trim()){ assignmentTitleError.textContent='Assignment title is required.'; assignmentTitleError.classList.remove('hidden'); ok=false; } else assignmentTitleError.classList.add('hidden');
+      if(!assignmentSubjectInput.value.trim()){ assignmentSubjectError.textContent='Subject is required.'; assignmentSubjectError.classList.remove('hidden'); ok=false; } else assignmentSubjectError.classList.add('hidden');
+      if(!ok) return;
+
+      const payload = {
+        title: assignmentTitleInput.value.trim(),
+        description: 'No description provided',
+        dueDate: new Date().toISOString(),
+        teacherId: userFromJWT?.userId || userFromJWT?.id || studentId,
+        schoolId: 'school-001',
+        classId: assignmentSubjectInput.value.trim()
+      };
+      try {
+        // POST /api/teacher/assignments  (adjust to your real route)
+        await post('/teacher/assignments', payload);
+        hideModal(assignmentModal);
+        showAlert('Success','Assignment added successfully!');
+        fetchAssignments();
+      } catch(e){
+        showAlert('Error', e.message || 'Failed to add assignment.');
+      }
+    });
+    addAssignmentBtn.addEventListener('click', ()=> showModal(assignmentModal));
+    cancelAssignmentBtn.addEventListener('click', ()=> hideModal(assignmentModal));
+
+    async function fetchStudentFeedback(studentId) {
+  try {
+    const res = await fetch(`/api/student/feedback/${studentId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` }
+    });
+    if (!res.ok) throw new Error('Failed to fetch feedback.');
+    const data = await res.json();
+    renderFeedback(data.feedback);
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+function renderFeedback(feedbacks) {
+  const container = document.getElementById('feedback-list');
+  container.innerHTML = '';
+
+  feedbacks.forEach(fb => {
+    const card = document.createElement('div');
+    card.className = "bg-white shadow rounded-lg p-4";
+
+    card.innerHTML = `
+      <p><strong>Assignment:</strong> ${fb.assignmentTitle}</p>
+      <p><strong>Submitted At:</strong> ${new Date(fb.submittedAt).toLocaleString()}</p>
+      <p><strong>Grade:</strong> ${fb.grade ?? 'Not graded yet'}</p>
+      <p><strong>Comments:</strong> ${fb.comments ?? 'No comments yet'}</p>
+      ${fb.feedbackFile ? `<p><a href="${fb.feedbackFile}" target="_blank" class="text-blue-500 underline">📂 Download Feedback File</a></p>` : ''}
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+// Call this after login or when student opens feedback tab
+// fetchStudentFeedback(studentId);
+
+    // ---------- BUDGET ----------
+    const fetchBudget = async () => {
+      budgetLoading.classList.remove('hidden');
+      budgetList.innerHTML='';
+      try {
+        // GET /api/budget
+        const resp = await get('/budget');
+        const budgets = resp.budgets || resp || [];
+        if(budgets.length===0){
+          budgetList.innerHTML = '<p class="italic text-gray-500 text-center">No budget entries yet.</p>';
+        } else {
+          budgets.forEach(entry=>{
+            const isIncome = (entry.type || '').toLowerCase()==='income' || entry.amount>0;
+            const color = isIncome ? 'text-green-600' : 'text-red-600';
+            const sign = isIncome ? '+' : '-';
+            const div = document.createElement('div');
+            div.className='bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm';
+            div.innerHTML = `
+              <div>
+                <h4 class="font-semibold text-lg">${entry.description || entry.title || 'Entry'}</h4>
+                <p class="text-sm text-gray-600">${entry.type || (isIncome?'income':'expense')}</p>
+              </div>
+              <span class="font-bold ${color}">${sign}${Math.abs(entry.amount||0).toFixed(2)} GHS</span>`;
+            budgetList.appendChild(div);
+          });
+        }
+        drawAnalytics(budgets);
+      } catch(e){
+        budgetList.innerHTML = `<p class="text-red-500 text-center">Failed to load budget entries.</p>`;
+        console.error(e);
+      } finally {
+        budgetLoading.classList.add('hidden');
+      }
+    };
+
+    saveBudgetBtn.addEventListener('click', async () => {
+      let ok=true;
+      if(!budgetTitleInput.value.trim()){ budgetTitleError.textContent='Title is required.'; budgetTitleError.classList.remove('hidden'); ok=false; } else budgetTitleError.classList.add('hidden');
+      if(!budgetAmountInput.value.trim() || isNaN(budgetAmountInput.value)){ budgetAmountError.textContent='Valid amount is required.'; budgetAmountError.classList.remove('hidden'); ok=false; } else budgetAmountError.classList.add('hidden');
+      if(!ok) return;
+
+      const amount = parseFloat(budgetAmountInput.value);
+      const payload = {
+        description: budgetTitleInput.value.trim(),
+        amount,
+        type: amount>=0 ? 'income' : 'expense'
+      };
+      try {
+        // POST /api/budget
+        await post('/budget', payload);
+        hideModal(budgetModal);
+        showAlert('Success','Budget entry added successfully!');
+        fetchBudget();
+      } catch(e){
+        showAlert('Error', e.message || 'Failed to add budget entry.');
+      }
+    });
+    addBudgetBtn.addEventListener('click', ()=> showModal(budgetModal));
+    cancelBudgetBtn.addEventListener('click', ()=> hideModal(budgetModal));
+
+    // ---------- GOALS (advancedGoals.js -> /api/rewards/goals) ----------
+    const fetchGoal = async () => {
+      try {
+        // GET /api/rewards/goals  (auth derives user)
+        const resp = await get('/rewards/goals');
+        const goals = resp.goals || [];
+        if(goals.length>0){
+          const latest = goals[goals.length-1];
+          const text = latest.description || '(no description)';
+          goalInput.value = text;
+          savedGoalText.textContent = `Saved: ${text}`;
+          savedGoalText.classList.remove('hidden');
+        } else {
+          savedGoalText.textContent = 'No goal saved yet.';
+          savedGoalText.classList.remove('hidden');
+        }
+      } catch(e){
+        savedGoalText.textContent = 'Failed to load goal.';
+        savedGoalText.classList.remove('hidden');
+        console.error(e);
+      }
+    };
+
+    const validateGoal = () => {
+      const g = goalInput.value.trim();
+      if(!g){ goalErrorEl.textContent='Weekly goal cannot be empty.'; goalErrorEl.classList.remove('hidden'); return false; }
+      goalErrorEl.classList.add('hidden'); return true;
+    };
+
+    saveGoalBtn.addEventListener('click', async () => {
+      if(!validateGoal()) return;
+      // Joi schema requires: description, target_date, progress, type
+      const oneWeek = new Date(Date.now()+7*24*60*60*1000).toISOString();
+      const payload = {
+        description: goalInput.value.trim(),
+        target_date: oneWeek,
+        progress: 0,
+        type: 'academic',
+        is_completed: false,
+        points: 0
+      };
+      try {
+        // POST /api/rewards/goals
+        await post('/rewards/goals', payload);
+        showAlert('Success','Weekly goal saved!');
+        fetchGoal();
+      } catch(e){
+        showAlert('Error', e.message || 'Failed to save goal.');
+      }
+    });
+
+    // ---------- AI INSIGHTS (advancedGoals.js -> /api/rewards/advice/:studentId) ----------
+    let isSubscribed = false; const trialUsageLimit = 3; let currentUsage = 0;
+    subscriptionToggle.addEventListener('change', e=> { isSubscribed = e.target.checked; });
+
+    const generateAiInsights = async () => {
+      insightsPlaceholder.classList.add('hidden');
+      insightsContent.classList.add('hidden');
+      insightsLoading.classList.remove('hidden');
+      generateInsightsBtn.disabled = true;
+
+      if(!isSubscribed){
+        if(currentUsage>=trialUsageLimit){
+          showAlert('Trial Expired','You reached your trial limit of 3 insights. Please subscribe to continue.');
+          insightsLoading.classList.add('hidden');
+          generateInsightsBtn.disabled=false;
+          return;
+        }
+        currentUsage++;
+      }
+
+      try {
+        // GET /api/rewards/advice/:studentId
+        const resp = await get(`/rewards/advice/${studentId}`);
+        const advice = resp.advice || {};
+        const study = advice.studyAdvice || 'Keep working hard on your goals!';
+        const spend = advice.spendingAdvice || 'Track your expenses to stay on top of your budget.';
+        insightsContent.innerHTML = `
+          <p class="mb-2"><span class="font-semibold">📚 Study:</span> ${study}</p>
+          <p><span class="font-semibold">💰 Spending:</span> ${spend}</p>`;
+        insightsContent.classList.remove('hidden');
+      } catch(e){
+        console.error(e);
+        showAlert('API Error', (e && e.message) || 'Failed to generate insights. Please try again later.');
+        insightsContent.textContent = 'Failed to load insights. Please try again.';
+        insightsContent.classList.remove('hidden');
+      } finally {
+        insightsLoading.classList.add('hidden');
+        generateInsightsBtn.disabled=false;
+      }
+    };
+    generateInsightsBtn.addEventListener('click', generateAiInsights);
+
+    // ---------- REWARDS (advancedGoals.js -> /api/rewards/:studentId) ----------
+    const fetchRewards = async () => {
+      try {
+        const resp = await get(`/rewards/${studentId}`);
+        const { name, weeklyMessage, badges=[], termSummary='', termRewards=[], treatSuggestions=[], premiumRewards=[] } = resp || {};
+        rewardsWrap.innerHTML = `
+          <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+            <p class="font-semibold">Hey ${name || firstname}! ${weeklyMessage || ''}</p>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-2">🎖️ Badges</h4>
+            <div class="flex flex-wrap gap-2">${badges.length? badges.map(b=>`<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">${b}</span>`).join(''): '<span class="text-gray-500">No badges yet.</span>'}</div>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-1">📜 Term Summary</h4>
+            <p class="text-gray-700">${termSummary || 'Keep going—rewards unlock with consistency.'}</p>
+            ${termRewards.length? `<ul class="list-disc ml-6 mt-2">${termRewards.map(r=>`<li>${r}</li>`).join('')}</ul>`:''}
+          </div>
+          <div>
+            <h4 class="font-semibold mb-2">🎉 Treat Suggestions</h4>
+            <ul class="list-disc ml-6">${(treatSuggestions||[]).slice(0,6).map(t=>`<li>${t}</li>`).join('')}</ul>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-2">🏅 Premium Rewards</h4>
+            ${premiumRewards.length? premiumRewards.map(p=>`
+              <div class="border rounded-lg p-3 mb-2">
+                <div class="font-semibold">${p.name}</div>
+                <div class="text-sm text-gray-600 mb-1">${p.description}</div>
+                <div class="text-sm"><span class="font-semibold">Reward:</span> ${p.reward}</div>
+              </div>`).join('') : '<p class="text-gray-500">No premium rewards yet.</p>'}
+          </div>
+        `;
+      } catch(e){
+        console.error(e);
+        rewardsWrap.innerHTML = `<p class="text-red-500 text-center">Failed to load rewards.</p>`;
+      }
+    };
+
+    // ---------- MENU / NAV ----------
+    document.addEventListener('click', (e) => {
+      if (e.target === menuModal) hideModal(menuModal);
+      if (e.target === assignmentModal) hideModal(assignmentModal);
+      if (e.target === budgetModal) hideModal(budgetModal);
+      if (e.target === alertModal) closeAlert();
+    });
+    menuBtn.addEventListener('click', () => { showModal(menuModal); menuContent.classList.remove('-translate-x-full'); });
+    closeMenuBtn.addEventListener('click', () => { menuContent.classList.add('-translate-x-full'); setTimeout(()=>hideModal(menuModal),300); });
+    const doLogout = () => { localStorage.clear(); window.location.href='/login.html'; };
+    logoutBtn.addEventListener('click', () => showAlert('Log Out','Are you sure you want to log out?', doLogout));
+    menuLogoutBtn.addEventListener('click', () => showAlert('Log Out','Are you sure you want to log out?', doLogout));
+
+    // ---------- CHART ----------
+    let chart;
+    function drawAnalytics(budgets){
+      try {
+        const ctx = document.getElementById('analytics-chart');
+        const totals = budgets.reduce((acc,b)=>{
+          const t = (b.type||'').toLowerCase();
+          if(t==='income'||b.amount>0) acc.income += Math.abs(b.amount||0);
+          else acc.expense += Math.abs(b.amount||0);
+          return acc;
+        },{income:0, expense:0});
+        const data = { labels:['Income','Expenses'], datasets:[{ data:[totals.income, totals.expense] }] };
+        if(chart) chart.destroy();
+        chart = new Chart(ctx, { type:'bar', data, options:{ plugins:{legend:{display:false}}, responsive:true, scales:{y:{beginAtZero:true}} }});
+      } catch(e){ console.warn('Chart error', e); }
+    }
+
+    // ---------- INIT ----------
+    window.addEventListener('DOMContentLoaded', () => {
+      if(!token){ showAlert('Not Authenticated','Please log in again.', ()=> window.location.href='/login.html'); return; }
+      if(!studentId){ showAlert('Missing ID','No student ID found in token/storage.'); }
+
+      fetchAssignments();
+      fetchBudget();
+      fetchGoal();
+      fetchRewards();
+    });
+    generateInsightsBtn.addEventListener('click', generateAiInsights);
+  </script>
+</body>
+</html>
+

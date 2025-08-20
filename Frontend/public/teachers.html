@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Import the Inter font for a clean, modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom styles for the message modal */
+        #messageModal, #promptModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .prompt-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .prompt-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* Custom styles for the file input button */
+        .custom-file-input::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+        .custom-file-input::before {
+            content: '📎 Pick Document/File';
+            display: inline-block;
+            background-color: #1abc9c;
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            outline: none;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .custom-file-input:hover::before {
+            background-color: #16a085;
+        }
+        .custom-file-input:active::before {
+            background-color: #1abc9c;
+            box-shadow: none;
+        }
+
+        /* Custom loading spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Profile Dropdown Custom Styling */
+        .dropdown-menu {
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            transform: translateY(-5px);
+        }
+
+        .dropdown-menu.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]">
+        <div class="text-center p-6 bg-white rounded-xl shadow-lg">
+            <div class="spinner mx-auto mb-4 border-blue-500 border-t-blue-500"></div>
+            <p class="text-lg text-gray-700 font-medium">Loading teacher dashboard...</p>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="flex">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeMessageModal()">&times;</span>
+            <h2 id="modalTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
+            <p id="modalMessage" class="text-gray-700"></p>
+            <div class="flex justify-end mt-4">
+                <button onclick="closeMessageModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Prompt Modal -->
+    <div id="promptModal" class="flex">
+        <div class="modal-content">
+            <h2 id="promptTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
+            <p id="promptMessage" class="text-gray-700 mb-4"></p>
+            <textarea id="promptInput" class="w-full h-32 p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your message here..."></textarea>
+            <div class="prompt-buttons">
+                <button id="cancelPromptBtn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition-colors">Cancel</button>
+                <button id="okPromptBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        
+        <!-- Top Bar with Header and Profile Dropdown -->
+        <header class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">📚 Teacher Dashboard</h1>
+
+            <!-- Profile Dropdown Menu with Image -->
+            <div class="relative inline-block text-left">
+                <!-- Dropdown toggle button -->
+                <button id="profile-menu-button" type="button" class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <!-- Profile Image Placeholder -->
+                    <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-500">
+                        <span id="profileInitials" class="font-medium text-lg text-white">TS</span>
+                    </span>
+                    <!-- User Name Placeholder -->
+                    <span id="profileName" class="font-medium text-gray-700 hidden sm:inline">Teacher</span>
+                    <!-- Dropdown Arrow Icon -->
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <!-- Dropdown menu, initially hidden -->
+                <div id="profile-dropdown-menu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0" role="menu" aria-orientation="vertical" aria-labelledby="profile-menu-button">
+                    <div class="py-1" role="none">
+                        <!-- New AI Essay Checker Link -->
+                        <a href="/AI-Essay-Checker.html" class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors px-4">
+                            🤖 AI Essay Checker
+                        </a>
+                        <!-- Profile link -->
+                        <a href="/public/profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                            Your Profile
+                        </a>
+                        <!-- Settings link -->
+                        <a href="/public/settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                            Settings
+                        </a>
+                        <hr class="my-1 border-gray-100" role="none">
+                        <!-- Logout button -->
+                        <button id="logoutButton" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                            🚪 Sign out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Sections -->
+        
+        <!-- Tab Navigation -->
+        <nav class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-gray-200 rounded-xl p-3 shadow-md">
+            <a href="/public/my-students.html" class="flex-1 text-center py-2 px-3 m-1 bg-blue-500 text-white font-bold rounded-lg shadow-sm hover:bg-blue-600 transition-colors">
+                👨‍🎓 My Class
+            </a>
+            <a href="/public/completed-assignment.html" class="flex-1 text-center py-2 px-3 m-1 bg-blue-500 text-white font-bold rounded-lg shadow-sm hover:bg-blue-600 transition-colors">
+                ✅ Completed Tasks
+            </a>
+            <a href="/public/AI Essay Checker.html" class="flex-1 text-center py-2 px-3 m-1 bg-blue-500 text-white font-bold rounded-lg shadow-sm hover:bg-blue-600 transition-colors">
+                🤖 AI Checker
+            </a>
+        </nav>
+
+        <!-- Students in Your Class Section -->
+        <section id="studentsSection" class="bg-white rounded-xl p-6 shadow-lg">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">🎓 Students in Your Class</h2>
+            <div id="studentsList" class="divide-y divide-gray-200">
+                <!-- Students will be rendered here by JS -->
+            </div>
+        </section>
+
+ <!-- Create and Send Assignment Section -->
+<section class="bg-white rounded-xl p-6 shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">✏️ Create and Send Assignment</h2>
+    
+    <label for="student-select" class="block text-gray-700 font-bold mb-2">Select Student:</label>
+    <div id="studentSelectContainer" class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+        <select id="student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none">
+            <!-- Options will be populated by JS -->
+        </select>
+    </div>
+
+    <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2">Assignment Title:</label>
+    <input type="text" id="assignmentTitle" class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., History Essay on World War II" maxlength="100">
+
+    <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2">Due Date:</label>
+    <input type="datetime-local" id="assignmentDueDate" class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+    <label for="assignmentText" class="block text-gray-700 font-bold mb-2">Assignment Details (max 1000 words or attach file):</label>
+    <textarea id="assignmentText" class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" placeholder="Type your assignment here..." maxlength="5000"></textarea>
+    <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
+    
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <label for="assignmentFile" class="custom-file-input cursor-pointer text-base">
+            <input type="file" id="assignmentFile" class="hidden">
+        </label>
+        <div id="fileStatus" class="flex items-center gap-2">
+            <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
+            <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">Clear</button>
+        </div>
+    </div>
+    
+    <button id="sendAssignmentButton" class="w-full py-4 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-600 transition-colors transform hover:scale-105" disabled>
+        Send Assignment
+    </button>
+</section>
+
+<!-- Add Student Points Section -->
+<section class="bg-white rounded-xl p-6 shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">➕ Add Student Points</h2>
+
+    <label for="points-student-select" class="block text-gray-700 font-bold mb-2">Select Student:</label>
+    <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+        <select id="points-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none">
+            <!-- Options will be populated dynamically -->
+        </select>
+    </div>
+
+    <label for="pointsInput" class="block text-gray-700 font-bold mb-2">Points to Add:</label>
+    <input type="number" id="pointsInput" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="e.g., 10" min="1">
+    
+    <label for="reasonText" class="block text-gray-700 font-bold mb-2">Reason (Optional):</label>
+    <textarea id="reasonText" class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y" placeholder="e.g., Great participation in class discussion."></textarea>
+    
+    <button id="addPointsButton" class="w-full py-4 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition-colors transform hover:scale-105">
+        Add Points
+    </button>
+</section>
+
+<!-- Overdue Tasks Section -->
+<section class="bg-white rounded-xl p-6 shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">📌 Overdue Tasks</h2>
+    <div id="overdueTasksList" class="divide-y divide-gray-200">
+        <!-- Overdue tasks will be rendered here by JS -->
+    </div>
+</section>
+
+<!-- Assigned Tasks Section -->
+<section class="bg-white rounded-xl p-6 shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">📝 Assigned Tasks & Feedback</h2>
+    <div id="assignedTasksList" class="divide-y divide-gray-200">
+        <!-- Each assigned task will be rendered here by JS -->
+        <!-- Under each submission, a feedback form will appear -->
+        <!-- Example structure rendered via JS -->
+        <!--
+        <div class="task-card p-4 bg-gray-50 rounded-lg mb-4">
+            <p><strong>Assignment:</strong> History Essay</p>
+            <p><strong>Student:</strong> John Doe</p>
+            <p><strong>Submitted At:</strong> 2025-08-18 10:00</p>
+            <form class="feedback-form mt-2">
+                <label class="block font-semibold mb-1">Feedback Grade:</label>
+                <input type="text" class="w-full p-2 border border-gray-300 rounded mb-2" placeholder="e.g., 95">
+                
+                <label class="block font-semibold mb-1">Comments:</label>
+                <textarea class="w-full p-2 border border-gray-300 rounded mb-2" placeholder="Write feedback here..."></textarea>
+                
+                <label class="block font-semibold mb-1">Upload Feedback File (Optional):</label>
+                <input type="file" class="mb-2">
+                
+                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Send Feedback</button>
+            </form>
+        </div>
+        -->
+    </div>
+</section>
+
+<!-- Student Feedback Section -->
+<section class="bg-white rounded-xl p-6 shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">💬 Student Feedback Overview</h2>
+    <div id="feedbackList" class="divide-y divide-gray-200">
+        <!-- Optionally, render aggregated student feedback here -->
+    </div>
+</section>
+
+
+        <!-- Academic Calendar Section -->
+        <section class="bg-white rounded-xl p-6 shadow-lg">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">📅 Academic Calendar</h2>
+            <input type="date" id="termStart" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Start of Term (YYYY-MM-DD)">
+            <input type="date" id="termEnd" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="End of Term (YYYY-MM-DD)">
+            <button id="saveCalendarButton" class="w-full py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition-colors transform hover:scale-105">
+                Save Calendar
+            </button>
+            <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="text-center text-sm text-gray-500 py-6 mt-4">
+            © <span id="currentYear"></span> SmartStudentAct
+        </footer>
+    </div>
+
+    <script>
+        // --- State Variables ---
+        let students = [];
+        let overdueTasks = [];
+        let assignedTasks = [];
+        let feedbackList = [];
+        let selectedAssignmentFile = null;
+        let isDropdownVisible = false;
+
+        // --- DOM Elements ---
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const studentsListEl = document.getElementById('studentsList');
+        const overdueTasksListEl = document.getElementById('overdueTasksList');
+        const assignedTasksListEl = document.getElementById('assignedTasksList');
+        const feedbackListEl = document.getElementById('feedbackList');
+        const studentSelectEl = document.getElementById('student-select');
+        const assignmentTitleEl = document.getElementById('assignmentTitle');
+        const assignmentDueDateEl = document.getElementById('assignmentDueDate');
+        const assignmentTextEl = document.getElementById('assignmentText');
+        const wordCountTextEl = document.getElementById('wordCountText');
+        const assignmentFileEl = document.getElementById('assignmentFile');
+        const fileNameEl = document.getElementById('fileName');
+        const clearFileButtonEl = document.getElementById('clearFileButton');
+        const sendAssignmentButtonEl = document.getElementById('sendAssignmentButton');
+        const termStartEl = document.getElementById('termStart');
+        const termEndEl = document.getElementById('termEnd');
+        const saveCalendarButtonEl = document.getElementById('saveCalendarButton');
+        const calendarMsgEl = document.getElementById('calendarMsg');
+        
+        // New dropdown DOM elements
+        const profileMenuButton = document.getElementById('profile-menu-button');
+        const profileDropdownMenu = document.getElementById('profile-dropdown-menu');
+        const logoutButtonEl = document.getElementById('logoutButton');
+
+        const messageModal = document.getElementById('messageModal');
+        const modalTitleEl = document.getElementById('modalTitle');
+        const modalMessageEl = document.getElementById('modalMessage');
+
+        const promptModal = document.getElementById('promptModal');
+        const promptTitleEl = document.getElementById('promptTitle');
+        const promptMessageEl = document = document.getElementById('promptMessage');
+        const promptInputEl = document.getElementById('promptInput');
+        const okPromptBtn = document.getElementById('okPromptBtn');
+        const cancelPromptBtn = document.getElementById('cancelPromptBtn');
+
+        // New DOM elements for adding points
+        const pointsStudentSelectEl = document.getElementById('points-student-select');
+        const pointsInputEl = document.getElementById('pointsInput');
+        const reasonTextEl = document.getElementById('reasonText');
+        const addPointsButtonEl = document.getElementById('addPointsButton');
+
+        // --- API Base URL ---
+        // Change the API_BASE to a relative path. This is a best practice for
+        // working with local or deployed servers, as it avoids hardcoding IP addresses.
+        const API_BASE = '/api';
+
+        // --- Helper Functions ---
+        /**
+         * Simple function to sanitize string inputs to prevent XSS attacks.
+         * Note: This is client-side validation and is NOT a substitute for
+         * robust server-side validation. Server-side validation is mandatory
+         * for real security.
+         * @param {string} str The string to sanitize.
+         * @returns {string} The sanitized string.
+         */
+        function sanitizeInput(str) {
+            if (typeof str !== 'string') return '';
+            const tempDiv = document.createElement('div');
+            tempDiv.textContent = str;
+            return tempDiv.innerHTML;
+        }
+
+        /**
+         * Displays a custom message modal.
+         * @param {string} title The title of the modal.
+         * @param {string} message The message to display.
+         */
+        function showMessageModal(title, message) {
+            modalTitleEl.textContent = title;
+            modalMessageEl.textContent = message;
+            messageModal.style.display = 'flex';
+        }
+
+        /**
+         * Closes the message modal.
+         */
+        function closeMessageModal() {
+            messageModal.style.display = 'none';
+        }
+
+        /**
+         * Displays a custom prompt modal for user input.
+         * @param {string} title The title of the prompt.
+         * @param {string} message The message to display.
+         * @returns {Promise<string|null>} A promise that resolves with the user's input or null if canceled.
+         */
+        function showPromptModal(title, message) {
+            return new Promise((resolve) => {
+                promptTitleEl.textContent = title;
+                promptMessageEl.textContent = message;
+                promptInputEl.value = ''; // Clear previous input
+                promptModal.style.display = 'flex';
+
+                const onOk = () => {
+                    resolve(promptInputEl.value);
+                    promptModal.style.display = 'none';
+                    okPromptBtn.removeEventListener('click', onOk);
+                    cancelPromptBtn.removeEventListener('click', onCancel);
+                };
+
+                const onCancel = () => {
+                    resolve(null);
+                    promptModal.style.display = 'none';
+                    okPromptBtn.removeEventListener('click', onOk);
+                    cancelPromptBtn.removeEventListener('click', onCancel);
+                };
+
+                okPromptBtn.addEventListener('click', onOk);
+                cancelPromptBtn.addEventListener('click', onCancel);
+            });
+        }
+
+        /**
+         * Simple toast/alert function.
+         * Replaced `alert()` with the custom modal for better UI.
+         * @param {string} msg The message to display.
+         */
+        function toast(msg) {
+            showMessageModal('Notice', msg);
+        }
+
+        /**
+         * Helper for API calls with error handling.
+         * @param {string} url The API endpoint URL.
+         * @param {Object} options The fetch options.
+         * @returns {Promise<Response>} The response object.
+         */
+        async function fetchAPI(url, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${url}`, {
+                    credentials: 'include',
+                    ...options
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                    throw new Error(`API Error: ${response.status} - ${errorData.message || response.statusText}`);
+                }
+                return response;
+            } catch (error) {
+                console.error(`Fetch API Error for ${url}:`, error);
+                // The original code only showed a generic network error.
+                // This is a more helpful message to the user.
+                showMessageModal('Network Error', `Could not connect to the server or fetch data. Please check your network connection. Details: ${error.message}`);
+                throw error;
+            }
+        }
+
+        /**
+         * Counts words in a given text.
+         * @param {string} text The text to count.
+         * @returns {number} The word count.
+         */
+        function getWordCount(text) {
+            return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+        }
+
+        /**
+         * Renders a list of items to a container element.
+         * @param {HTMLElement} container The DOM element to render into.
+         * @param {Array} items The data array.
+         * @param {Function} renderItem A function that returns HTML for each item.
+         * @param {string} emptyMessage The message to show if the list is empty.
+         */
+        function renderList(container, items, renderItem, emptyMessage) {
+            container.innerHTML = ''; // Clear previous content
+            if (items.length === 0) {
+                container.innerHTML = `<p class="text-center italic text-gray-500 py-4">${emptyMessage}</p>`;
+                return;
+            }
+            items.forEach(item => {
+                container.innerHTML += renderItem(item);
+            });
+        }
+
+        // --- Core Application Logic ---
+
+        /**
+         * Fetches all data from the API and renders the dashboard.
+         */
+        async function init() {
+            loadingOverlay.style.display = 'flex';
+            try {
+                // Fetch user data for the dashboard header
+                await fetchUserData();
+                
+                // Fetch and render all data sections
+                await Promise.all([
+                    fetchStudents(),
+                    fetchOverdueTasks(),
+                    fetchAssignedTasks(),
+                    fetchFeedback()
+                ]);
+
+                // Initial state update for the assignment button
+                toggleSendAssignmentButtonState();
+
+                // Set current year in the footer
+                document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                showMessageModal('Initialization Error', 'Failed to load dashboard data. Please try refreshing the page.');
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        /**
+         * Fetches and displays teacher and student data.
+         * @returns {Promise<void>}
+         */
+        async function fetchUserData() {
+            try {
+                const teacherResponse = await fetchAPI('/teacher/profile');
+                const teacherData = await teacherResponse.json();
+                
+                const studentResponse = await fetchAPI('/teacher/students');
+                students = await studentResponse.json();
+                
+                // Update profile initials and name
+                const profileInitialsEl = document.getElementById('profileInitials');
+                const profileNameEl = document.getElementById('profileName');
+                if (teacherData.firstname && teacherData.lastname) {
+                    profileInitialsEl.textContent = `${teacherData.firstname.charAt(0)}${teacherData.lastname.charAt(0)}`.toUpperCase();
+                    profileNameEl.textContent = `${teacherData.firstname} ${teacherData.lastname}`;
+                } else {
+                    profileInitialsEl.textContent = 'T';
+                    profileNameEl.textContent = 'Teacher';
+                }
+                
+                renderStudents();
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // showMessageModal already handles the error, no need to re-show.
+            }
+        }
+
+        /**
+         * Fetches and renders the list of students in the class.
+         */
+        function renderStudents() {
+            renderList(studentsListEl, students, (s) => `
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
+                    <span class="flex-1 text-gray-800 text-base font-medium mb-2 sm:mb-0">${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (Grade ${sanitizeInput(s.grade)})</span>
+                    <button onclick="toast('Open assign for ${sanitizeInput(s.email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-blue-600 transition-colors">Assign</button>
+                </div>
+            `, 'No students found in your class.');
+
+            // Populate student select for assignments and points
+            const optionsHtml = students.map(s => `<option value="${sanitizeInput(s.email)}">${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (${sanitizeInput(s.email)})</option>`).join('');
+            studentSelectEl.innerHTML = optionsHtml;
+            pointsStudentSelectEl.innerHTML = optionsHtml;
+        }
+
+        /**
+         * Fetches and renders the list of overdue tasks.
+         */
+        async function fetchOverdueTasks() {
+            try {
+                const response = await fetchAPI('/teacher/overdue-tasks');
+                overdueTasks = await response.json();
+                renderOverdueTasks();
+            } catch (error) {
+                console.error('Error fetching overdue tasks:', error);
+                // Renders an empty list with a message on error
+                renderList(overdueTasksListEl, [], () => '', 'Could not load overdue tasks.');
+            }
+        }
+        
+        /**
+         * Renders overdue tasks list.
+         */
+        function renderOverdueTasks() {
+            renderList(overdueTasksListEl, overdueTasks, (o) => `
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
+                    <span class="flex-1 text-gray-800 text-base font-medium mb-2 sm:mb-0">
+                        <span class="font-bold">${sanitizeInput(o.student_email)}</span>: "${sanitizeInput(o.title)}" was due ${new Date(o.due_datetime).toLocaleString()}
+                    </span>
+                    <button onclick="sendMessage('${sanitizeInput(o.student_email)}')" class="px-3 py-1 bg-orange-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-orange-600 transition-colors">Remind</button>
+                </div>
+            `, 'No overdue tasks!');
+        }
+
+        /**
+         * Fetches and renders the list of assigned tasks.
+         */
+        async function fetchAssignedTasks() {
+            try {
+                const response = await fetchAPI('/teacher/assigned-tasks');
+                assignedTasks = await response.json();
+                renderAssignedTasks();
+            } catch (error) {
+                console.error('Error fetching assigned tasks:', error);
+                renderList(assignedTasksListEl, [], () => '', 'Could not load assigned tasks.');
+            }
+        }
+
+        /**
+         * Renders assigned tasks list.
+         */
+        function renderAssignedTasks() {
+            renderList(assignedTasksListEl, assignedTasks, (t) => `
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
+                    <span class="flex-1 text-gray-800 text-base font-medium mb-2 sm:mb-0">
+                        <span class="font-bold">${sanitizeInput(t.student_email)}</span>: ${sanitizeInput(t.title)} (${sanitizeInput(t.subject)}) due ${new Date(t.due_datetime).toLocaleString()}
+                    </span>
+                    <div class="flex gap-2 mt-2 sm:mt-0">
+                        ${t.attachment ? `<a href="${API_BASE}/uploads/${t.attachment}" target="_blank" class="px-3 py-1 bg-gray-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-gray-600 transition-colors">📎</a>` : ''}
+                        <button onclick="sendMessage('${sanitizeInput(t.student_email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-blue-600 transition-colors">Message</button>
+                    </div>
+                </div>
+            `, 'No tasks assigned yet.');
+        }
+
+        /**
+         * Fetches and renders the list of student feedback.
+         */
+        async function fetchFeedback() {
+            try {
+                const response = await fetchAPI('/teacher/feedback');
+                feedbackList = await response.json();
+                renderFeedback();
+            } catch (error) {
+                console.error('Error fetching feedback:', error);
+                renderList(feedbackListEl, [], () => '', 'Could not load student feedback.');
+            }
+        }
+        
+        /**
+         * Renders feedback list.
+         */
+        function renderFeedback() {
+            renderList(feedbackListEl, feedbackList, (f) => `
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
+                    <span class="flex-1 text-gray-800 text-base font-medium mb-2 sm:mb-0">
+                        <span class="font-bold">${sanitizeInput(f.student_email)}</span>: ${sanitizeInput(f.message.slice(0, 100))}${f.message.length > 100 ? '...' : ''}
+                    </span>
+                    <div class="flex gap-2 mt-2 sm:mt-0">
+                        ${f.file_name ? `<a href="${API_BASE}/uploads/${f.file_name}" target="_blank" class="px-3 py-1 bg-gray-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-gray-600 transition-colors">📎</a>` : ''}
+                        <button onclick="sendMessage('${sanitizeInput(f.student_email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-blue-600 transition-colors">Reply</button>
+                    </div>
+                </div>
+            `, 'No student feedback received.');
+        }
+
+        /**
+         * Toggles the enabled/disabled state of the Send Assignment button based on form validity.
+         */
+        function toggleSendAssignmentButtonState() {
+            const studentSelected = studentSelectEl.value !== '';
+            const title = assignmentTitleEl.value.trim();
+            const dueDate = assignmentDueDateEl.value;
+            const hasContent = title !== '' && dueDate !== '' && (assignmentTextEl.value.trim() !== '' || selectedAssignmentFile !== null);
+
+            // A more robust check for a valid due date
+            const isDueDateValid = dueDate ? new Date(dueDate) > new Date() : false;
+            
+            const isValid = studentSelected && title !== '' && isDueDateValid && (assignmentTextEl.value.trim() !== '' || selectedAssignmentFile !== null);
+            sendAssignmentButtonEl.disabled = !isValid;
+        }
+
+        /**
+         * Sends a message to a student.
+         * @param {string} email The student's email.
+         */
+        async function sendMessage(email) {
+            const text = await showPromptModal(`Message to ${email}`, 'Type your message below:');
+            // Check if the user cancelled the prompt
+            if (text === null) {
+                return;
+            }
+            if (text.trim() === '') {
+                toast('Message cannot be empty.');
+                return;
+            }
+            
+            try {
+                const res = await fetchAPI('/teacher/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to: email, text: sanitizeInput(text) }),
+                });
+                if (res.ok) {
+                    toast('Message sent!');
+                } else {
+                    const errorData = await res.json().catch(() => ({ message: 'Failed to send message.' }));
+                    toast(`Failed to send message: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                toast('Failed to send message due to a network error.');
+            }
+        }
+        
+        /**
+         * Submits a new assignment.
+         */
+        async function sendAssignment() {
+            const studentEmail = studentSelectEl.value;
+            const title = assignmentTitleEl.value.trim();
+            const dueDate = assignmentDueDateEl.value;
+            const textContent = assignmentTextEl.value.trim();
+
+            if (!studentEmail || !title || !dueDate || (!textContent && !selectedAssignmentFile)) {
+                showMessageModal('Validation Error', 'Please fill in all required fields (title, due date) and provide either text or a file.');
+                return;
+            }
+
+            // Create a FormData object to handle both text and file data
+            const formData = new FormData();
+            formData.append('studentEmail', studentEmail);
+            formData.append('title', title);
+            formData.append('dueDate', dueDate);
+            formData.append('description', textContent);
+            if (selectedAssignmentFile) {
+                formData.append('file', selectedAssignmentFile);
+            }
+
+            sendAssignmentButtonEl.disabled = true;
+            sendAssignmentButtonEl.innerHTML = `<div class="spinner border-white border-t-white mx-auto"></div>`;
+
+            try {
+                const res = await fetchAPI('/teacher/assignments', {
+                    method: 'POST',
+                    body: formData, // No Content-Type header needed for FormData
+                });
+
+                if (res.ok) {
+                    toast('Assignment sent successfully!');
+                    // Reset form fields
+                    assignmentTitleEl.value = '';
+                    assignmentDueDateEl.value = '';
+                    assignmentTextEl.value = '';
+                    clearFile();
+                } else {
+                    const errorData = await res.json().catch(() => ({ message: 'Failed to send assignment.' }));
+                    toast(`Failed to send assignment: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error('Error sending assignment:', error);
+                toast('Failed to send assignment due to a network error.');
+            } finally {
+                sendAssignmentButtonEl.innerHTML = 'Send Assignment';
+                toggleSendAssignmentButtonState();
+            }
+        }
+
+        /**
+         * Adds points to a student.
+         */
+        async function addPoints() {
+            const studentEmail = pointsStudentSelectEl.value;
+            const points = parseInt(pointsInputEl.value, 10);
+            const reason = reasonTextEl.value.trim();
+            
+            if (!studentEmail || isNaN(points) || points <= 0) {
+                showMessageModal('Validation Error', 'Please select a student and enter a valid number of points.');
+                return;
+            }
+
+            addPointsButtonEl.disabled = true;
+            addPointsButtonEl.innerHTML = `<div class="spinner border-white border-t-white mx-auto"></div>`;
+
+            try {
+                const res = await fetchAPI('/teacher/add-points', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentEmail, points, reason: sanitizeInput(reason) }),
+                });
+
+                if (res.ok) {
+                    toast('Points added successfully!');
+                    pointsInputEl.value = '';
+                    reasonTextEl.value = '';
+                } else {
+                    const errorData = await res.json().catch(() => ({ message: 'Failed to add points.' }));
+                    toast(`Failed to add points: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error('Error adding points:', error);
+                toast('Failed to add points due to a network error.');
+            } finally {
+                addPointsButtonEl.innerHTML = 'Add Points';
+                addPointsButtonEl.disabled = false;
+            }
+        }
+
+        /**
+         * Saves the academic calendar dates.
+         */
+        async function saveCalendar() {
+            const termStart = termStartEl.value;
+            const termEnd = termEndEl.value;
+            if (!termStart || !termEnd) {
+                calendarMsgEl.textContent = 'Please enter both start and end dates.';
+                calendarMsgEl.classList.remove('text-green-500');
+                calendarMsgEl.classList.add('text-red-500');
+                return;
+            }
+
+            const startDate = new Date(termStart);
+            const endDate = new Date(termEnd);
+            if (startDate > endDate) {
+                calendarMsgEl.textContent = 'Start date cannot be after end date.';
+                calendarMsgEl.classList.remove('text-green-500');
+                calendarMsgEl.classList.add('text-red-500');
+                return;
+            }
+
+            saveCalendarButtonEl.disabled = true;
+            calendarMsgEl.textContent = 'Saving...';
+            
+            try {
+                const res = await fetchAPI('/calendar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ start: termStart, end: termEnd }),
+                });
+
+                if (res.ok) {
+                    calendarMsgEl.textContent = 'Calendar saved successfully!';
+                    calendarMsgEl.classList.remove('text-red-500');
+                    calendarMsgEl.classList.add('text-green-500');
+                } else {
+                    const errorData = await res.json().catch(() => ({ message: 'Failed to save calendar.' }));
+                    calendarMsgEl.textContent = `Error: ${errorData.message}`;
+                    calendarMsgEl.classList.remove('text-green-500');
+                    calendarMsgEl.classList.add('text-red-500');
+                }
+            } catch (error) {
+                console.error('Error saving calendar:', error);
+                calendarMsgEl.textContent = 'Network error while saving calendar.';
+                calendarMsgEl.classList.remove('text-green-500');
+                calendarMsgEl.classList.add('text-red-500');
+            } finally {
+                saveCalendarButtonEl.disabled = false;
+            }
+        }
+
+        /**
+         * Toggles the profile dropdown menu visibility.
+         */
+        function toggleProfileDropdown() {
+            isDropdownVisible = !isDropdownVisible;
+            if (isDropdownVisible) {
+                profileDropdownMenu.classList.remove('hidden');
+                setTimeout(() => {
+                    profileDropdownMenu.classList.add('visible');
+                }, 10);
+            } else {
+                profileDropdownMenu.classList.remove('visible');
+                setTimeout(() => {
+                    profileDropdownMenu.classList.add('hidden');
+                }, 200); // Match CSS transition duration
+            }
+        }
+        
+        /**
+         * Hides the profile dropdown menu when clicking outside.
+         */
+        function handleOutsideClick(event) {
+            if (isDropdownVisible && !profileMenuButton.contains(event.target) && !profileDropdownMenu.contains(event.target)) {
+                toggleProfileDropdown();
+            }
+        }
+
+        /**
+         * Clears the selected file from the assignment form.
+         */
+        function clearFile() {
+            selectedAssignmentFile = null;
+            assignmentFileEl.value = '';
+            fileNameEl.textContent = 'No file selected.';
+            clearFileButtonEl.classList.add('hidden');
+            toggleSendAssignmentButtonState();
+        }
+
+        // --- Event Listeners ---
+        window.onload = init; // Call the main initialization function on page load
+        
+        assignmentTextEl.addEventListener('input', () => {
+            wordCountTextEl.textContent = `Word count: ${getWordCount(assignmentTextEl.value)}`;
+            toggleSendAssignmentButtonState();
+        });
+
+        assignmentFileEl.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                selectedAssignmentFile = file;
+                fileNameEl.textContent = `Selected: ${file.name}`;
+                clearFileButtonEl.classList.remove('hidden');
+            } else {
+                clearFile();
+            }
+            toggleSendAssignmentButtonState();
+        });
+
+        clearFileButtonEl.addEventListener('click', clearFile);
+        
+        sendAssignmentButtonEl.addEventListener('click', sendAssignment);
+        
+        addPointsButtonEl.addEventListener('click', addPoints);
+
+        saveCalendarButtonEl.addEventListener('click', saveCalendar);
+
+        profileMenuButton.addEventListener('click', toggleProfileDropdown);
+        document.addEventListener('click', handleOutsideClick);
+
+        logoutButtonEl.addEventListener('click', async () => {
+            try {
+                const response = await fetchAPI('/auth/logout', { method: 'POST' });
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                } else {
+                    toast('Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                toast('Network error during logout. Please try again.');
+            }
+        });
+
+        // Add a listener to the assignment form inputs to dynamically enable/disable the button
+        [studentSelectEl, assignmentTitleEl, assignmentDueDateEl, assignmentTextEl].forEach(element => {
+            element.addEventListener('input', toggleSendAssignmentButtonState);
+        });
+
+
+    const assignedTasksList = document.getElementById("assignedTasksList");
+     feedbackList = document.getElementById("feedbackList");
+
+    // --- Render Assigned Tasks ---
+    function renderAssignedTasks() {
+        assignedTasksList.innerHTML = ""; // clear
+        assignedTasks.forEach(task => {
+            const taskCard = document.createElement("div");
+            taskCard.className = "task-card p-4 bg-gray-50 rounded-lg mb-4";
+
+            taskCard.innerHTML = `
+                <p><strong>Assignment:</strong> ${task.title}</p>
+                <p><strong>Student:</strong> ${task.student}</p>
+                <p><strong>Submitted At:</strong> ${task.submittedAt}</p>
+
+                <form class="feedback-form mt-2" data-task-id="${task.id}">
+                    <label class="block font-semibold mb-1">Feedback Grade:</label>
+                    <input type="text" name="grade" class="w-full p-2 border border-gray-300 rounded mb-2" placeholder="e.g., 95">
+
+                    <label class="block font-semibold mb-1">Comments:</label>
+                    <textarea name="comments" class="w-full p-2 border border-gray-300 rounded mb-2" placeholder="Write feedback here..."></textarea>
+
+                    <label class="block font-semibold mb-1">Upload Feedback File (Optional):</label>
+                    <input type="file" name="feedbackFile" class="mb-2">
+
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Send Feedback</button>
+                </form>
+            `;
+            assignedTasksList.appendChild(taskCard);
+        });
+    }
+
+    // --- Handle Feedback Submission ---
+    assignedTasksList.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!e.target.classList.contains("feedback-form")) return;
+
+        const form = e.target;
+        const taskId = form.dataset.taskId;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(`/api/assignments/${taskId}/feedback`, {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) throw new Error("Failed to submit feedback");
+
+            const result = await response.json();
+
+            // Update Student Feedback Overview
+            const feedbackItem = document.createElement("div");
+            feedbackItem.className = "p-2 mb-2 border border-gray-200 rounded";
+            feedbackItem.innerHTML = `
+                <p><strong>${result.student}</strong> – ${result.assignment}</p>
+                <p><strong>Grade:</strong> ${result.grade}</p>
+                <p><strong>Comments:</strong> ${result.comments}</p>
+                ${result.feedbackFileUrl ? `<a href="${result.feedbackFileUrl}" target="_blank" class="text-blue-500 underline">View file</a>` : ""}
+            `;
+            feedbackList.prepend(feedbackItem);
+
+            form.reset();
+            alert("Feedback submitted successfully!");
+        } catch (err) {
+            console.error(err);
+            alert("Error submitting feedback. Check console.");
+        }
+    });
+
+    // --- Initialize ---
+    renderAssignedTasks();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completed Tasks</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optional: Add custom fonts or base styles here */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+
+    <main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8">Your Completed Tasks</h1>
+        
+        <!-- This container will be populated by JavaScript -->
+        <div id="completed-tasks-list" class="space-y-4">
+            <!-- Task items will be dynamically inserted here -->
+        </div>
+
+    </main>
+
+    <!-- Main JavaScript Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Hardcoded data mirroring the React Native code.
+            // In a real application, this would be fetched from an API.
+            const completedTasksData = [
+                { id: '1', title: 'Math Homework - Chapter 3', date: '2025-07-20' },
+                { id: '2', title: 'Science Project - Photosynthesis', date: '2025-07-18' },
+                { id: '3', title: 'English Essay - "My Summer"', date: '2025-07-15' },
+                { id: '4', title: 'History Quiz - WW2', date: '2025-07-10' },
+                { id: '5', title: 'Art Class - Still Life Drawing', date: '2025-07-08' },
+            ];
+
+            const taskListContainer = document.getElementById('completed-tasks-list');
+
+            /**
+             * Renders a single task item and appends it to the list.
+             * @param {object} item The task item object with title and date.
+             */
+            const renderTaskItem = (item) => {
+                const taskItemEl = document.createElement('div');
+                taskItemEl.classList.add(
+                    'bg-blue-50', 
+                    'p-4', 
+                    'rounded-lg', 
+                    'mb-3', 
+                    'border-l-4', 
+                    'border-blue-600', 
+                    'shadow-sm',
+                    'hover:shadow-md',
+                    'transition-shadow'
+                );
+
+                const titleEl = document.createElement('p');
+                titleEl.classList.add('text-lg', 'font-semibold', 'text-gray-700');
+                titleEl.textContent = item.title;
+
+                const dateEl = document.createElement('p');
+                dateEl.classList.add('text-sm', 'text-gray-500', 'mt-1');
+                dateEl.textContent = `Completed: ${item.date}`;
+
+                taskItemEl.appendChild(titleEl);
+                taskItemEl.appendChild(dateEl);
+
+                taskListContainer.appendChild(taskItemEl);
+            };
+
+            // Loop through the data and render each task
+            completedTasksData.forEach(renderTaskItem);
+        });
+    </script>
+
+</body>
+</html>

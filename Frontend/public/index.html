@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartStudentAct</title>
+    <!-- Use Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to match the React Native design */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* A light background color */
+        }
+
+        /* Replicate the background image behavior with CSS */
+        .background-image-container {
+            background-image: url("/images/bg.png");
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        /* Modal for alerts */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 80%;
+            text-align: center;
+        }
+        
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Modal for displaying messages, as per instructions to avoid alert() -->
+    <div id="alert-modal" class="modal">
+        <div class="modal-content shadow-lg">
+            <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
+            <p id="modal-message" class="mb-6"></p>
+            <button onclick="closeModal()" class="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">OK</button>
+        </div>
+    </div>
+
+    <div class="background-image-container flex-col p-4 md:p-8">
+        <div class="w-full max-w-2xl mx-auto space-y-6">
+
+            <!-- Header Section -->
+            <div class="bg-blue-500 bg-opacity-80 p-8 rounded-xl shadow-lg text-center">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-2" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">SmartStudentAct</h1>
+                <p class="text-lg md:text-xl text-white opacity-90" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Track your goals. Budget smart.</p>
+            </div>
+
+            <!-- Main Card Section -->
+            <div class="bg-white bg-opacity-90 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-3 text-gray-800">Welcome to SmartStudentAct 📚</h2>
+                <p class="text-gray-700 mb-4 leading-relaxed">
+                    SmartStudentAct is designed to help you manage your assignments, track your goals,
+                    control your budget, and earn exciting rewards based on your academic and financial achievements.
+                </p>
+                <p class="text-gray-700 leading-relaxed">
+                    Whether you're a student looking to stay organized or a teacher supporting your class,
+                    SmartStudentAct connects you with the right tools for smart success.
+                </p>
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mt-6 justify-center">
+                    <button id="signInBtn" class="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 transition-colors flex-1">
+                        🔐 Sign In
+                    </button>
+                    <button id="signUpBtn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-600 transition-colors flex-1">
+                        📝 Sign Up
+                    </button>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div class="bg-gray-100 bg-opacity-90 p-6 rounded-xl shadow-inner">
+                <h2 class="text-2xl font-bold mb-3 text-gray-800">About SmartStudentAct</h2>
+                <p class="text-gray-700 leading-relaxed">
+                    SmartStudentAct is a student-focused app designed to help you stay on top
+                    of your assignments, budget wisely, and track personal goals. Whether you're tracking due
+                    dates or saving up for your next big project, we’ve got your back.
+                </p>
+            </div>
+
+            <!-- Footer Section -->
+            <footer class="text-center text-gray-600 space-y-2 mt-8">
+                <p class="text-sm">
+                    © <span id="current-year"></span> SmartStudentAct | Built with 💙 for learners
+                </p>
+                <div class="flex justify-center space-x-6">
+                    <button id="aboutLink" class="text-blue-500 font-semibold hover:underline">About</button>
+                    <button id="contactLink" class="text-blue-500 font-semibold hover:underline">Contact</button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Get the current year and set it in the footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // Get elements for the custom alert modal
+        const alertModal = document.getElementById('alert-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        
+        // Function to show the custom alert modal
+        function showAlert(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            alertModal.style.display = 'flex';
+        }
+
+        // Function to close the custom alert modal
+        function closeModal() {
+            alertModal.style.display = 'none';
+        }
+
+        // Attach event listeners to the buttons
+        document.getElementById('signInBtn').addEventListener('click', () => {
+            // Replace useRouter push with a standard link
+            window.location.href = '/login.html'; // Using a hash for a single-page app feel
+        });
+
+        document.getElementById('signUpBtn').addEventListener('click', () => {
+            // Replace useRouter push with a standard link
+            window.location.href = '/signup.html';
+        });
+
+        document.getElementById('aboutLink').addEventListener('click', () => {
+            // Replace the alert() with the custom modal
+            showAlert('About', 'This is a placeholder for the About section. In a real app, this would navigate to an About page.');
+        });
+
+        document.getElementById('contactLink').addEventListener('click', () => {
+            // This replicates the Linking.openURL behavior for email
+            window.location.href = 'evansbuckman1@gmail.com';
+        });
+    </script>
+</body>
+</html>
+
+

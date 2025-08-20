@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Achievements</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Import the Inter font for a clean, modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+
+        /* Custom styles for the message modal */
+        #messageModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        /* Custom styles for the interactive form */
+        #addTreatForm {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        #newTreatInput {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            transition: border-color 0.2s ease-in-out;
+        }
+        #newTreatInput:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+        #addTreatBtn {
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        }
+        #addTreatBtn:hover {
+            transform: scale(1.02);
+        }
+        #addTreatBtn:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .highlight-box {
+            background-color: #dcfce7;
+            border-left: 6px solid #10b981;
+        }
+
+        .badge {
+            background-color: #e0f2fe;
+            color: #0c4a6e;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* Loading spinner styles */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="flex">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeMessageModal()">&times;</span>
+            <h2 id="modalTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
+            <p id="modalMessage" class="text-gray-700"></p>
+            <div class="flex justify-end mt-4">
+                <button onclick="closeMessageModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto space-y-8">
+        <!-- Back to Dashboard Link -->
+        <a href="#" onclick="history.back()" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors font-medium">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Back to Dashboard
+        </a>
+
+        <!-- Main Title -->
+        <h1 class="text-4xl font-extrabold text-gray-900 text-center">🏆 Your Achievements</h1>
+
+        <!-- Loading state -->
+        <div id="loading" class="flex justify-center items-center h-48">
+            <div class="spinner"></div>
+            <p class="ml-4 text-gray-600 font-semibold">Loading rewards...</p>
+        </div>
+
+        <!-- Main content container (hidden initially) -->
+        <div id="content" class="hidden space-y-8">
+            <!-- Weekly Motivation Section -->
+            <section class="bg-white p-6 rounded-xl shadow-lg highlight-box">
+                <p id="weeklyMessage" class="text-lg font-semibold text-gray-800 leading-relaxed"></p>
+            </section>
+
+            <!-- Achievement Badges Section -->
+            <section class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">🎖️ Achievement Badges</h2>
+                <div id="badgeContainer" class="flex flex-wrap gap-2">
+                    <!-- Badges will be rendered here by JS -->
+                </div>
+                <p id="noBadgesMessage" class="text-center italic text-gray-500 mt-4 hidden">No badges earned yet. Keep up the great work!</p>
+            </section>
+
+            <!-- Term / Consistency Rewards Section -->
+            <section class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">📚 Term Performance</h2>
+                <p id="termSummary" class="text-gray-700 leading-relaxed mb-4"></p>
+                <ul id="termRewardsList" class="list-none space-y-2">
+                    <!-- Term rewards will be rendered here by JS -->
+                </ul>
+            </section>
+
+            <!-- Suggested Treats Section -->
+            <section class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">🎁 Treat Suggestions</h2>
+                <ul id="treatSuggestionsList" class="list-none space-y-2 mb-4">
+                    <!-- Treat suggestions will be rendered here by JS -->
+                </ul>
+                
+                <form id="addTreatForm">
+                    <label for="newTreatInput" class="block text-gray-700 font-semibold mb-2">Add Your Own Treat Suggestion:</label>
+                    <div class="flex flex-col sm:flex-row gap-4 items-end">
+                        <input type="text" id="newTreatInput" class="flex-grow rounded-lg" placeholder="e.g., 'Go to the zoo' or 'Read a new book'" required>
+                        <button type="submit" id="addTreatBtn" class="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700">Add Suggestion</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // --- Mock API Call to Simulate Backend Fetch ---
+        /**
+         * Simulates an API call to a backend to get user reward data.
+         * @returns {Promise<Object>} A promise that resolves with the user data.
+         */
+        const fetchData = async () => {
+            // Replace this mock ID with the actual student ID from your user session
+            const studentId = 'some-unique-student-id'; 
+            const apiEndpoint = `/api/rewards/${studentId}`;
+
+            const response = await fetch(apiEndpoint);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        };
+
+        // --- Data from the original React Native component, adapted for JS ---
+        // Treat suggestions will now come from the backend. The form will add to this local array.
+        let treatSuggestions = [];
+
+        // --- DOM Elements ---
+        const loadingEl = document.getElementById('loading');
+        const contentEl = document.getElementById('content');
+        const weeklyMessageEl = document.getElementById('weeklyMessage');
+        const badgeContainerEl = document.getElementById('badgeContainer');
+        const noBadgesMessageEl = document.getElementById('noBadgesMessage');
+        const termSummaryEl = document.getElementById('termSummary');
+        const termRewardsListEl = document.getElementById('termRewardsList');
+        const treatSuggestionsListEl = document.getElementById('treatSuggestionsList');
+        const addTreatFormEl = document.getElementById('addTreatForm');
+        const newTreatInputEl = document.getElementById('newTreatInput');
+        
+        // Modal elements
+        const messageModal = document.getElementById('messageModal');
+        const modalTitleEl = document.getElementById('modalTitle');
+        const modalMessageEl = document.getElementById('modalMessage');
+
+        // --- Helper Functions ---
+        /**
+         * Sanitizes a string to prevent XSS attacks.
+         * @param {string} str The string to sanitize.
+         * @returns {string} The sanitized string.
+         */
+        function sanitize(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        /**
+         * Displays a custom message modal.
+         * @param {string} title The title of the modal.
+         * @param {string} message The message to display.
+         */
+        function showMessageModal(title, message) {
+            modalTitleEl.textContent = title;
+            modalMessageEl.textContent = message;
+            messageModal.style.display = 'flex';
+        }
+
+        /**
+         * Closes the message modal.
+         */
+        function closeMessageModal() {
+            messageModal.style.display = 'none';
+        }
+
+        // --- Render Functions ---
+
+        /**
+         * Renders the weekly motivation message based on data from the backend.
+         * @param {Object} userRewardsData The data object from the API.
+         */
+        function renderWeeklyMessage(userRewardsData) {
+            weeklyMessageEl.textContent = sanitize(userRewardsData.weeklyMessage);
+        }
+
+        /**
+         * Renders the achievement badges based on data from the backend.
+         * @param {Object} userRewardsData The data object from the API.
+         */
+        function renderBadges(userRewardsData) {
+            const badges = userRewardsData.badges;
+            if (badges.length > 0) {
+                badgeContainerEl.innerHTML = badges.map(badge => `
+                    <div class="badge rounded-full px-4 py-1 text-sm font-semibold shadow-sm">
+                        ${sanitize(badge)}
+                    </div>
+                `).join('');
+                noBadgesMessageEl.classList.add('hidden');
+            } else {
+                badgeContainerEl.innerHTML = '';
+                noBadgesMessageEl.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Renders the term rewards section based on data from the backend.
+         * @param {Object} userRewardsData The data object from the API.
+         */
+        function renderTermRewards(userRewardsData) {
+            termSummaryEl.textContent = sanitize(userRewardsData.termSummary);
+            const termRewards = userRewardsData.termRewards;
+
+            if (termRewards.length > 0) {
+                termRewardsListEl.innerHTML = termRewards.map(item => `
+                    <li class="flex items-center text-gray-700">
+                        <span class="mr-2">${sanitize(item.split(' ')[0])}</span>
+                        <span>${sanitize(item.substring(item.indexOf(' ') + 1))}</span>
+                    </li>
+                `).join('');
+            } else {
+                termRewardsListEl.innerHTML = `
+                    <li class="text-center italic text-gray-500">
+                        No term rewards unlocked yet. Keep working towards your goals!
+                    </li>
+                `;
+            }
+        }
+
+        /**
+         * Renders the treat suggestions list.
+         */
+        function renderTreatSuggestions() {
+            if (treatSuggestions.length > 0) {
+                treatSuggestionsListEl.innerHTML = treatSuggestions.map(treat => `
+                    <li class="flex items-center text-gray-700">
+                        <span class="mr-2">${sanitize(treat.split(' ')[0])}</span>
+                        <span>${sanitize(treat.substring(treat.indexOf(' ') + 1))}</span>
+                    </li>
+                `).join('');
+            } else {
+                treatSuggestionsListEl.innerHTML = `
+                    <li class="text-center italic text-gray-500">
+                        No treat suggestions yet. Add one!
+                    </li>
+                `;
+            }
+        }
+
+        // --- Event Handlers ---
+
+        /**
+         * Handles the form submission to add a new treat suggestion.
+         * @param {Event} event The form submission event.
+         */
+        function handleAddTreat(event) {
+            event.preventDefault();
+            const newTreat = newTreatInputEl.value.trim();
+            if (newTreat) {
+                treatSuggestions.push(newTreat);
+                renderTreatSuggestions();
+                newTreatInputEl.value = '';
+                showMessageModal('Success!', 'Your new treat suggestion has been added.');
+            } else {
+                showMessageModal('Oops!', 'Please enter a valid treat suggestion.');
+            }
+        }
+
+        // --- Initialization ---
+
+        /**
+         * Initializes the dashboard by fetching data and then rendering all sections.
+         */
+        async function initDashboard() {
+            loadingEl.classList.remove('hidden');
+            contentEl.classList.add('hidden');
+
+            try {
+                // Fetch data from the backend instead of using the mock function
+                const userRewardsData = await fetchData();
+                
+                // Set the initial treat suggestions from the backend data
+                treatSuggestions = userRewardsData.treatSuggestions || [];
+
+                renderWeeklyMessage(userRewardsData);
+                renderBadges(userRewardsData);
+                renderTermRewards(userRewardsData);
+                renderTreatSuggestions();
+                
+                loadingEl.classList.add('hidden');
+                contentEl.classList.remove('hidden');
+            } catch (error) {
+                loadingEl.classList.add('hidden');
+                contentEl.classList.add('hidden');
+                showMessageModal('Error', 'Failed to load user data. Please try again later.');
+                console.error('Error fetching data:', error);
+            }
+        }
+        
+        // Add event listeners
+        addTreatFormEl.addEventListener('submit', handleAddTreat);
+
+        // Run the initialization function when the page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
+
+
+

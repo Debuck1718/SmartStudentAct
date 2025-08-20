@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completed Assigned Tasks</title>
+    <!-- Use the Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Include Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main container matching the React Native component's structure -->
+    <div class="container bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full">
+
+        <!-- Header section -->
+        <h1 class="text-3xl font-bold text-gray-800 text-center mb-6">Completed Assigned Tasks</h1>
+
+        <!-- Container for the tasks, which will be populated by JavaScript -->
+        <div id="tasks-list" class="space-y-4">
+            <!-- Task items will be dynamically added here -->
+        </div>
+
+    </div>
+
+    <script>
+        // Define the data, just as it was in the React Native file
+        const assignedTasks = [
+            { id: 'a1', student: 'Alice Johnson', task: 'Algebra Worksheet', status: 'Completed', date: '2025-07-25' },
+            { id: 'a2', student: 'Bob Williams', task: 'History Report', status: 'Completed', date: '2025-07-22' },
+            { id: 'a3', student: 'Charlie Brown', task: 'Science Lab Report', status: 'Graded', date: '2025-07-20' },
+            { id: 'a4', student: 'Diana Prince', task: 'Geometry Test', status: 'Completed', date: '2025-07-19' },
+        ];
+
+        // Get the container element where tasks will be rendered
+        const tasksListContainer = document.getElementById('tasks-list');
+
+        /**
+         * Renders a single task item based on the provided task object.
+         * @param {Object} item The task data object.
+         * @returns {HTMLElement} The created HTML element for the task.
+         */
+        function createTaskItem(item) {
+            // Create a main div for the task item
+            const taskItemDiv = document.createElement('div');
+            taskItemDiv.className = 'bg-green-100 p-4 rounded-lg mb-2 border-l-4 border-green-500 shadow-sm';
+
+            // Create and append the task title
+            const taskTitle = document.createElement('p');
+            taskTitle.className = 'text-lg font-semibold text-gray-700';
+            taskTitle.textContent = item.task;
+            taskItemDiv.appendChild(taskTitle);
+
+            // Create and append student details
+            const studentDetails = document.createElement('p');
+            studentDetails.className = 'text-sm text-gray-600 mt-1';
+            studentDetails.textContent = `Student: ${item.student}`;
+            taskItemDiv.appendChild(studentDetails);
+
+            // Create and append status details
+            const statusDetails = document.createElement('p');
+            statusDetails.className = 'text-sm text-gray-600 mt-1';
+            statusDetails.textContent = `Status: ${item.status}`;
+            taskItemDiv.appendChild(statusDetails);
+
+            // Create and append date details
+            const dateDetails = document.createElement('p');
+            dateDetails.className = 'text-sm text-gray-600 mt-1';
+            dateDetails.textContent = `Date: ${item.date}`;
+            taskItemDiv.appendChild(dateDetails);
+
+            return taskItemDiv;
+        }
+
+        /**
+         * Renders all tasks in the assignedTasks array into the DOM.
+         */
+        function renderTasks() {
+            // Clear any existing content before rendering
+            tasksListContainer.innerHTML = '';
+
+            // Loop through the data and create an HTML element for each task
+            assignedTasks.forEach(task => {
+                const taskElement = createTaskItem(task);
+                tasksListContainer.appendChild(taskElement);
+            });
+        }
+
+        // Call the render function when the page loads
+        document.addEventListener('DOMContentLoaded', renderTasks);
+    </script>
+
+</body>
+</html>

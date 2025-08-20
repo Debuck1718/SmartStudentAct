@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher's Dashboard</title>
+    <!-- Use the Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Include Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main container matching the React Native component's structure -->
+    <div class="container bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full">
+
+        <!-- Header and Navigation -->
+        <header class="flex flex-col sm:flex-row justify-between items-center mb-6">
+            <h1 id="page-title" class="text-3xl font-bold text-gray-800 text-center sm:text-left mb-4 sm:mb-0">My Class
+                Students</h1>
+            <div class="flex space-x-2">
+                <button id="my-class-btn"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:bg-blue-700 transition duration-300">My
+                    Class</button>
+                <button id="other-students-btn"
+                    class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium shadow-md hover:bg-gray-300 transition duration-300">Other
+                    Students</button>
+            </div>
+        </header>
+
+        <!-- Container for the students, populated by JavaScript -->
+        <div id="content-area">
+            <!-- Loading, Error, or Student list will be dynamically added here -->
+        </div>
+
+    </div>
+
+    <script>
+        // Define the API endpoints
+        const API_ENDPOINTS = {
+            'my-class': '/teacher/students',
+            'other-students': '/teacher/students/other'
+        };
+
+        // Get DOM elements
+        const pageTitle = document.getElementById('page-title');
+        const contentArea = document.getElementById('content-area');
+        const myClassBtn = document.getElementById('my-class-btn');
+        const otherStudentsBtn = document.getElementById('other-students-btn');
+
+        // Initial view
+        let currentView = 'my-class';
+
+        /**
+         * Updates the UI to show a loading state.
+         * @param {string} viewName The name of the view being loaded.
+         */
+        function showLoading(viewName) {
+            const title = viewName === 'my-class' ? 'My Class' : 'Other Students';
+            pageTitle.textContent = `${title} Students`;
+            contentArea.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-t-4 border-gray-200 border-t-blue-500"></div>
+                    <p class="ml-4 text-gray-500 mt-4">Loading ${title.toLowerCase()} students...</p>
+                </div>
+            `;
+        }
+
+        /**
+         * Renders a single student card for the 'My Class' view.
+         * @param {Object} student The student data object.
+         * @returns {HTMLElement} The created HTML element for the student.
+         */
+        function createMyClassStudentCard(student) {
+            const studentItemDiv = document.createElement('div');
+            const borderColor = 'border-blue-500';
+            const bgColor = 'bg-blue-50';
+            studentItemDiv.className = `p-4 rounded-lg mb-2 border-l-4 ${borderColor} ${bgColor} shadow-sm flex items-center space-x-4`;
+
+            const imageUrl = student.imageUrl || `https://placehold.co/100x100/A0C4FF/ffffff?text=${student.firstname.charAt(0)}${student.lastname.charAt(0)}`;
+            studentItemDiv.innerHTML = `
+                <img class="h-16 w-16 rounded-full object-cover" src="${imageUrl}" alt="Profile picture of ${student.firstname} ${student.lastname}">
+                <div class="flex-1">
+                    <p class="text-lg font-semibold text-gray-700">${student.firstname} ${student.lastname}</p>
+                    <p class="text-sm text-gray-600 mt-1">Grade: ${student.grade}</p>
+                </div>
+            `;
+            return studentItemDiv;
+        }
+
+        /**
+         * Renders a single student card for the 'Other Students' view.
+         * @param {Object} student The student data object.
+         * @returns {HTMLElement} The created HTML element for the student.
+         */
+        function createOtherStudentCard(student) {
+            const studentItemDiv = document.createElement('div');
+            const imageUrl = student.imageUrl || `https://placehold.co/120x120/AEC6CF/ffffff?text=${student.firstname.charAt(0)}${student.lastname.charAt(0)}`;
+            studentItemDiv.className = `flex flex-col items-center bg-blue-50 p-6 rounded-lg border-t-4 border-blue-400 shadow-sm transition-transform transform hover:scale-105`;
+            studentItemDiv.innerHTML = `
+                <img 
+                    src="${imageUrl}" 
+                    alt="Profile picture of ${student.firstname} ${student.lastname}" 
+                    onerror="this.onerror=null; this.src='https://placehold.co/120x120/AEC6CF/ffffff?text=OS';"
+                    class="w-24 h-24 rounded-full mb-4 object-cover border-4 border-white shadow-md"
+                >
+                <div class="text-center">
+                    <p class="text-xl font-semibold text-gray-700">${student.firstname} ${student.lastname}</p>
+                    <p class="text-md text-gray-600">Grade: ${student.grade}</p>
+                </div>
+            `;
+            return studentItemDiv;
+        }
+
+        /**
+         * Fetches students from the backend and renders them based on the active view.
+         * @param {string} view The view to fetch ('my-class' or 'other-students').
+         */
+        async function fetchStudentsAndRender(view) {
+            showLoading(view);
+            const endpoint = API_ENDPOINTS[view];
+
+            try {
+                // Get the JWT token from client-side storage
+                const jwtToken = localStorage.getItem('jwtToken');
+
+                if (!jwtToken) {
+                    throw new Error('No authentication token found. Please log in.');
+                }
+
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const students = await response.json();
+
+                if (students.length === 0) {
+                    const message = view === 'my-class' ? 'No students found in your class.' : 'No other students found in your school.';
+                    contentArea.innerHTML = `
+                        <div class="text-center text-gray-500 py-12">
+                            <p class="text-lg font-semibold">${message}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Create a DocumentFragment to efficiently build the DOM
+                const fragment = document.createDocumentFragment();
+
+                if (view === 'other-students') {
+                    // Sort students alphabetically for the "other-students" view
+                    students.sort((a, b) => {
+                        const nameA = `${a.firstname} ${a.lastname}`.toLowerCase();
+                        const nameB = `${b.firstname} ${b.lastname}`.toLowerCase();
+                        return nameA.localeCompare(nameB);
+                    });
+
+                    // Wrap the grid in a container and append individual cards
+                    const gridContainer = document.createElement('div');
+                    gridContainer.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6';
+                    students.forEach(student => {
+                        gridContainer.appendChild(createOtherStudentCard(student));
+                    });
+                    fragment.appendChild(gridContainer);
+                } else { // 'my-class' view
+                    const listContainer = document.createElement('div');
+                    listContainer.className = 'space-y-4';
+                    students.forEach(student => {
+                        listContainer.appendChild(createMyClassStudentCard(student));
+                    });
+                    fragment.appendChild(listContainer);
+                }
+
+                // Clear the content area and append the new content
+                contentArea.innerHTML = '';
+                contentArea.appendChild(fragment);
+
+            } catch (error) {
+                console.error('Failed to fetch students:', error);
+                contentArea.innerHTML = `
+                    <div class="text-center text-red-500 py-12">
+                        <p class="font-bold">Error:</p>
+                        <p>${error.message}</p>
+                        <p>Could not load student list. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Event listener for the "My Class" button.
+         */
+        myClassBtn.addEventListener('click', () => {
+            currentView = 'my-class';
+            fetchStudentsAndRender(currentView);
+            myClassBtn.classList.remove('bg-gray-200', 'text-gray-800');
+            myClassBtn.classList.add('bg-blue-600', 'text-white');
+            otherStudentsBtn.classList.remove('bg-blue-600', 'text-white');
+            otherStudentsBtn.classList.add('bg-gray-200', 'text-gray-800');
+        });
+
+        /**
+         * Event listener for the "Other Students" button.
+         */
+        otherStudentsBtn.addEventListener('click', () => {
+            currentView = 'other-students';
+            fetchStudentsAndRender(currentView);
+            otherStudentsBtn.classList.remove('bg-gray-200', 'text-gray-800');
+            otherStudentsBtn.classList.add('bg-blue-600', 'text-white');
+            myClassBtn.classList.remove('bg-blue-600', 'text-white');
+            myClassBtn.classList.add('bg-gray-200', 'text-gray-800');
+        });
+
+        // Initial fetch when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchStudentsAndRender(currentView);
+        });
+    </script>
+</body>
+
+</html>

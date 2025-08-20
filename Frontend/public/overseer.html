@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overseer Dashboard</title>
+    <!-- Tailwind CSS for modern, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to match the React Native component's look */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #f5f7fa;
+        }
+
+        .spinner {
+            border-top-color: #007bff;
+            -webkit-animation: spinner 1s linear infinite;
+            animation: spinner 1s linear infinite;
+        }
+
+        @-webkit-keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+    <!-- Ionicons for the icons, just like in the React Native version -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- The main container for the dashboard -->
+    <div class="max-w-4xl mx-auto p-6 lg:p-10">
+
+        <!-- Loading state container -->
+        <div id="loading-container" class="flex flex-col items-center justify-center min-h-screen">
+            <div class="spinner w-12 h-12 border-4 rounded-full border-gray-200"></div>
+            <p class="mt-4 text-lg font-medium text-gray-600">Loading Overseer Dashboard...</p>
+        </div>
+
+        <!-- Dashboard content container (hidden by default) -->
+        <div id="dashboard-content" class="hidden">
+            <!-- Header section -->
+            <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
+                <div class="flex items-center space-x-2">
+                    <!-- Profile and Settings buttons, currently for display -->
+                    <button id="profile-btn" class="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <ion-icon name="person-circle-outline" class="text-3xl text-gray-700"></ion-icon>
+                    </button>
+                    <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <ion-icon name="settings-outline" class="text-3xl text-gray-700"></ion-icon>
+                    </button>
+                </div>
+                <h1 class="text-2xl font-bold text-center text-gray-800 flex-1">Overseer Dashboard</h1>
+                <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition-colors">
+                    Logout
+                </button>
+            </div>
+
+            <!-- Dashboard sections -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-700 pb-2 border-b border-gray-100 mb-4">Your Regions</h2>
+                <div id="regions-container">
+                    <!-- Dynamic region cards will be inserted here by JavaScript -->
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-700 pb-2 border-b border-gray-100 mb-4">Management</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button id="manage-schools-btn" class="flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-colors">
+                        <ion-icon name="map-outline" class="text-2xl"></ion-icon>
+                        <span>Manage Schools & Regions</span>
+                    </button>
+                    <button id="manage-admins-btn" class="flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition-colors">
+                        <ion-icon name="people-outline" class="text-2xl"></ion-icon>
+                        <span>Manage School Admins</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Modal for Alerts/Confirmations -->
+    <div id="custom-modal" class="hidden fixed inset-0 z-50 overflow-y-auto flex items-center justify-center modal-overlay">
+        <div class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-sm w-full">
+            <div class="text-center">
+                <h3 id="modal-title" class="text-lg leading-6 font-medium text-gray-900 mb-2"></h3>
+                <div class="mt-2">
+                    <p id="modal-message" class="text-sm text-gray-500"></p>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse space-x-2 space-x-reverse">
+                <button id="modal-confirm-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Logout
+                </button>
+                <button id="modal-cancel-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Base URL for API calls. In a real environment, this would be the backend server address.
+            const API_URL = 'http://172.20.10.10:4000/api'; // Assuming the SmartStudent API is at this address
+
+            // Element references
+            const loadingContainer = document.getElementById('loading-container');
+            const dashboardContent = document.getElementById('dashboard-content');
+            const regionsContainer = document.getElementById('regions-container');
+            const logoutBtn = document.getElementById('logout-btn');
+            const manageSchoolsBtn = document.getElementById('manage-schools-btn');
+            const manageAdminsBtn = document.getElementById('manage-admins-btn');
+
+            // Custom modal element references
+            const customModal = document.getElementById('custom-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            
+            /**
+             * Shows a custom modal for user confirmation.
+             * @param {string} title The title for the modal.
+             * @param {string} message The message to display.
+             * @param {Function} onConfirm Callback to execute on confirmation.
+             */
+            const showCustomModal = (title, message, onConfirm) => {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                customModal.classList.remove('hidden');
+
+                // Clear previous event listeners
+                modalConfirmBtn.onclick = null;
+                modalCancelBtn.onclick = null;
+
+                // Add new listeners
+                modalConfirmBtn.onclick = () => {
+                    customModal.classList.add('hidden');
+                    onConfirm();
+                };
+                modalCancelBtn.onclick = () => {
+                    customModal.classList.add('hidden');
+                };
+            };
+
+
+            /**
+             * Handles the fetching and display of dashboard data from the API.
+             * API: GET /api/v3/overseer/dashboard
+             * Assumes the backend returns a JSON object with a 'managedRegions' array.
+             */
+            const fetchDashboardData = async () => {
+                loadingContainer.classList.remove('hidden');
+                dashboardContent.classList.add('hidden');
+                
+                try {
+                    // This is a hypothetical API endpoint based on the frontend's needs.
+                    // The backend would need to implement a route like:
+                    // router.get('/overseer/dashboard', authenticateJWT, hasRole('overseer'), async (req, res) => { ... });
+                    const token = localStorage.getItem('authToken'); // Get the auth token from local storage
+                    const response = await fetch(`${API_URL}/overseer/dashboard`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}` // Attach the JWT for authentication
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    renderRegions(data.managedRegions);
+
+                } catch (error) {
+                    console.error('Error fetching dashboard data:', error);
+                    regionsContainer.innerHTML = `<p class="text-center text-red-500 italic py-4">Failed to load data. Please try again later.</p>`;
+                } finally {
+                    loadingContainer.classList.add('hidden');
+                    dashboardContent.classList.remove('hidden');
+                }
+            };
+
+            /**
+             * Renders the region overview cards based on the fetched data.
+             * @param {Array} regions - An array of region objects from the API.
+             */
+            const renderRegions = (regions) => {
+                regionsContainer.innerHTML = ''; // Clear existing content
+                if (!regions || regions.length === 0) {
+                    regionsContainer.innerHTML = `<p class="text-center text-gray-500 italic py-4">No regions assigned to you yet.</p>`;
+                } else {
+                    regions.forEach(region => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-gray-100 p-4 rounded-lg mb-3 shadow-sm';
+                        card.innerHTML = `
+                            <p class="text-base text-gray-700 font-semibold mb-1">Region: ${region.name}</p>
+                            <p class="text-sm text-gray-600">Schools in Region: ${region.totalSchools || 0}</p>
+                            <p class="text-sm text-gray-600">Admins in Region: ${region.totalAdmins || 0}</p>
+                        `;
+                        regionsContainer.appendChild(card);
+                    });
+                }
+            };
+
+            /**
+             * Handles the logout process with a custom confirmation modal.
+             * Clears the authentication token and redirects.
+             */
+            const handleLogout = () => {
+                showCustomModal('Confirm Logout', 'Are you sure you want to log out?', () => {
+                    localStorage.removeItem('authToken'); // Clear the token
+                    // Redirect to the login page.
+                    window.location.href = '/login.html'; 
+                });
+            };
+
+            /**
+             * Handles navigation to the school and region management page.
+             * This would be a separate HTML file in a complete application.
+             */
+            const handleManageSchoolsAndRegions = () => {
+                // In a real app, this would redirect or render a new component.
+                // For now, we'll just log the action and simulate navigation.
+                console.log('Navigating to School & Region Management...');
+                // window.location.href = '/manage-schools.html';
+            };
+
+            /**
+             * Handles navigation to the school admin management page.
+             * This would be a separate HTML file.
+             */
+            const handleManageAdmins = () => {
+                // In a real app, this would redirect or render a new component.
+                console.log('Navigating to School Admin Management...');
+                // window.location.href = '/manage-admins.html';
+            };
+
+            // Add event listeners for buttons
+            logoutBtn.addEventListener('click', handleLogout);
+            manageSchoolsBtn.addEventListener('click', handleManageSchoolsAndRegions);
+            manageAdminsBtn.addEventListener('click', handleManageAdmins);
+
+            // Fetch and display data when the page loads
+            fetchDashboardData();
+        });
+    </script>
+
+</body>
+</html>
