@@ -11,7 +11,7 @@ const logger = require('../utils/logger');
 const webpush = require('web-push');
 const jwt = require('jsonwebtoken');
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const { sendEmail } = require('../utils/mailer'); // ✅ Corrected import for your mailer.js file
+const { sendEmail } = require('../utils/mailer');
 
 // Import your middlewares
 const { authenticateJWT, hasRole } = require('../middlewares/auth');
@@ -20,7 +20,6 @@ const checkSubscription = require('../middlewares/checkSubscription');
 const validate = (schema) => (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
     if (error) {
-        // Return a 400 Bad Request with validation error details
         return res.status(400).json({
             message: 'Validation failed',
             errors: error.details.map(d => d.message)
@@ -33,8 +32,8 @@ const validate = (schema) => (req, res, next) => {
 const advancedGoalsRouter = require('./advancedGoals');
 const essayRouter = require('./essay');
 const budgetRouter = require('./budget');
-const schoolRouter = require('./schoolRoutes'); // 🆕 Import the school router
-const uploadRouter = require('./uploadRoutes'); // 🆕 Import the upload router
+const schoolRouter = require('./schoolRoutes');
+const uploadRouter = require('./uploadRoutes');
 
 // --- Models ---
 const User = require('../models/User');
@@ -51,11 +50,7 @@ const { getUserPrice } = require('../services/pricingService');
 const { initFlutterwavePayment } = require('../services/flutterwaveService');
 const { initPaystackPayment } = require('../services/paystackService');
 
-
-/**
- * SMS Helper
- */
-// NOTE: You'll need to make sure `smsApi` is properly imported and configured
+// Your helper functions (sendSMS, sendPushToUser, notifyUser) here...
 async function sendSMS(phone, message) {
     if (!phone) return;
     const recipient = phone.startsWith('+') ? phone : `+${phone}`;
@@ -71,9 +66,6 @@ async function sendSMS(phone, message) {
     }
 }
 
-/**
- * Push Helper
- */
 async function sendPushToUser(userId, payload) {
     const sub = await PushSub.findOne({ user_id: userId });
     if (sub && sub.subscription) {
@@ -85,9 +77,6 @@ async function sendPushToUser(userId, payload) {
     }
 }
 
-/**
- * Combined Push + SMS
- */
 async function notifyUser(userId, title, message, url) {
     const user = await User.findById(userId).select('phone');
     await sendPushToUser(userId, { title, body: message, url });
@@ -95,24 +84,23 @@ async function notifyUser(userId, title, message, url) {
 }
 
 /* ──────────── MAIN ROUTER FUNCTION ──────────── */
-// ✅ This function receives the 'cloudinary' object from server.js
 module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinary) {
 
-    // ✅ Create an Express Router
-    const router = express.Router();
+    // ✅ Create two separate routers
+    const publicRouter = express.Router();
+    const protectedRouter = express.Router();
 
-// --- MULTER STORAGE SETUP ---
-    // This is the local disk storage setup
+    // --- MULTER STORAGE SETUP ---
+    // ... Your multer storage and file system logic remains the same ...
     const localDiskStorage = multer.diskStorage({
         destination: (req, _file, cb) => {
-            // Determine destination based on the route
             let dest;
             if (req.path.includes('/teacher/assignments')) {
                 dest = path.join(__dirname, 'uploads', 'assignments');
             } else if (req.path.includes('/student/submissions')) {
                 dest = path.join(__dirname, 'uploads', 'submissions');
             } else {
-                dest = path.join(__dirname, 'uploads', 'other'); // A generic fallback
+                dest = path.join(__dirname, 'uploads', 'other');
             }
             cb(null, dest);
         },
@@ -120,17 +108,15 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
             cb(null, Date.now() + '-' + crypto.randomBytes(4).toString('hex') + path.extname(file.originalname).toLowerCase())
     });
 
-    // This is the Cloudinary storage setup for a generic upload route
     const cloudinaryStorage = new CloudinaryStorage({
         cloudinary: cloudinary,
         params: {
-            folder: "smartstudent-uploads", // A dedicated folder for these uploads
+            folder: "smartstudent-uploads",
             allowed_formats: ["jpg", "png", "jpeg", "webp", "gif"],
             transformation: [{ width: 800, crop: "scale" }],
         },
     });
 
-    // This is a special Cloudinary storage for profile pictures
     const profilePictureStorage = new CloudinaryStorage({
         cloudinary: cloudinary,
         params: {
@@ -139,7 +125,6 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         },
     });
 
-    // Check and create local upload directories
     const dirs = {
         assignments: path.join(__dirname, 'uploads', 'assignments'),
         submissions: path.join(__dirname, 'uploads', 'submissions'),
@@ -155,10 +140,9 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         }
     });
 
-    // We'll create a single `upload` middleware factory that chooses the storage
     const createUploadMiddleware = (storageEngine) => multer({
         storage: storageEngine,
-        limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+        limits: { fileSize: 10 * 1024 * 1024 },
         fileFilter: (_req, file, cb) => {
             const allowedExtensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.webp', '.gif'];
             const fileExtension = path.extname(file.originalname).toLowerCase();
@@ -169,181 +153,13 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         }
     });
 
-    // ✅ Define the multer instances here, so they are available to all routes
     const localUpload = createUploadMiddleware(localDiskStorage);
     const cloudinaryUpload = createUploadMiddleware(cloudinaryStorage);
     const profileUpload = multer({ storage: profilePictureStorage });
 
 
-    // ✅ NOTE: Mount your sub-routers
-    app.use('/api/rewards', advancedGoalsRouter);
-    app.use('/api/budget', budgetRouter);
-    app.use('/api/essay', essayRouter);
-    app.use('/api/schools', schoolRouter); // 🆕 Use the school router
-    app.use('/api/uploads', uploadRouter); // 🆕 Use the upload router
-
-    router.use(authenticateJWT, checkSubscription);
-
-    // --- New Cloudinary Upload Endpoint ---
-    // This route uses the 'cloudinaryUpload' middleware
-    router.post("/upload/cloudinary", cloudinaryUpload.single("image"), (req, res) => {
-        try {
-            if (!req.file) {
-                return res.status(400).json({ success: false, message: "No file was uploaded." });
-            }
-            res.status(200).json({
-                success: true,
-                message: "Image uploaded successfully!",
-                imageUrl: req.file.path,
-                publicId: req.file.filename,
-            });
-        } catch (error) {
-            console.error("❌ Cloudinary upload error:", error);
-            res.status(500).json({ success: false, message: "Failed to upload image." });
-        }
-    });
-
-    // --- Your existing local upload endpoint, now using 'localUpload' ---
-    router.post("/upload/local", localUpload.single("file"), (req, res) => {
-        try {
-            if (!req.file) {
-                return res.status(400).json({ success: false, message: "No file was uploaded." });
-            }
-            res.status(200).json({
-                success: true,
-                message: "File uploaded locally!",
-                filePath: req.file.path,
-                fileName: req.file.filename,
-            });
-        } catch (error) {
-            console.error("❌ Local upload error:", error);
-            res.status(500).json({ success: false, message: "Failed to upload file." });
-        }
-    });
-
-    // 🆕 New route to securely serve student submissions
-    router.get('/student/submissions/:filename', authenticateJWT, hasRole('student', 'teacher', 'admin', 'global_overseer'), async (req, res) => {
-        try {
-            const { filename } = req.params;
-            const filePath = path.join(dirs.submissions, filename);
-            const userId = req.user.id;
-            const userRole = req.user.role;
-
-            // Check if the file exists
-            await fs.access(filePath);
-
-            // Authorization logic
-            let isAuthorized = false;
-            if (userRole === 'global_overseer' || userRole === 'admin') {
-                isAuthorized = true; // Admins and overseers have blanket access
-            } else {
-                // Find the submission record to check ownership
-                const submission = await Submission.findOne({ submission_file: `/uploads/submissions/${filename}` }).populate('user_id');
-                if (submission) {
-                    if (userRole === 'student' && submission.user_id._id.toString() === userId) {
-                        isAuthorized = true; // The student can view their own submission
-                    } else if (userRole === 'teacher' && submission.user_id.schoolName === req.user.schoolName && submission.user_id.grade === req.user.grade) {
-                        isAuthorized = true; // The teacher can view their students' submissions
-                    }
-                }
-            }
-
-            if (isAuthorized) {
-                res.sendFile(filePath);
-            } else {
-                res.status(403).json({ message: 'Forbidden. You do not have permission to view this file.' });
-            }
-        } catch (error) {
-            logger.error('Error serving student submission file:', error);
-            if (error.code === 'ENOENT') {
-                res.status(404).json({ message: 'File not found.' });
-            } else {
-                res.status(500).json({ message: 'Server error occurred while retrieving file.' });
-            }
-        }
-    });
-
-    // 🆕 New route to securely serve teacher-assigned files
-    router.get('/teacher/assignments/:filename', authenticateJWT, hasRole('student', 'teacher', 'admin', 'global_overseer'), async (req, res) => {
-        try {
-            const { filename } = req.params;
-            const filePath = path.join(dirs.assignments, filename);
-            const userId = req.user.id;
-            const userRole = req.user.role;
-
-            await fs.access(filePath);
-
-            let isAuthorized = false;
-            if (userRole === 'global_overseer' || userRole === 'admin') {
-                isAuthorized = true;
-            } else {
-                const assignment = await Assignment.findOne({ attachment_file: `/uploads/assignments/${filename}` });
-                if (assignment) {
-                    if (userRole === 'teacher' && assignment.created_by.toString() === userId) {
-                        isAuthorized = true; // The teacher can view their own assignment files
-                    } else if (userRole === 'student' && assignment.assigned_to_users.includes(req.user.email)) {
-                        isAuthorized = true; // The student can view files assigned to them
-                    }
-                }
-            }
-
-            if (isAuthorized) {
-                res.sendFile(filePath);
-            } else {
-                res.status(403).json({ message: 'Forbidden. You do not have permission to view this file.' });
-            }
-        } catch (error) {
-            logger.error('Error serving assignment file:', error);
-            if (error.code === 'ENOENT') {
-                res.status(404).json({ message: 'File not found.' });
-            } else {
-                res.status(500).json({ message: 'Server error occurred while retrieving file.' });
-            }
-        }
-    });
-
-    // 🆕 New route for securely serving feedback files
-    router.get('/teacher/feedback/:filename', authenticateJWT, hasRole('student', 'teacher', 'admin', 'global_overseer'), async (req, res) => {
-        try {
-            const { filename } = req.params;
-            const filePath = path.join(dirs.feedback, filename);
-            const userId = req.user.id;
-            const userRole = req.user.role;
-
-            await fs.access(filePath);
-
-            let isAuthorized = false;
-            if (userRole === 'global_overseer' || userRole === 'admin') {
-                isAuthorized = true;
-            } else {
-                const submission = await Submission.findOne({ feedback_file: `/uploads/feedback/${filename}` });
-                if (submission) {
-                    if (userRole === 'teacher') {
-                        const assignment = await Assignment.findById(submission.assignment_id);
-                        if (assignment && assignment.created_by.toString() === userId) {
-                            isAuthorized = true;
-                        }
-                    } else if (userRole === 'student' && submission.user_id.toString() === userId) {
-                        isAuthorized = true; // Student can view feedback for their submission
-                    }
-                }
-            }
-            if (isAuthorized) {
-                res.sendFile(filePath);
-            } else {
-                res.status(403).json({ message: 'Forbidden. You do not have permission to view this file.' });
-            }
-        } catch (error) {
-            logger.error('Error serving feedback file:', error);
-            if (error.code === 'ENOENT') {
-                res.status(404).json({ message: 'File not found.' });
-            } else {
-                res.status(500).json({ message: 'Server error occurred while retrieving file.' });
-            }
-        }
-    });
-
-    /* ──────────── Joi Schemas ──────────── */
+    // --- Joi Schemas (remain unchanged) ---
+    // ... all your Joi schemas here ...
     const signupOtpSchema = Joi.object({
         phone: Joi.string().pattern(/^\d{10,15}$/).required(),
         email: Joi.string().email().required(),
@@ -401,9 +217,6 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         promote: Joi.boolean().required()
     });
 
-    // NOTE: The Joi schemas for goals and budget have been moved
-    // to their respective sub-router files to reduce code duplication.
-
     const teacherAssignmentSchema = Joi.object({
         title: Joi.string().required(),
         description: Joi.string().allow('', null),
@@ -433,13 +246,11 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         tier: Joi.number().integer().min(1).required(),
     });
 
-    // ✅ New Joi Schema for assigning a region to an Overseer
     const assignRegionSchema = Joi.object({
         overseerEmail: Joi.string().email().required(),
         region: Joi.string().required()
     });
 
-    // ✅ New Joi Schema for the academic calendar
     const academicCalendarSchema = Joi.object({
         schoolName: Joi.string().required(),
         academicYear: Joi.string().required(),
@@ -450,7 +261,6 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         })).min(1).required()
     });
 
-    // ✅ New Joi Schema for the user settings update
     const settingsSchema = Joi.object({
         firstname: Joi.string().min(2).max(50).optional(),
         lastname: Joi.string().min(2).max(50).optional(),
@@ -467,14 +277,14 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         schoolCountry: Joi.string().length(2).optional(),
     }).min(1).unknown(true);
 
-    // ✅ New Joi Schema for password update
     const passwordUpdateSchema = Joi.object({
         currentPassword: Joi.string().required(),
         newPassword: Joi.string().min(8).required()
     });
 
-    /* ──────────── Auth Routes ──────────── */
-    router.post('/users/signup-otp',
+    /* ──────────── Public Auth Routes ──────────── */
+    // These routes will NOT have authentication or subscription middleware applied
+    publicRouter.post('/users/signup-otp',
         rateLimit({ windowMs: 5 * 60 * 1000, max: 3 }),
         validate(signupOtpSchema),
         (req, res) => {
@@ -485,7 +295,7 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
             req.session.signup = { ...req.body, code, timestamp: Date.now() };
             logger.debug('[OTP] Generated OTP for %s: %s', phone, code);
 
-            sendEmail( // ✅ Corrected function name
+            sendEmail(
                 email,
                 'Your SmartStudentAct OTP Code',
                 `<p>Hello ${firstname},</p><p>Your OTP code is: <strong>${code}</strong></p><p>This code will expire in 10 minutes.</p>`
@@ -495,7 +305,7 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         }
     );
 
-    router.post('/users/verify-otp', validate(verifyOtpSchema), async (req, res) => {
+    publicRouter.post('/users/verify-otp', validate(verifyOtpSchema), async (req, res) => {
         const { code, email } = req.body;
         const signupData = req.session?.signup;
 
@@ -525,7 +335,7 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
             });
 
             delete req.session.signup;
-            sendEmail( // ✅ Corrected function name
+            sendEmail(
                 newUser.email,
                 'Welcome to SmartStudentAct!',
                 `<p>Hi ${newUser.firstname},</p><p>Welcome aboard! Your account has been created successfully. Your 30-day free trial has begun.</p><p>Start exploring our platform today.</p>`
@@ -541,7 +351,7 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         }
     });
 
-    router.post('/users/login', validate(loginSchema), async (req, res) => {
+    publicRouter.post('/users/login', validate(loginSchema), async (req, res) => {
         const { email, password } = req.body;
 
         const u = await User.findOne({ email }).select('+password +role +is_on_trial +subscription_status');
@@ -593,80 +403,221 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         });
     });
 
-    /**
-     * @route POST /auth/forgot-password
-     * @desc Sends a password reset link to the user's email
-     * @access Public
-     */
-    router.post('/auth/forgot-password', validate(forgotPasswordSchema), async (req, res) => {
+    publicRouter.post('/auth/forgot-password', validate(forgotPasswordSchema), async (req, res) => {
+        // ... your forgot password logic remains the same ...
         try {
             const { email } = req.body;
             const user = await User.findOne({ email });
 
-            // We send a success message even if the user isn't found to prevent email enumeration attacks
             if (!user) {
                 return res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
             }
 
-            // Generate a secure token
             const token = crypto.randomBytes(32).toString('hex');
-            const resetTokenExpiry = Date.now() + 3600000; // 1 hour
-
-            // Save the token and its expiration to the user's document
+            const resetTokenExpiry = Date.now() + 3600000;
             user.reset_password_token = token;
             user.reset_password_expires = resetTokenExpiry;
             await user.save();
-
-            // Create the reset link
             const resetLink = `${req.protocol}://${req.get('host')}/reset-password.html?token=${token}`;
-
-            // Send the email
-            sendEmail( // ✅ Corrected function name
+            sendEmail(
                 user.email,
                 'Password Reset Request',
                 `<p>Hello,</p><p>You are receiving this because you have requested the reset of the password for your account.</p><p>Please click on the following link, or paste this into your browser to complete the process:</p><p><a href="${resetLink}">Reset Password</a></p><p>If you did not request this, please ignore this email and your password will remain unchanged.</p>`
             );
-
             res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
-
         } catch (error) {
             logger.error('Forgot password error:', error);
             res.status(500).json({ message: 'Server error' });
         }
     });
-    
-    /**
-     * @route POST /auth/reset-password
-     * @desc Resets the user's password using a valid token
-     * @access Public
-     */
-    router.post('/auth/reset-password', validate(resetPasswordSchema), async (req, res) => {
+
+    publicRouter.post('/auth/reset-password', validate(resetPasswordSchema), async (req, res) => {
+        // ... your reset password logic remains the same ...
         try {
             const { token, newPassword } = req.body;
-
-            // Find the user with the given token and that the token is not expired
             const user = await User.findOne({
                 reset_password_token: token,
                 reset_password_expires: { $gt: Date.now() },
             });
-
             if (!user) {
                 return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
             }
-
-            // Hash the new password and save it
             user.password = await bcrypt.hash(newPassword, 10);
-            user.reset_password_token = undefined; // Clear the token
-            user.reset_password_expires = undefined; // Clear the expiration
+            user.reset_password_token = undefined;
+            user.reset_password_expires = undefined;
             await user.save();
-
             res.status(200).json({ message: 'Password has been successfully reset.' });
-
         } catch (error) {
             logger.error('Reset password error:', error);
             res.status(500).json({ message: 'Server error' });
         }
     });
+
+    /* ──────────── Protected Routes ──────────── */
+    // ✅ This applies the middlewares to all routes defined on protectedRouter
+    protectedRouter.use(authenticateJWT, checkSubscription);
+
+    // --- New Cloudinary Upload Endpoint ---
+    protectedRouter.post("/upload/cloudinary", cloudinaryUpload.single("image"), (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({ success: false, message: "No file was uploaded." });
+            }
+            res.status(200).json({
+                success: true,
+                message: "Image uploaded successfully!",
+                imageUrl: req.file.path,
+                publicId: req.file.filename,
+            });
+        } catch (error) {
+            console.error("❌ Cloudinary upload error:", error);
+            res.status(500).json({ success: false, message: "Failed to upload image." });
+        }
+    });
+
+    // --- Your existing local upload endpoint, now using 'localUpload' ---
+    protectedRouter.post("/upload/local", localUpload.single("file"), (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({ success: false, message: "No file was uploaded." });
+            }
+            res.status(200).json({
+                success: true,
+                message: "File uploaded locally!",
+                filePath: req.file.path,
+                fileName: req.file.filename,
+            });
+        } catch (error) {
+            console.error("❌ Local upload error:", error);
+            res.status(500).json({ success: false, message: "Failed to upload file." });
+        }
+    });
+
+    // 🆕 New route to securely serve student submissions
+    protectedRouter.get('/student/submissions/:filename', hasRole('student', 'teacher', 'admin', 'global_overseer'), async (req, res) => {
+        // ... your file serving logic
+        try {
+            const { filename } = req.params;
+            const filePath = path.join(dirs.submissions, filename);
+            const userId = req.user.id;
+            const userRole = req.user.role;
+            await fs.access(filePath);
+            let isAuthorized = false;
+            if (userRole === 'global_overseer' || userRole === 'admin') {
+                isAuthorized = true;
+            } else {
+                const submission = await Submission.findOne({ submission_file: `/uploads/submissions/${filename}` }).populate('user_id');
+                if (submission) {
+                    if (userRole === 'student' && submission.user_id._id.toString() === userId) {
+                        isAuthorized = true;
+                    } else if (userRole === 'teacher' && submission.user_id.schoolName === req.user.schoolName && submission.user_id.grade === req.user.grade) {
+                        isAuthorized = true;
+                    }
+                }
+            }
+            if (isAuthorized) {
+                res.sendFile(filePath);
+            } else {
+                res.status(403).json({ message: 'Forbidden. You do not have permission to view this file.' });
+            }
+        } catch (error) {
+            logger.error('Error serving student submission file:', error);
+            if (error.code === 'ENOENT') {
+                res.status(404).json({ message: 'File not found.' });
+            } else {
+                res.status(500).json({ message: 'Server error occurred while retrieving file.' });
+            }
+        }
+    });
+
+    // ... All other protected routes follow the same pattern on protectedRouter ...
+    protectedRouter.get('/teacher/assignments/:filename', hasRole('student', 'teacher', 'admin', 'global_overseer'), async (req, res) => {
+        try {
+            const { filename } = req.params;
+            const filePath = path.join(dirs.assignments, filename);
+            const userId = req.user.id;
+            const userRole = req.user.role;
+            await fs.access(filePath);
+            let isAuthorized = false;
+            if (userRole === 'global_overseer' || userRole === 'admin') {
+                isAuthorized = true;
+            } else {
+                const assignment = await Assignment.findOne({ attachment_file: `/uploads/assignments/${filename}` });
+                if (assignment) {
+                    if (userRole === 'teacher' && assignment.created_by.toString() === userId) {
+                        isAuthorized = true;
+                    } else if (userRole === 'student' && assignment.assigned_to_users.includes(req.user.email)) {
+                        isAuthorized = true;
+                    }
+                }
+            }
+            if (isAuthorized) {
+                res.sendFile(filePath);
+            } else {
+                res.status(403).json({ message: 'Forbidden. You do not have permission to view this file.' });
+            }
+        } catch (error) {
+            logger.error('Error serving assignment file:', error);
+            if (error.code === 'ENOENT') {
+                res.status(404).json({ message: 'File not found.' });
+            } else {
+                res.status(500).json({ message: 'Server error occurred while retrieving file.' });
+            }
+        }
+    });
+
+    protectedRouter.get('/teacher/feedback/:filename', hasRole('student', 'teacher', 'admin', 'global_overseer'), async (req, res) => {
+        try {
+            const { filename } = req.params;
+            const filePath = path.join(dirs.feedback, filename);
+            const userId = req.user.id;
+            const userRole = req.user.role;
+            await fs.access(filePath);
+            let isAuthorized = false;
+            if (userRole === 'global_overseer' || userRole === 'admin') {
+                isAuthorized = true;
+            } else {
+                const submission = await Submission.findOne({ feedback_file: `/uploads/feedback/${filename}` });
+                if (submission) {
+                    if (userRole === 'teacher') {
+                        const assignment = await Assignment.findById(submission.assignment_id);
+                        if (assignment && assignment.created_by.toString() === userId) {
+                            isAuthorized = true;
+                        }
+                    } else if (userRole === 'student' && submission.user_id.toString() === userId) {
+                        isAuthorized = true;
+                    }
+                }
+            }
+            if (isAuthorized) {
+                res.sendFile(filePath);
+            } else {
+                res.status(403).json({ message: 'Forbidden. You do not have permission to view this file.' });
+            }
+        } catch (error) {
+            logger.error('Error serving feedback file:', error);
+            if (error.code === 'ENOENT') {
+                res.status(404).json({ message: 'File not found.' });
+            } else {
+                res.status(500).json({ message: 'Server error occurred while retrieving file.' });
+            }
+        }
+    });
+
+    // --- Mount the Routers ---
+    // ✅ Mount the public router directly to the app
+    app.use('/api/users', publicRouter);
+
+    // ✅ Mount the protected router to the app
+    app.use('/api', protectedRouter);
+
+    // ✅ Mount your sub-routers with middleware explicitly
+    app.use('/api/rewards', authenticateJWT, checkSubscription, advancedGoalsRouter);
+    app.use('/api/budget', authenticateJWT, checkSubscription, budgetRouter);
+    app.use('/api/essay', authenticateJWT, checkSubscription, essayRouter);
+    app.use('/api/schools', authenticateJWT, checkSubscription, schoolRouter);
+    app.use('/api/uploads', authenticateJWT, checkSubscription, uploadRouter);
+
 
     router.post('/logout', authenticateJWT, (req, res) => {
         eventBus.emit('user_logged_out', { userId: req.user.id });
