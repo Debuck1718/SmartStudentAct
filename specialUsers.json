@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Admin One",
+    "email": "admin1@school.com",
+    "password": "adminpass123",
+    "role": "admin",
+    "schoolName": "Sunrise High School"
+  },
+  {
+    "name": "Overseer One",
+    "email": "overseer1@schools.com",
+    "password": "overseerpass123",
+    "role": "overseer"
+  }
+]
