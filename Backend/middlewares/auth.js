@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 
-// ✅ Routes that don’t require authentication
+// ✅ Routes that don’t require authentication (prefix match supported)
 const PUBLIC_ROUTES = [
     '/api/users/login',
     '/api/users/signup',
@@ -13,13 +13,15 @@ const PUBLIC_ROUTES = [
     '/api/auth/reset-password',
 ];
 
+const isPublicRoute = (url) => {
+    return PUBLIC_ROUTES.some((route) => url.startsWith(route));
+};
+
 /**
  * Middleware to authenticate a user using a JWT.
- * Skips PUBLIC_ROUTES (whitelisted).
  */
 const authenticateJWT = (req, res, next) => {
-    // Use originalUrl (includes /api prefix)
-    if (PUBLIC_ROUTES.includes(req.originalUrl)) {
+    if (isPublicRoute(req.originalUrl)) {
         return next();
     }
 
@@ -42,7 +44,6 @@ const authenticateJWT = (req, res, next) => {
 
 /**
  * Middleware factory to enforce role-based access control.
- * Should be used after authenticateJWT.
  */
 const hasRole = (requiredRole) => {
     return (req, res, next) => {
@@ -66,3 +67,4 @@ module.exports = {
     authenticateJWT,
     hasRole,
 };
+

@@ -160,172 +160,186 @@
         </div>
     </div>
     <script>
-        // Set API base URL here
-        const API_BASE_URL = "https://smartstudentact.onrender.com/api";
-        // Get DOM elements
-        const emailInput = document.getElementById('emailInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const loginButton = document.getElementById('loginButton');
-        const passwordToggle = document.getElementById('passwordToggle');
-        const passwordToggleText = passwordToggle.querySelector('.password-toggle-text');
-        const emailErrorEl = document.getElementById('emailError');
-        const passwordErrorEl = document.getElementById('passwordError');
-        const signupLink = document.getElementById('signupLink');
-        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-        // State variables
-        let email = '';
-        let password = '';
-        let loading = false;
-        let showPassword = false;
-        // --- Helper Functions ---
-        /**
-         * Simple mock for AsyncStorage using localStorage.
-         */
-        const AsyncStorage = {
-            setItem: (key, value) => Promise.resolve(localStorage.setItem(key, value)),
-        };
-        /**
-         * Updates the UI based on the current loading state.
-         * @param {boolean} isLoading - The current loading state.
-         */
-        function setLoading(isLoading) {
-            loading = isLoading;
-            loginButton.disabled = loading;
-            if (loading) {
-                loginButton.innerHTML = `<div class="spinner"></div>`;
-            } else {
-                loginButton.innerHTML = `<p class="button-text">Login</p>`;
+    // Set API base URL here
+    const API_BASE_URL = "https://smartstudentact.onrender.com/api";
+
+    // Get DOM elements
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginButton = document.getElementById('loginButton');
+    const passwordToggle = document.getElementById('passwordToggle');
+    const passwordToggleText = passwordToggle.querySelector('.password-toggle-text');
+    const emailErrorEl = document.getElementById('emailError');
+    const passwordErrorEl = document.getElementById('passwordError');
+    const signupLink = document.getElementById('signupLink');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+
+    // State variables
+    let email = '';
+    let password = '';
+    let loading = false;
+    let showPassword = false;
+
+    // --- Helper Functions ---
+
+    // 🔑 Reusable authFetch (for protected API calls on other pages)
+    async function authFetch(url, options = {}) {
+        const token = localStorage.getItem("token");
+        const res = await fetch(url, {
+            ...options,
+            headers: {
+                ...(options.headers || {}),
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
             }
+        });
+
+        if (res.status === 401) {
+            // Token invalid/expired → logout
+            localStorage.removeItem("token");
+            alert("Session expired. Please log in again.");
+            window.location.href = "/login.html";
+            return;
         }
-        /**
-         * Displays or hides an error message for a specific input field.
-         * @param {HTMLElement} element - The HTML element for the error message.
-         * @param {string | null} message - The message to display, or null to hide.
-         * @param {HTMLElement} inputElement - The associated input field to style.
-         */
-        function setError(element, message, inputElement) {
-            if (message) {
-                element.textContent = message;
-                element.classList.remove('hidden');
-                inputElement.classList.add('error');
-            } else {
-                element.textContent = '';
-                element.classList.add('hidden');
-                inputElement.classList.remove('error');
-            }
+
+        return res;
+    }
+
+    // Update loading state
+    function setLoading(isLoading) {
+        loading = isLoading;
+        loginButton.disabled = loading;
+        if (loading) {
+            loginButton.innerHTML = `<div class="spinner"></div>`;
+        } else {
+            loginButton.innerHTML = `<p class="button-text">Login</p>`;
         }
-        /**
-         * Validates the email input.
-         * @param {string} text - The email text to validate.
-         * @returns {string | null} An error message or null if valid.
-         */
-        function validateEmail(text) {
-            if (!text.trim()) return "Email cannot be empty.";
-            if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
-            return null;
+    }
+
+    // Set error message
+    function setError(element, message, inputElement) {
+        if (message) {
+            element.textContent = message;
+            element.classList.remove('hidden');
+            inputElement.classList.add('error');
+        } else {
+            element.textContent = '';
+            element.classList.add('hidden');
+            inputElement.classList.remove('error');
         }
-        /**
-         * Validates the password input.
-         * @param {string} text - The password text to validate.
-         * @returns {string | null} An error message or null if valid.
-         */
-        function validatePassword(text) {
-            if (!text.trim()) return "Password cannot be empty.";
-            if (text.length < 8) return "Password must be at least 8 characters long.";
-            return null;
-        }
-        // --- Event Handlers ---
-        emailInput.addEventListener('input', (e) => {
-            email = e.target.value;
-            setError(emailErrorEl, null, emailInput);
-        });
-        emailInput.addEventListener('blur', () => {
-            const result = validateEmail(email);
-            setError(emailErrorEl, result, emailInput);
-        });
-        passwordInput.addEventListener('input', (e) => {
-            password = e.target.value;
-            setError(passwordErrorEl, null, passwordInput);
-        });
-        passwordInput.addEventListener('blur', () => {
-            const result = validatePassword(password);
-            setError(passwordErrorEl, result, passwordInput);
-        });
-        passwordToggle.addEventListener('click', () => {
-            showPassword = !showPassword;
-            passwordInput.type = showPassword ? "text" : "password";
-            passwordToggleText.textContent = showPassword ? "Hide" : "Show";
-        });
-        signupLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            // In a real app, this would navigate to the signup page.
-            window.location.href = "/signup.html";
-        });
-        forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            // In a real app, this would navigate to the forgot password page.
-            window.location.href = "/forgot-password.html";
-        });
-        /**
-         * Handles the login button click and form submission.
-         */
-        async function handleLogin() {
-            const emailValidationResult = validateEmail(emailInput.value);
-            const passwordValidationResult = validatePassword(passwordInput.value);
-            setError(emailErrorEl, emailValidationResult, emailInput);
-            setError(passwordErrorEl, passwordValidationResult, passwordInput);
-            if (emailValidationResult || passwordValidationResult) return;
-            setLoading(true);
-            try {
-                const response = await fetch(`${API_BASE_URL}/users/login`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ email: emailInput.value, password: passwordInput.value }),
-                });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    const message = errorData.message || "Invalid email or password.";
-                    setError(passwordErrorEl, message, passwordInput);
-                    setLoading(false);
-                    return;
-                }
-                const data = await response.json();
-                // Store token securely (mocking with localStorage)
-                await AsyncStorage.setItem("token", data.token);
-                // Simulate auth context update
-                console.log("User logged in successfully:", data.user);
-                // Role-based navigation
-                // In a real app, this would be a full page redirect
-                switch (data.user.occupation) {
-                    case "global_overseer":
-                        window.location.href = "/global-overseer.html";
-                        break;
-                    case "overseer":
-                        window.location.href = "/overseer.html";
-                        break;
-                    case "student":
-                        window.location.href = "/students.html";
-                        break;
-                    case "teacher":
-                        window.location.href = "/teachers.html";
-                        break;
-                    case "admin":
-                        window.location.href = "/admin.html";
-                        break;
-                    default:
-                        window.location.href = "/login.html";
-                        break;
-                }
-            } catch (error) {
-                console.error("Login error:", error);
-                setError(passwordErrorEl, "An unexpected error occurred. Please try again later.", passwordInput);
-            } finally {
+    }
+
+    // Validate email
+    function validateEmail(text) {
+        if (!text.trim()) return "Email cannot be empty.";
+        if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
+        return null;
+    }
+
+    // Validate password
+    function validatePassword(text) {
+        if (!text.trim()) return "Password cannot be empty.";
+        if (text.length < 8) return "Password must be at least 8 characters long.";
+        return null;
+    }
+
+    // --- Event Handlers ---
+    emailInput.addEventListener('input', (e) => {
+        email = e.target.value;
+        setError(emailErrorEl, null, emailInput);
+    });
+    emailInput.addEventListener('blur', () => {
+        const result = validateEmail(email);
+        setError(emailErrorEl, result, emailInput);
+    });
+
+    passwordInput.addEventListener('input', (e) => {
+        password = e.target.value;
+        setError(passwordErrorEl, null, passwordInput);
+    });
+    passwordInput.addEventListener('blur', () => {
+        const result = validatePassword(password);
+        setError(passwordErrorEl, result, passwordInput);
+    });
+
+    passwordToggle.addEventListener('click', () => {
+        showPassword = !showPassword;
+        passwordInput.type = showPassword ? "text" : "password";
+        passwordToggleText.textContent = showPassword ? "Hide" : "Show";
+    });
+
+    signupLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = "/signup.html";
+    });
+
+    forgotPasswordLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = "/forgot-password.html";
+    });
+
+    // --- Handle Login ---
+    async function handleLogin() {
+        const emailValidationResult = validateEmail(emailInput.value);
+        const passwordValidationResult = validatePassword(passwordInput.value);
+
+        setError(emailErrorEl, emailValidationResult, emailInput);
+        setError(passwordErrorEl, passwordValidationResult, passwordInput);
+
+        if (emailValidationResult || passwordValidationResult) return;
+
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: emailInput.value, password: passwordInput.value }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                const message = data.message || "Invalid email or password.";
+                setError(passwordErrorEl, message, passwordInput);
                 setLoading(false);
+                return;
             }
+
+            // ✅ Save JWT token
+            localStorage.setItem("token", data.token);
+
+            console.log("User logged in successfully:", data.user);
+
+            // Role-based navigation
+            switch (data.user.occupation) {
+                case "global_overseer":
+                    window.location.href = "/global-overseer.html";
+                    break;
+                case "overseer":
+                    window.location.href = "/overseer.html";
+                    break;
+                case "student":
+                    window.location.href = "/students.html";
+                    break;
+                case "teacher":
+                    window.location.href = "/teachers.html";
+                    break;
+                case "admin":
+                    window.location.href = "/admin.html";
+                    break;
+                default:
+                    window.location.href = "/login.html";
+                    break;
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            setError(passwordErrorEl, "An unexpected error occurred. Please try again later.", passwordInput);
+        } finally {
+            setLoading(false);
         }
-        loginButton.addEventListener('click', handleLogin);
-    </script>
+    }
+
+    loginButton.addEventListener('click', handleLogin);
+</script>
 </body>
 </html>
