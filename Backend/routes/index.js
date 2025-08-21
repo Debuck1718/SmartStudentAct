@@ -1570,6 +1570,6 @@ publicRouter.get('/health', (req, res) => {
 
 // Return the router at the bottom
 // This should return both routers, but for simplicity, you can just remove this line
-// as the app.use calls already mount the routers.
-// return router;
+ // Final step: Return the public and protected routers as an object.
+    return { publicRouter, protectedRouter };
 };
