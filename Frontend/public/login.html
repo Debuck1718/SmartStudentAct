@@ -314,21 +314,29 @@ async function handleLogin() {
     const data = await response.json();
 
     if (!response.ok) {
-      let message = "Login failed.";
-      if (response.status === 401) {
-        message = "Incorrect email or password.";
-      } else if (response.status === 403) {
-        message = "Your account is not verified. Please check your email for the OTP.";
-      } else if (response.status === 500) {
-        message = "Server error. Please try again later.";
-      } else if (data.message) {
-        message = data.message;
-      }
+  const code = data.code || "UNKNOWN_ERROR";
+  const message = data.message || "Invalid email or password.";
 
+  switch (code) {
+    case "INVALID_EMAIL":
+      setError(emailErrorEl, message, emailInput);
+      break;
+    case "INVALID_PASSWORD":
       setError(passwordErrorEl, message, passwordInput);
-      setLoading(false);
-      return;
-    }
+      break;
+    case "UNVERIFIED":
+      // Show near email but you could also display a banner
+      setError(emailErrorEl, message, emailInput);
+      break;
+    default:
+      setError(passwordErrorEl, message, passwordInput);
+      break;
+  }
+
+  setLoading(false);
+  return;
+}
+
 
     // ✅ Save JWT token
     localStorage.setItem("token", data.token);
