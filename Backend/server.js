@@ -14,19 +14,19 @@ const cloudinary = require("cloudinary").v2;
 // 1️⃣ Environment Validation
 // ───────────────────────────────────────────────
 const requiredEnvVars = [
-  "PORT",
-  "MONGODB_URI",
-  "SESSION_SECRET",
-  "JWT_SECRET",
-  "CLOUDINARY_CLOUD_NAME",
-  "CLOUDINARY_API_KEY",
-  "CLOUDINARY_API_SECRET",
+    "PORT",
+    "MONGODB_URI",
+    "SESSION_SECRET",
+    "JWT_SECRET",
+    "CLOUDINARY_CLOUD_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_API_SECRET",
 ];
 requiredEnvVars.forEach((key) => {
-  if (!process.env[key]) {
-    console.error(`❌ Missing required env variable: ${key}`);
-    process.exit(1);
-  }
+    if (!process.env[key]) {
+        console.error(`❌ Missing required env variable: ${key}`);
+        process.exit(1);
+    }
 });
 
 const PORT = process.env.PORT || 4000;
@@ -38,10 +38,10 @@ const MONGO_URI = process.env.MONGODB_URI;
 const app = express();
 
 app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : "*",
-    credentials: true,
-  })
+    cors({
+        origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : "*",
+        credentials: true,
+    })
 );
 app.use(helmet());
 app.use(morgan("dev"));
@@ -53,29 +53,29 @@ app.use(express.urlencoded({ extended: true }));
 // ───────────────────────────────────────────────
 // Configure Cloudinary with credentials from the .env file
 try {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-  console.log("✅ Cloudinary configured successfully!");
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+    console.log("✅ Cloudinary configured successfully!");
 } catch (error) {
-  console.error("❌ Failed to configure Cloudinary. Check your .env file.", error);
-  process.exit(1);
+    console.error("❌ Failed to configure Cloudinary. Check your .env file.", error);
+    process.exit(1);
 }
 
 // ───────────────────────────────────────────────
 // 4️⃣ MongoDB Connection with Logging
 // ───────────────────────────────────────────────
 async function connectMongo() {
-  try {
-    console.log(`📡 Connecting to MongoDB at ${new Date().toISOString()}...`);
-    await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected successfully!");
-  } catch (err) {
-    console.error(`❌ MongoDB connection error at ${new Date().toISOString()}:`, err);
-    process.exit(1);
-  }
+    try {
+        console.log(`📡 Connecting to MongoDB at ${new Date().toISOString()}...`);
+        await mongoose.connect(MONGO_URI);
+        console.log("✅ MongoDB connected successfully!");
+    } catch (err) {
+        console.error(`❌ MongoDB connection error at ${new Date().toISOString()}:`, err);
+        process.exit(1);
+    }
 }
 
 // ───────────────────────────────────────────────
@@ -83,59 +83,65 @@ async function connectMongo() {
 // ───────────────────────────────────────────────
 let agenda;
 async function startAgenda() {
-  try {
-    agenda = new Agenda({
-      db: { address: MONGO_URI, collection: "agendaJobs" },
-    });
+    try {
+        agenda = new Agenda({
+            db: { address: MONGO_URI, collection: "agendaJobs" },
+        });
 
-    agenda.define("test job", async () => {
-      console.log(`⏳ Running test job at ${new Date().toISOString()}`);
-    });
+        agenda.define("test job", async () => {
+            console.log(`⏳ Running test job at ${new Date().toISOString()}`);
+        });
 
-    await agenda.start();
-    await agenda.every("1 minute", "test job");
+        await agenda.start();
+        await agenda.every("1 minute", "test job");
 
-    console.log("📅 Agenda job scheduler started!");
-  } catch (err) {
-    console.error(`❌ Agenda startup error at ${new Date().toISOString()}:`, err);
-  }
+        console.log("📅 Agenda job scheduler started!");
+    } catch (err) {
+        console.error(`❌ Agenda startup error at ${new Date().toISOString()}:`, err);
+    }
 }
 
 // ───────────────────────────────────────────────
 // 6️⃣ Routes Loader
 // ───────────────────────────────────────────────
 try {
-  // Now we only pass the `cloudinary` object to the routes file
-  const mainRoutes = require("./routes")(app, mongoose, eventBus, agenda, cloudinary);
-  app.use("/api", mainRoutes);
-  console.log("✅ Routes loaded successfully!");
+    // ❌ OLD: const mainRoutes = require("./routes")(app, mongoose, eventBus, agenda, cloudinary);
+    // ✅ NEW: Destructure the returned object to get both routers
+    const { publicRouter, protectedRouter } = require("./routes")(app, mongoose, eventBus, agenda, cloudinary);
+
+    // ✅ Mount the protected routes
+    app.use("/api", protectedRouter);
+    // ✅ Mount the public routes, e.g., the health check
+    app.use("/api", publicRouter);
+
+    console.log("✅ Routes loaded successfully!");
 } catch (err) {
-  console.error(`❌ Routes loading error at ${new Date().toISOString()}:`, err);
-  process.exit(1);
+    console.error(`❌ Routes loading error at ${new Date().toISOString()}:`, err);
+    process.exit(1);
 }
 
 // ───────────────────────────────────────────────
 // 7️⃣ Root Route
 // ────────────────────────────────────────────────
 app.get("/", (req, res) => {
-  res.json({ message: "SmartStudentAct Backend Running 🚀" });
+    res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
 // ───────────────────────────────────────────────
 // 8️⃣ Start Server
 // ───────────────────────────────────────────────
 (async () => {
-  try {
-    await connectMongo();
-    await startAgenda();
+    try {
+        await connectMongo();
+        await startAgenda();
 
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV}]`);
-    });
-  } catch (err) {
-    console.error(`❌ Fatal startup error at ${new Date().toISOString()}:`, err);
-    process.exit(1);
-  }
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV}]`);
+        });
+    } catch (err) {
+        console.error(`❌ Fatal startup error at ${new Date().toISOString()}:`, err);
+        process.exit(1);
+    }
 })();
 
 
