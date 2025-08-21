@@ -88,7 +88,10 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
 
     // ✅ Create two separate routers
     const publicRouter = express.Router();
-    const protectedRouter = express.Router();
+console.log("✅ Public Router loaded.");
+
+const protectedRouter = express.Router();
+console.log("❌ Protected Router loaded.");
 
     // --- MULTER STORAGE SETUP ---
     // ... Your multer storage and file system logic remains the same ...
