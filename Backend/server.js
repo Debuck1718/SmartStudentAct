@@ -37,12 +37,18 @@ const MONGO_URI = process.env.MONGODB_URI;
 // ───────────────────────────────────────────────
 const app = express();
 
+// ✅ Updated CORS to allow all HTTPS origins and null origin (Postman/curl)
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : "*",
+        origin: (origin, callback) => {
+            if (!origin) return callback(null, true); // allow non-browser clients
+            if (origin.startsWith("https://")) return callback(null, true);
+            return callback(new Error("Not allowed by CORS"));
+        },
         credentials: true,
     })
 );
+
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
@@ -51,7 +57,6 @@ app.use(express.urlencoded({ extended: true }));
 // ───────────────────────────────────────────────
 // 3️⃣ Cloudinary Configuration
 // ───────────────────────────────────────────────
-// Configure Cloudinary with credentials from the .env file
 try {
     cloudinary.config({
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -110,9 +115,9 @@ try {
     // Apply the checkSubscription middleware to the protected router ONLY
     protectedRouter.use(require('./middlewares/checkSubscription'));
 
-    // ✅ FIX: Mount public routes BEFORE protected routes.
-    app.use("/api", publicRouter); // Routes like /users/login and /users/signup
-    app.use("/api", protectedRouter); // All other authenticated routes
+    // ✅ Mount routes
+    app.use("/api", publicRouter);
+    app.use("/api", protectedRouter);
 
     console.log("✅ Routes loaded successfully!");
 } catch (err) {
@@ -143,5 +148,4 @@ app.get("/", (req, res) => {
         process.exit(1);
     }
 })();
-
 
