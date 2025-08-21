@@ -27,8 +27,8 @@ const SchoolCalendar = require('../models/SchoolCalendar');
 const advancedGoalsRouter = require('./advancedGoals');
 const essayRouter = require('./essay');
 const budgetRouter = require('./budget');
-const schoolRouter = require('./schoolRouter');
-const uploadRouter = require('./uploadRouter');
+const schoolRouter = require('./schoolRoutes');
+const uploadRouter = require('./uploadRoutes');
 
 // --- Import Controllers ---
 const paymentController = require('../controllers/paymentController'); // ✅ Import payment controller
