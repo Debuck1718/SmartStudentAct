@@ -387,9 +387,9 @@ publicRouter.post('/users/login', async (req, res) => {
       });
     }
 
-    // Generate JWT with role
+    // ✅ Generate JWT with id, role, and email
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -415,6 +415,7 @@ publicRouter.post('/users/login', async (req, res) => {
 publicRouter.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
+
 
 
 /* ──────────── PASSWORD RESET ──────────── */

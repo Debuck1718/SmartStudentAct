@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 
-// ✅ Routes that don’t require authentication (prefix match supported)
+// ✅ Routes that don’t require authentication
 const PUBLIC_ROUTES = [
     '/api/users/login',
     '/api/users/signup',
@@ -13,8 +13,14 @@ const PUBLIC_ROUTES = [
     '/api/auth/reset-password',
 ];
 
+/**
+ * Normalize the URL so PUBLIC_ROUTES match with or without `/api` prefix
+ */
 const isPublicRoute = (url) => {
-    return PUBLIC_ROUTES.some((route) => url.startsWith(route));
+    const cleanUrl = url.split('?')[0]; // strip query params
+    return PUBLIC_ROUTES.some((route) =>
+        cleanUrl === route || cleanUrl === route.replace('/api', '')
+    );
 };
 
 /**
@@ -55,8 +61,9 @@ const hasRole = (requiredRole) => {
         if (req.user.role === requiredRole) {
             next();
         } else {
+            const identifier = req.user.email || req.user.id || req.user.userId;
             logger.warn(
-                `Access denied for user ${req.user.userId}. Required role: ${requiredRole}, User role: ${req.user.role}`
+                `Access denied for user ${identifier}. Required role: ${requiredRole}, User role: ${req.user.role}`
             );
             res.status(403).json({ message: 'You do not have the required permissions to access this resource.' });
         }
@@ -67,4 +74,3 @@ module.exports = {
     authenticateJWT,
     hasRole,
 };
-
