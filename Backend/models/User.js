@@ -16,21 +16,27 @@ const userSchema = new mongoose.Schema({
   program: String,
   verified: { type: Boolean, default: false },
   is_admin: { type: Boolean, default: false },
-  role: String,
+  role: { type: String, required: true }, // Ensure role is always set
   brevoOtp: String, // Store OTP
   brevoOtpExpiry: Date, // Store expiry timestamp
 
   // --- Fields for subscription management ---
-  is_on_trial: { type: Boolean, default: true }, // Tracks if the user is on a free trial
-  trial_end_date: { type: Date, default: () => {
-    // Default to 30 days from creation, which is a common trial length.
-    const date = new Date();
-    date.setDate(date.getDate() + 30);
-    return date;
-  }}, // End date of the free trial
-  subscription_status: { type: String, enum: ['inactive', 'active', 'expired'], default: 'inactive' }, // User's current subscription status
-  payment_gateway: String, // Stores the payment gateway used (e.g., 'paystack')
-  payment_date: Date, // Stores the date of the last successful payment
+  is_on_trial: { type: Boolean, default: true }, 
+  trial_end_date: { 
+    type: Date, 
+    default: () => {
+      const date = new Date();
+      date.setDate(date.getDate() + 30);
+      return date;
+    }
+  },
+  subscription_status: { 
+    type: String, 
+    enum: ['inactive', 'active', 'expired'], 
+    default: 'inactive' 
+  },
+  payment_gateway: String, 
+  payment_date: Date, 
 
   // --- Field for Overseer role ---
   managedRegions: {
@@ -41,7 +47,9 @@ const userSchema = new mongoose.Schema({
   // --- Field for the school's country ---
   schoolCountry: {
     type: String,
-    required: true // Making this field required for new signups
+    required: function () {
+      return ['student', 'teacher', 'admin'].includes(this.role);
+    }
   },
 
   // --- New field to store earned badges for goal setting ---
@@ -52,3 +60,4 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
+
