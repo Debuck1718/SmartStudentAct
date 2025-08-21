@@ -5,9 +5,16 @@ const bcrypt = require('bcrypt');
 const User = require('./models/User'); // adjust path if needed
 
 const MONGODB_URI = process.env.MONGODB_URI;
+const INITIAL_GLOBAL_OVERSEER_EMAIL = process.env.INITIAL_GLOBAL_OVERSEER_EMAIL;
+const INITIAL_GLOBAL_OVERSEER_PASSWORD = process.env.INITIAL_GLOBAL_OVERSEER_PASSWORD;
 
 if (!MONGODB_URI) {
   console.error("❌ MONGODB_URI not found. Did you set it in your .env file?");
+  process.exit(1);
+}
+
+if (!INITIAL_GLOBAL_OVERSEER_EMAIL || !INITIAL_GLOBAL_OVERSEER_PASSWORD) {
+  console.error("❌ Initial global overseer credentials not found in .env");
   process.exit(1);
 }
 
@@ -35,11 +42,11 @@ async function seedUsers() {
       },
       {
         name: "Global Overseer",
-        email: "evans.buckman55@gmail.com",
-        password: await bcrypt.hash("globalpass123", 10),
+        email: INITIAL_GLOBAL_OVERSEER_EMAIL,
+        password: await bcrypt.hash(INITIAL_GLOBAL_OVERSEER_PASSWORD, 10),
         role: "global_overseer",
         verified: true,
-      }
+      },
     ];
 
     for (const u of users) {
