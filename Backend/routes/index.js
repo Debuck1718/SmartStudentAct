@@ -287,30 +287,31 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
 // Signup with OTP
 publicRouter.post('/users/signup', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, role = 'student' } = req.body; // default role = student
         if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password required' });
+            return res.status(400).json({ message: 'Email and password are required' });
         }
 
-        // Check if user exists
-        const existing = await User.findOne({ email });
-        if (existing) {
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
         // Hash password
-        const hashed = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Save user with OTP (not yet verified)
+        // Create user (not verified yet)
         const user = await User.create({
             email,
-            password: hashed,
+            password: hashedPassword,
+            role,
             otp,
             isVerified: false,
-            otpExpires: Date.now() + 10 * 60 * 1000 // 10 minutes
+            otpExpires: Date.now() + 10 * 60 * 1000, // 10 minutes
         });
 
         // Send OTP via email (Brevo / Nodemailer etc.)
@@ -320,7 +321,10 @@ publicRouter.post('/users/signup', async (req, res) => {
             `Your OTP code is: ${otp}`
         );
 
-        res.status(201).json({ message: 'Signup successful, OTP sent to email', userId: user._id });
+        res.status(201).json({
+            message: 'Signup successful, OTP sent to email',
+            userId: user._id,
+        });
     } catch (err) {
         logger.error('Signup error:', err.message);
         res.status(500).json({ message: 'Server error' });
@@ -357,15 +361,14 @@ publicRouter.post('/users/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
+
         if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+        if (!user.isVerified) return res.status(403).json({ message: 'Account not verified. Please verify OTP.' });
 
-        if (!user.isVerified) {
-            return res.status(403).json({ message: 'Account not verified. Please verify OTP.' });
-        }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) return res.status(401).json({ message: 'Invalid credentials' });
 
-        const valid = await bcrypt.compare(password, user.password);
-        if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
-
+        // Generate JWT with role
         const token = jwt.sign(
             { id: user._id, role: user.role },
             process.env.JWT_SECRET,
@@ -374,7 +377,11 @@ publicRouter.post('/users/login', async (req, res) => {
 
         res.json({
             token,
-            user: { id: user._id, email: user.email, role: user.role }
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role, // frontend now reads role
+            },
         });
     } catch (err) {
         logger.error('Login error:', err.message);
@@ -386,6 +393,7 @@ publicRouter.post('/users/login', async (req, res) => {
 publicRouter.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK' });
 });
+
 
 /* ──────────── PASSWORD RESET ──────────── */
 
