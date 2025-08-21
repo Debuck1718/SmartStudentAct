@@ -282,176 +282,169 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         newPassword: Joi.string().min(8).required()
     });
 
-    /* ──────────── Public Auth Routes ──────────── */
-    // These routes will NOT have authentication or subscription middleware applied
-    publicRouter.post('/users/signup-otp',
-        rateLimit({ windowMs: 5 * 60 * 1000, max: 3 }),
-        validate(signupOtpSchema),
-        (req, res) => {
-            const { phone, email, firstname } = req.body;
-            const code = process.env.NODE_ENV === 'production'
-                ? Math.floor(100000 + Math.random() * 900000).toString()
-                : '1234';
-            req.session.signup = { ...req.body, code, timestamp: Date.now() };
-            logger.debug('[OTP] Generated OTP for %s: %s', phone, code);
+   /* ──────────── PUBLIC AUTH ROUTES ──────────── */
 
-            sendEmail(
-                email,
-                'Your SmartStudentAct OTP Code',
-                `<p>Hello ${firstname},</p><p>Your OTP code is: <strong>${code}</strong></p><p>This code will expire in 10 minutes.</p>`
-            );
-
-            res.json({ step: 'verify', message: 'OTP sent' });
-        }
-    );
-
-    publicRouter.post('/users/verify-otp', validate(verifyOtpSchema), async (req, res) => {
-        const { code, email } = req.body;
-        const signupData = req.session?.signup;
-
-        if (!signupData || signupData.email !== email || signupData.code !== code) {
-            return res.status(400).json({ error: 'Invalid OTP or email.' });
-        }
-        if (Date.now() - signupData.timestamp > 10 * 60 * 1000) {
-            delete req.session.signup;
-            return res.status(400).json({ error: 'OTP expired.' });
-        }
-
-        const hash = await bcrypt.hash(signupData.password, 10);
-        const trialEndDate = new Date();
-        trialEndDate.setDate(trialEndDate.getDate() + 30);
-
-        try {
-            const newUser = await User.create({
-                ...signupData,
-                password: hash,
-                verified: true,
-                is_admin: signupData.occupation === 'admin',
-                role: signupData.occupation,
-                schoolCountry: signupData.schoolCountry,
-                is_on_trial: true,
-                trial_end_date: trialEndDate,
-                subscription_status: 'inactive'
-            });
-
-            delete req.session.signup;
-            sendEmail(
-                newUser.email,
-                'Welcome to SmartStudentAct!',
-                `<p>Hi ${newUser.firstname},</p><p>Welcome aboard! Your account has been created successfully. Your 30-day free trial has begun.</p><p>Start exploring our platform today.</p>`
-            );
-
-            eventBus.emit('user_signed_up', { userId: newUser._id, email: newUser.email, occupation: newUser.occupation });
-            res.status(201).json({ message: 'Account created successfully.' });
-        } catch (err) {
-            if (err.code === 11000) {
-                return res.status(409).json({ error: 'Email or phone already registered.' });
-            }
-            res.status(500).json({ error: 'Account creation failed.' });
-        }
-    });
-
-    publicRouter.post('/users/login', validate(loginSchema), async (req, res) => {
+// Signup with OTP
+publicRouter.post('/users/signup', async (req, res) => {
+    try {
         const { email, password } = req.body;
-
-        const u = await User.findOne({ email }).select('+password +role +is_on_trial +subscription_status');
-
-        if (!u || !(await bcrypt.compare(password, u.password))) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password required' });
         }
 
-        const userOccupation = u.role;
+        // Check if user exists
+        const existing = await User.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
 
-        const token = jwt.sign({
-            id: u._id,
-            email: u.email,
-            occupation: userOccupation,
-            is_admin: u.is_admin,
-            firstname: u.firstname,
-            lastname: u.lastname,
-            school: u.schoolName || u.teacherSchool || '',
-            grade: u.grade || u.teacherGrade || '',
-            timezone: u.timezone || 'UTC',
-            role: u.role,
-            managedRegions: u.managedRegions,
-            schoolCountry: u.schoolCountry,
-            profile_picture_url: u.profile_picture_url || null
-        }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        // Hash password
+        const hashed = await bcrypt.hash(password, 10);
 
-        eventBus.emit('user_logged_in', { userId: u._id, email: u.email, occupation: userOccupation });
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Save user with OTP (not yet verified)
+        const user = await User.create({
+            email,
+            password: hashed,
+            otp,
+            isVerified: false,
+            otpExpires: Date.now() + 10 * 60 * 1000 // 10 minutes
+        });
+
+        // Send OTP via email (Brevo / Nodemailer etc.)
+        await sendEmail(
+            email,
+            'Verify your SmartStudent account',
+            `Your OTP code is: ${otp}`
+        );
+
+        res.status(201).json({ message: 'Signup successful, OTP sent to email', userId: user._id });
+    } catch (err) {
+        logger.error('Signup error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Verify OTP
+publicRouter.post('/users/verify-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (user.isVerified) return res.status(400).json({ message: 'User already verified' });
+        if (user.otp !== otp || user.otpExpires < Date.now()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        // Mark as verified
+        user.isVerified = true;
+        user.otp = undefined;
+        user.otpExpires = undefined;
+        await user.save();
+
+        res.json({ message: 'Account verified successfully' });
+    } catch (err) {
+        logger.error('OTP verification error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Login (only if verified)
+publicRouter.post('/users/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+
+        if (!user.isVerified) {
+            return res.status(403).json({ message: 'Account not verified. Please verify OTP.' });
+        }
+
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
+
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
 
         res.json({
             token,
-            user: {
-                id: u._id,
-                email: u.email,
-                occupation: userOccupation,
-                is_admin: u.is_admin,
-                firstname: u.firstname,
-                lastname: u.lastname,
-                school: u.schoolName || u.teacherSchool || '',
-                grade: u.grade || u.teacherGrade || '',
-                timezone: u.timezone || 'UTC',
-                role: u.role,
-                is_on_trial: u.is_on_trial,
-                subscription_status: u.subscription_status,
-                managedRegions: u.managedRegions,
-                schoolCountry: u.schoolCountry,
-                profile_picture_url: u.profile_picture_url || null
-            },
-            message: 'Login successful.'
+            user: { id: user._id, email: user.email, role: user.role }
         });
-    });
+    } catch (err) {
+        logger.error('Login error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
-    publicRouter.post('/auth/forgot-password', validate(forgotPasswordSchema), async (req, res) => {
-        // ... your forgot password logic remains the same ...
-        try {
-            const { email } = req.body;
-            const user = await User.findOne({ email });
+// Health check
+publicRouter.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK' });
+});
 
-            if (!user) {
-                return res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
-            }
+/* ──────────── PASSWORD RESET ──────────── */
 
-            const token = crypto.randomBytes(32).toString('hex');
-            const resetTokenExpiry = Date.now() + 3600000;
-            user.reset_password_token = token;
-            user.reset_password_expires = resetTokenExpiry;
-            await user.save();
-            const resetLink = `${req.protocol}://${req.get('host')}/reset-password.html?token=${token}`;
-            sendEmail(
-                user.email,
-                'Password Reset Request',
-                `<p>Hello,</p><p>You are receiving this because you have requested the reset of the password for your account.</p><p>Please click on the following link, or paste this into your browser to complete the process:</p><p><a href="${resetLink}">Reset Password</a></p><p>If you did not request this, please ignore this email and your password will remain unchanged.</p>`
-            );
-            res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
-        } catch (error) {
-            logger.error('Forgot password error:', error);
-            res.status(500).json({ message: 'Server error' });
+// Forgot password → send reset OTP
+publicRouter.post('/users/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
-    });
 
-    publicRouter.post('/auth/reset-password', validate(resetPasswordSchema), async (req, res) => {
-        // ... your reset password logic remains the same ...
-        try {
-            const { token, newPassword } = req.body;
-            const user = await User.findOne({
-                reset_password_token: token,
-                reset_password_expires: { $gt: Date.now() },
-            });
-            if (!user) {
-                return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
-            }
-            user.password = await bcrypt.hash(newPassword, 10);
-            user.reset_password_token = undefined;
-            user.reset_password_expires = undefined;
-            await user.save();
-            res.status(200).json({ message: 'Password has been successfully reset.' });
-        } catch (error) {
-            logger.error('Reset password error:', error);
-            res.status(500).json({ message: 'Server error' });
+        // Generate reset OTP
+        const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.resetOtp = resetOtp;
+        user.resetOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        await user.save();
+
+        // Send reset OTP by email
+        await sendEmail(
+            email,
+            'SmartStudent Password Reset',
+            `Your password reset code is: ${resetOtp}`
+        );
+
+        res.json({ message: 'Password reset OTP sent to email' });
+    } catch (err) {
+        logger.error('Forgot password error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Reset password → verify OTP + set new password
+publicRouter.post('/users/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user.resetOtp || user.resetOtp !== otp || user.resetOtpExpires < Date.now()) {
+            return res.status(400).json({ message: 'Invalid or expired reset OTP' });
         }
-    });
+
+        // Hash new password
+        const hashed = await bcrypt.hash(newPassword, 10);
+
+        // Update user password
+        user.password = hashed;
+        user.resetOtp = undefined;
+        user.resetOtpExpires = undefined;
+        await user.save();
+
+        res.json({ message: 'Password reset successful. You can now log in with your new password.' });
+    } catch (err) {
+        logger.error('Reset password error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
     /* ──────────── Protected Routes ──────────── */
     // ✅ This applies the middlewares to all routes defined on protectedRouter
