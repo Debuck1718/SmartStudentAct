@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/mailer');
 const User = require('../models/User');
-const eventBus = require('../eventBus'); // Make sure this is correctly exported if it's in a separate file
+const eventBus = require('../utils/eventBus'); // Make sure this is correctly exported if it's in a separate file
 
 const publicRouter = express.Router();
 

@@ -8,6 +8,7 @@ const Joi = require('joi');
 const logger = require('../utils/logger');
 const webpush = require('web-push');
 const jwt = require('jsonwebtoken');
+const eventBus = require('../utils/eventBus');
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const { authenticateJWT, hasRole } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
@@ -26,8 +27,11 @@ const SchoolCalendar = require('../models/SchoolCalendar');
 const advancedGoalsRouter = require('./advancedGoals');
 const essayRouter = require('./essay');
 const budgetRouter = require('./budget');
-const schoolRouter = require('./schoolRouter'); // ✅ New import for schools router
-const uploadRouter = require('./uploadRouter'); // ✅ New import for uploads router
+const schoolRouter = require('./schoolRouter');
+const uploadRouter = require('./uploadRouter');
+
+// --- Import Controllers ---
+const paymentController = require('../controllers/paymentController'); // ✅ Import payment controller
 
 // --- Helpers ---
 const smsApi = {};
@@ -59,18 +63,6 @@ async function notifyUser(userId, title, message, url) {
     const user = await User.findById(userId).select('phone');
     await sendPushToUser(userId, { title, body: message, url });
     await sendSMS(user?.phone, `${title}: ${message}`);
-}
-async function getUserPrice(country, occupation, school) {
-    // ... your logic here
-    return { localPrice: 50, currency: 'USD' };
-}
-async function initFlutterwavePayment(email, amount, currency) {
-    // ... your logic here
-    return { reference: 'flw_ref_123' };
-}
-async function initPaystackPayment(email, amount, currency) {
-    // ... your logic here
-    return { authorization_url: 'https://paystack.com/pay/xyz' };
 }
 const agenda = { schedule: () => {} };
 
@@ -228,6 +220,7 @@ const validate = (schema) => (req, res, next) => {
     next();
 };
 
+// ──────────────────── Protected Router ────────────────────
 
 protectedRouter.post('/logout', authenticateJWT, (req, res) => {
     eventBus.emit('user_logged_out', { userId: req.user.id });
@@ -1223,65 +1216,65 @@ protectedRouter.get('/student/teachers/my-school', authenticateJWT, hasRole('stu
         }
     });
 
-    /* ──────────── Payment & Pricing Routes ──────────── */
-    protectedRouter.get('/pricing', authenticateJWT, async (req, res) => {
-        const { occupation, school, grade } = req.user;
-        const user = await User.findById(req.user.id).select('country');
-    
-        if (!user || !user.country) {
-            return res.status(400).json({ error: 'User country not found.' });
+   // ──────────────────── Payment & Pricing Routes ────────────────────
+protectedRouter.get('/pricing', async (req, res) => {
+    const { occupation, school, grade } = req.user;
+    const user = await User.findById(req.user.id).select('country');
+
+    if (!user || !user.country) {
+        return res.status(400).json({ error: 'User country not found.' });
+    }
+
+    try {
+        const price = await paymentController.getUserPrice(user.country, occupation, school);
+        res.json(price);
+    } catch (err) {
+        logger.error('Error getting user price:', err);
+        res.status(500).json({ error: 'Failed to retrieve pricing information.' });
+    }
+});
+
+// Initiate a payment transaction
+protectedRouter.post('/payment/initiate', validate(paymentSchema), async (req, res) => {
+    const { gateway } = req.body;
+    const { email, id, occupation, school } = req.user;
+    const user = await User.findById(id).select('country');
+
+    if (!user || !user.country) {
+        return res.status(400).json({ error: 'User country not found.' });
+    }
+
+    // Users who don't pay shouldn't initiate payments.
+    if (['student', 'overseer', 'global_overseer'].includes(occupation)) {
+        return res.status(403).json({ error: 'Forbidden: This role does not require payment.' });
+    }
+
+    try {
+        const priceInfo = await paymentController.getUserPrice(user.country, occupation, school);
+        const amount = priceInfo.localPrice;
+        const currency = priceInfo.currency;
+
+        if (amount <= 0) {
+            return res.status(400).json({ error: 'Invalid payment amount.' });
         }
-    
-        try {
-            const price = await getUserPrice(user.country, occupation, school);
-            res.json(price);
-        } catch (err) {
-            logger.error('Error getting user price:', err);
-            res.status(500).json({ error: 'Failed to retrieve pricing information.' });
+
+        let paymentData;
+        if (gateway === 'flutterwave') {
+            paymentData = await paymentController.initFlutterwavePayment(email, amount, currency);
+        } else if (gateway === 'paystack') {
+            paymentData = await paymentController.initPaystackPayment(email, amount, currency);
         }
-    });
-    
-    // Initiate a payment transaction
-    protectedRouter.post('/payment/initiate', authenticateJWT, validate(paymentSchema), async (req, res) => {
-        const { gateway } = req.body;
-        const { email, id, occupation, school } = req.user;
-        const user = await User.findById(id).select('country');
-    
-        if (!user || !user.country) {
-            return res.status(400).json({ error: 'User country not found.' });
-        }
-    
-        // Users who don't pay shouldn't initiate payments.
-        if (['overseer', 'global_overseer'].includes(occupation)) {
-            return res.status(403).json({ error: 'Forbidden: This role does not require payment.' });
-        }
-    
-        try {
-            const priceInfo = await getUserPrice(user.country, occupation, school);
-            const amount = priceInfo.localPrice;
-            const currency = priceInfo.currency;
-    
-            if (amount <= 0) {
-                return res.status(400).json({ error: 'Invalid payment amount.' });
-            }
-    
-            let paymentData;
-            if (gateway === 'flutterwave') {
-                paymentData = await initFlutterwavePayment(email, amount, currency);
-            } else if (gateway === 'paystack') {
-                paymentData = await initPaystackPayment(email, amount, currency);
-            }
-    
-            if (paymentData) {
-                res.json({ message: 'Payment initiated successfully.', data: paymentData });
-            } else {
-                res.status(500).json({ error: 'Failed to initiate payment.' });
-            }
-        } catch (err) {
-            logger.error('Error initiating payment:', err);
+
+        if (paymentData) {
+            res.json({ message: 'Payment initiated successfully.', data: paymentData });
+        } else {
             res.status(500).json({ error: 'Failed to initiate payment.' });
         }
-    });
+    } catch (err) {
+        logger.error('Error initiating payment:', err);
+        res.status(500).json({ error: 'Failed to initiate payment.' });
+    }
+});
     
     // Start a free trial for a user
     protectedRouter.post('/trial/start', authenticateJWT, async (req, res) => {
