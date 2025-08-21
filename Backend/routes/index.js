@@ -358,64 +358,71 @@ publicRouter.post('/users/verify-otp', async (req, res) => {
 
 // Login (only if verified)
 publicRouter.post('/users/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
+    // ✅ Log 1: See what the server receives
+    console.log(`Attempting login for email: ${email}`);
 
-    // Normalize email (avoid case sensitivity issues)
-    const normalizedEmail = email?.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    // Normalize email (avoid case sensitivity issues)
+    const normalizedEmail = email?.toLowerCase().trim();
+    // .select('+password') is necessary because 'select: false' is on the schema
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
 
-    if (!user) {
-      return res.status(401).json({
-        code: 'INVALID_EMAIL',
-        message: 'No account found with this email address.',
-      });
-    }
+    if (!user) {
+      // ✅ Log 2: User not found
+      console.log(`Login failed: No user found for ${normalizedEmail}`);
+      return res.status(401).json({
+        code: 'INVALID_EMAIL',
+        message: 'No account found with this email address.',
+      });
+    }
 
-    if (!user.verified) {
-      return res.status(403).json({
-        code: 'UNVERIFIED',
-        message: 'Your account is not verified. Please check your email for the OTP.',
-      });
-    }
+    // ✅ Log 3: User found, checking verification
+    console.log(`User found. Verification status: ${user.verified}`);
+    if (!user.verified) {
+      return res.status(403).json({
+        code: 'UNVERIFIED',
+        message: 'Your account is not verified. Please check your email for the OTP.',
+      });
+    }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        code: 'INVALID_PASSWORD',
-        message: 'The password you entered is incorrect.',
-      });
-    }
+    // ✅ Log 4: Checking password
+    console.log('Checking password...');
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      // ✅ Log 5: Password failed
+      console.log('Login failed: Invalid password.');
+      return res.status(401).json({
+        code: 'INVALID_PASSWORD',
+        message: 'The password you entered is incorrect.',
+      });
+    }
 
-    // ✅ Generate JWT with id, role, and email
-    const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // ✅ Log 6: Login successful
+    console.log('Login successful. Generating JWT.');
+    // ✅ Generate JWT with id, role, and email
+    const token = jwt.sign(
+      { id: user._id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } catch (err) {
-    logger.error('Login error:', err.message);
-    res.status(500).json({
-      code: 'SERVER_ERROR',
-      message: 'An unexpected error occurred. Please try again later.',
-    });
-  }
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    logger.error('Login error:', err.message);
+    res.status(500).json({
+      code: 'SERVER_ERROR',
+      message: 'An unexpected error occurred. Please try again later.',
+    });
+  }
 });
-
-// Health check
-publicRouter.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK' });
-});
-
 
 
 /* ──────────── PASSWORD RESET ──────────── */
