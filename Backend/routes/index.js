@@ -605,72 +605,72 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
     });
 
     // --- Mount the Routers ---
-    // ✅ Mount the public router directly to the app
-    app.use('/api/users', publicRouter);
+// ✅ Mount the public router directly to the app
+app.use('/api/users', publicRouter);
 
-    // ✅ Mount the protected router to the app
-    app.use('/api', protectedRouter);
+// ✅ Mount the protected router to the app
+app.use('/api', protectedRouter);
 
-    // ✅ Mount your sub-routers with middleware explicitly
-    app.use('/api/rewards', authenticateJWT, checkSubscription, advancedGoalsRouter);
-    app.use('/api/budget', authenticateJWT, checkSubscription, budgetRouter);
-    app.use('/api/essay', authenticateJWT, checkSubscription, essayRouter);
-    app.use('/api/schools', authenticateJWT, checkSubscription, schoolRouter);
-    app.use('/api/uploads', authenticateJWT, checkSubscription, uploadRouter);
+// ✅ Mount your sub-routers with middleware explicitly
+app.use('/api/rewards', authenticateJWT, checkSubscription, advancedGoalsRouter);
+app.use('/api/budget', authenticateJWT, checkSubscription, budgetRouter);
+app.use('/api/essay', authenticateJWT, checkSubscription, essayRouter);
+app.use('/api/schools', authenticateJWT, checkSubscription, schoolRouter);
+app.use('/api/uploads', authenticateJWT, checkSubscription, uploadRouter);
 
+// Corrected Routes (replace 'router' with 'protectedRouter')
+protectedRouter.post('/logout', authenticateJWT, (req, res) => {
+    eventBus.emit('user_logged_out', { userId: req.user.id });
+    res.json({ message: 'Logged out successfully (client should discard token).' });
+});
 
-    router.post('/logout', authenticateJWT, (req, res) => {
-        eventBus.emit('user_logged_out', { userId: req.user.id });
-        res.json({ message: 'Logged out successfully (client should discard token).' });
-    });
+protectedRouter.post('/timezone', authenticateJWT, validate(timezoneSchema), async (req, res) => {
+    const { timezone } = req.body;
+    const userId = req.user.id;
+    const result = await User.updateOne({ _id: userId }, { timezone });
+    if (result.modifiedCount > 0) {
+        res.json({ ok: true, message: 'Timezone updated.' });
+    } else {
+        res.status(404).json({ error: 'User not found or no change.' });
+    }
+});
 
-    router.post('/timezone', authenticateJWT, validate(timezoneSchema), async (req, res) => {
-        const { timezone } = req.body;
-        const userId = req.user.id;
-        const result = await User.updateOne({ _id: userId }, { timezone });
+/* ──────────── Settings and Profile Routes ──────────── */
+/**
+ * @route PATCH /api/settings
+ * @desc Update general user settings
+ * @access Private (Authenticated User)
+ */
+protectedRouter.patch('/settings', authenticateJWT, validate(settingsSchema), async (req, res) => {
+    const userId = req.user.id;
+    const updateData = req.body;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        // If a new email is provided, check if it's already in use by another user
+        if (updateData.email && updateData.email !== user.email) {
+            const existingUser = await User.findOne({ email: updateData.email });
+            if (existingUser) {
+                return res.status(409).json({ message: 'Email already in use.' });
+            }
+        }
+
+        // Update user document
+        const result = await User.updateOne({ _id: userId }, updateData);
         if (result.modifiedCount > 0) {
-            res.json({ ok: true, message: 'Timezone updated.' });
+            res.status(200).json({ message: 'Settings updated successfully.', updatedFields: updateData });
         } else {
-            res.status(404).json({ error: 'User not found or no change.' });
+            res.status(200).json({ message: 'No changes were made.' });
         }
-    });
-
-    /* ──────────── Settings and Profile Routes ──────────── */
-    /**
-     * @route PATCH /api/settings
-     * @desc Update general user settings
-     * @access Private (Authenticated User)
-     */
-    router.patch('/settings', authenticateJWT, validate(settingsSchema), async (req, res) => {
-        const userId = req.user.id;
-        const updateData = req.body;
-
-        try {
-            const user = await User.findById(userId);
-            if (!user) {
-                return res.status(404).json({ message: 'User not found.' });
-            }
-
-            // If a new email is provided, check if it's already in use by another user
-            if (updateData.email && updateData.email !== user.email) {
-                const existingUser = await User.findOne({ email: updateData.email });
-                if (existingUser) {
-                    return res.status(409).json({ message: 'Email already in use.' });
-                }
-            }
-
-            // Update user document
-            const result = await User.updateOne({ _id: userId }, updateData);
-            if (result.modifiedCount > 0) {
-                res.status(200).json({ message: 'Settings updated successfully.', updatedFields: updateData });
-            } else {
-                res.status(200).json({ message: 'No changes were made.' });
-            }
-        } catch (error) {
-            logger.error('Error updating user settings:', error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    });
+    } catch (error) {
+        logger.error('Error updating user settings:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 /**
  * @route GET /api/profile
@@ -679,7 +679,7 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
  * This route is crucial for the front-end to load the existing user data
  * and populate the form fields when the page loads.
  */
-router.get('/profile', authenticateJWT, async (req, res) => {
+protectedRouter.get('/profile', authenticateJWT, async (req, res) => {
     const userId = req.user.id;
     try {
         const user = await User.findById(userId).select('-password'); // Exclude password for security
@@ -701,7 +701,7 @@ router.get('/profile', authenticateJWT, async (req, res) => {
  * This route is now a single, comprehensive endpoint for all profile data updates.
  * It does NOT handle file uploads.
  */
-router.patch('/profile', authenticateJWT, validate(settingsSchema), async (req, res) => {
+protectedRouter.patch('/profile', authenticateJWT, validate(settingsSchema), async (req, res) => {
     const userId = req.user.id;
     const updateData = req.body;
 
@@ -746,7 +746,7 @@ router.patch('/profile', authenticateJWT, validate(settingsSchema), async (req, 
  * This is a new route specifically for the photo upload, which aligns with the
  * front-end's `handlePhotoUpload` function.
  */
-router.post('/profile/upload-photo', authenticateJWT, profileUpload.single('profilePhoto'), async (req, res) => {
+protectedRouter.post('/profile/upload-photo', authenticateJWT, profileUpload.single('profilePhoto'), async (req, res) => {
     const userId = req.user.id;
     
     // Check if a file was uploaded by multer
@@ -778,165 +778,165 @@ router.post('/profile/upload-photo', authenticateJWT, profileUpload.single('prof
     }
 });
 
-    /* ──────────── Admin Routes ──────────── */
+/* ──────────── Admin Routes ──────────── */
 
-    router.post('/admin/promote', authenticateJWT, hasRole(['overseer', 'global_overseer']), validate(promoteUserSchema), async (req, res) => {
-        const { email, make_admin, role } = req.body;
-        const actor = req.user;
+protectedRouter.post('/admin/promote', authenticateJWT, hasRole(['overseer', 'global_overseer']), validate(promoteUserSchema), async (req, res) => {
+    const { email, make_admin, role } = req.body;
+    const actor = req.user;
 
-        try {
-            const targetUser = await User.findOne({ email });
-            if (!targetUser) return res.status(404).json({ error: 'Target user not found.' });
-            if (targetUser.email === actor.email) return res.status(403).json({ error: 'Cannot modify your own account.' });
+    try {
+        const targetUser = await User.findOne({ email });
+        if (!targetUser) return res.status(404).json({ error: 'Target user not found.' });
+        if (targetUser.email === actor.email) return res.status(403).json({ error: 'Cannot modify your own account.' });
 
-            if (actor.occupation !== 'global_overseer' &&
-                (targetUser.occupation === 'overseer' || targetUser.occupation === 'global_overseer')) {
-                return res.status(403).json({ error: 'You do not have permission to modify this user.' });
-            }
-
-            await User.updateOne({ email }, { is_admin: make_admin, role, occupation: role });
-            logger.info('User %s promoted/demoted by %s', email, actor.email);
-            res.json({ message: 'User updated successfully.' });
-        } catch (e) {
-            res.status(500).json({ error: 'Failed to update user status.' });
+        if (actor.occupation !== 'global_overseer' &&
+            (targetUser.occupation === 'overseer' || targetUser.occupation === 'global_overseer')) {
+            return res.status(403).json({ error: 'You do not have permission to modify this user.' });
         }
-    });
 
-    router.post('/admin/remove-user', authenticateJWT, hasRole(['admin', 'overseer', 'global_overseer']), validate(removeUserSchema), async (req, res) => {
-        const { email } = req.body;
-        const actor = req.user;
-        if (actor.email === email) {
-            return res.status(403).json({ error: 'Cannot remove your own account.' });
-        }
-        try {
-            const targetUser = await User.findOne({ email });
-            if (!targetUser) return res.status(404).json({ error: 'User not found.' });
-            if (actor.occupation === 'overseer' && (targetUser.occupation === 'overseer' || targetUser.occupation === 'global_overseer')) {
-                return res.status(403).json({ error: 'You do not have permission to remove this user.' });
-            }
-            if (actor.is_admin) {
-                if (targetUser.is_admin || ['overseer', 'global_overseer'].includes(targetUser.occupation)) {
-                    return res.status(403).json({ error: 'You cannot remove this user.' });
-                }
-                const sameSchool = [targetUser.schoolName, targetUser.teacherSchool].includes(actor.school);
-                if (!sameSchool) return res.status(403).json({ error: 'Can only remove users from your school.' });
-            }
-            const result = await User.deleteOne({ email });
-            if (result.deletedCount === 0) {
-                return res.status(404).json({ error: 'User not found or not authorized.' });
-            }
-            logger.info('User %s removed by %s', email, actor.email);
-            res.json({ message: 'User removed successfully.' });
-        } catch (e) {
-            res.status(500).json({ error: 'Failed to remove user.' });
-        }
-    });
+        await User.updateOne({ email }, { is_admin: make_admin, role, occupation: role });
+        logger.info('User %s promoted/demoted by %s', email, actor.email);
+        res.json({ message: 'User updated successfully.' });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to update user status.' });
+    }
+});
 
-    router.get('/admin/schools', authenticateJWT, hasRole(['admin', 'overseer', 'global_overseer']), async (req, res) => {
-        try {
-            const schools = await User.aggregate([
-                { $project: { school: { $ifNull: ['$schoolName', '$teacherSchool'] } } },
-                { $match: { school: { $ne: null } } },
-                { $group: { _id: '$school' } }
-            ]);
-            res.json(schools.map(s => s._id));
-        } catch (e) {
-            res.status(500).json({ error: 'Failed to retrieve schools.' });
+protectedRouter.post('/admin/remove-user', authenticateJWT, hasRole(['admin', 'overseer', 'global_overseer']), validate(removeUserSchema), async (req, res) => {
+    const { email } = req.body;
+    const actor = req.user;
+    if (actor.email === email) {
+        return res.status(403).json({ error: 'Cannot remove your own account.' });
+    }
+    try {
+        const targetUser = await User.findOne({ email });
+        if (!targetUser) return res.status(404).json({ error: 'User not found.' });
+        if (actor.occupation === 'overseer' && (targetUser.occupation === 'overseer' || targetUser.occupation === 'global_overseer')) {
+            return res.status(403).json({ error: 'You do not have permission to remove this user.' });
         }
-    });
-
-    router.post('/admin/set-admin', authenticateJWT, hasRole(['admin', 'overseer', 'global_overseer']), validate(setAdminSchema), async (req, res) => {
-        const { email, promote } = req.body;
-        const actor = req.user;
-        try {
-            const target = await User.findOne({ email });
-            if (!target) return res.status(404).json({ error: 'User not found' });
-            const isOverseerActor = ['overseer', 'global_overseer'].includes(actor.occupation);
-            const isTargetHigher = ['overseer', 'global_overseer'].includes(target.occupation);
-            if (!isOverseerActor && isTargetHigher) {
-                return res.status(403).json({ error: 'Cannot modify other administrators.' });
+        if (actor.is_admin) {
+            if (targetUser.is_admin || ['overseer', 'global_overseer'].includes(targetUser.occupation)) {
+                return res.status(403).json({ error: 'You cannot remove this user.' });
             }
-            const sameSchool = [target.schoolName, target.teacherSchool].includes(actor.school);
-            if (!isOverseerActor && !sameSchool) {
-                return res.status(403).json({ error: 'Can only modify users from your school' });
-            }
-            await User.updateOne({ email }, { is_admin: promote });
-            res.json({ message: 'Updated' });
-        } catch (err) {
-            res.status(500).json({ error: 'DB error' });
+            const sameSchool = [targetUser.schoolName, targetUser.teacherSchool].includes(actor.school);
+            if (!sameSchool) return res.status(403).json({ error: 'Can only remove users from your school.' });
         }
-    });
-
-    // --- New route to add a school ---
-    router.post('/admin/schools/add', authenticateJWT, hasRole(['overseer', 'global_overseer']), validate(schoolSchema), async (req, res) => {
-        const { name, country, tier } = req.body;
-        try {
-            const newSchool = new School({ name, country, tier });
-            await newSchool.save();
-            res.status(201).json(newSchool);
-        } catch (error) {
-            if (error.code === 11000) {
-                return res.status(409).json({ error: 'A school with this name already exists.' });
-            }
-            logger.error('Error adding school:', error);
-            res.status(500).json({ error: 'Internal server error.' });
+        const result = await User.deleteOne({ email });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'User not found or not authorized.' });
         }
-    });
+        logger.info('User %s removed by %s', email, actor.email);
+        res.json({ message: 'User removed successfully.' });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to remove user.' });
+    }
+});
 
-    // ✅ New: Route for Overseer Dashboard Overview
-    router.get('/overseer/dashboard-overview', authenticateJWT, hasRole(['overseer', 'global_overseer']), async (req, res) => {
-        const { managedRegions } = req.user;
-        if (!managedRegions || managedRegions.length === 0) {
-            return res.json({ managedRegions: [] });
+protectedRouter.get('/admin/schools', authenticateJWT, hasRole(['admin', 'overseer', 'global_overseer']), async (req, res) => {
+    try {
+        const schools = await User.aggregate([
+            { $project: { school: { $ifNull: ['$schoolName', '$teacherSchool'] } } },
+            { $match: { school: { $ne: null } } },
+            { $group: { _id: '$school' } }
+        ]);
+        res.json(schools.map(s => s._id));
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to retrieve schools.' });
+    }
+});
+
+protectedRouter.post('/admin/set-admin', authenticateJWT, hasRole(['admin', 'overseer', 'global_overseer']), validate(setAdminSchema), async (req, res) => {
+    const { email, promote } = req.body;
+    const actor = req.user;
+    try {
+        const target = await User.findOne({ email });
+        if (!target) return res.status(404).json({ error: 'User not found' });
+        const isOverseerActor = ['overseer', 'global_overseer'].includes(actor.occupation);
+        const isTargetHigher = ['overseer', 'global_overseer'].includes(target.occupation);
+        if (!isOverseerActor && isTargetHigher) {
+            return res.status(403).json({ error: 'Cannot modify other administrators.' });
         }
-        try {
-            const overviewData = await Promise.all(managedRegions.map(async (region) => {
-                // Find schools in the region
-                const schoolsInRegion = await School.find({ country: region });
-                const schoolNames = schoolsInRegion.map(school => school.name);
-                // Count users and admins in those schools
-                const usersInSchools = await User.find({
-                    $or: [
-                        { schoolName: { $in: schoolNames } },
-                        { teacherSchool: { $in: schoolNames } }
-                    ]
-                });
-                const totalAdmins = usersInSchools.filter(user => user.is_admin).length;
-                return { name: region, totalSchools: schoolNames.length, totalAdmins };
-            }));
-            res.json({ managedRegions: overviewData });
-        } catch (e) {
-            logger.error('Failed to get overseer dashboard data:', e);
-            res.status(500).json({ error: 'Failed to retrieve dashboard data.' });
+        const sameSchool = [target.schoolName, target.teacherSchool].includes(actor.school);
+        if (!isOverseerActor && !sameSchool) {
+            return res.status(403).json({ error: 'Can only modify users from your school' });
         }
-    });
+        await User.updateOne({ email }, { is_admin: promote });
+        res.json({ message: 'Updated' });
+    } catch (err) {
+        res.status(500).json({ error: 'DB error' });
+    }
+});
 
-    // ✅ New: Route to assign a region to an Overseer
-    router.post('/admin/assign-region', authenticateJWT, hasRole(['global_overseer']), validate(assignRegionSchema), async (req, res) => {
-        const { overseerEmail, region } = req.body;
-        try {
-            const targetUser = await User.findOne({ email: overseerEmail });
-            if (!targetUser) {
-                return res.status(404).json({ error: 'Overseer user not found.' });
-            }
-            if (targetUser.occupation !== 'overseer' && targetUser.occupation !== 'global_overseer') {
-                return res.status(400).json({ error: 'Target user is not an overseer.' });
-            }
+// --- New route to add a school ---
+protectedRouter.post('/admin/schools/add', authenticateJWT, hasRole(['overseer', 'global_overseer']), validate(schoolSchema), async (req, res) => {
+    const { name, country, tier } = req.body;
+    try {
+        const newSchool = new School({ name, country, tier });
+        await newSchool.save();
+        res.status(201).json(newSchool);
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(409).json({ error: 'A school with this name already exists.' });
+        }
+        logger.error('Error adding school:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
 
-            // Push the new region to the managedRegions array if it's not already there
-            await User.updateOne({ email: overseerEmail }, {
-                $addToSet: { managedRegions: region }
+// ✅ New: Route for Overseer Dashboard Overview
+protectedRouter.get('/overseer/dashboard-overview', authenticateJWT, hasRole(['overseer', 'global_overseer']), async (req, res) => {
+    const { managedRegions } = req.user;
+    if (!managedRegions || managedRegions.length === 0) {
+        return res.json({ managedRegions: [] });
+    }
+    try {
+        const overviewData = await Promise.all(managedRegions.map(async (region) => {
+            // Find schools in the region
+            const schoolsInRegion = await School.find({ country: region });
+            const schoolNames = schoolsInRegion.map(school => school.name);
+            // Count users and admins in those schools
+            const usersInSchools = await User.find({
+                $or: [
+                    { schoolName: { $in: schoolNames } },
+                    { teacherSchool: { $in: schoolNames } }
+                ]
             });
+            const totalAdmins = usersInSchools.filter(user => user.is_admin).length;
+            return { name: region, totalSchools: schoolNames.length, totalAdmins };
+        }));
+        res.json({ managedRegions: overviewData });
+    } catch (e) {
+        logger.error('Failed to get overseer dashboard data:', e);
+        res.status(500).json({ error: 'Failed to retrieve dashboard data.' });
+    }
+});
 
-            res.json({ message: `Successfully assigned region ${region} to overseer ${overseerEmail}.` });
-        } catch (e) {
-            logger.error('Error assigning region:', e);
-            res.status(500).json({ error: 'Failed to assign region.' });
+// ✅ New: Route to assign a region to an Overseer
+protectedRouter.post('/admin/assign-region', authenticateJWT, hasRole(['global_overseer']), validate(assignRegionSchema), async (req, res) => {
+    const { overseerEmail, region } = req.body;
+    try {
+        const targetUser = await User.findOne({ email: overseerEmail });
+        if (!targetUser) {
+            return res.status(404).json({ error: 'Overseer user not found.' });
         }
-    });
+        if (targetUser.occupation !== 'overseer' && targetUser.occupation !== 'global_overseer') {
+            return res.status(400).json({ error: 'Target user is not an overseer.' });
+        }
 
-    // 🆕 New route for a Global Overseer to view all uploaded files
-router.get('/admin/all-files', authenticateJWT, hasRole(['global_overseer']), async (req, res) => {
+        // Push the new region to the managedRegions array if it's not already there
+        await User.updateOne({ email: overseerEmail }, {
+            $addToSet: { managedRegions: region }
+        });
+
+        res.json({ message: `Successfully assigned region ${region} to overseer ${overseerEmail}.` });
+    } catch (e) {
+        logger.error('Error assigning region:', e);
+        res.status(500).json({ error: 'Failed to assign region.' });
+    }
+});
+
+// 🆕 New route for a Global Overseer to view all uploaded files
+protectedRouter.get('/admin/all-files', authenticateJWT, hasRole(['global_overseer']), async (req, res) => {
     try {
         // Fetch all assignments and their file paths
         const assignments = await Assignment.find({ attachment_file: { $ne: null } }).select('title attachment_file created_by');
@@ -984,7 +984,7 @@ router.get('/admin/all-files', authenticateJWT, hasRole(['global_overseer']), as
 });
 
 // 🆕 New universal file-serving route for Global Overseer
-router.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole(['global_overseer']), async (req, res) => {
+protectedRouter.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole(['global_overseer']), async (req, res) => {
     try {
         const { type, filename } = req.params;
         let filePath;
@@ -1021,105 +1021,103 @@ router.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole(['global
 });
 
 /* ──────────── Payment & Pricing Routes ──────────── */
-    
-    // Get the user's current price based on their role and school
-    router.get('/pricing', authenticateJWT, async (req, res) => {
-        const { occupation, school, grade } = req.user;
-        const user = await User.findById(req.user.id).select('country');
+protectedRouter.get('/pricing', authenticateJWT, async (req, res) => {
+    const { occupation, school, grade } = req.user;
+    const user = await User.findById(req.user.id).select('country');
 
-        if (!user || !user.country) {
-            return res.status(400).json({ error: 'User country not found.' });
+    if (!user || !user.country) {
+        return res.status(400).json({ error: 'User country not found.' });
+    }
+
+    try {
+        const price = await getUserPrice(user.country, occupation, school);
+        res.json(price);
+    } catch (err) {
+        logger.error('Error getting user price:', err);
+        res.status(500).json({ error: 'Failed to retrieve pricing information.' });
+    }
+});
+
+// Initiate a payment transaction
+protectedRouter.post('/payment/initiate', authenticateJWT, validate(paymentSchema), async (req, res) => {
+    const { gateway } = req.body;
+    const { email, id, occupation, school } = req.user;
+    const user = await User.findById(id).select('country');
+
+    if (!user || !user.country) {
+        return res.status(400).json({ error: 'User country not found.' });
+    }
+
+    // Users who don't pay shouldn't initiate payments.
+    if (['student', 'overseer', 'global_overseer'].includes(occupation)) {
+        return res.status(403).json({ error: 'Forbidden: This role does not require payment.' });
+    }
+
+    try {
+        const priceInfo = await getUserPrice(user.country, occupation, school);
+        const amount = priceInfo.localPrice;
+        const currency = priceInfo.currency;
+
+        if (amount <= 0) {
+            return res.status(400).json({ error: 'Invalid payment amount.' });
         }
 
-        try {
-            const price = await getUserPrice(user.country, occupation, school);
-            res.json(price);
-        } catch (err) {
-            logger.error('Error getting user price:', err);
-            res.status(500).json({ error: 'Failed to retrieve pricing information.' });
-        }
-    });
-
-    // Initiate a payment transaction
-    router.post('/payment/initiate', authenticateJWT, validate(paymentSchema), async (req, res) => {
-        const { gateway } = req.body;
-        const { email, id, occupation, school } = req.user;
-        const user = await User.findById(id).select('country');
-
-        if (!user || !user.country) {
-            return res.status(400).json({ error: 'User country not found.' });
+        let paymentData;
+        if (gateway === 'flutterwave') {
+            paymentData = await initFlutterwavePayment(email, amount, currency);
+        } else if (gateway === 'paystack') {
+            paymentData = await initPaystackPayment(email, amount, currency);
         }
 
-        // Users who don't pay shouldn't initiate payments.
-        if (['student', 'overseer', 'global_overseer'].includes(occupation)) {
-            return res.status(403).json({ error: 'Forbidden: This role does not require payment.' });
-        }
-
-        try {
-            const priceInfo = await getUserPrice(user.country, occupation, school);
-            const amount = priceInfo.localPrice;
-            const currency = priceInfo.currency;
-
-            if (amount <= 0) {
-                return res.status(400).json({ error: 'Invalid payment amount.' });
-            }
-
-            let paymentData;
-            if (gateway === 'flutterwave') {
-                paymentData = await initFlutterwavePayment(email, amount, currency);
-            } else if (gateway === 'paystack') {
-                paymentData = await initPaystackPayment(email, amount, currency);
-            }
-
-            if (paymentData) {
-                res.json({ message: 'Payment initiated successfully.', data: paymentData });
-            } else {
-                res.status(500).json({ error: 'Failed to initiate payment.' });
-            }
-        } catch (err) {
-            logger.error('Error initiating payment:', err);
+        if (paymentData) {
+            res.json({ message: 'Payment initiated successfully.', data: paymentData });
+        } else {
             res.status(500).json({ error: 'Failed to initiate payment.' });
         }
-    });
-    
-    // Start a free trial for a user
-    router.post('/trial/start', authenticateJWT, async (req, res) => {
-        const userId = req.user.id;
-        try {
-            const user = await User.findById(userId);
+    } catch (err) {
+        logger.error('Error initiating payment:', err);
+        res.status(500).json({ error: 'Failed to initiate payment.' });
+    }
+});
 
-            if (!user) {
-                return res.status(404).json({ error: 'User not found.' });
-            }
+// Start a free trial for a user
+protectedRouter.post('/trial/start', authenticateJWT, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const user = await User.findById(userId);
 
-            if (user.is_on_trial || user.has_used_trial) {
-                return res.status(400).json({ error: 'Trial has already been used or is currently active.' });
-            }
-
-            // Set trial flags
-            user.is_on_trial = true;
-            user.trial_starts_at = new Date();
-            user.has_used_trial = true;
-            await user.save();
-
-            // Schedule an Agenda job to end the trial after 14 days
-            agenda.schedule('in 14 days', 'end-trial', { userId: user._id });
-
-            logger.info('Free trial started for user:', userId);
-            res.json({ message: 'Free trial started successfully. It will end in 14 days.' });
-        } catch (err) {
-            logger.error('Error starting free trial:', err);
-            res.status(500).json({ error: 'Failed to start free trial.' });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
         }
-    });
-    
+
+        if (user.is_on_trial || user.has_used_trial) {
+            return res.status(400).json({ error: 'Trial has already been used or is currently active.' });
+        }
+
+        // Set trial flags
+        user.is_on_trial = true;
+        user.trial_starts_at = new Date();
+        user.has_used_trial = true;
+        await user.save();
+
+        // Schedule an Agenda job to end the trial after 14 days
+        agenda.schedule('in 14 days', 'end-trial', { userId: user._id });
+
+        logger.info('Free trial started for user:', userId);
+        res.json({ message: 'Free trial started successfully. It will end in 14 days.' });
+    } catch (err) {
+        logger.error('Error starting free trial:', err);
+        res.status(500).json({ error: 'Failed to start free trial.' });
+    }
+});
+
 /* ──────────── Teacher Routes ──────────── */
 /**
  * @route GET /api/teacher/profile
  * @desc Gets the profile information of the logged-in teacher.
  * @access Private (Teacher Only)
  */
-router.get('/teacher/profile', authenticateJWT, hasRole('teacher'), async (req, res) => {
+protectedRouter.get('/teacher/profile', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const teacher = await User.findById(req.user.id).select('-password');
         if (!teacher) {
@@ -1137,7 +1135,7 @@ router.get('/teacher/profile', authenticateJWT, hasRole('teacher'), async (req, 
  * @desc Allows a teacher to submit the academic calendar for their school.
  * @access Private (Teacher Only)
  */
-router.post('/teacher/calendar', authenticateJWT, hasRole('teacher'), validate(academicCalendarSchema), async (req, res) => {
+protectedRouter.post('/teacher/calendar', authenticateJWT, hasRole('teacher'), validate(academicCalendarSchema), async (req, res) => {
     const { schoolName, academicYear, terms } = req.body;
     const teacherId = req.user.id;
 
@@ -1180,7 +1178,7 @@ router.post('/teacher/calendar', authenticateJWT, hasRole('teacher'), validate(a
  * @desc Creates a new assignment for a student and emits an event.
  * @access Private (Teacher Only)
  */
-router.post('/teacher/assignments', authenticateJWT, hasRole('teacher'), localUpload.single('file'), async (req, res) => {
+protectedRouter.post('/teacher/assignments', authenticateJWT, hasRole('teacher'), localUpload.single('file'), async (req, res) => {
     try {
         const { studentEmail, title, description, dueDate } = req.body;
         const teacherId = req.user.id;
@@ -1228,7 +1226,7 @@ router.post('/teacher/assignments', authenticateJWT, hasRole('teacher'), localUp
  * @desc Gets all assignments created by a specific teacher.
  * @access Private (Teacher Only)
  */
-router.get('/teacher/assignments/:teacherId', authenticateJWT, hasRole('teacher'), async (req, res) => {
+protectedRouter.get('/teacher/assignments/:teacherId', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const assignments = await Assignment.find({ created_by: req.params.teacherId });
         res.status(200).json({ assignments });
@@ -1243,7 +1241,7 @@ router.get('/teacher/assignments/:teacherId', authenticateJWT, hasRole('teacher'
  * @desc Teacher leaves feedback and/or a grade on a student submission.
  * @access Private (Teacher Only)
  */
-router.post(
+protectedRouter.post(
     '/teacher/feedback/:submissionId',
     authenticateJWT,
     hasRole('teacher'),
@@ -1293,7 +1291,7 @@ router.post(
  * @desc Fetches all students in the same school and class as the logged-in teacher.
  * @access Private (Teacher Only)
  */
-router.get('/teacher/students', authenticateJWT, hasRole('teacher'), async (req, res) => {
+protectedRouter.get('/teacher/students', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const teacher = await User.findById(req.user.id);
         if (!teacher || !teacher.schoolName || !teacher.grade) {
@@ -1317,7 +1315,7 @@ router.get('/teacher/students', authenticateJWT, hasRole('teacher'), async (req,
  * @desc Fetches all assignments that are overdue for students in the teacher's class.
  * @access Private (Teacher Only)
  */
-router.get('/teacher/overdue-tasks', authenticateJWT, hasRole('teacher'), async (req, res) => {
+protectedRouter.get('/teacher/overdue-tasks', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const teacher = await User.findById(req.user.id);
         const now = new Date();
@@ -1366,7 +1364,7 @@ router.get('/teacher/overdue-tasks', authenticateJWT, hasRole('teacher'), async 
  * @desc Fetches all assignments assigned by the current teacher.
  * @access Private (Teacher Only)
  */
-router.get('/teacher/assigned-tasks', authenticateJWT, hasRole('teacher'), async (req, res) => {
+protectedRouter.get('/teacher/assigned-tasks', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const assignedTasks = await Assignment.find({ created_by: req.user.id });
         const formattedTasks = assignedTasks.map(t => ({
@@ -1388,7 +1386,7 @@ router.get('/teacher/assigned-tasks', authenticateJWT, hasRole('teacher'), async
  * @desc Fetches all submissions that have received feedback from the current teacher.
  * @access Private (Teacher Only)
  */
-router.get('/teacher/feedback', authenticateJWT, hasRole('teacher'), async (req, res) => {
+protectedRouter.get('/teacher/feedback', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         // Find all submissions that have feedback/grades
         const submissionsWithFeedback = await Submission.find({
@@ -1423,7 +1421,7 @@ router.get('/teacher/feedback', authenticateJWT, hasRole('teacher'), async (req,
  * @desc Sends a notification message to a specific student.
  * @access Private (Teacher Only)
  */
-router.post('/teacher/message', authenticateJWT, hasRole('teacher'), async (req, res) => {
+protectedRouter.post('/teacher/message', authenticateJWT, hasRole('teacher'), async (req, res) => {
     const { to, text } = req.body;
     try {
         const student = await User.findOne({ email: to, role: 'student' });
@@ -1450,7 +1448,7 @@ router.post('/teacher/message', authenticateJWT, hasRole('teacher'), async (req,
  * @desc Fetches all students in the same school but NOT the same class as the logged-in teacher.
  * @access Private (Teacher Only)
  */
-router.get('/teacher/students/other', authenticateJWT, hasRole('teacher'), async (req, res) => {
+protectedRouter.get('/teacher/students/other', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const teacher = await User.findById(req.user.id);
         if (!teacher || !teacher.schoolName || !teacher.grade) {
@@ -1470,104 +1468,108 @@ router.get('/teacher/students/other', authenticateJWT, hasRole('teacher'), async
 });
 
 
-    // --- Student Routes ---
-    /**
-     * @route GET /api/student/assignments/:studentId
-     * @desc Gets all assignments for a student's class.
-     * @access Private (Student Only)
-     */
-    router.get('/student/assignments/:studentId', authenticateJWT, hasRole('student'), async (req, res) => {
-        try {
-            // Logic to find the student's class and then fetch assignments for that class
-            // This is a placeholder; you would need a way to link a student to a class
-            const student = await User.findById(req.params.studentId);
-            if (!student) {
-                return res.status(404).json({ message: 'Student not found.' });
-            }
-            // Assuming the User model has a 'class' field
-            const assignments = await Assignment.find({ class: student.class });
-            res.status(200).json({ assignments });
-        } catch (error) {
-            logger.error('Error fetching student assignments:', error);
-            res.status(500).json({ message: 'Server error' });
+// --- Student Routes ---
+/**
+ * @route GET /api/student/assignments/:studentId
+ * @desc Gets all assignments for a student's class.
+ * @access Private (Student Only)
+ */
+protectedRouter.get('/student/assignments/:studentId', authenticateJWT, hasRole('student'), async (req, res) => {
+    try {
+        // Logic to find the student's class and then fetch assignments for that class
+        // This is a placeholder; you would need a way to link a student to a class
+        const student = await User.findById(req.params.studentId);
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found.' });
         }
-    });
+        // Assuming the User model has a 'class' field
+        const assignments = await Assignment.find({ class: student.class });
+        res.status(200).json({ assignments });
+    } catch (error) {
+        logger.error('Error fetching student assignments:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
-  /**
-     * @route POST /api/student/submissions
-     * @desc Submits an assignment (text + optional file).
-     * @access Private (Student Only)
-     */
-    router.post(
-      '/student/submissions',
-      authenticateJWT,
-      hasRole('student'),
-      localUpload.single('file'),  // ✅ Use the correctly defined localUpload instance
-      async (req, res) => {
-        try {
-          const { assignmentId, studentId, submissionText } = req.body;
-          if (!assignmentId || !studentId) {
-            return res.status(400).json({ message: 'Missing required fields.' });
-          }
-
-          const newSubmission = new Submission({
-            assignment_id: assignmentId,
-            user_id: studentId,
-            submission_file: req.file ? `/uploads/submissions/${req.file.filename}` : null,
-            submission_text: submissionText || null,
-            submitted_at: new Date()
-          });
-
-          await newSubmission.save();
-
-          // notify teachers
-          eventBus.emit('new_submission', {
-            assignmentId,
-            studentId,
-          });
-
-          res.status(201).json({
-            message: 'Submission successful!',
-            submission: newSubmission
-          });
-        } catch (error) {
-          logger.error('Error submitting assignment:', error);
-          res.status(500).json({ message: 'Server error' });
+/**
+ * @route POST /api/student/submissions
+ * @desc Submits an assignment (text + optional file).
+ * @access Private (Student Only)
+ */
+protectedRouter.post(
+    '/student/submissions',
+    authenticateJWT,
+    hasRole('student'),
+    localUpload.single('file'),  // ✅ Use the correctly defined localUpload instance
+    async (req, res) => {
+      try {
+        const { assignmentId, studentId, submissionText } = req.body;
+        if (!assignmentId || !studentId) {
+          return res.status(400).json({ message: 'Missing required fields.' });
         }
+
+        const newSubmission = new Submission({
+          assignment_id: assignmentId,
+          user_id: studentId,
+          submission_file: req.file ? `/uploads/submissions/${req.file.filename}` : null,
+          submission_text: submissionText || null,
+          submitted_at: new Date()
+        });
+
+        await newSubmission.save();
+
+        // notify teachers
+        eventBus.emit('new_submission', {
+          assignmentId,
+          studentId,
+        });
+
+        res.status(201).json({
+          message: 'Submission successful!',
+          submission: newSubmission
+        });
+      } catch (error) {
+        logger.error('Error submitting assignment:', error);
+        res.status(500).json({ message: 'Server error' });
       }
-    );
+    }
+);
 
-    /**
-     * @route GET /api/student/teachers/my-school
-     * @desc Fetches all teachers from the same school as the logged-in student.
-     * @access Private (Student Only)
-     */
-    router.get('/student/teachers/my-school', authenticateJWT, hasRole('student'), async (req, res) => {
-        try {
-            const student = await User.findById(req.user.id);
-            if (!student || !student.school) {
-                return res.status(400).json({ message: 'Student school information is missing.' });
-            }
-            const teachers = await User.find({
-                role: 'teacher',
-                school: student.school
-            }).select('firstName lastName email'); // Select only necessary fields
-
-            res.status(200).json({ teachers });
-        } catch (error) {
-            logger.error('Error fetching teachers for student\'s school:', error);
-            res.status(500).json({ message: 'Server error' });
+/**
+ * @route GET /api/student/teachers/my-school
+ * @desc Fetches all teachers from the same school as the logged-in student.
+ * @access Private (Student Only)
+ */
+protectedRouter.get('/student/teachers/my-school', authenticateJWT, hasRole('student'), async (req, res) => {
+    try {
+        const student = await User.findById(req.user.id);
+        if (!student || !student.school) {
+            return res.status(400).json({ message: 'Student school information is missing.' });
         }
-    });
+        const teachers = await User.find({
+            role: 'teacher',
+            school: student.school
+        }).select('firstName lastName email'); // Select only necessary fields
 
+        res.status(200).json({ teachers });
+    } catch (error) {
+        logger.error('Error fetching teachers for student\'s school:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
+// ✅ Attach all routes to the main app
+// This line should not be duplicated. It was already included in the previous update.
+// The `router` variable from the original code is no longer used, and this line needs to be removed.
+// app.use('/api', router);
 
-    // ✅ Attach all routes to the main app
-    app.use('/api', router);
-    router.get('/health', (req, res) => {
-        res.status(200).json({ status: 'OK' });
-    });
+// This health check route is public, so it should use the publicRouter
+publicRouter.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK' });
+});
 
-    // Return the router at the bottom
-    return router;
+// Return the router at the bottom
+// This should return both routers, but for simplicity, you can just remove this line
+// as the app.use calls already mount the routers.
+// return router;
 };
