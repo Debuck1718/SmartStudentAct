@@ -37,11 +37,10 @@ const MONGO_URI = process.env.MONGODB_URI;
 // ───────────────────────────────────────────────
 const app = express();
 
-// ✅ Updated CORS to allow all HTTPS origins and null origin (Postman/curl)
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (!origin) return callback(null, true); // allow non-browser clients
+            if (!origin) return callback(null, true); 
             if (origin.startsWith("https://")) return callback(null, true);
             return callback(new Error("Not allowed by CORS"));
         },
@@ -110,13 +109,14 @@ async function startAgenda() {
 // 6️⃣ Routes Loader
 // ───────────────────────────────────────────────
 try {
-    const { publicRouter, protectedRouter } = require("./routes")(app, mongoose, eventBus, agenda, cloudinary);
+    // ✅ Updated to correctly import the public and protected routers directly.
+    const publicRouter = require('./routes/index');
+    const protectedRouter = require('./routes/protectedRoutes');
 
-    // Apply the checkSubscription middleware to the protected router ONLY
-    protectedRouter.use(require('./middlewares/checkSubscription'));
-
-    // ✅ Mount routes
+    // ✅ Mount public routes first
     app.use("/api", publicRouter);
+
+    // ✅ Mount protected routes second. The protected router already applies middleware.
     app.use("/api", protectedRouter);
 
     console.log("✅ Routes loaded successfully!");
@@ -148,4 +148,3 @@ app.get("/", (req, res) => {
         process.exit(1);
     }
 })();
-
