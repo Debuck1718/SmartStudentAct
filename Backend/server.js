@@ -105,14 +105,15 @@ async function startAgenda() {
 // 6️⃣ Routes Loader
 // ───────────────────────────────────────────────
 try {
-    // ❌ OLD: const mainRoutes = require("./routes")(app, mongoose, eventBus, agenda, cloudinary);
-    // ✅ NEW: Destructure the returned object to get both routers
     const { publicRouter, protectedRouter } = require("./routes")(app, mongoose, eventBus, agenda, cloudinary);
 
-    // ✅ Mount the protected routes
-    app.use("/api", protectedRouter);
-    // ✅ Mount the public routes, e.g., the health check
-    app.use("/api", publicRouter);
+    // ✅ Apply the checkSubscription middleware to the protected router ONLY
+    // The order is important: authentication first, then subscription check.
+    protectedRouter.use(require('./middlewares/checkSubscription'));
+
+    // Mount the routers. Order matters here. Public routes should be checked first.
+    app.use("/api", publicRouter); // Routes like /login and /register
+    app.use("/api", protectedRouter); // All other authenticated routes
 
     console.log("✅ Routes loaded successfully!");
 } catch (err) {
