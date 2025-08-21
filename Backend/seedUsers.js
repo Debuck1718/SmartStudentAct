@@ -19,7 +19,7 @@ const defaultSpecialUsers = [
     password: "adminpass123",
     role: "admin",
     schoolName: "Sunrise High School",
-    schoolCountry: "GH", // ✅ required now
+    schoolCountry: "GH", // ✅ required for admins
   },
   {
     name: "Overseer One",
@@ -46,7 +46,6 @@ if (
   process.env.INITIAL_GLOBAL_OVERSEER_EMAIL &&
   process.env.INITIAL_GLOBAL_OVERSEER_PASSWORD
 ) {
-  // Check if already exists in JSON
   const alreadyExists = specialUsers.find(
     (u) => u.email === process.env.INITIAL_GLOBAL_OVERSEER_EMAIL
   );
@@ -96,15 +95,15 @@ async function seedUsers() {
           }
         }
 
-        if (!existingUser.isVerified) {
-          existingUser.isVerified = true;
+        // ✅ Fix: use verified (not isVerified)
+        if (!existingUser.verified) {
+          existingUser.verified = true;
           updated = true;
         }
 
         // ✅ Password update: only compare if both exist
         if (userData.password) {
           if (!existingUser.password) {
-            // Missing password → set new one
             existingUser.password = await bcrypt.hash(userData.password, 10);
             updated = true;
           } else {
@@ -132,7 +131,7 @@ async function seedUsers() {
           email: userData.email,
           password: hashedPassword,
           role: userData.role,
-          isVerified: true,
+          verified: true, // ✅ fixed here
         };
 
         if (userData.role === "admin") {
@@ -155,4 +154,3 @@ async function seedUsers() {
 }
 
 seedUsers();
-

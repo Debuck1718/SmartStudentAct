@@ -282,12 +282,12 @@ module.exports = function buildRouter(app, mongoose, eventBus, agenda, cloudinar
         newPassword: Joi.string().min(8).required()
     });
 
-   /* ──────────── PUBLIC AUTH ROUTES ──────────── */
+  /* ──────────── PUBLIC AUTH ROUTES ──────────── */
 
 // Signup with OTP
 publicRouter.post('/users/signup', async (req, res) => {
     try {
-        const { email, password, role = 'student' } = req.body; // default role = student
+        const { email, password, role = 'student' } = req.body;
         if (!email || !password) {
             return res.status(400).json({ message: 'Email and password are required' });
         }
@@ -309,12 +309,12 @@ publicRouter.post('/users/signup', async (req, res) => {
             email,
             password: hashedPassword,
             role,
-            otp,
-            isVerified: false,
-            otpExpires: Date.now() + 10 * 60 * 1000, // 10 minutes
+            brevoOtp: otp,
+            brevoOtpExpiry: Date.now() + 10 * 60 * 1000, // 10 minutes
+            verified: false,
         });
 
-        // Send OTP via email (Brevo / Nodemailer etc.)
+        // Send OTP via email
         await sendEmail(
             email,
             'Verify your SmartStudent account',
@@ -338,15 +338,15 @@ publicRouter.post('/users/verify-otp', async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) return res.status(404).json({ message: 'User not found' });
-        if (user.isVerified) return res.status(400).json({ message: 'User already verified' });
-        if (user.otp !== otp || user.otpExpires < Date.now()) {
+        if (user.verified) return res.status(400).json({ message: 'User already verified' });
+        if (user.brevoOtp !== otp || user.brevoOtpExpiry < Date.now()) {
             return res.status(400).json({ message: 'Invalid or expired OTP' });
         }
 
         // Mark as verified
-        user.isVerified = true;
-        user.otp = undefined;
-        user.otpExpires = undefined;
+        user.verified = true;
+        user.brevoOtp = undefined;
+        user.brevoOtpExpiry = undefined;
         await user.save();
 
         res.json({ message: 'Account verified successfully' });
@@ -360,10 +360,10 @@ publicRouter.post('/users/verify-otp', async (req, res) => {
 publicRouter.post('/users/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select('+password');
 
         if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-        if (!user.isVerified) return res.status(403).json({ message: 'Account not verified. Please verify OTP.' });
+        if (!user.verified) return res.status(403).json({ message: 'Account not verified. Please verify OTP.' });
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) return res.status(401).json({ message: 'Invalid credentials' });
@@ -380,7 +380,7 @@ publicRouter.post('/users/login', async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                role: user.role, // frontend now reads role
+                role: user.role,
             },
         });
     } catch (err) {
@@ -393,6 +393,7 @@ publicRouter.post('/users/login', async (req, res) => {
 publicRouter.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK' });
 });
+
 
 
 /* ──────────── PASSWORD RESET ──────────── */
