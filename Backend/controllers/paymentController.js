@@ -2,7 +2,7 @@
 const { getPaymentDetails } = require('../services/pricingService');
 const { initPaystackPayment } = require('../services/paystackService');
 const { initFlutterwavePayment } = require('../services/flutterwaveService');
-const { validatePaymentRequest } = require('../utils/validation'); // New file for validation
+const { validatePaymentRequest } = require('../utils/validator'); // New file for validation
 const { handleWebhook } = require('./webhookController'); // A new controller for webhooks
 
 async function initializePayment(req, res) {
