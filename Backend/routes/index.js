@@ -358,42 +358,63 @@ publicRouter.post('/users/verify-otp', async (req, res) => {
 
 // Login (only if verified)
 publicRouter.post('/users/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email }).select('+password');
+  try {
+    const { email, password } = req.body;
 
-        if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-        if (!user.verified) return res.status(403).json({ message: 'Account not verified. Please verify OTP.' });
+    // Normalize email (avoid case sensitivity issues)
+    const normalizedEmail = email?.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) return res.status(401).json({ message: 'Invalid credentials' });
-
-        // Generate JWT with role
-        const token = jwt.sign(
-            { id: user._id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-
-        res.json({
-            token,
-            user: {
-                id: user._id,
-                email: user.email,
-                role: user.role,
-            },
-        });
-    } catch (err) {
-        logger.error('Login error:', err.message);
-        res.status(500).json({ message: 'Server error' });
+    if (!user) {
+      return res.status(401).json({
+        code: 'INVALID_EMAIL',
+        message: 'No account found with this email address.',
+      });
     }
+
+    if (!user.verified) {
+      return res.status(403).json({
+        code: 'UNVERIFIED',
+        message: 'Your account is not verified. Please check your email for the OTP.',
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        code: 'INVALID_PASSWORD',
+        message: 'The password you entered is incorrect.',
+      });
+    }
+
+    // Generate JWT with role
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    logger.error('Login error:', err.message);
+    res.status(500).json({
+      code: 'SERVER_ERROR',
+      message: 'An unexpected error occurred. Please try again later.',
+    });
+  }
 });
 
 // Health check
 publicRouter.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK' });
+  res.status(200).json({ status: 'OK' });
 });
-
 
 
 /* ──────────── PASSWORD RESET ──────────── */

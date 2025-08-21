@@ -24,21 +24,21 @@ async function seedUsers() {
         role: "admin",
         schoolName: "Sunrise High School",
         schoolCountry: "GH",
-        isVerified: true,
+        verified: true,
       },
       {
         name: "Overseer One",
         email: "overseer1@schools.com",
         password: await bcrypt.hash("overseerpass123", 10),
         role: "overseer",
-        isVerified: true,
+        verified: true,
       },
       {
         name: "Global Overseer",
         email: "evans.buckman55@gmail.com",
         password: await bcrypt.hash("globalpass123", 10),
         role: "global_overseer",
-        isVerified: true,
+        verified: true,
       }
     ];
 

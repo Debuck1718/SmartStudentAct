@@ -291,73 +291,82 @@
       });
 
       // --- Handle Login ---
-      async function handleLogin() {
-        const emailValidationResult = validateEmail(emailInput.value);
-        const passwordValidationResult = validatePassword(passwordInput.value);
+async function handleLogin() {
+  const emailValidationResult = validateEmail(emailInput.value);
+  const passwordValidationResult = validatePassword(passwordInput.value);
 
-        setError(emailErrorEl, emailValidationResult, emailInput);
-        setError(passwordErrorEl, passwordValidationResult, passwordInput);
+  setError(emailErrorEl, emailValidationResult, emailInput);
+  setError(passwordErrorEl, passwordValidationResult, passwordInput);
 
-        if (emailValidationResult || passwordValidationResult) return;
+  if (emailValidationResult || passwordValidationResult) return;
 
-        setLoading(true);
-        try {
-          const response = await fetch(`${API_BASE_URL}/users/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: emailInput.value,
-              password: passwordInput.value,
-            }),
-          });
+  setLoading(true);
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: emailInput.value,
+        password: passwordInput.value,
+      }),
+    });
 
-          const data = await response.json();
+    const data = await response.json();
 
-          if (!response.ok) {
-            const message = data.message || "Invalid email or password.";
-            setError(passwordErrorEl, message, passwordInput);
-            setLoading(false);
-            return;
-          }
-
-          // ✅ Save JWT token
-          localStorage.setItem("token", data.token);
-
-          console.log("User logged in successfully:", data.user);
-
-          // Role-based navigation
-          switch (data.user.role) {
-            case "global_overseer":
-              window.location.href = "/global-overseer.html";
-              break;
-            case "overseer":
-              window.location.href = "/overseer.html";
-              break;
-            case "student":
-              window.location.href = "/students.html";
-              break;
-            case "teacher":
-              window.location.href = "/teachers.html";
-              break;
-            case "admin":
-              window.location.href = "/admin.html";
-              break;
-            default:
-              window.location.href = "/login.html";
-              break;
-          }
-        } catch (error) {
-          console.error("Login error:", error);
-          setError(
-            passwordErrorEl,
-            "An unexpected error occurred. Please try again later.",
-            passwordInput
-          );
-        } finally {
-          setLoading(false);
-        }
+    if (!response.ok) {
+      let message = "Login failed.";
+      if (response.status === 401) {
+        message = "Incorrect email or password.";
+      } else if (response.status === 403) {
+        message = "Your account is not verified. Please check your email for the OTP.";
+      } else if (response.status === 500) {
+        message = "Server error. Please try again later.";
+      } else if (data.message) {
+        message = data.message;
       }
 
+      setError(passwordErrorEl, message, passwordInput);
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Save JWT token
+    localStorage.setItem("token", data.token);
+
+    console.log("User logged in successfully:", data.user);
+
+    // Role-based navigation
+    switch (data.user.role) {
+      case "global_overseer":
+        window.location.href = "/global-overseer.html";
+        break;
+      case "overseer":
+        window.location.href = "/overseer.html";
+        break;
+      case "student":
+        window.location.href = "/students.html";
+        break;
+      case "teacher":
+        window.location.href = "/teachers.html";
+        break;
+      case "admin":
+        window.location.href = "/admin.html";
+        break;
+      default:
+        window.location.href = "/login.html";
+        break;
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    setError(
+      passwordErrorEl,
+      "An unexpected error occurred. Please try again later.",
+      passwordInput
+    );
+  } finally {
+    setLoading(false);
+  }
+}
       loginButton.addEventListener("click", handleLogin);
     </script>
   </body>
