@@ -31,7 +31,7 @@ const schoolRouter = require('./schoolRoutes');
 const uploadRouter = require('./uploadRoutes');
 
 // --- Import Controllers ---
-const paymentController = require('../controllers/paymentController'); // ✅ Import payment controller
+const paymentController = require('../controllers/paymentController');
 
 // --- Helpers ---
 const smsApi = {};
@@ -135,6 +135,7 @@ Object.values(dirs).forEach(async d => {
         logger.error(`Failed to create upload directory ${d}: ${error.message}`);
     }
 });
+
 
 // --- Joi Schemas for Protected Routes ---
 const timezoneSchema = Joi.object({
@@ -1315,4 +1316,4 @@ protectedRouter.use('/essay', essayRouter);
 protectedRouter.use('/schools', schoolRouter); // ✅ Now correctly mounted
 protectedRouter.use('/uploads', uploadRouter); // ✅ Now correctly mounted
 
-return protectedRouter;
+module.exports = protectedRouter;
