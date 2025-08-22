@@ -9,7 +9,7 @@ const Agenda = require("agenda");
 const EventEmitter = require("events");
 const eventBus = new EventEmitter();
 const cloudinary = require("cloudinary").v2;
-const session = require("express-session"); // ✅ New: Import express-session
+const session = require("express-session");
 
 // ───────────────────────────────────────────────
 // 1️⃣ Environment Validation
@@ -54,7 +54,7 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ New: Session Middleware
+// ✅ Session Middleware
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
@@ -123,9 +123,9 @@ async function startAgenda() {
 // 6️⃣ Routes Loader
 // ───────────────────────────────────────────────
 try {
-    // Correctly import the router loader and pass the dependencies to it.
+    // ✅ Updated: Load the central routes/index.js file
     const loadRoutes = require("./routes");
-    loadRoutes(app, eventBus, agenda); // Now passing the dependencies to the router loader function
+    loadRoutes(app, eventBus, agenda); // Pass app, eventBus, and agenda to the central loader
     console.log("✅ Routes loaded successfully!");
 } catch (err) {
     console.error(`❌ Routes loading error at ${new Date().toISOString()}:`, err);
