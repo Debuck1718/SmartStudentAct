@@ -1315,4 +1315,4 @@ protectedRouter.use('/essay', essayRouter);
 protectedRouter.use('/schools', schoolRouter); // ✅ Now correctly mounted
 protectedRouter.use('/uploads', uploadRouter); // ✅ Now correctly mounted
 
-module.exports = protectedRouter;
+return protectedRouter;
