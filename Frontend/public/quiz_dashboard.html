@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Dashboard - SmartStudentAct</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="bg-blue-600 text-white p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">SmartStudentAct | Quiz Dashboard</h1>
+    <a href="teachers.html" class="bg-white text-blue-600 px-4 py-2 rounded shadow hover:bg-gray-200">
+      Back to Teacher Dashboard
+    </a>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="flex-1 container mx-auto p-6">
+    
+    <!-- Create Quiz -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+      <h2 class="text-2xl font-bold mb-4">Create New Quiz</h2>
+      <form id="quizForm" class="space-y-4">
+        <input type="text" id="quizTitle" placeholder="Quiz Title" class="w-full border p-2 rounded" required>
+        <textarea id="quizDescription" placeholder="Quiz Description" class="w-full border p-2 rounded"></textarea>
+        <input type="date" id="quizDueDate" class="w-full border p-2 rounded" required>
+
+        <!-- Dynamic Questions -->
+        <div id="questionsContainer" class="space-y-6"></div>
+
+        <button type="button" id="addQuestionBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">
+          ➕ Add Question
+        </button>
+
+        <!-- Assignment Options -->
+        <div class="mt-6">
+          <h3 class="text-lg font-semibold mb-2">Assign To:</h3>
+          <input type="text" id="assignEmails" placeholder="Student Emails (comma separated)" class="w-full border p-2 rounded mb-2">
+          <input type="text" id="assignGrade" placeholder="Grade (optional)" class="w-full border p-2 rounded mb-2">
+          <input type="text" id="assignSchool" placeholder="School Name (optional)" class="w-full border p-2 rounded">
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700">
+          📤 Save & Assign Quiz
+        </button>
+      </form>
+    </div>
+
+    <!-- List of Existing Quizzes -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-4">My Quizzes</h2>
+      <ul id="quizList" class="space-y-3">
+        <!-- Fetched quizzes will appear here -->
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = "https://smartstudentact.onrender.com/api";
+    const csrfToken = localStorage.getItem("csrfToken");
+
+    const questionsContainer = document.getElementById('questionsContainer');
+    const addQuestionBtn = document.getElementById('addQuestionBtn');
+    const quizList = document.getElementById('quizList');
+    let questionCount = 0;
+
+    // Add new question block
+    addQuestionBtn.addEventListener('click', () => {
+      questionCount++;
+      const qDiv = document.createElement('div');
+      qDiv.className = "border p-4 rounded bg-gray-50";
+      qDiv.innerHTML = `
+        <label class="block font-semibold">Question ${questionCount}</label>
+        <input type="text" name="questionText" placeholder="Enter question" class="w-full border p-2 rounded mb-2" required>
+        
+        <div class="space-y-2">
+          <input type="text" name="option1" placeholder="Option A" class="w-full border p-2 rounded" required>
+          <input type="text" name="option2" placeholder="Option B" class="w-full border p-2 rounded" required>
+          <input type="text" name="option3" placeholder="Option C" class="w-full border p-2 rounded">
+          <input type="text" name="option4" placeholder="Option D" class="w-full border p-2 rounded">
+        </div>
+
+        <label class="block mt-2">Correct Answer:</label>
+        <select name="correctAnswer" class="w-full border p-2 rounded">
+          <option value="A">Option A</option>
+          <option value="B">Option B</option>
+          <option value="C">Option C</option>
+          <option value="D">Option D</option>
+        </select>
+      `;
+      questionsContainer.appendChild(qDiv);
+    });
+
+    // Handle quiz form submit
+    document.getElementById('quizForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const quizData = {
+        title: document.getElementById('quizTitle').value,
+        description: document.getElementById('quizDescription').value,
+        due_date: document.getElementById('quizDueDate').value,
+        questions: [],
+        assigned_to_users: document.getElementById('assignEmails').value.split(',').map(e => e.trim()).filter(e => e),
+        assigned_to_grades: document.getElementById('assignGrade').value ? [Number(document.getElementById('assignGrade').value)] : [],
+        assigned_to_schools: document.getElementById('assignSchool').value ? [document.getElementById('assignSchool').value] : []
+      };
+
+      // Gather questions
+      document.querySelectorAll('#questionsContainer > div').forEach(qDiv => {
+        const qText = qDiv.querySelector('input[name="questionText"]').value;
+        const options = [
+          qDiv.querySelector('input[name="option1"]').value,
+          qDiv.querySelector('input[name="option2"]').value,
+          qDiv.querySelector('input[name="option3"]').value,
+          qDiv.querySelector('input[name="option4"]').value,
+        ].filter(o => o);
+        const correct = qDiv.querySelector('select[name="correctAnswer"]').value;
+
+        quizData.questions.push({ question: qText, options, correct });
+      });
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'CSRF-Token': csrfToken 
+          },
+          credentials: "include",
+          body: JSON.stringify(quizData)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to save quiz");
+
+        alert("✅ Quiz created successfully!");
+        fetchQuizzes(); // refresh list
+      } catch (err) {
+        alert("❌ Error: " + err.message);
+      }
+    });
+
+    // Fetch quizzes for teacher
+    async function fetchQuizzes() {
+      quizList.innerHTML = "<li>Loading...</li>";
+      try {
+        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
+          method: "GET",
+          headers: { 'CSRF-Token': csrfToken },
+          credentials: "include"
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Failed to load quizzes");
+
+        quizList.innerHTML = "";
+        if (data.length === 0) {
+          quizList.innerHTML = "<li>No quizzes yet.</li>";
+        } else {
+          data.forEach(quiz => {
+            const li = document.createElement("li");
+            li.className = "p-4 border rounded flex justify-between items-center";
+            li.innerHTML = `
+              <div>
+                <h3 class="font-bold">${quiz.title}</h3>
+                <p class="text-gray-600">${quiz.description || ""}</p>
+                <p class="text-sm text-gray-500">Due: ${quiz.due_date}</p>
+              </div>
+              <span class="text-sm text-green-600">${quiz.questions?.length || 0} Questions</span>
+            `;
+            quizList.appendChild(li);
+          });
+        }
+      } catch (err) {
+        quizList.innerHTML = `<li class="text-red-600">Error: ${err.message}</li>`;
+      }
+    }
+
+    // Initial fetch
+    fetchQuizzes();
+  </script>
+</body>
+</html>
+
+

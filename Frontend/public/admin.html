@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLp3wz/zQv2gC6P6Zg6xQ8zI+8U9l0s6fGzUfR6v6V6n6V6x6V6p6G6x6V6v6p6g6w6a6p6p6n6w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Custom styles to mimic React Native's StyleSheet.create */
         body {
@@ -29,7 +27,6 @@
             background-color: #f5f7fa;
         }
         
-        /* Mimic the behavior of touchable elements */
         .action-button:active, .logout-button:active, .header-icon:active {
             transform: scale(0.98);
         }
@@ -45,7 +42,7 @@
         }
 
         .picker-container::after {
-            content: '\f078'; /* Font Awesome down arrow */
+            content: '\f078';
             font-family: 'Font Awesome 5 Free';
             font-weight: 900;
             position: absolute;
@@ -67,16 +64,25 @@
             font-size: 16px;
             color: #4b5563;
         }
+
+        .tab-button {
+            padding: 10px 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: border-color 0.3s;
+        }
+        
+        .tab-button.active {
+            border-bottom-color: #3b82f6; /* Blue-500 */
+        }
     </style>
 </head>
 <body class="bg-gray-100 antialiased">
 
-    <!-- Main App Container -->
     <div id="app-container" class="container">
-        <!-- The UI will be rendered here by the JavaScript -->
-    </div>
+        </div>
 
-    <!-- Custom Alert/Modal Box -->
     <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4">
         <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
             <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
@@ -89,79 +95,41 @@
     </div>
     
     <script>
-        // Mocking React Native/Expo dependencies for the browser environment
         const API_BASE = 'https://smartstudentact.onrender.com';
 
-        // --- Mock Router & Navigation ---
         const router = {
             replace: (path) => window.location.href = path,
             push: (path) => window.location.href = path,
         };
 
-        // --- Mock API Responses and Data ---
-        // We've added a few more users to better demonstrate the filtering.
-        const mockUsers = [
-            { id: 1, firstname: 'John', lastname: 'Doe', email: 'john.doe@example.com', occupation: 'teacher', school: 'Central High School' },
-            { id: 2, firstname: 'Jane', lastname: 'Smith', email: 'jane.smith@example.com', occupation: 'student', school: 'Central High School' },
-            { id: 3, firstname: 'Peter', lastname: 'Jones', email: 'peter.jones@example.com', occupation: 'admin', school: 'Northside Academy' },
-            { id: 4, firstname: 'Lisa', lastname: 'Davis', email: 'lisa.davis@example.com', occupation: 'student', school: 'Central High School' },
-            { id: 5, firstname: 'Mike', lastname: 'Johnson', email: 'mike.johnson@example.com', occupation: 'teacher', school: 'Northside Academy' },
-            { id: 6, firstname: 'Alice', lastname: 'Williams', email: 'alice.w@example.com', occupation: 'student', school: 'Eastside Middle School' },
-            { id: 7, firstname: 'Bob', lastname: 'Brown', email: 'bob.b@example.com', occupation: 'admin', school: 'Central High School' },
-        ];
-
-        // The current logged-in user, who is an admin for 'Central High School'.
-        let currentUser = { id: 100, firstname: 'Admin', lastname: 'User', occupation: 'admin', school: 'Central High School' };
-        
         const fetchAPI = async (url, options = {}) => {
             try {
-                // Mocking API endpoints
-                if (url === '/api/session') {
-                    return {
-                        ok: true,
-                        json: () => Promise.resolve({ loggedIn: true, user: currentUser })
-                    };
-                }
-                
-                // IMPORTANT: This is where we implement the new backend logic.
-                // Instead of returning all users, we now filter them based on the current user's school.
-                if (url === '/api/admin/users') {
-                    // Filter the mock users to only include those from the current admin's school.
-                    // This simulates the backend database query where a `where` clause would be used.
-                    const filteredUsers = mockUsers.filter(user => user.school === currentUser.school);
-
-                    return {
-                        ok: true,
-                        json: () => Promise.resolve(filteredUsers)
-                    };
-                }
-
-                if (url === '/api/logout') {
-                    return { ok: true, json: () => Promise.resolve({ success: true }) };
-                }
-                
-                if (url === '/api/admin/manage') {
-                    const { userId, action } = JSON.parse(options.body);
-                    return {
-                        ok: true,
-                        json: () => Promise.resolve({ success: true, message: `Successfully ${action}d user ${userId}.` })
-                    };
-                }
-                
-                // Fallback for other URLs
-                return {
-                    ok: false,
-                    status: 404,
-                    statusText: 'Not Found',
-                    json: () => Promise.resolve({ message: 'Mock API endpoint not found.' })
+                const token = localStorage.getItem('jwtToken');
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 };
+                
+                const response = await fetch(`${API_BASE}${url}`, { ...options, headers });
+                
+                if (response.status === 401) {
+                    showCustomAlert('Session Expired', 'Your session has expired. Please log in again.');
+                    router.replace('/login.html');
+                    return { ok: false, status: 401 };
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'API request failed');
+                }
+                
+                return response;
             } catch (error) {
-                showCustomAlert('Network Error', `Could not connect to the server or process request for ${url.split('?')[0]}.`);
+                console.error('Fetch error:', error);
                 throw error;
             }
         };
 
-        // --- Custom Alert/Modal Logic ---
         const showCustomAlert = (title, message, options) => {
             const modal = document.getElementById('alert-modal');
             const titleEl = document.getElementById('alert-title');
@@ -190,40 +158,40 @@
             modal.classList.remove('hidden');
         };
 
-        // --- State Management ---
         const state = {
+            user: null,
             users: [],
+            files: [],
             filteredUsers: [],
-            // No need for a schools array or selectedSchool state, as the backend now handles school filtering.
             roleFilter: 'all',
-            isLoadingUsers: true,
-            isManagingUser: false,
+            gradeFilter: 'all',
+            searchTerm: '',
+            activeTab: 'users',
+            isLoading: true,
         };
 
-        // --- UI Rendering ---
         const render = () => {
             const container = document.getElementById('app-container');
-            container.innerHTML = ''; // Clear existing content
+            container.innerHTML = '';
 
-            if (state.isLoadingUsers) {
+            if (state.isLoading) {
                 container.innerHTML = `
                     <div class="loading-container">
                         <i class="fas fa-spinner fa-spin text-blue-500 text-5xl"></i>
-                        <p class="mt-4 text-base text-gray-600">Loading users...</p>
+                        <p class="mt-4 text-base text-gray-600">Loading dashboard...</p>
                     </div>
                 `;
                 return;
             }
 
-            // Main Dashboard UI
-            const dashboardHtml = `
+            const header = `
                 <div class="flex flex-row justify-between items-center mb-5 pb-2 border-b border-gray-200">
                     <div class="flex items-center space-x-4">
-                        <img src="https://placehold.co/40x40/94a3b8/ffffff?text=U" alt="Profile Picture" class="rounded-full w-10 h-10 shadow-md"/>
-                        <button onclick="router.push('/(app)/profile')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
+                        <img src="${state.user?.profile_picture_url || 'https://placehold.co/40x40/94a3b8/ffffff?text=U'}" alt="Profile Picture" class="rounded-full w-10 h-10 shadow-md"/>
+                        <button onclick="router.push('/profile.html')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
                             <i class="fas fa-user-circle text-2xl"></i>
                         </button>
-                        <button onclick="router.push('/(app)/settings')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
+                        <button onclick="router.push('/settings.html')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
                             <i class="fas fa-cog text-2xl"></i>
                         </button>
                     </div>
@@ -232,19 +200,65 @@
                         Logout
                     </button>
                 </div>
+            `;
+            container.innerHTML += header;
 
-                <!-- Removed the school filter since the backend now handles it. -->
+            const tabs = `
+                <div class="flex border-b border-gray-300 mb-5">
+                    <button id="tab-users" class="tab-button ${state.activeTab === 'users' ? 'active text-blue-600' : 'text-gray-600'}" onclick="changeTab('users')">Manage Users</button>
+                    <button id="tab-files" class="tab-button ${state.activeTab === 'files' ? 'active text-blue-600' : 'text-gray-600'}" onclick="changeTab('files')">Manage Files</button>
+                </div>
+            `;
+            container.innerHTML += tabs;
+
+            if (state.activeTab === 'users') {
+                renderUserManagement();
+            } else if (state.activeTab === 'files') {
+                renderFileManagement();
+            }
+
+            document.getElementById('logout-button').addEventListener('click', handleLogout);
+        };
+
+        const renderUserManagement = () => {
+            const container = document.getElementById('app-container');
+            const usersSection = document.createElement('div');
+            
+            usersSection.innerHTML = `
                 <div class="bg-white rounded-xl shadow-md p-4 mb-5">
                     <h2 class="text-base sm:text-lg font-semibold text-gray-800">Filters</h2>
-                    <div class="mt-4">
-                        <label for="role-filter" class="block text-gray-700 font-bold mb-2">Filter by Role:</label>
-                        <div class="picker-container">
-                            <select id="role-filter" class="picker">
-                                <option value="all">All Roles</option>
-                                <option value="student">Student</option>
-                                <option value="teacher">Teacher</option>
-                                <option value="admin">Admin</option>
-                            </select>
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="search-term" class="block text-gray-700 font-bold mb-2">Search by Name/Email:</label>
+                            <input type="text" id="search-term" value="${state.searchTerm}" placeholder="Search..." class="w-full p-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label for="grade-filter" class="block text-gray-700 font-bold mb-2">Filter by Grade:</label>
+                            <div class="picker-container">
+                                <select id="grade-filter" class="picker">
+                                    <option value="all">All Grades</option>
+                                    <optgroup label="Upper Grade (Class 5-6)">
+                                        <option value="5">Grade 5 (Class 5)</option>
+                                        <option value="6">Grade 6 (Class 6)</option>
+                                    </optgroup>
+                                    <optgroup label="Junior High (Form 1-3)">
+                                        <option value="7">Grade 7 (Form 1)</option>
+                                        <option value="8">Grade 8 (Form 2)</option>
+                                        <option value="9">Grade 9 (Form 3)</option>
+                                    </optgroup>
+                                    <optgroup label="Senior High (SHS 1-3)">
+                                        <option value="10">Grade 10 (SHS 1)</option>
+                                        <option value="11">Grade 11 (SHS 2)</option>
+                                        <option value="12">Grade 12 (SHS 3)</option>
+                                    </optgroup>
+                                    <optgroup label="University">
+                                        <option value="100">Level 100 (First Year)</option>
+                                        <option value="200">Level 200 (Second Year)</option>
+                                        <option value="300">Level 300 (Third Year)</option>
+                                        <option value="400">Level 400 (Final Year)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -258,15 +272,15 @@
                             <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">
                                 ${u.firstname} ${u.lastname} (<span class="text-gray-600 font-normal">${u.email}</span>)
                             </h3>
-                            <p class="text-sm text-gray-600 mb-3">Role: ${u.occupation} | School: ${u.school}</p>
+                            <p class="text-sm text-gray-600 mb-3">
+                                Role: ${u.occupation} | School: ${u.schoolName || u.teacherSchool || 'N/A'}
+                                ${u.occupation === 'student' ? `| Grade: ${u.grade || 'N/A'}` : ''}
+                            </p>
                             <div class="flex flex-wrap gap-2">
-                                <button onclick="manageUser(${u.id}, 'promote')" class="action-button flex-1 bg-green-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-600 transition duration-300">Promote</button>
-                                <button onclick="manageUser(${u.id}, 'demote')" class="action-button flex-1 bg-yellow-500 text-gray-900 font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-300">Demote</button>
-                                <button onclick="manageUser(${u.id}, 'suspend')" class="action-button flex-1 bg-cyan-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-cyan-600 transition duration-300">Suspend</button>
-                                <button onclick="confirmDelete(${u.id}, '${u.firstname} ${u.lastname}')" class="action-button flex-1 bg-red-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition duration-300">Delete</button>
-                            </div>
-                            <div id="spinner-${u.id}" class="absolute right-4 top-4 hidden">
-                                <i class="fas fa-spinner fa-spin text-blue-500"></i>
+                                <button onclick="manageUser('${u.email}', 'promote')" class="action-button flex-1 bg-green-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-600 transition duration-300">Promote</button>
+                                <button onclick="manageUser('${u.email}', 'demote')" class="action-button flex-1 bg-yellow-500 text-gray-900 font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-300">Demote</button>
+                                <button onclick="manageUser('${u.email}', 'suspend')" class="action-button flex-1 bg-cyan-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-cyan-600 transition duration-300">Suspend</button>
+                                <button onclick="confirmRemove('${u.email}', '${u.firstname} ${u.lastname}')" class="action-button flex-1 bg-red-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition duration-300">Delete</button>
                             </div>
                         </div>
                     `).join('')}
@@ -274,43 +288,106 @@
 
                 <div class="mt-6 p-4 bg-gray-200 rounded-lg border-l-4 border-gray-500">
                     <h4 class="font-bold text-base text-gray-900 mb-1">Note:</h4>
-                    <p class="text-sm text-gray-700">You can only manage users from your school unless you are a global overseer.</p>
+                    <p class="text-sm text-gray-700">You can only manage users from your school.</p>
                 </div>
             `;
-            container.innerHTML = dashboardHtml;
-            
-            // Re-attach event listeners
-            document.getElementById('logout-button').addEventListener('click', handleLogout);
-            document.getElementById('role-filter').addEventListener('change', (e) => {
-                state.roleFilter = e.target.value;
+            container.appendChild(usersSection);
+
+            document.getElementById('search-term').addEventListener('input', (e) => {
+                state.searchTerm = e.target.value;
                 filterUsers();
             });
+            document.getElementById('grade-filter').addEventListener('change', (e) => {
+                state.gradeFilter = e.target.value;
+                filterUsers();
+            });
+            document.getElementById('grade-filter').value = state.gradeFilter;
+        };
+
+        const renderFileManagement = () => {
+            const container = document.getElementById('app-container');
+            const filesSection = document.createElement('div');
+            filesSection.innerHTML = `
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Files from Your School</h2>
+                <div id="files-list">
+                    ${state.files.length === 0 ? `<p class="text-center italic text-gray-500 py-5">No files found for your school.</p>` : 
+                        state.files.map(file => `
+                            <div class="bg-white rounded-xl shadow-md p-4 mb-3">
+                                <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">${file.filename}</h3>
+                                <p class="text-sm text-gray-600">
+                                    Type: ${file.type} | Submitted By: ${file.submittedBy || 'N/A'}
+                                </p>
+                                <a href="${file.url}" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">
+                                    <i class="fas fa-eye mr-1"></i>View File
+                                </a>
+                            </div>
+                        `).join('')}
+                </div>
+            `;
+            container.appendChild(filesSection);
+        };
+
+        const changeTab = (tab) => {
+            state.activeTab = tab;
+            state.isLoading = true;
+            render();
+            if (tab === 'users') {
+                loadUsers();
+            } else if (tab === 'files') {
+                loadFiles();
+            }
         };
         
-        // --- Core Functions ---
         const filterUsers = () => {
             let result = state.users;
-            // The school filter is now handled on the server side (or mock server side).
-            if (state.roleFilter !== 'all') {
-                result = result.filter(u => u.occupation === state.roleFilter);
+            
+            // Search by name or email
+            if (state.searchTerm) {
+                const term = state.searchTerm.toLowerCase();
+                result = result.filter(u => 
+                    (u.firstname && u.firstname.toLowerCase().includes(term)) ||
+                    (u.lastname && u.lastname.toLowerCase().includes(term)) ||
+                    (u.email && u.email.toLowerCase().includes(term))
+                );
             }
+
+            // Filter by grade
+            if (state.gradeFilter !== 'all') {
+                result = result.filter(u => String(u.grade) === state.gradeFilter);
+            }
+            
             state.filteredUsers = result;
             render();
         };
 
         const loadUsers = async () => {
-            state.isLoadingUsers = true;
+            state.isLoading = true;
             render();
             try {
                 const res = await fetchAPI('/api/admin/users');
-                const data = await res.json();
-                state.users = data;
-                filterUsers(); // Initial filter
+                state.users = await res.json();
+                filterUsers();
             } catch (err) {
                 console.error('Failed to load users', err);
                 showCustomAlert('Error', 'Failed to load user data.');
             } finally {
-                state.isLoadingUsers = false;
+                state.isLoading = false;
+                render();
+            }
+        };
+        
+        const loadFiles = async () => {
+            state.isLoading = true;
+            render();
+            try {
+                // This is a new endpoint for the file view functionality
+                const res = await fetchAPI('/api/admin/my-school-files'); 
+                state.files = await res.json();
+            } catch (err) {
+                console.error('Failed to load files', err);
+                showCustomAlert('Error', 'Failed to load files from your school.');
+            } finally {
+                state.isLoading = false;
                 render();
             }
         };
@@ -321,7 +398,7 @@
                 { text: 'Logout', onPress: async () => {
                     try {
                         await fetchAPI('/api/logout', { method: 'POST' });
-                        router.replace('/(public)/login');
+                        router.replace('/login.html');
                     } catch (error) {
                         console.error('Logout failed:', error);
                         showCustomAlert('Logout Error', 'Failed to log out. Please try again.');
@@ -329,58 +406,66 @@
                 }},
             ]);
         };
-
-        const manageUser = async (userId, action) => {
-            // Show loading spinner for the specific user card
-            const spinner = document.getElementById(`spinner-${userId}`);
-            if (spinner) spinner.classList.remove('hidden');
-
-            try {
-                const res = await fetchAPI('/api/admin/manage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId, action }),
-                });
-                const result = await res.json();
-                if (result.success) {
-                    showCustomAlert('Success', result.message);
-                    await loadUsers(); // Reload users after a successful action
-                } else {
-                    showCustomAlert('Error', result.message || `Failed to ${action} user.`);
-                }
-            } catch (err) {
-                console.error(`Error managing user (${action}):`, err);
-                showCustomAlert('Error', `Something went wrong while trying to ${action} the user.`);
-            } finally {
-                // Hide spinner
-                if (spinner) spinner.classList.add('hidden');
-            }
+        
+        const manageUser = async (email, action) => {
+            showCustomAlert(action.charAt(0).toUpperCase() + action.slice(1) + ' User', `Are you sure you want to ${action} this user?`, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: action.charAt(0).toUpperCase() + action.slice(1), onPress: async () => {
+                    try {
+                        const res = await fetchAPI(`/api/admin/${action}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email }),
+                        });
+                        const result = await res.json();
+                        if (res.ok) {
+                            showCustomAlert('Success', result.message);
+                            await loadUsers();
+                        } else {
+                            showCustomAlert('Error', result.message || `Failed to ${action} user.`);
+                        }
+                    } catch (err) {
+                        console.error(`Error managing user (${action}):`, err);
+                        showCustomAlert('Error', `Something went wrong while trying to ${action} the user.`);
+                    }
+                }},
+            ]);
         };
-
-        const confirmDelete = (userId, userName) => {
+        
+        const confirmRemove = (email, userName) => {
             showCustomAlert('Confirm Delete', `Are you sure you want to delete ${userName}? This action cannot be undone.`, [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', onPress: () => manageUser(userId, 'delete') },
+                { text: 'Delete', onPress: () => manageUser(email, 'remove-user') },
             ]);
         };
 
-        // Initial setup on page load
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                const res = await fetchAPI('/api/session');
-                const data = await res.json();
-                if (!data.loggedIn || data.user.occupation !== 'admin') {
-                    showCustomAlert('Access Denied', 'You must be logged in as an administrator to access this page.');
-                    router.replace('/(public)/login');
+                const res = await fetchAPI('/api/profile');
+                if (res.ok) {
+                    const user = await res.json();
+                    if (user.occupation !== 'admin') {
+                        showCustomAlert('Access Denied', 'You do not have permission to view this page.');
+                        router.replace('/admin.html');
+                        return;
+                    }
+                    state.user = user;
+                    state.isLoading = false;
+                    render();
+                    // Load data for the initial active tab
+                    if (state.activeTab === 'users') {
+                        loadUsers();
+                    } else if (state.activeTab === 'files') {
+                        loadFiles();
+                    }
                 } else {
-                    // Update the currentUser with the mock session data
-                    currentUser = data.user;
-                    loadUsers();
+                    showCustomAlert('Authentication Failed', 'Please log in to continue.');
+                    router.replace('/login.html');
                 }
             } catch (err) {
                 console.error('Session check failed:', err);
                 showCustomAlert('Session Error', 'Could not verify session. Please log in again.');
-                router.replace('/(public)/login');
+                router.replace('/login.html');
             }
         });
     </script>

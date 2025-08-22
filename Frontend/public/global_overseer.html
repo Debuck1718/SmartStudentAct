@@ -1,777 +1,369 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Global Overseer Dashboard</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLp6a5NfS/k6y5J0B4e7Q1K7tI3rN5V2M3K/d8tB6d6o9c7mX5v6V6n6x6V6p6p6n6w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      xintegrity="sha512-iecdLp6a5NfS/k6y5J0B4e7Q1K7tI3rN5V2M3K/d8tB6d6o9c7mX5v6V6n6x6V6p6p6n6w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
     <style>
-        /* Custom styles for a clean look */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+      /* Custom styles for a clean look */
+      body {
+        font-family: "Inter", sans-serif;
+      }
 
-        /* Responsive container padding */
-        .container {
-            padding: 20px;
-            background-color: #f5f7fa;
-            min-height: 100vh;
-        }
+      /* Responsive container padding */
+      .container {
+        padding: 20px;
+        background-color: #f5f7fa;
+        min-height: 100vh;
+      }
 
-        /* Centered loading container */
-        .loading-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f5f7fa;
-            text-align: center;
-        }
+      /* Centered loading container */
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f5f7fa;
+        text-align: center;
+      }
 
-        /* Style for clickable action buttons */
-        .action-button:active {
-            transform: scale(0.98);
-        }
+      /* Style for clickable action buttons */
+      .action-button:active {
+        transform: scale(0.98);
+      }
 
-        /* Fade-in animation for content */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+      /* Fade-in animation for content */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
         }
+        to {
+          opacity: 1;
+        }
+      }
 
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
 
-        /* Collapsible section transition */
-        .collapsible {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
+      /* Collapsible section transition */
+      .collapsible {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
 
-        .collapsible.active {
-            max-height: 1000px; /* A large value to allow for content expansion */
-            transition: max-height 0.5s ease-in;
-        }
+      .collapsible.active {
+        max-height: 1000px; /* A large value to allow for content expansion */
+        transition: max-height 0.5s ease-in;
+      }
 
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: #3b82f6;
-            animation: spin 1s ease infinite;
-        }
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #3b82f6;
+        animation: spin 1s ease infinite;
+      }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
-</head>
+  </head>
 
-<body class="bg-gray-100 antialiased">
-
+  <body class="bg-gray-100 antialiased">
     <!-- Main App Container -->
     <div id="app-container" class="container">
-        <!-- The UI will be rendered here by the JavaScript -->
+      <!-- The UI will be rendered here by the JavaScript -->
     </div>
 
     <!-- Custom Alert/Modal Box -->
-    <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
-            <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
-            <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
-            <div class="flex justify-end space-x-2">
-                <button id="alert-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300">Cancel</button>
-                <button id="alert-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">OK</button>
-            </div>
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50"
+    >
+      <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
+        <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
+        <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
+        <div class="flex justify-end space-x-2">
+          <button
+            id="alert-cancel"
+            class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300"
+          >
+            Cancel
+          </button>
+          <button
+            id="alert-confirm"
+            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
+          >
+            OK
+          </button>
         </div>
+      </div>
     </div>
 
     <!-- A modal for complex forms, hidden by default -->
-    <div id="form-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="form-modal-title" class="font-bold text-lg"></h3>
-                <button id="form-modal-close" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div id="form-modal-content">
-                <!-- Form content will be injected here -->
-            </div>
+    <div
+      id="form-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50"
+    >
+      <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg">
+        <div class="flex justify-between items-center mb-4">
+          <h3 id="form-modal-title" class="font-bold text-lg"></h3>
+          <button
+            id="form-modal-close"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fas fa-times"></i>
+          </button>
         </div>
+        <div id="form-modal-content">
+          <!-- Form content will be injected here -->
+        </div>
+      </div>
     </div>
 
-    <script>
-        // Use a simple state object to manage the application's data and UI state.
-        const state = {
-            user: null, // Stores user authentication info
-            dashboardData: null, // Data fetched from the dashboard API
-            allFiles: null, // List of files from the API
-            isLoading: true, // Master loading state for the entire page
-            isFilesLoading: false, // Separate loading state for the file list
-            showManagedRegions: false, // UI state for the collapsible regions section
-            fileFilters: { // Filters for the file list
-                query: '',
-                type: 'all'
-            },
-            // New state properties for management features
-            isUserManagementLoading: false,
-            isSchoolManagementLoading: false,
-            // Mock data for demonstration
-            mockOverseers: ['overseer1@example.com', 'overseer2@example.com'],
-            mockRegions: ['North America', 'Europe', 'Asia']
-        };
+<script>
+  // --- State ---
+  const state = {
+    user: null,
+    dashboardData: null,
+    allFiles: null,
+    isLoading: true,
+    isFilesLoading: false,
+    showManagedRegions: false,
+    fileFilters: { query: "", type: "all" },
+    isUserManagementLoading: false,
+    isSchoolManagementLoading: false,
+    mockOverseers: ["overseer1@example.com", "overseer2@example.com"],
+    mockRegions: ["North America", "Europe", "Asia"],
+  };
 
-        // Mock API base URL. Replace with your actual backend URL.
-        const API_BASE = 'https://smartstudentact.onrender.com/api';
+  const API_BASE = "https://smartstudentact.onrender.com/api";
 
-        // --- Core Application Logic ---
+  // --- Authenticated fetch helper ---
+  const authFetch = async (url, options = {}) => {
+    const csrfToken = localStorage.getItem("csrfToken"); // saved after login
+    const headers = {
+      ...(options.headers || {}),
+      "X-CSRF-Token": csrfToken || "",
+    };
 
-        /**
-         * Renders the entire UI based on the current application state.
-         * This function acts as the single source of truth for UI updates.
-         */
-        const render = () => {
-            const container = document.getElementById('app-container');
-            container.innerHTML = ''; // Clear previous content
+    return fetch(url, {
+      ...options,
+      credentials: "include", // ✅ send JWT cookie
+      headers,
+    });
+  };
 
-            // Show a loading screen if the main data is being fetched
-            if (state.isLoading) {
-                container.innerHTML = `
-                    <div class="loading-container">
-                        <i class="fas fa-spinner fa-spin text-blue-500 text-5xl"></i>
-                        <p class="mt-4 text-base text-gray-600">Loading Global Overseer Dashboard...</p>
-                    </div>
-                `;
-                return;
-            }
+  // --- Dashboard fetch ---
+  const fetchDashboardData = async () => {
+    try {
+      const res = await authFetch(`${API_BASE}/overseer/dashboard-overview`);
+      if (!res.ok) throw new Error("Failed to fetch dashboard data");
 
-            // Check if the user is authenticated and has the correct role
-            if (!state.user || state.user.occupation !== 'global_overseer') {
-                container.innerHTML = `
-                    <div class="loading-container text-center p-4 fade-in">
-                        <h2 class="text-xl font-bold text-red-600 mb-2">Access Denied</h2>
-                        <p class="text-gray-700">You must be logged in as a Global Overseer to access this page. Redirecting to login...</p>
-                    </div>
-                `;
-                setTimeout(() => window.location.href = '/public/login.html', 3000);
-                return;
-            }
+      const data = await res.json();
+      const totalSchools = data.managedRegions.reduce(
+        (sum, r) => sum + (r.totalSchools || 0),
+        0
+      );
+      const totalAdmins = data.managedRegions.reduce(
+        (sum, r) => sum + (r.totalAdmins || 0),
+        0
+      );
 
-            // Render the main dashboard UI if authenticated
-            const dashboardHtml = `
-                <div class="fade-in">
-                    <div class="flex flex-col sm:flex-row justify-between items-center mb-5 pb-2 border-b border-gray-200">
-                        <div class="flex items-center space-x-4 mb-4 sm:mb-0">
-                            <a href="#" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300" title="Profile">
-                                <i class="fas fa-user-circle text-2xl"></i>
-                            </a>
-                            <a href="#" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300" title="Settings">
-                                <i class="fas fa-cog text-2xl"></i>
-                            </a>
-                        </div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex-1 text-center sm:text-left">Global Overseer Dashboard</h1>
-                        <button id="logout-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-300 mt-4 sm:mt-0">
-                            Logout
-                        </button>
-                    </div>
+      state.dashboardData = {
+        totalRegions: data.managedRegions.length,
+        totalSchools,
+        totalAdmins,
+        totalUsers: data.totalUsers || 0,
+        managedRegions: data.managedRegions,
+      };
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+      showAlert("Error", "Failed to load dashboard data. Please try again.");
+    } finally {
+      state.isLoading = false;
+      render();
+    }
+  };
 
-                    <!-- Overview Section -->
-                    <div class="bg-white rounded-xl shadow-md p-4 mb-5 fade-in">
-                        <h2 class="text-lg sm:text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2">Overview</h2>
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 p-2 bg-gray-50 rounded-lg">
-                            <div class="p-3 bg-white rounded-lg shadow-sm">
-                                <p class="text-sm text-gray-500">Total Regions</p>
-                                <p class="text-xl font-bold text-gray-800">${state.dashboardData?.totalRegions || 'N/A'}</p>
-                            </div>
-                            <div class="p-3 bg-white rounded-lg shadow-sm">
-                                <p class="text-sm text-gray-500">Total Schools</p>
-                                <p class="text-xl font-bold text-gray-800">${state.dashboardData?.totalSchools || 'N/A'}</p>
-                            </div>
-                            <div class="p-3 bg-white rounded-lg shadow-sm">
-                                <p class="text-sm text-gray-500">Total Admins</p>
-                                <p class="text-xl font-bold text-gray-800">${state.dashboardData?.totalAdmins || 'N/A'}</p>
-                            </div>
-                            <div class="p-3 bg-white rounded-lg shadow-sm">
-                                <p class="text-sm text-gray-500">Total Users</p>
-                                <p class="text-xl font-bold text-gray-800">${state.dashboardData?.totalUsers || 'N/A'}</p>
-                            </div>
-                        </div>
-                    </div>
+  // --- Files fetch ---
+  const fetchAndRenderAllFiles = async () => {
+    state.isFilesLoading = true;
+    renderFilesTable();
+    try {
+      const res = await authFetch(`${API_BASE}/admin/all-files`);
+      if (!res.ok) throw new Error("Failed to fetch files");
+      const data = await res.json();
+      state.allFiles = data.files;
+    } catch (error) {
+      console.error("Failed to fetch all files:", error);
+      showAlert("Error", "Failed to load the list of files.");
+    } finally {
+      state.isFilesLoading = false;
+      render();
+    }
+  };
 
-                    <!-- Managed Regions Section -->
-                    <div class="bg-white rounded-xl shadow-md p-4 mb-5 fade-in">
-                        <h2 class="text-lg sm:text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2">
-                            <button id="toggle-regions-button" class="flex justify-between items-center w-full">
-                                <span>Managed Regions</span>
-                                <i class="fas fa-chevron-${state.showManagedRegions ? 'up' : 'down'} text-sm transition-transform duration-300"></i>
-                            </button>
-                        </h2>
-                        <div id="managed-regions-list" class="collapsible ${state.showManagedRegions ? 'active' : ''}">
-                             ${state.dashboardData?.managedRegions ? renderManagedRegions() : '<p class="text-center text-gray-500">No regions found.</p>'}
-                        </div>
-                    </div>
+  // --- Management actions ---
+  const handlePromoteUser = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const email = form.email.value;
+    const role = form.role.value;
+    const makeAdmin = form.make_admin.checked;
 
-                    <!-- Management Section -->
-                    <div class="bg-white rounded-xl shadow-md p-4 mb-5 fade-in">
-                        <h2 class="text-lg sm:text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2">Management</h2>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- User Management Card -->
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <h3 class="font-semibold text-gray-800 mb-2">User Management</h3>
-                                <div class="space-y-3">
-                                    <button id="promote-user-button" class="action-button flex items-center justify-center bg-blue-600 text-white font-bold py-3 px-4 rounded-lg w-full shadow-md hover:bg-blue-700 transition duration-300">
-                                        <i class="fas fa-user-plus mr-2"></i>
-                                        <span>Promote/Set Admin</span>
-                                    </button>
-                                    <button id="remove-user-button" class="action-button flex items-center justify-center bg-red-600 text-white font-bold py-3 px-4 rounded-lg w-full shadow-md hover:bg-red-700 transition duration-300">
-                                        <i class="fas fa-user-minus mr-2"></i>
-                                        <span>Remove User</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <!-- School & Region Management Card -->
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <h3 class="font-semibold text-gray-800 mb-2">School & Region Management</h3>
-                                <div class="space-y-3">
-                                    <button id="add-school-button" class="action-button flex items-center justify-center bg-green-600 text-white font-bold py-3 px-4 rounded-lg w-full shadow-md hover:bg-green-700 transition duration-300">
-                                        <i class="fas fa-plus-circle mr-2"></i>
-                                        <span>Add New School</span>
-                                    </button>
-                                    <button id="assign-region-button" class="action-button flex items-center justify-center bg-purple-600 text-white font-bold py-3 px-4 rounded-lg w-full shadow-md hover:bg-purple-700 transition duration-300">
-                                        <i class="fas fa-map-marked-alt mr-2"></i>
-                                        <span>Assign Region to Overseer</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    state.isUserManagementLoading = true;
+    document.getElementById("promote-user-button").innerHTML =
+      '<div class="spinner"></div>';
 
-                    <!-- All Uploaded Files Section -->
-                    <div class="bg-white rounded-xl shadow-md p-4 mb-5 fade-in ${state.allFiles || state.isFilesLoading ? 'block' : 'hidden'}" id="files-section">
-                        <h2 class="text-lg sm:text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2">
-                             <button id="fetch-files-button" class="action-button flex items-center justify-center bg-blue-600 text-white font-bold py-3 px-4 rounded-lg w-full shadow-md hover:bg-blue-700 transition duration-300">
-                                 <i class="fas fa-file-alt mr-2"></i>
-                                 <span>View All Uploaded Files</span>
-                             </button>
-                        </h2>
-                        <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
-                            <div class="relative flex-1">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <i class="fas fa-search text-gray-400"></i>
-                                </div>
-                                <input type="text" id="file-search-input" placeholder="Search files..." class="w-full pl-10 pr-4 py-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <div class="relative">
-                                <select id="file-type-filter" class="w-full sm:w-auto pl-3 pr-10 py-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="all">All Types</option>
-                                    <option value="Assignment">Assignment</option>
-                                    <option value="Submission">Submission</option>
-                                    <option value="Feedback">Feedback</option>
-                                </select>
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    <i class="fas fa-chevron-down text-gray-400"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="file-list-container" class="overflow-x-auto">
-                            <!-- File list table or loading message will be rendered here -->
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.innerHTML = dashboardHtml;
+    try {
+      const res = await authFetch(`${API_BASE}/overseer/manage-user/promote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role, makeAdmin }),
+      });
 
-            // Add event listeners for static buttons
-            document.getElementById('logout-button').addEventListener('click', handleLogout);
-            document.getElementById('fetch-files-button').addEventListener('click', fetchAndRenderAllFiles);
-            document.getElementById('toggle-regions-button').addEventListener('click', toggleManagedRegions);
+      if (!res.ok) throw new Error("Failed to promote user");
+      await res.json();
+      showAlert("Success", `User ${email} has been promoted to ${role}.`);
+      document.getElementById("form-modal").classList.add("hidden");
+    } catch (error) {
+      console.error("Error promoting user:", error);
+      showAlert("Error", error.message);
+    } finally {
+      state.isUserManagementLoading = false;
+      render();
+    }
+  };
 
-            // Add event listeners for new management buttons to open modals
-            document.getElementById('promote-user-button').addEventListener('click', () => openFormModal('Promote/Set Admin', 'promote-form'));
-            document.getElementById('remove-user-button').addEventListener('click', () => openFormModal('Remove User', 'remove-user-form'));
-            document.getElementById('add-school-button').addEventListener('click', () => openFormModal('Add New School', 'add-school-form'));
-            document.getElementById('assign-region-button').addEventListener('click', () => openFormModal('Assign Region', 'assign-region-form'));
+  const handleRemoveUser = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const email = form.email.value;
 
-            // Add event listeners for file filtering
-            const fileSearchInput = document.getElementById('file-search-input');
-            const fileTypeFilter = document.getElementById('file-type-filter');
-            if (fileSearchInput) {
-                fileSearchInput.value = state.fileFilters.query;
-                fileSearchInput.addEventListener('input', (e) => {
-                    state.fileFilters.query = e.target.value;
-                    renderFilesTable();
-                });
-            }
-            if (fileTypeFilter) {
-                fileTypeFilter.value = state.fileFilters.type;
-                fileTypeFilter.addEventListener('change', (e) => {
-                    state.fileFilters.type = e.target.value;
-                    renderFilesTable();
-                });
-            }
+    const confirmed = await showAlert(
+      "Confirm Removal",
+      `Remove user: ${email}? This cannot be undone.`,
+      true
+    );
+    if (!confirmed) return;
 
-            // Dynamically render the file table content if available
-            renderFilesTable();
-        };
+    state.isUserManagementLoading = true;
+    document.getElementById("remove-user-button").innerHTML =
+      '<div class="spinner"></div>';
 
-        /**
-         * Renders the HTML for the managed regions list.
-         * @returns {string} The HTML string for the regions list.
-         */
-        const renderManagedRegions = () => {
-            if (!state.dashboardData || !state.dashboardData.managedRegions) {
-                return '<p class="text-center text-gray-500">No regions found.</p>';
-            }
+    try {
+      const res = await authFetch(`${API_BASE}/overseer/manage-user/remove`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-            return state.dashboardData.managedRegions.map(region => `
-                <div class="bg-gray-50 rounded-lg p-3 my-2 shadow-sm">
-                    <h3 class="font-semibold text-gray-800">${region.name}</h3>
-                    <p class="text-sm text-gray-600">Total Schools: ${region.totalSchools || 0}</p>
-                    <p class="text-sm text-gray-600">Total Admins: ${region.totalAdmins || 0}</p>
-                </div>
-            `).join('');
-        };
+      if (!res.ok) throw new Error("Failed to remove user");
+      await res.json();
+      showAlert("Success", `User ${email} has been removed.`);
+      document.getElementById("form-modal").classList.add("hidden");
+    } catch (error) {
+      console.error("Error removing user:", error);
+      showAlert("Error", error.message);
+    } finally {
+      state.isUserManagementLoading = false;
+      render();
+    }
+  };
 
-        /**
-         * Toggles the visibility of the managed regions list.
-         */
-        const toggleManagedRegions = () => {
-            state.showManagedRegions = !state.showManagedRegions;
-            const regionsList = document.getElementById('managed-regions-list');
-            if (regionsList) {
-                regionsList.classList.toggle('active');
-            }
-            // Re-render to update the chevron icon
-            render();
-        };
+  const handleAddSchool = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.name.value;
+    const country = form.country.value;
+    const tier = parseInt(form.tier.value, 10);
 
-        /**
-         * Renders the file list table based on the files state.
-         * Called by the main render function and after fetching files.
-         */
-        const renderFilesTable = () => {
-            const fileListContainer = document.getElementById('file-list-container');
-            if (!fileListContainer) return; // Exit if the container doesn't exist yet
+    state.isSchoolManagementLoading = true;
+    document.getElementById("add-school-button").innerHTML =
+      '<div class="spinner"></div>';
 
-            if (state.isFilesLoading) {
-                fileListContainer.innerHTML = '<p class="text-center text-gray-500">Loading file list...</p>';
-            } else if (!state.allFiles) {
-                 // Nothing to do if files haven't been fetched yet
-            } else if (state.allFiles.length === 0) {
-                fileListContainer.innerHTML = '<p class="text-center text-gray-500">No files found.</p>';
-            } else {
-                // Filter files based on the current state
-                const filteredFiles = state.allFiles.filter(file => {
-                    const matchesQuery = file.filename.toLowerCase().includes(state.fileFilters.query.toLowerCase());
-                    const matchesType = state.fileFilters.type === 'all' || file.type.toLowerCase() === state.fileFilters.type.toLowerCase();
-                    return matchesQuery && matchesType;
-                });
+    try {
+      const res = await authFetch(`${API_BASE}/overseer/manage-school/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, country, tier }),
+      });
 
-                if (filteredFiles.length === 0) {
-                    fileListContainer.innerHTML = '<p class="text-center text-gray-500">No matching files found.</p>';
-                    return;
-                }
-                
-                const tableHtml = `
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-200">
-                            ${filteredFiles.map(file => `
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${file.filename}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${file.type}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="${API_BASE}/admin/view-file/${file.type}/${file.filename}" target="_blank" class="text-blue-600 hover:text-blue-900">
-                                            View <i class="fas fa-external-link-alt ml-1"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
-                fileListContainer.innerHTML = tableHtml;
-                document.getElementById('files-section').style.display = 'block';
-            }
-        };
+      if (!res.ok) throw new Error("Failed to add school");
+      await res.json();
+      showAlert("Success", `School "${name}" added in ${country}.`);
+      document.getElementById("form-modal").classList.add("hidden");
+      await fetchDashboardData();
+    } catch (error) {
+      console.error("Error adding school:", error);
+      showAlert("Error", error.message);
+    } finally {
+      state.isSchoolManagementLoading = false;
+      render();
+    }
+  };
 
-        /**
-         * Fetches dashboard overview data from the API.
-         */
-        const fetchDashboardData = async () => {
-            state.isLoading = true;
-            render();
-            try {
-                const res = await fetch(`${API_BASE}/overseer/dashboard-overview`);
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorData.message || 'Failed to fetch dashboard data');
-                }
-                const data = await res.json();
-                
-                // Calculate total schools and admins from the managed regions data
-                const totalSchools = data.managedRegions.reduce((sum, region) => sum + (region.totalSchools || 0), 0);
-                const totalAdmins = data.managedRegions.reduce((sum, region) => sum + (region.totalAdmins || 0), 0);
+  const handleAssignRegion = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const overseerEmail = form.overseer.value;
+    const regionName = form.region.value;
 
-                state.dashboardData = {
-                    totalRegions: data.managedRegions.length,
-                    totalSchools: totalSchools,
-                    totalAdmins: totalAdmins,
-                    // These numbers are placeholders as they are not returned by the API
-                    totalUsers: 99999,
-                    managedRegions: data.managedRegions,
-                };
-            } catch (error) {
-                console.error('Failed to fetch global overseer dashboard data:', error);
-                showAlert('Error', 'Failed to load dashboard data. Please check the network connection.');
-            } finally {
-                state.isLoading = false;
-                render();
-            }
-        };
+    state.isUserManagementLoading = true;
+    document.getElementById("assign-region-button").innerHTML =
+      '<div class="spinner"></div>';
 
-        /**
-         * Fetches and renders the list of all uploaded files.
-         */
-        const fetchAndRenderAllFiles = async () => {
-            state.isFilesLoading = true;
-            renderFilesTable(); // Show loading message
-            try {
-                const res = await fetch(`${API_BASE}/admin/all-files`);
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorData.message || 'Failed to fetch files');
-                }
-                const data = await res.json();
-                state.allFiles = data.files;
-            } catch (error) {
-                console.error('Failed to fetch all files:', error);
-                showAlert('Error', 'Failed to load the list of files.');
-            } finally {
-                state.isFilesLoading = false;
-                render(); // Re-render to show the file list
-            }
-        };
+    try {
+      const res = await authFetch(`${API_BASE}/overseer/manage-region/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ overseerEmail, regionName }),
+      });
 
-        // --- New Management Functionality ---
+      if (!res.ok) throw new Error("Failed to assign region");
+      await res.json();
+      showAlert("Success", `Region "${regionName}" assigned to ${overseerEmail}.`);
+      document.getElementById("form-modal").classList.add("hidden");
+    } catch (error) {
+      console.error("Error assigning region:", error);
+      showAlert("Error", error.message);
+    } finally {
+      state.isUserManagementLoading = false;
+      render();
+    }
+  };
 
-        /**
-         * Opens a modal with a specific form.
-         * @param {string} title - Title for the modal.
-         * @param {string} formType - Identifier for the form to render.
-         */
-        const openFormModal = (title, formType) => {
-            const modal = document.getElementById('form-modal');
-            const modalTitle = document.getElementById('form-modal-title');
-            const modalContent = document.getElementById('form-modal-content');
-            
-            modalTitle.textContent = title;
-            modalContent.innerHTML = getFormHtml(formType);
-            modal.classList.remove('hidden');
+  // --- Init ---
+  document.addEventListener("DOMContentLoaded", () => {
+    state.user = {
+      id: "user_123",
+      email: "global.overseer@example.com",
+      occupation: "global_overseer",
+    };
+    fetchDashboardData();
+  });
+</script>
 
-            // Add event listeners specific to the form
-            document.getElementById('form-modal-close').addEventListener('click', () => modal.classList.add('hidden'));
-
-            if (formType === 'promote-form') {
-                document.getElementById('promote-user-form').addEventListener('submit', handlePromoteUser);
-            } else if (formType === 'remove-user-form') {
-                document.getElementById('remove-user-form').addEventListener('submit', handleRemoveUser);
-            } else if (formType === 'add-school-form') {
-                document.getElementById('add-school-form').addEventListener('submit', handleAddSchool);
-            } else if (formType === 'assign-region-form') {
-                document.getElementById('assign-region-form').addEventListener('submit', handleAssignRegion);
-            }
-        };
-
-        /**
-         * Returns the HTML for a given form type.
-         * @param {string} formType
-         * @returns {string} The form HTML string.
-         */
-        const getFormHtml = (formType) => {
-            switch (formType) {
-                case 'promote-form':
-                    return `
-                        <form id="promote-user-form" class="space-y-4">
-                            <div>
-                                <label for="promote-email" class="block text-sm font-medium text-gray-700">User Email</label>
-                                <input type="email" id="promote-email" name="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label for="promote-role" class="block text-sm font-medium text-gray-700">Select Role</label>
-                                <select id="promote-role" name="role" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="student">Student</option>
-                                    <option value="teacher">Teacher</option>
-                                    <option value="overseer">Overseer</option>
-                                    <option value="global_overseer">Global Overseer</option>
-                                </select>
-                            </div>
-                            <div class="flex items-center">
-                                <input id="make-admin" name="make_admin" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <label for="make-admin" class="ml-2 block text-sm text-gray-900">Make Admin</label>
-                            </div>
-                            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Submit
-                            </button>
-                        </form>
-                    `;
-                case 'remove-user-form':
-                    return `
-                        <form id="remove-user-form" class="space-y-4">
-                            <div>
-                                <label for="remove-email" class="block text-sm font-medium text-gray-700">User Email</label>
-                                <input type="email" id="remove-email" name="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
-                            </div>
-                            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                Remove User
-                            </button>
-                        </form>
-                    `;
-                case 'add-school-form':
-                    return `
-                        <form id="add-school-form" class="space-y-4">
-                            <div>
-                                <label for="school-name" class="block text-sm font-medium text-gray-700">School Name</label>
-                                <input type="text" id="school-name" name="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                            </div>
-                            <div>
-                                <label for="school-country" class="block text-sm font-medium text-gray-700">Country (Region)</label>
-                                <input type="text" id="school-country" name="country" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                            </div>
-                            <div>
-                                <label for="school-tier" class="block text-sm font-medium text-gray-700">School Tier</label>
-                                <input type="number" id="school-tier" name="tier" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                            </div>
-                            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                Add School
-                            </button>
-                        </form>
-                    `;
-                case 'assign-region-form':
-                    const overseerOptions = state.mockOverseers.map(email => `<option value="${email}">${email}</option>`).join('');
-                    const regionOptions = state.mockRegions.map(region => `<option value="${region}">${region}</option>`).join('');
-                    return `
-                        <form id="assign-region-form" class="space-y-4">
-                            <div>
-                                <label for="overseer-email" class="block text-sm font-medium text-gray-700">Overseer Email</label>
-                                <select id="overseer-email" name="overseerEmail" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
-                                    ${overseerOptions}
-                                </select>
-                            </div>
-                            <div>
-                                <label for="region" class="block text-sm font-medium text-gray-700">Region to Assign</label>
-                                <select id="region" name="region" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
-                                    ${regionOptions}
-                                </select>
-                            </div>
-                            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                                Assign Region
-                            </button>
-                        </form>
-                    `;
-                default:
-                    return '<p>Form not found.</p>';
-            }
-        };
-
-        // --- Form Submission Handlers ---
-
-        const handlePromoteUser = async (event) => {
-            event.preventDefault();
-            const form = event.target;
-            const email = form.email.value;
-            const role = form.role.value;
-            const make_admin = form.make_admin.checked;
-            
-            try {
-                const res = await fetch(`${API_BASE}/admin/promote`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, role, make_admin })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Failed to promote user');
-                showAlert('Success', data.message);
-                document.getElementById('form-modal').classList.add('hidden');
-            } catch (error) {
-                showAlert('Error', error.message);
-            }
-        };
-
-        const handleRemoveUser = async (event) => {
-            event.preventDefault();
-            const email = event.target.email.value;
-            showAlert('Confirm Removal', `Are you sure you want to remove ${email}? This action cannot be undone.`, {
-                confirmText: 'Yes, Remove',
-                onConfirm: async () => {
-                    try {
-                        const res = await fetch(`${API_BASE}/admin/remove-user`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email })
-                        });
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data.message || 'Failed to remove user');
-                        showAlert('Success', data.message);
-                        document.getElementById('form-modal').classList.add('hidden');
-                    } catch (error) {
-                        showAlert('Error', error.message);
-                    }
-                },
-                showCancel: true
-            });
-        };
-
-        const handleAddSchool = async (event) => {
-            event.preventDefault();
-            const form = event.target;
-            const name = form.name.value;
-            const country = form.country.value;
-            const tier = parseInt(form.tier.value);
-
-            try {
-                const res = await fetch(`${API_BASE}/admin/schools/add`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, country, tier })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Failed to add school');
-                showAlert('Success', `School "${name}" added successfully!`);
-                document.getElementById('form-modal').classList.add('hidden');
-            } catch (error) {
-                showAlert('Error', error.message);
-            }
-        };
-
-        const handleAssignRegion = async (event) => {
-            event.preventDefault();
-            const form = event.target;
-            const overseerEmail = form.overseerEmail.value;
-            const region = form.region.value;
-
-            try {
-                const res = await fetch(`${API_BASE}/admin/assign-region`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ overseerEmail, region })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Failed to assign region');
-                showAlert('Success', data.message);
-                document.getElementById('form-modal').classList.add('hidden');
-            } catch (error) {
-                showAlert('Error', error.message);
-            }
-        };
-
-        /**
-         * Handles the user logout process.
-         */
-        const handleLogout = () => {
-            showAlert(
-                'Logout',
-                'Are you sure you want to log out?', {
-                    confirmText: 'Logout',
-                    onConfirm: () => {
-                        localStorage.removeItem('mockUser');
-                        state.user = null;
-                        render();
-                        window.location.href = '/public/login.html'; // Redirect to login page
-                    },
-                    showCancel: true
-                }
-            );
-        };
-
-        // --- Custom Alert/Modal Functions ---
-
-        /**
-         * Displays a custom modal alert box.
-         * @param {string} title - The title of the alert.
-         * @param {string} message - The message content.
-         * @param {object} options - Options for the alert.
-         * @param {string} options.confirmText - Text for the confirm button.
-         * @param {Function} options.onConfirm - Callback function for the confirm button.
-         * @param {boolean} options.showCancel - Whether to show the cancel button.
-         */
-        const showAlert = (title, message, options = {}) => {
-            const modal = document.getElementById('alert-modal');
-            const titleEl = document.getElementById('alert-title');
-            const messageEl = document.getElementById('alert-message');
-            const confirmBtn = document.getElementById('alert-confirm');
-            const cancelBtn = document.getElementById('alert-cancel');
-
-            titleEl.textContent = title;
-            messageEl.textContent = message;
-
-            confirmBtn.textContent = options.confirmText || 'OK';
-            confirmBtn.onclick = () => {
-                modal.classList.add('hidden');
-                if (options.onConfirm) {
-                    options.onConfirm();
-                }
-            };
-
-            if (options.showCancel) {
-                cancelBtn.textContent = 'Cancel';
-                cancelBtn.onclick = () => modal.classList.add('hidden');
-                cancelBtn.classList.remove('hidden');
-            } else {
-                cancelBtn.classList.add('hidden');
-            }
-
-            modal.classList.remove('hidden');
-        };
-
-        // --- Initial setup on page load ---
-        window.onload = async () => {
-            // Mock authentication for demonstration purposes
-            const mockUser = {
-                username: 'john.doe',
-                occupation: 'global_overseer',
-                schoolName: 'Global HQ'
-            };
-
-            // Check if a user is already "logged in" in local storage
-            const storedUser = localStorage.getItem('mockUser');
-            if (!storedUser) {
-                // If not, 'log in' the mock user and store it
-                localStorage.setItem('mockUser', JSON.stringify(mockUser));
-                state.user = mockUser;
-            } else {
-                // If a user is found, parse it into the state
-                state.user = JSON.parse(storedUser);
-            }
-
-            // Start the main process by fetching data
-            await fetchDashboardData();
-        };
-    </script>
-</body>
-
+  </body>
 </html>

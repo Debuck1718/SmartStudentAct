@@ -133,10 +133,11 @@ module.exports = (eventBus, agenda) => {
         }
     });
 
-    publicRouter.post('/users/login', validate(loginSchema), async (req, res) => {
-        console.log("✅ The login route was reached!");
-        const { email, password } = req.body;
+publicRouter.post('/users/login', validate(loginSchema), async (req, res) => {
+    console.log("✅ The login route was reached!");
+    const { email, password } = req.body;
 
+    try {
         const u = await User.findOne({ email }).select('+password +role +is_on_trial +subscription_status');
 
         if (!u || !(await bcrypt.compare(password, u.password))) {
@@ -145,6 +146,7 @@ module.exports = (eventBus, agenda) => {
 
         const userOccupation = u.role;
 
+        // 🔑 Issue JWT
         const token = jwt.sign({
             id: u._id,
             email: u.email,
@@ -161,10 +163,27 @@ module.exports = (eventBus, agenda) => {
             profile_picture_url: u.profile_picture_url || null
         }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
+        // 🔑 Generate CSRF token
+        const csrfToken = crypto.randomBytes(24).toString("hex");
+
+        // ✅ Save CSRF token in session for later validation
+        if (req.session) {
+            req.session.csrfToken = csrfToken;
+        }
+
+        // 🔑 Emit login event
         eventBus.emit('user_logged_in', { userId: u._id, email: u.email, occupation: userOccupation });
 
+        // ✅ Send back JWT (cookie) + CSRF token (response body)
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
         res.json({
-            token,
+            csrfToken, // frontend must include this in `X-CSRF-Token` header
             user: {
                 id: u._id,
                 email: u.email,
@@ -184,7 +203,13 @@ module.exports = (eventBus, agenda) => {
             },
             message: 'Login successful.'
         });
-    });
+
+    } catch (err) {
+        console.error("❌ Login route error:", err);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 
     publicRouter.post('/auth/forgot-password', validate(forgotPasswordSchema), async (req, res) => {
         try {

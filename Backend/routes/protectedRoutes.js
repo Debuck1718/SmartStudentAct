@@ -12,6 +12,8 @@ const eventBus = require('../utils/eventBus');
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const { authenticateJWT, hasRole } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
+const csrfProtection = require('../middlewares/csrf'); // ✅ Import the csrf middleware
+
 
 // --- Import Models ---
 const User = require('../models/User');
@@ -21,6 +23,7 @@ const Assignment = require('../models/Assignment');
 const Submission = require('../models/Submission');
 const PushSub = require('../models/PushSub');
 const School = require('../models/School');
+const Quiz = require('../models/Quiz');
 const SchoolCalendar = require('../models/SchoolCalendar');
 
 // --- Import Sub-routers ---
@@ -68,7 +71,9 @@ const agenda = { schedule: () => {} };
 
 // ──────────────────── Protected Router ────────────────────
 const protectedRouter = express.Router();
-protectedRouter.use(authenticateJWT, checkSubscription);
+
+// ✅ Apply authentication + subscription + CSRF
+protectedRouter.use(authenticateJWT, checkSubscription, csrfProtection);
 
 // --- Multer Storage Setup (moved here as all upload routes are protected) ---
 const localDiskStorage = multer.diskStorage({
@@ -623,6 +628,35 @@ protectedRouter.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole
         }
     }
 });
+// 🆕 New: Route for Admin to fetch files for their school
+protectedRouter.get('/admin/my-school-files', authenticateJWT, hasRole(['admin']), async (req, res) => {
+    try {
+        const user = req.user;
+
+        const schoolName = user.school || user.schoolName || user.teacherSchool;
+        if (!schoolName) {
+            return res.status(400).json({ error: 'User is not associated with a school.' });
+        }
+
+        // Find files uploaded in this school
+        const files = await File.find({ school_id: schoolName })
+            .populate('uploader', 'firstname lastname email');
+
+        const formattedFiles = files.map(file => ({
+            filename: file.filename,
+            url: file.url,
+            type: file.type,
+            submittedBy: file.uploader
+                ? `${file.uploader.firstname} ${file.uploader.lastname} (${file.uploader.email})`
+                : 'Unknown'
+        }));
+
+        res.status(200).json(formattedFiles);
+    } catch (err) {
+        logger.error('Error fetching admin files:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 /* ──────────── Teacher Routes ──────────── */
 /**
@@ -823,6 +857,79 @@ protectedRouter.get('/teacher/students', authenticateJWT, hasRole('teacher'), as
         res.status(500).json({ message: 'Server error' });
     }
 });
+/**
+ * @route POST /api/teacher/quiz
+ * @desc Teacher creates a quiz assignment with multiple questions.
+ * @access Private (Teacher Only)
+ */
+protectedRouter.post('/teacher/quiz', authenticateJWT, hasRole('teacher'), async (req, res) => {
+    try {
+        const { title, description, dueDate, questions, assignTo } = req.body;
+        const teacherId = req.user.id;
+
+        if (!title || !questions || questions.length === 0) {
+            return res.status(400).json({ message: 'Quiz must have a title and at least one question.' });
+        }
+
+        // Create the assignment
+        const quizAssignment = new Assignment({
+            teacher_id: teacherId,
+            title,
+            description,
+            due_date: new Date(dueDate),
+            type: 'quiz',
+            questions, // array of Question IDs
+            assigned_to_users: assignTo?.users || [],
+            assigned_to_grades: assignTo?.grades || [],
+            assigned_to_schools: assignTo?.schools || []
+        });
+
+        await quizAssignment.save();
+
+        eventBus.emit('assignment_created', {
+            assignmentId: quizAssignment._id,
+            title: quizAssignment.title,
+            creatorId: teacherId,
+        });
+
+        res.status(201).json({ message: 'Quiz created successfully!', assignment: quizAssignment });
+    } catch (error) {
+        logger.error('Error creating quiz assignment:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * @route GET /api/teacher/quiz/:assignmentId/results
+ * @desc Teacher views results of a quiz assignment.
+ * @access Private (Teacher Only)
+ */
+protectedRouter.get('/teacher/quiz/:assignmentId/results', authenticateJWT, hasRole('teacher'), async (req, res) => {
+    try {
+        const { assignmentId } = req.params;
+        const assignment = await Assignment.findById(assignmentId).populate('questions');
+        
+        if (!assignment || assignment.teacher_id.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to view results for this assignment.' });
+        }
+
+        // Fetch student submissions
+        const submissions = await Submission.find({ assignment_id: assignmentId }).populate('user_id', 'firstname lastname email');
+
+        const formattedResults = submissions.map(sub => ({
+            student: `${sub.user_id.firstname} ${sub.user_id.lastname}`,
+            email: sub.user_id.email,
+            score: sub.score || null,
+            submittedAt: sub.submitted_at
+        }));
+
+        res.status(200).json({ assignment: assignment.title, results: formattedResults });
+    } catch (error) {
+        logger.error('Error fetching quiz results:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 /**
  * @route GET /api/teacher/overdue-tasks
@@ -1072,6 +1179,127 @@ protectedRouter.get('/student/teachers/my-school', authenticateJWT, hasRole('stu
     }
 });
 
+/**
+ * @route GET /api/student/quizzes
+ * @desc Gets all quiz assignments available for the logged-in student.
+ * @access Private (Student Only)
+ */
+protectedRouter.get('/student/quizzes', authenticateJWT, hasRole('student'), async (req, res) => {
+  try {
+    const student = await User.findById(req.user.id);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found.' });
+    }
+
+    // Find quizzes assigned directly, by grade, or by school
+    const quizzes = await Assignment.find({
+      type: 'quiz',
+      $or: [
+        { assigned_to_users: student.email },
+        { assigned_to_grades: student.grade },
+        { assigned_to_schools: student.school }
+      ]
+    }).populate('questions'); // load question details
+
+    res.status(200).json({ quizzes });
+  } catch (error) {
+    logger.error('Error fetching student quizzes:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route POST /api/student/quizzes/:assignmentId/submit
+ * @desc Student submits answers for a quiz assignment (auto-scored).
+ * @access Private (Student Only)
+ */
+protectedRouter.post('/student/quizzes/:assignmentId/submit', authenticateJWT, hasRole('student'), async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const { answers } = req.body; // { questionId: selectedOption }
+
+    const student = await User.findById(req.user.id);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found.' });
+    }
+
+    const assignment = await Assignment.findById(assignmentId).populate('questions');
+    if (!assignment || assignment.type !== 'quiz') {
+      return res.status(404).json({ message: 'Quiz not found.' });
+    }
+
+    // Auto-score the quiz
+    let score = 0;
+    const results = assignment.questions.map(q => {
+      const studentAnswer = answers[q._id] || null;
+      const isCorrect = studentAnswer === q.correct_option;
+      if (isCorrect) score++;
+      return {
+        questionId: q._id,
+        studentAnswer,
+        correct: isCorrect
+      };
+    });
+
+    // Save submission
+    const newSubmission = new Submission({
+      assignment_id: assignmentId,
+      user_id: student._id,
+      answers: results,
+      score,
+      submitted_at: new Date()
+    });
+
+    await newSubmission.save();
+
+    eventBus.emit('quiz_submitted', {
+      assignmentId,
+      studentId: student._id,
+      score
+    });
+
+    res.status(201).json({
+      message: 'Quiz submitted successfully!',
+      score,
+      total: assignment.questions.length,
+      submission: newSubmission
+    });
+  } catch (error) {
+    logger.error('Error submitting quiz:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * @route GET /api/student/quizzes/:quizId/result
+ * @desc Get logged-in student’s result for a quiz
+ * @access Private (Student Only)
+ */
+protectedRouter.get('/student/quizzes/:quizId/result', authenticateJWT, hasRole('student'), async (req, res) => {
+  try {
+    const quiz = await Quiz.findById(req.params.quizId);
+    if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
+
+    // find the submission for this student
+    const submission = quiz.submissions.find(sub => sub.student_id.toString() === req.user.id);
+    if (!submission) {
+      return res.status(404).json({ message: 'No submission found for this student' });
+    }
+
+    res.status(200).json({
+      quizTitle: quiz.title,
+      submittedAt: submission.submitted_at,
+      score: submission.score,
+      answers: submission.answers
+    });
+  } catch (error) {
+    logger.error('Error fetching student quiz result:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
 // --- New Cloudinary Upload Endpoint ---
     protectedRouter.post("/upload/cloudinary", cloudinaryUpload.single("image"), (req, res) => {
         try {
@@ -1218,6 +1446,8 @@ protectedRouter.get('/student/teachers/my-school', authenticateJWT, hasRole('stu
             }
         }
     });
+
+    
 
    // ──────────────────── Payment & Pricing Routes ────────────────────
 protectedRouter.get('/pricing', async (req, res) => {

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Quiz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://kit.fontawesome.com/a2e0e9c6e2.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8">
+
+  <!-- Container -->
+  <div class="w-full max-w-3xl bg-white shadow-lg rounded-xl p-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-center text-blue-600 mb-6">📘 Quiz</h1>
+
+    <!-- Quiz Title -->
+    <h2 id="quiz-title" class="text-xl font-semibold mb-2 text-gray-800"></h2>
+    <p id="quiz-desc" class="text-gray-600 mb-6"></p>
+
+    <!-- Questions -->
+    <form id="quiz-form" class="space-y-6">
+      <div id="questions-container" class="space-y-6"></div>
+
+      <button type="submit" 
+        class="w-full bg-blue-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-600 transition-colors">
+        Submit Quiz
+      </button>
+    </form>
+
+    <!-- Results -->
+    <div id="quiz-result" class="mt-6 hidden text-center">
+      <h3 class="text-2xl font-bold text-green-600 mb-2">✅ Quiz Submitted</h3>
+      <p id="score-text" class="text-lg text-gray-800 mb-4"></p>
+      <div id="answer-breakdown" class="space-y-4 text-left"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    const token = localStorage.getItem('token');
+    const urlParams = new URLSearchParams(window.location.search);
+    const quizId = urlParams.get('quizId');
+
+    // Get student ID from token (or storage)
+    let studentId = null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      studentId = payload.id;
+    } catch {
+      studentId = localStorage.getItem('studentId');
+    }
+
+    const quizTitle = document.getElementById('quiz-title');
+    const quizDesc = document.getElementById('quiz-desc');
+    const questionsContainer = document.getElementById('questions-container');
+    const quizForm = document.getElementById('quiz-form');
+    const quizResult = document.getElementById('quiz-result');
+    const scoreText = document.getElementById('score-text');
+    const breakdownContainer = document.getElementById('answer-breakdown');
+
+    // Fetch quiz details
+    const fetchQuiz = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/student/quizzes/${quizId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to load quiz');
+        const data = await res.json();
+        renderQuiz(data.quiz);
+      } catch (err) {
+        questionsContainer.innerHTML = `<p class="text-red-500">Error loading quiz.</p>`;
+        console.error(err);
+      }
+    };
+
+    const renderQuiz = (quiz) => {
+      quizTitle.textContent = quiz.title;
+      quizDesc.textContent = quiz.description || '';
+
+      quiz.questions.forEach((q, idx) => {
+        const div = document.createElement('div');
+        div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
+        div.setAttribute("data-question", idx);
+
+        div.innerHTML = `
+          <p class="font-semibold mb-2">${idx+1}. ${q.question}</p>
+          <div class="space-y-2">
+            ${q.options.map((opt,i) => `
+              <label class="flex items-center space-x-2">
+                <input type="radio" name="q${idx}" value="${opt}" class="text-blue-500">
+                <span>${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+          <p class="hidden text-red-500 text-sm mt-2 warning">⚠️ Please answer this question</p>
+        `;
+        questionsContainer.appendChild(div);
+      });
+    };
+
+    // Show results
+    const showResults = (quiz, submission) => {
+      quizForm.classList.add('hidden');
+      quizResult.classList.remove('hidden');
+      scoreText.textContent = `You scored ${submission.score} / ${quiz.questions.length}`;
+
+      breakdownContainer.innerHTML = '';
+      quiz.questions.forEach((q, idx) => {
+        const studentAnswer = submission.answers[idx] || 'No answer';
+        const correct = q.correct === studentAnswer;
+
+        const div = document.createElement('div');
+        div.className = `p-3 rounded-lg ${correct ? 'bg-green-100' : 'bg-red-100'}`;
+        div.innerHTML = `
+          <p class="font-semibold">${idx+1}. ${q.question}</p>
+          <p>Your answer: <span class="${correct ? 'text-green-600' : 'text-red-600'}">${studentAnswer}</span></p>
+          <p>Correct answer: <span class="font-bold text-green-700">${q.correct}</span></p>
+        `;
+        breakdownContainer.appendChild(div);
+      });
+    };
+
+    // Submit quiz answers
+    quizForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const answers = {};
+      let allAnswered = true;
+
+      // Reset previous warnings
+      document.querySelectorAll('[data-question]').forEach(div => {
+        div.classList.remove('border', 'border-red-500');
+        div.querySelector('.warning').classList.add('hidden');
+      });
+
+      const totalQuestions = document.querySelectorAll('[data-question]').length;
+
+      for (let i = 0; i < totalQuestions; i++) {
+        const selected = quizForm.querySelector(`input[name=q${i}]:checked`);
+        if (selected) {
+          answers[i] = selected.value;
+        } else {
+          allAnswered = false;
+          const div = document.querySelector(`[data-question="${i}"]`);
+          div.classList.add('border', 'border-red-500');
+          div.querySelector('.warning').classList.remove('hidden');
+        }
+      }
+
+      if (!allAnswered) {
+        alert("⚠️ Please answer all questions before submitting!");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/student/quizzes/submit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ quizId, studentId, answers })
+        });
+
+        if (!res.ok) throw new Error('Submit failed');
+        const result = await res.json();
+
+        showResults(result.quiz, result.submission);
+      } catch (err) {
+        alert('Error submitting quiz');
+        console.error(err);
+      }
+    });
+
+    fetchQuiz();
+  </script>
+</body>
+</html>
+
