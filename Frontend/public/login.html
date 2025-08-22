@@ -132,16 +132,16 @@
       <div class="form-container max-w-sm mx-auto">
         <h1 class="title">SmartStudentAct Login</h1>
         <div class="input-group">
-          <!-- INPUT FIELD UPDATED FROM EMAIL TO PHONE -->
+          <!-- REVERTED BACK TO EMAIL -->
           <input
-            id="phoneInput"
-            type="tel"
+            id="emailInput"
+            type="email"
             class="input"
-            placeholder="Phone Number"
-            autocomplete="tel"
+            placeholder="Email"
+            autocomplete="email"
           />
-          <!-- ERROR ELEMENT UPDATED TO PHONE -->
-          <p id="phoneError" class="error-text hidden"></p>
+          <!-- REVERTED BACK TO EMAIL -->
+          <p id="emailError" class="error-text hidden"></p>
         </div>
         <div class="input-group">
           <div class="password-input-container">
@@ -174,13 +174,13 @@
       const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 
       // DOM elements
-      // UPDATED TO phoneInput AND phoneErrorEl
-      const phoneInput = document.getElementById("phoneInput");
+      // REVERTED BACK TO EMAIL
+      const emailInput = document.getElementById("emailInput");
       const passwordInput = document.getElementById("passwordInput");
       const loginButton = document.getElementById("loginButton");
       const passwordToggle = document.getElementById("passwordToggle");
       const passwordToggleText = passwordToggle.querySelector(".password-toggle-text");
-      const phoneErrorEl = document.getElementById("phoneError");
+      const emailErrorEl = document.getElementById("emailError");
       const passwordErrorEl = document.getElementById("passwordError");
       const signupLink = document.getElementById("signupLink");
       const forgotPasswordLink = document.getElementById("forgotPasswordLink");
@@ -189,10 +189,10 @@
       const bannerEl = document.createElement("div");
       bannerEl.id = "banner";
       bannerEl.className = "hidden text-red-600 text-center mb-4";
-      phoneInput.closest(".form-container").prepend(bannerEl);
+      emailInput.closest(".form-container").prepend(bannerEl);
 
       // State
-      let phone = "";
+      let email = "";
       let password = "";
       let loading = false;
       let showPassword = false;
@@ -216,11 +216,10 @@
         }
       }
 
-      // NEW VALIDATION FUNCTION FOR PHONE NUMBER
-      function validatePhone(text) {
-        if (!text.trim()) return "Phone number cannot be empty.";
-        // Simple regex to check for 10-15 digits, with optional leading +
-        if (!/^\+?[0-9]{10,15}$/.test(text)) return "Please enter a valid phone number.";
+      // REVERTED BACK TO EMAIL VALIDATION
+      function validateEmail(text) {
+        if (!text.trim()) return "Email cannot be empty.";
+        if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
         return null;
       }
 
@@ -231,10 +230,10 @@
       }
 
       // --- Event Handlers ---
-      // UPDATED FROM EMAIL TO PHONE
-      phoneInput.addEventListener("input", (e) => {
-        phone = e.target.value;
-        setError(phoneErrorEl, null, phoneInput);
+      // REVERTED BACK TO EMAIL
+      emailInput.addEventListener("input", (e) => {
+        email = e.target.value;
+        setError(emailErrorEl, null, emailInput);
         bannerEl.classList.add("hidden");
       });
       passwordInput.addEventListener("input", (e) => {
@@ -259,17 +258,17 @@
 
       // --- Login Handler ---
       async function handleLogin() {
-        // UPDATED FROM EMAIL TO PHONE
-        setError(phoneErrorEl, null, phoneInput);
+        // REVERTED BACK TO EMAIL
+        setError(emailErrorEl, null, emailInput);
         setError(passwordErrorEl, null, passwordInput);
         bannerEl.classList.add("hidden");
 
-        const phoneValidationResult = validatePhone(phoneInput.value);
+        const emailValidationResult = validateEmail(emailInput.value);
         const passwordValidationResult = validatePassword(passwordInput.value);
 
-        setError(phoneErrorEl, phoneValidationResult, phoneInput);
+        setError(emailErrorEl, emailValidationResult, emailInput);
         setError(passwordErrorEl, passwordValidationResult, passwordInput);
-        if (phoneValidationResult || passwordValidationResult) return;
+        if (emailValidationResult || passwordValidationResult) return;
 
         setLoading(true);
 
@@ -280,8 +279,8 @@
                 "Content-Type": "application/json" 
             },
             body: JSON.stringify({
-              // UPDATED TO USE PHONE INSTEAD OF EMAIL
-              phone: phoneInput.value.trim(),
+              // REVERTED BACK TO EMAIL
+              email: emailInput.value.trim().toLowerCase(),
               password: passwordInput.value,
             }),
           });
@@ -351,4 +350,3 @@
     </script>
   </body>
 </html>
-
