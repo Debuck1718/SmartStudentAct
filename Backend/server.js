@@ -9,6 +9,7 @@ const Agenda = require("agenda");
 const EventEmitter = require("events");
 const eventBus = new EventEmitter();
 const cloudinary = require("cloudinary").v2;
+const session = require("express-session"); // ✅ New: Import express-session
 
 // ───────────────────────────────────────────────
 // 1️⃣ Environment Validation
@@ -40,7 +41,7 @@ const app = express();
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (!origin) return callback(null, true); 
+            if (!origin) return callback(null, true);
             if (origin.startsWith("https://")) return callback(null, true);
             return callback(new Error("Not allowed by CORS"));
         },
@@ -52,6 +53,19 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// ✅ New: Session Middleware
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+            httpOnly: true,
+        },
+    })
+);
 
 // ───────────────────────────────────────────────
 // 3️⃣ Cloudinary Configuration
@@ -109,16 +123,9 @@ async function startAgenda() {
 // 6️⃣ Routes Loader
 // ───────────────────────────────────────────────
 try {
-    // ✅ Updated to correctly import the public and protected routers directly.
-    const publicRouter = require('./routes/index');
-    const protectedRouter = require('./routes/protectedRoutes');
-
-    // ✅ Mount public routes first
-    app.use("/api", publicRouter);
-
-    // ✅ Mount protected routes second. The protected router already applies middleware.
-    app.use("/api", protectedRouter);
-
+    // Correctly import the router loader and pass the dependencies to it.
+    const loadRoutes = require("./routes");
+    loadRoutes(app, eventBus, agenda); // Now passing the dependencies to the router loader function
     console.log("✅ Routes loaded successfully!");
 } catch (err) {
     console.error(`❌ Routes loading error at ${new Date().toISOString()}:`, err);
