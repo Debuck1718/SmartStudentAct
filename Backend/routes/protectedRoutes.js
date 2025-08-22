@@ -814,9 +814,10 @@ protectedRouter.get('/teacher/students', authenticateJWT, hasRole('teacher'), as
             role: 'student',
             schoolName: teacher.schoolName,
             grade: teacher.grade
-        }).select('firstname lastname email grade'); // Select only necessary fields
+        }).select('firstname lastname email grade imageUrl');
 
-        res.status(200).json(students); // Return the students array directly
+        // This endpoint already returns a direct array, which is correct.
+        res.status(200).json(students);
     } catch (error) {
         logger.error('Error fetching students for teacher\'s class:', error);
         res.status(500).json({ message: 'Server error' });
@@ -958,7 +959,7 @@ protectedRouter.post('/teacher/message', authenticateJWT, hasRole('teacher'), as
 
 /**
  * @route GET /api/teacher/students/other
- * @desc Fetches all students in the same school but NOT the same class as the logged-in teacher.
+ * @desc Fetches all students from the same school but NOT the same grade as the logged-in teacher.
  * @access Private (Teacher Only)
  */
 protectedRouter.get('/teacher/students/other', authenticateJWT, hasRole('teacher'), async (req, res) => {
@@ -971,9 +972,10 @@ protectedRouter.get('/teacher/students/other', authenticateJWT, hasRole('teacher
             role: 'student',
             schoolName: teacher.schoolName,
             grade: { $ne: teacher.grade }
-        }).select('firstname lastname email grade');
+        }).select('firstname lastname email grade imageUrl');
 
-        res.status(200).json({ students: otherStudents });
+        // ✅ Corrected: Return the students array directly, not as part of an object.
+        res.status(200).json(otherStudents);
     } catch (error) {
         logger.error('Error fetching students from other classes:', error);
         res.status(500).json({ message: 'Server error' });

@@ -55,7 +55,7 @@
             <!-- Header section -->
             <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
                 <div class="flex items-center space-x-2">
-                    <!-- Profile and Settings buttons, currently for display -->
+                    <!-- Profile and Settings buttons, now with click handlers -->
                     <button id="profile-btn" class="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <ion-icon name="person-circle-outline" class="text-3xl text-gray-700"></ion-icon>
                     </button>
@@ -113,10 +113,40 @@
         </div>
     </div>
 
+    <!-- NEW: Profile & Settings Modal -->
+    <div id="profile-modal" class="hidden fixed inset-0 z-50 overflow-y-auto flex items-center justify-center modal-overlay">
+        <div class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-lg w-full">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Update Profile & Settings</h3>
+            <form id="profile-form" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">New Password</label>
+                    <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div id="profile-message" class="text-sm mt-2 font-medium"></div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="close-profile-modal-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" id="update-profile-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                        Update Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Base URL for API calls. In a real environment, this would be the backend server address.
-            const API_URL = 'https://smartstudentact.onrender.com'; // Assuming the SmartStudent API is at this address
+            // Base URL for API calls.
+            const API_BASE_URL = 'https://smartstudentact.onrender.com/api';
 
             // Element references
             const loadingContainer = document.getElementById('loading-container');
@@ -125,6 +155,8 @@
             const logoutBtn = document.getElementById('logout-btn');
             const manageSchoolsBtn = document.getElementById('manage-schools-btn');
             const manageAdminsBtn = document.getElementById('manage-admins-btn');
+            const profileBtn = document.getElementById('profile-btn');
+            const settingsBtn = document.getElementById('settings-btn');
 
             // Custom modal element references
             const customModal = document.getElementById('custom-modal');
@@ -132,7 +164,16 @@
             const modalMessage = document.getElementById('modal-message');
             const modalConfirmBtn = document.getElementById('modal-confirm-btn');
             const modalCancelBtn = document.getElementById('modal-cancel-btn');
-            
+
+            // NEW: Profile modal references
+            const profileModal = document.getElementById('profile-modal');
+            const profileForm = document.getElementById('profile-form');
+            const closeProfileModalBtn = document.getElementById('close-profile-modal-btn');
+            const usernameInput = document.getElementById('username');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const profileMessage = document.getElementById('profile-message');
+
             /**
              * Shows a custom modal for user confirmation.
              * @param {string} title The title for the modal.
@@ -158,34 +199,45 @@
                 };
             };
 
-
             /**
              * Handles the fetching and display of dashboard data from the API.
-             * API: GET /api/v3/overseer/dashboard
-             * Assumes the backend returns a JSON object with a 'managedRegions' array.
+             * Corrected API endpoint and token retrieval.
              */
             const fetchDashboardData = async () => {
+                // Get the auth token from local storage using the correct key.
+                const token = localStorage.getItem('token'); 
+
+                // If no token is found, redirect to login. This prevents a 401 error.
+                if (!token) {
+                    console.error("No token found. Redirecting to login.");
+                    window.location.href = '/login.html';
+                    return;
+                }
+
                 loadingContainer.classList.remove('hidden');
                 dashboardContent.classList.add('hidden');
                 
                 try {
-                    // This is a hypothetical API endpoint based on the frontend's needs.
-                    // The backend would need to implement a route like:
-                    // router.get('/overseer/dashboard', authenticateJWT, hasRole('overseer'), async (req, res) => { ... });
-                    const token = localStorage.getItem('authToken'); // Get the auth token from local storage
-                    const response = await fetch(`${API_URL}/overseer/dashboard`, {
+                    // This is the correct API endpoint from your previous server logs.
+                    const response = await fetch(`${API_BASE_URL}/overseer/dashboard-overview`, {
                         headers: {
                             'Authorization': `Bearer ${token}` // Attach the JWT for authentication
                         }
                     });
 
                     if (!response.ok) {
+                        // If the status is 401 (Unauthorized) or 403 (Forbidden), redirect to login
+                        if (response.status === 401 || response.status === 403) {
+                            console.error(`Authentication error: ${response.status}. Clearing token and redirecting.`);
+                            localStorage.removeItem('token');
+                            window.location.href = '/login.html';
+                            return;
+                        }
                         throw new Error(`API call failed with status: ${response.status}`);
                     }
 
                     const data = await response.json();
-                    renderRegions(data.managedRegions);
-
+                    renderRegions(data.regions); // Assuming the response has a 'regions' key
                 } catch (error) {
                     console.error('Error fetching dashboard data:', error);
                     regionsContainer.innerHTML = `<p class="text-center text-red-500 italic py-4">Failed to load data. Please try again later.</p>`;
@@ -223,7 +275,7 @@
              */
             const handleLogout = () => {
                 showCustomModal('Confirm Logout', 'Are you sure you want to log out?', () => {
-                    localStorage.removeItem('authToken'); // Clear the token
+                    localStorage.removeItem('token'); // Clear the token
                     // Redirect to the login page.
                     window.location.href = '/login.html'; 
                 });
@@ -234,8 +286,6 @@
              * This would be a separate HTML file in a complete application.
              */
             const handleManageSchoolsAndRegions = () => {
-                // In a real app, this would redirect or render a new component.
-                // For now, we'll just log the action and simulate navigation.
                 console.log('Navigating to School & Region Management...');
                 // window.location.href = '/manage-schools.html';
             };
@@ -245,20 +295,110 @@
              * This would be a separate HTML file.
              */
             const handleManageAdmins = () => {
-                // In a real app, this would redirect or render a new component.
                 console.log('Navigating to School Admin Management...');
                 // window.location.href = '/manage-admins.html';
+            };
+
+            /**
+             * NEW: Shows the profile update modal.
+             * For demonstration, this will populate the fields with mock data.
+             */
+            const showProfileSettingsModal = async () => {
+                // In a real app, you would fetch the user's current data from an API here.
+                // For now, we'll use placeholder data.
+                const user = {
+                    username: 'OverseerAdmin',
+                    email: 'admin@example.com'
+                };
+
+                usernameInput.value = user.username;
+                emailInput.value = user.email;
+                passwordInput.value = ''; // Password field should always be blank for security
+
+                profileMessage.textContent = ''; // Clear any previous messages
+                profileModal.classList.remove('hidden');
+            };
+
+            /**
+             * NEW: Handles the profile update form submission.
+             * This is a mock function; you'll need to replace the fetch call with your actual API endpoint.
+             */
+            const handleProfileUpdate = async (event) => {
+                event.preventDefault(); // Prevent the default form submission
+
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    profileMessage.textContent = 'Authentication error. Please log in again.';
+                    profileMessage.className = 'text-sm mt-2 text-red-500 font-medium';
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 2000);
+                    return;
+                }
+
+                const newUsername = usernameInput.value;
+                const newEmail = emailInput.value;
+                const newPassword = passwordInput.value;
+
+                // Simple validation to ensure fields aren't empty
+                if (!newUsername || !newEmail) {
+                    profileMessage.textContent = 'Username and Email are required.';
+                    profileMessage.className = 'text-sm mt-2 text-red-500 font-medium';
+                    return;
+                }
+                
+                // You would construct your payload here based on what's being updated
+                const payload = {
+                    username: newUsername,
+                    email: newEmail,
+                    // Only include the password field if it has a value
+                    ...(newPassword && { password: newPassword })
+                };
+
+                // This is a placeholder for your actual API call to update the user profile
+                try {
+                    const response = await fetch(`${API_BASE_URL}/users/update-profile`, {
+                        method: 'PUT', // Or POST, depending on your API
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to update profile.');
+                    }
+
+                    // On success
+                    profileMessage.textContent = 'Profile updated successfully!';
+                    profileMessage.className = 'text-sm mt-2 text-green-500 font-medium';
+                    // Optionally, you can hide the modal after a short delay
+                    setTimeout(() => {
+                        profileModal.classList.add('hidden');
+                    }, 2000);
+
+                } catch (error) {
+                    profileMessage.textContent = error.message;
+                    profileMessage.className = 'text-sm mt-2 text-red-500 font-medium';
+                }
             };
 
             // Add event listeners for buttons
             logoutBtn.addEventListener('click', handleLogout);
             manageSchoolsBtn.addEventListener('click', handleManageSchoolsAndRegions);
             manageAdminsBtn.addEventListener('click', handleManageAdmins);
+            
+            // NEW: Event listeners for profile and settings
+            profileBtn.addEventListener('click', showProfileSettingsModal);
+            settingsBtn.addEventListener('click', showProfileSettingsModal);
+            closeProfileModalBtn.addEventListener('click', () => profileModal.classList.add('hidden'));
+            profileForm.addEventListener('submit', handleProfileUpdate);
 
             // Fetch and display data when the page loads
             fetchDashboardData();
         });
     </script>
-
 </body>
 </html>

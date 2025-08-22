@@ -30,6 +30,9 @@
         <div id="error-message" class="text-center text-red-500 font-medium py-4 hidden">
             Failed to load teachers. Please try again later.
         </div>
+        <div id="no-teachers-message" class="text-center text-gray-500 font-medium py-4 hidden">
+            No teachers found in your school.
+        </div>
 
         <!-- This container will be populated by JavaScript -->
         <div id="teachers-list" class="space-y-4">
@@ -45,10 +48,12 @@
             const teacherListContainer = document.getElementById('teachers-list');
             const loadingMessage = document.getElementById('loading-message');
             const errorMessage = document.getElementById('error-message');
+            const noTeachersMessage = document.getElementById('no-teachers-message');
 
             /**
              * Renders a single teacher item and appends it to the list.
-             * @param {object} teacher The teacher item object with name, subject, and email.
+             * This function now correctly handles the `firstName` and `lastName` from the API.
+             * @param {object} teacher The teacher item object with firstName, lastName, and email.
              */
             const renderTeacherItem = (teacher) => {
                 const teacherItemEl = document.createElement('div');
@@ -66,11 +71,13 @@
 
                 const nameEl = document.createElement('p');
                 nameEl.classList.add('text-lg', 'font-semibold', 'text-gray-800');
-                nameEl.textContent = teacher.name;
+                // Correctly use firstName and lastName from the API response
+                nameEl.textContent = `${teacher.firstName} ${teacher.lastName}`;
 
+                // The backend does not provide a 'subject' field, so we add a placeholder.
                 const subjectEl = document.createElement('p');
                 subjectEl.classList.add('text-sm', 'text-gray-600', 'mt-1');
-                subjectEl.textContent = teacher.subject;
+                subjectEl.textContent = 'Subject: Not Specified';
 
                 const emailEl = document.createElement('a');
                 emailEl.href = `mailto:${teacher.email}`;
@@ -88,9 +95,10 @@
              * Fetches the teachers list from the backend API.
              */
             const fetchTeachers = async () => {
-                // Show loading indicator
+                // Show loading indicator and hide other messages
                 loadingMessage.classList.remove('hidden');
                 errorMessage.classList.add('hidden');
+                noTeachersMessage.classList.add('hidden');
                 teacherListContainer.innerHTML = ''; // Clear previous content
 
                 try {
@@ -98,28 +106,43 @@
                     // This is a placeholder for demonstration purposes.
                     const token = 'YOUR_JWT_TOKEN'; 
 
-                    const response = await fetch('/student/teachers/my-school', {
+                    // The backend route is prefixed with '/api'
+                    const response = await fetch('/api/student/teachers/my-school', {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
+                            // The Authorization header is required for this private route
                             'Authorization': `Bearer ${token}`
                         }
                     });
 
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        // Handle specific HTTP errors from the backend
+                        if (response.status === 401) {
+                             throw new Error('Unauthorized: Please log in.');
+                        } else if (response.status === 403) {
+                            throw new Error('Forbidden: You do not have permission.');
+                        } else {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
                     }
 
                     const data = await response.json();
 
                     // Assuming the API response has a 'teachers' key containing an array
                     if (data.teachers && Array.isArray(data.teachers)) {
-                        data.teachers.forEach(renderTeacherItem);
+                        if (data.teachers.length > 0) {
+                            data.teachers.forEach(renderTeacherItem);
+                        } else {
+                            // Show a specific message if no teachers are found
+                            noTeachersMessage.classList.remove('hidden');
+                        }
                     } else {
                         throw new Error('Invalid data format received from the API.');
                     }
                 } catch (error) {
                     console.error('Failed to fetch teachers:', error);
+                    errorMessage.textContent = `Failed to load teachers: ${error.message}`;
                     errorMessage.classList.remove('hidden');
                 } finally {
                     // Hide loading indicator
@@ -134,4 +157,3 @@
 
 </body>
 </html>
-

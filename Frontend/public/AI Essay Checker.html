@@ -14,43 +14,92 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        /* Custom styles for the app container */
+        .app-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
+        }
+
+        .cta-button {
+            background-image: linear-gradient(to right, #4c51bf 0%, #667eea 100%);
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.4);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom spinner for loading state */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 1.5rem;
+            height: 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
-<body class="bg-gray-100 p-8 flex justify-center items-center min-h-screen">
+<body class="bg-gray-100 p-4 md:p-8 flex justify-center items-center min-h-screen">
 
-    <div class="w-full max-w-4xl bg-white p-6 md:p-10 rounded-xl shadow-2xl transition-all duration-300">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6 md:mb-8">AI Essay Checker ✍️</h1>
+    <div class="w-full max-w-5xl app-container p-6 md:p-12 rounded-2xl shadow-2xl">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2 md:mb-4">AI Essay Checker ✍️</h1>
+        <p class="text-center text-gray-500 mb-6 md:mb-8">Get instant feedback on your essay's grammar, structure, and style.</p>
 
-        <!-- Trial Status Section -->
-        <div id="trial-status-message" class="bg-yellow-100 text-yellow-800 p-4 rounded-lg mb-6 text-center shadow-md border border-yellow-200">
-            You are on a **30-day free trial**. You have <span id="uses-left" class="font-bold text-lg">5</span> AI checks remaining.
+        <!-- Word count and limit display -->
+        <div class="flex justify-between items-center text-sm font-medium text-gray-500 mb-4">
+            <span id="word-count">0 words</span>
+            <span id="word-limit" class="text-gray-400">/ 1000 words max</span>
         </div>
 
         <!-- Essay Submission Form -->
         <form id="essay-form" class="flex flex-col gap-4">
             <textarea
                 id="essay-text"
-                class="w-full h-64 p-4 md:p-6 border border-gray-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                placeholder="Paste your essay here..."
+                class="w-full h-80 p-4 md:p-6 border border-gray-300 rounded-xl shadow-inner 
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                placeholder="Paste your essay here... (1000 words max)"
                 required
             ></textarea>
+            
             <button
                 type="submit"
                 id="submit-button"
-                class="w-full px-6 py-3 text-lg font-semibold rounded-lg shadow-lg transition-all duration-300
-                       bg-blue-600 hover:bg-blue-700 text-white transform hover:-translate-y-1"
+                class="w-full px-6 py-4 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300
+                       text-white cta-button flex items-center justify-center min-h-[50px]
+                       disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 Get Feedback
             </button>
         </form>
 
         <!-- Loading and Error Messages -->
-        <div id="status-message" class="mt-4 text-center hidden"></div>
+        <div id="status-message" class="mt-6 text-center hidden"></div>
 
         <!-- Feedback Display Section -->
         <div id="feedback-container" class="mt-8 space-y-6 hidden">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Feedback</h2>
-            <!-- Feedback content will be dynamically inserted here -->
+            <div id="feedback-content" class="space-y-6">
+                <!-- Feedback content will be dynamically inserted here -->
+            </div>
+            <button id="copy-button" class="mt-4 w-full py-3 px-6 text-base font-medium rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors shadow-md hidden">
+                Copy Feedback to Clipboard
+            </button>
         </div>
 
     </div>
@@ -62,78 +111,154 @@
         const submitButton = document.getElementById('submit-button');
         const statusMessageDiv = document.getElementById('status-message');
         const feedbackContainer = document.getElementById('feedback-container');
-        const trialStatusMessage = document.getElementById('trial-status-message');
-        const usesLeftSpan = document.getElementById('uses-left');
+        const feedbackContentDiv = document.getElementById('feedback-content');
+        const copyButton = document.getElementById('copy-button');
+        const wordCountSpan = document.getElementById('word-count');
+        const wordLimitSpan = document.getElementById('word-limit');
 
-        // Initial state
-        let isTrialUser = true; // Simulates user state from backend. Set to 'false' for paid users.
-        let usesLeft = 5; // Simulates the number of trial uses remaining from backend.
+        // Configuration
+        const MAX_WORDS = 1000;
+        const API_KEY = ""; // Do not change. The platform will provide this at runtime.
 
-        // Initial UI setup based on user state
-        if (!isTrialUser) {
-            trialStatusMessage.classList.add('hidden'); // Hide the trial message for paying users
-        }
-
-        // Function to update the trial uses counter in the UI
-        function updateUsesLeft() {
-            if (isTrialUser) {
-                usesLeftSpan.textContent = usesLeft;
-                if (usesLeft <= 0) {
-                    submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'transform', 'hover:-translate-y-1');
-                    submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
-                    submitButton.disabled = true;
-                    statusMessageDiv.textContent = 'You have used all your free trial checks. Please subscribe to continue.';
-                    statusMessageDiv.classList.remove('hidden');
-                    statusMessageDiv.classList.add('bg-red-100', 'text-red-800', 'p-4', 'rounded-lg', 'mt-4');
-                }
+        // State variables
+        let isLoading = false;
+        
+        // Function to update the word count display
+        function updateWordCount() {
+            const text = essayTextarea.value;
+            const words = text.split(/\s+/).filter(word => word.length > 0);
+            const count = words.length;
+            
+            wordCountSpan.textContent = `${count} words`;
+            
+            if (count > MAX_WORDS) {
+                wordCountSpan.classList.add('text-red-500');
+                wordLimitSpan.classList.add('text-red-500');
+                submitButton.disabled = true;
+            } else {
+                wordCountSpan.classList.remove('text-red-500');
+                wordLimitSpan.classList.remove('text-red-500');
+                submitButton.disabled = false;
             }
         }
 
-        // Initial call to set up the uses counter
-        updateUsesLeft();
+        // Add event listener for real-time word count
+        essayTextarea.addEventListener('input', updateWordCount);
 
         // Function to display messages (loading, error)
         function showStatus(message, type) {
             statusMessageDiv.textContent = message;
-            statusMessageDiv.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800', 'p-4', 'rounded-lg', 'mt-4');
+            statusMessageDiv.classList.remove('hidden', 'text-red-500', 'text-blue-500');
+            statusMessageDiv.classList.add('p-3', 'rounded-lg');
+            
             if (type === 'loading') {
                 statusMessageDiv.classList.add('text-blue-600', 'animate-pulse');
+                submitButton.disabled = true;
+                submitButton.innerHTML = `<div class="spinner"></div>`;
             } else if (type === 'error') {
-                statusMessageDiv.classList.add('bg-red-100', 'text-red-800', 'p-4', 'rounded-lg', 'mt-4');
+                statusMessageDiv.classList.add('text-red-500');
+                submitButton.disabled = false;
+                submitButton.innerHTML = `Get Feedback`;
+            } else if (type === 'success') {
+                 statusMessageDiv.classList.add('text-green-500');
+                 submitButton.disabled = false;
+                 submitButton.innerHTML = `Get Feedback`;
+            } else {
+                statusMessageDiv.classList.remove('p-3', 'rounded-lg');
             }
-            statusMessageDiv.classList.remove('hidden');
         }
 
-        // Function to render the feedback sections dynamically
+        // Function to render the feedback sections dynamically from a JSON object
         function renderFeedback(feedback) {
-            feedbackContainer.innerHTML = '<h2 class="text-2xl font-bold text-gray-800 mb-4">Feedback</h2>'; // Clear previous feedback
+            feedbackContentDiv.innerHTML = ''; // Clear previous feedback
             feedbackContainer.classList.remove('hidden');
+            copyButton.classList.remove('hidden');
 
-            for (const category in feedback) {
-                const title = category.charAt(0).toUpperCase() + category.slice(1);
-                const feedbackItems = feedback[category];
+            const sections = [
+                { key: 'thesis_statement_feedback', title: 'Thesis Statement', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>` },
+                { key: 'structure_feedback', title: 'Structure & Flow', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>` },
+                { key: 'grammar_and_spelling_feedback', title: 'Grammar & Spelling', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2-7a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2V9a2 2 0 012-2h4a2 2 0 012 2z" /></svg>` },
+                { key: 'style_and_tone_feedback', title: 'Style & Tone', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.586a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>` },
+                { key: 'summary_and_next_steps', title: 'Summary & Next Steps', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>` }
+            ];
 
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm';
-                categoryDiv.innerHTML = `<h3 class="text-xl font-semibold text-gray-700 mb-2">${title.replace(/([A-Z])/g, ' $1')}</h3>`;
-
-                if (feedbackItems.length > 0) {
-                    const ul = document.createElement('ul');
-                    ul.className = 'list-disc list-inside space-y-2';
-                    feedbackItems.forEach(item => {
-                        const li = document.createElement('li');
-                        li.className = 'text-gray-600';
-                        li.textContent = item;
-                        ul.appendChild(li);
-                    });
-                    categoryDiv.appendChild(ul);
-                } else {
-                    const p = document.createElement('p');
-                    p.className = 'text-gray-500 italic';
-                    p.textContent = 'No feedback for this category. Great job!';
-                    categoryDiv.appendChild(p);
+            sections.forEach(section => {
+                const feedbackItems = feedback[section.key];
+                if (feedbackItems) {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'bg-white p-6 rounded-xl border border-gray-200 shadow-lg fade-in';
+                    sectionDiv.innerHTML = `<h3 class="flex items-center text-xl font-semibold text-gray-700 mb-4">${section.icon} ${section.title}</h3>`;
+                    
+                    if (feedbackItems.length > 0) {
+                        const ul = document.createElement('ul');
+                        ul.className = 'list-disc list-inside space-y-2 text-gray-600';
+                        feedbackItems.forEach(item => {
+                            const li = document.createElement('li');
+                            li.textContent = item;
+                            ul.appendChild(li);
+                        });
+                        sectionDiv.appendChild(ul);
+                    } else {
+                        const p = document.createElement('p');
+                        p.className = 'text-gray-500 italic';
+                        p.textContent = 'No issues found. Excellent!';
+                        sectionDiv.appendChild(p);
+                    }
+                    feedbackContentDiv.appendChild(sectionDiv);
                 }
-                feedbackContainer.appendChild(categoryDiv);
+            });
+        }
+
+        // --- Core Logic for AI Integration and API Call ---
+        async function getEssayFeedback(essayText) {
+            const prompt = `You are a helpful and detailed academic essay checker. Analyze the following essay and provide constructive feedback in a structured JSON format. The user's essay is:\n\n---\n${essayText}\n---\n\nProvide feedback for the following categories:\n1. thesis_statement_feedback: A clear evaluation of the thesis statement.\n2. structure_feedback: Comments on the essay's paragraph structure and logical flow.\n3. grammar_and_spelling_feedback: Identify any grammatical errors or typos. Do not just list corrections, but explain the rules or reasons.\n4. style_and_tone_feedback: Suggestions for improving the writing style and tone to be more academic or persuasive.\n5. summary_and_next_steps: A brief summary of the overall essay's strengths and a clear list of next steps for revision.\n\nYour response MUST be a single JSON object with the following schema:\n{\n  "thesis_statement_feedback": ["string"],\n  "structure_feedback": ["string"],\n  "grammar_and_spelling_feedback": ["string"],\n  "style_and_tone_feedback": ["string"],\n  "summary_and_next_steps": ["string"]\n}\n\nDo not include any other text or formatting outside of the JSON object.`;
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "thesis_statement_feedback": { "type": "ARRAY", "items": { "type": "STRING" } },
+                            "structure_feedback": { "type": "ARRAY", "items": { "type": "STRING" } },
+                            "grammar_and_spelling_feedback": { "type": "ARRAY", "items": { "type": "STRING" } },
+                            "style_and_tone_feedback": { "type": "ARRAY", "items": { "type": "STRING" } },
+                            "summary_and_next_steps": { "type": "ARRAY", "items": { "type": "STRING" } }
+                        },
+                        "propertyOrdering": ["thesis_statement_feedback", "structure_feedback", "grammar_and_spelling_feedback", "style_and_tone_feedback", "summary_and_next_steps"]
+                    }
+                }
+            };
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+
+            let response;
+            try {
+                response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error.message || 'API request failed.');
+                }
+
+                const result = await response.json();
+                const json = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!json) {
+                    throw new Error('No valid JSON response from API.');
+                }
+                return JSON.parse(json);
+
+            } catch (error) {
+                console.error('API call failed:', error);
+                throw new Error(`API call failed: ${error.message}`);
             }
         }
 
@@ -141,54 +266,63 @@
         essayForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // --- Core Trial Logic ---
-            if (isTrialUser && usesLeft <= 0) {
-                showStatus('You have used all your free trial checks. Please subscribe to continue.', 'error');
+            // Hide previous results
+            feedbackContainer.classList.add('hidden');
+            copyButton.classList.add('hidden');
+
+            const essayText = essayTextarea.value.trim();
+            if (!essayText) {
+                showStatus('Please enter an essay to check.', 'error');
                 return;
             }
 
-            // Reset UI states
-            showStatus('Analyzing...', 'loading');
-            feedbackContainer.classList.add('hidden');
+            showStatus('Analyzing your essay...', 'loading');
             
-            const essayText = essayTextarea.value;
-
             try {
-                const response = await fetch('/api/essay/check', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Assuming you have a way to get the JWT token.
-                        // For a real app, this would be retrieved from a cookie or local storage.
-                        'Authorization': `Bearer your_jwt_token_here`
-                    },
-                    body: JSON.stringify({ essayText })
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to get essay feedback.');
-                }
-
-                if (isTrialUser) {
-                    usesLeft--; // Decrement the trial counter
-                    updateUsesLeft(); // Update the UI
-                }
-
-                renderFeedback(result.feedback);
-
+                // Here, we call the new AI function with the essay text.
+                const feedback = await getEssayFeedback(essayText);
+                renderFeedback(feedback);
+                showStatus('Feedback generated successfully!', 'success');
             } catch (error) {
-                console.error('API Error:', error);
+                console.error('An error occurred:', error);
                 showStatus(error.message, 'error');
             } finally {
-                // Hide the loading message
-                if (statusMessageDiv.textContent === 'Analyzing...') {
-                    statusMessageDiv.classList.add('hidden');
-                }
+                // The status message is updated in the try/catch blocks, so we don't need to hide it here.
             }
         });
-    </script>
+        
+        // Copy feedback to clipboard functionality
+        copyButton.addEventListener('click', () => {
+            let feedbackText = "Essay Feedback:\n\n";
+            const feedbackSections = document.querySelectorAll('#feedback-content > div');
+            feedbackSections.forEach(section => {
+                const title = section.querySelector('h3').textContent.trim();
+                feedbackText += `--- ${title} ---\n`;
+                const listItems = section.querySelectorAll('li');
+                if (listItems.length > 0) {
+                    listItems.forEach(item => {
+                        feedbackText += `- ${item.textContent.trim()}\n`;
+                    });
+                } else {
+                    feedbackText += `No issues found. Excellent!\n`;
+                }
+                feedbackText += '\n';
+            });
+            
+            navigator.clipboard.writeText(feedbackText)
+                .then(() => {
+                    copyButton.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyButton.textContent = 'Copy Feedback to Clipboard';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                });
+        });
 
+        // Initial call to set up the uses counter (from original code, kept for consistency)
+        updateWordCount();
+    </script>
 </body>
 </html>

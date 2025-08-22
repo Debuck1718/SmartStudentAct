@@ -88,13 +88,13 @@
         // You MUST replace this with your actual backend URL.
         const BACKEND_BASE_URL = ' https://smartstudentact.onrender.com/api'; // Example: 'https://api.yourdomain.com'
         
-        // You MUST get the JWT token and user email from your authentication process.
-        // This is a placeholder. In a real app, you would store this after a successful login.
-        const JWT_TOKEN = '5d4272c6c967410b420770265749cd06e6d2dca3c00dcaa4ff1c6c9135f8f435'; 
-        const USER_EMAIL = 'user@example.com'; 
+       // ✅ CORRECTED: Retrieve the JWT token and user email dynamically.
+// These should be set when the user logs in successfully.
+const JWT_TOKEN = localStorage.getItem('jwtToken'); 
+const USER_EMAIL = localStorage.getItem('userEmail'); 
 
-        // Paystack public key. Replace with your actual public key from your Paystack dashboard.
-        const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
+// Paystack public key. It is safe to hardcode this as it's a public key.
+const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
         // ---------------------------------
 
         let finalAmount = 0;

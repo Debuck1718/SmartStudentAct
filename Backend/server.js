@@ -38,6 +38,10 @@ const MONGO_URI = process.env.MONGODB_URI;
 // ───────────────────────────────────────────────
 const app = express();
 
+// 💡 SECURITY NOTE: The current CORS policy is too permissive for production.
+// It allows any HTTPS domain to send credentials. In a live environment,
+// you should replace this with a specific list of trusted origins.
+// Example: origin: ['https://your-frontend-domain.com']
 app.use(
     cors({
         origin: (origin, callback) => {
@@ -140,7 +144,20 @@ app.get("/", (req, res) => {
 });
 
 // ───────────────────────────────────────────────
-// 8️⃣ Start Server
+// 8️⃣ Global Error Handler (New)
+// ───────────────────────────────────────────────
+// This middleware catches all unhandled errors from your routes.
+app.use((err, req, res, next) => {
+    console.error('❌ Global error handler caught:', err.stack);
+    res.status(err.status || 500).json({
+        error: 'An unexpected server error occurred.',
+        // Only include the detailed error message in development
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+});
+
+// ───────────────────────────────────────────────
+// 9️⃣ Start Server
 // ───────────────────────────────────────────────
 (async () => {
     try {

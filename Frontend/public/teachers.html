@@ -222,7 +222,7 @@
             </div>
         </section>
 
- <!-- Create and Send Assignment Section -->
+<!-- Create and Send Assignment Section -->
 <section class="bg-white rounded-xl p-6 shadow-lg">
     <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">✏️ Create and Send Assignment</h2>
     
@@ -293,27 +293,6 @@
     <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">📝 Assigned Tasks & Feedback</h2>
     <div id="assignedTasksList" class="divide-y divide-gray-200">
         <!-- Each assigned task will be rendered here by JS -->
-        <!-- Under each submission, a feedback form will appear -->
-        <!-- Example structure rendered via JS -->
-        <!--
-        <div class="task-card p-4 bg-gray-50 rounded-lg mb-4">
-            <p><strong>Assignment:</strong> History Essay</p>
-            <p><strong>Student:</strong> John Doe</p>
-            <p><strong>Submitted At:</strong> 2025-08-18 10:00</p>
-            <form class="feedback-form mt-2">
-                <label class="block font-semibold mb-1">Feedback Grade:</label>
-                <input type="text" class="w-full p-2 border border-gray-300 rounded mb-2" placeholder="e.g., 95">
-                
-                <label class="block font-semibold mb-1">Comments:</label>
-                <textarea class="w-full p-2 border border-gray-300 rounded mb-2" placeholder="Write feedback here..."></textarea>
-                
-                <label class="block font-semibold mb-1">Upload Feedback File (Optional):</label>
-                <input type="file" class="mb-2">
-                
-                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Send Feedback</button>
-            </form>
-        </div>
-        -->
     </div>
 </section>
 
@@ -321,21 +300,20 @@
 <section class="bg-white rounded-xl p-6 shadow-lg">
     <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">💬 Student Feedback Overview</h2>
     <div id="feedbackList" class="divide-y divide-gray-200">
-        <!-- Optionally, render aggregated student feedback here -->
+        <!-- Student feedback will be rendered here by JS -->
     </div>
 </section>
 
-
-        <!-- Academic Calendar Section -->
-        <section class="bg-white rounded-xl p-6 shadow-lg">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">📅 Academic Calendar</h2>
-            <input type="date" id="termStart" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Start of Term (YYYY-MM-DD)">
-            <input type="date" id="termEnd" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="End of Term (YYYY-MM-DD)">
-            <button id="saveCalendarButton" class="w-full py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition-colors transform hover:scale-105">
-                Save Calendar
-            </button>
-            <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
-        </section>
+<!-- Academic Calendar Section -->
+<section class="bg-white rounded-xl p-6 shadow-lg">
+    <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">📅 Academic Calendar</h2>
+    <input type="date" id="termStart" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Start of Term (YYYY-MM-DD)">
+    <input type="date" id="termEnd" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="End of Term (YYYY-MM-DD)">
+    <button id="saveCalendarButton" class="w-full py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition-colors transform hover:scale-105">
+        Save Calendar
+    </button>
+    <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
+</section>
         
         <!-- Footer -->
         <footer class="text-center text-sm text-gray-500 py-6 mt-4">
@@ -372,39 +350,37 @@
         const saveCalendarButtonEl = document.getElementById('saveCalendarButton');
         const calendarMsgEl = document.getElementById('calendarMsg');
         
-        // New dropdown DOM elements
+        // Profile dropdown DOM elements
         const profileMenuButton = document.getElementById('profile-menu-button');
         const profileDropdownMenu = document.getElementById('profile-dropdown-menu');
         const logoutButtonEl = document.getElementById('logoutButton');
 
+        // Modal DOM elements
         const messageModal = document.getElementById('messageModal');
         const modalTitleEl = document.getElementById('modalTitle');
         const modalMessageEl = document.getElementById('modalMessage');
-
         const promptModal = document.getElementById('promptModal');
         const promptTitleEl = document.getElementById('promptTitle');
-        const promptMessageEl = document = document.getElementById('promptMessage');
+        const promptMessageEl = document.getElementById('promptMessage');
         const promptInputEl = document.getElementById('promptInput');
         const okPromptBtn = document.getElementById('okPromptBtn');
         const cancelPromptBtn = document.getElementById('cancelPromptBtn');
 
-        // New DOM elements for adding points
+        // Points section DOM elements
         const pointsStudentSelectEl = document.getElementById('points-student-select');
         const pointsInputEl = document.getElementById('pointsInput');
         const reasonTextEl = document.getElementById('reasonText');
         const addPointsButtonEl = document.getElementById('addPointsButton');
 
         // --- API Base URL ---
-        // Change the API_BASE to a relative path. This is a best practice for
-        // working with local or deployed servers, as it avoids hardcoding IP addresses.
-        const API_BASE = 'https://smartstudentact.onrender.com/api';
+        // Changed hardcoded URL to a relative path for better deployment flexibility.
+        const API_BASE = '/api';
 
         // --- Helper Functions ---
         /**
          * Simple function to sanitize string inputs to prevent XSS attacks.
-         * Note: This is client-side validation and is NOT a substitute for
-         * robust server-side validation. Server-side validation is mandatory
-         * for real security.
+         * This is a client-side safeguard and NOT a substitute for robust
+         * server-side validation, which is mandatory for real security.
          * @param {string} str The string to sanitize.
          * @returns {string} The sanitized string.
          */
@@ -435,6 +411,7 @@
 
         /**
          * Displays a custom prompt modal for user input.
+         * Replaces the browser's native `prompt()` for better styling and control.
          * @param {string} title The title of the prompt.
          * @param {string} message The message to display.
          * @returns {Promise<string|null>} A promise that resolves with the user's input or null if canceled.
@@ -476,6 +453,7 @@
 
         /**
          * Helper for API calls with error handling.
+         * This function centralizes fetch logic to handle network and API errors.
          * @param {string} url The API endpoint URL.
          * @param {Object} options The fetch options.
          * @returns {Promise<Response>} The response object.
@@ -493,8 +471,6 @@
                 return response;
             } catch (error) {
                 console.error(`Fetch API Error for ${url}:`, error);
-                // The original code only showed a generic network error.
-                // This is a more helpful message to the user.
                 showMessageModal('Network Error', `Could not connect to the server or fetch data. Please check your network connection. Details: ${error.message}`);
                 throw error;
             }
@@ -535,11 +511,9 @@
         async function init() {
             loadingOverlay.style.display = 'flex';
             try {
-                // Fetch user data for the dashboard header
-                await fetchUserData();
-                
                 // Fetch and render all data sections
                 await Promise.all([
+                    fetchUserData(),
                     fetchStudents(),
                     fetchOverdueTasks(),
                     fetchAssignedTasks(),
@@ -554,7 +528,7 @@
 
             } catch (error) {
                 console.error('Initialization failed:', error);
-                showMessageModal('Initialization Error', 'Failed to load dashboard data. Please try refreshing the page.');
+                // The showMessageModal in fetchAPI already handles this.
             } finally {
                 loadingOverlay.style.display = 'none';
             }
@@ -569,9 +543,6 @@
                 const teacherResponse = await fetchAPI('/teacher/profile');
                 const teacherData = await teacherResponse.json();
                 
-                const studentResponse = await fetchAPI('/teacher/students');
-                students = await studentResponse.json();
-                
                 // Update profile initials and name
                 const profileInitialsEl = document.getElementById('profileInitials');
                 const profileNameEl = document.getElementById('profileName');
@@ -582,23 +553,34 @@
                     profileInitialsEl.textContent = 'T';
                     profileNameEl.textContent = 'Teacher';
                 }
-                
-                renderStudents();
-
             } catch (error) {
-                console.error('Error fetching data:', error);
-                // showMessageModal already handles the error, no need to re-show.
+                console.error('Error fetching user data:', error);
+                // Error handled by fetchAPI
+            }
+        }
+        
+        /**
+         * Fetches and renders the list of students in the class.
+         */
+        async function fetchStudents() {
+            try {
+                const response = await fetchAPI('/teacher/students');
+                students = await response.json();
+                renderStudents();
+            } catch (error) {
+                console.error('Error fetching students:', error);
+                renderList(studentsListEl, [], () => '', 'Could not load student list.');
             }
         }
 
         /**
-         * Fetches and renders the list of students in the class.
+         * Renders the list of students to the UI.
          */
         function renderStudents() {
             renderList(studentsListEl, students, (s) => `
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
                     <span class="flex-1 text-gray-800 text-base font-medium mb-2 sm:mb-0">${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (Grade ${sanitizeInput(s.grade)})</span>
-                    <button onclick="toast('Open assign for ${sanitizeInput(s.email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-blue-600 transition-colors">Assign</button>
+                    <button onclick="handleAssignClick('${sanitizeInput(s.email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-blue-600 transition-colors">Assign</button>
                 </div>
             `, 'No students found in your class.');
 
@@ -606,6 +588,16 @@
             const optionsHtml = students.map(s => `<option value="${sanitizeInput(s.email)}">${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (${sanitizeInput(s.email)})</option>`).join('');
             studentSelectEl.innerHTML = optionsHtml;
             pointsStudentSelectEl.innerHTML = optionsHtml;
+        }
+
+        /**
+         * Placeholder for handling the 'Assign' button click.
+         * @param {string} studentEmail The email of the student to assign to.
+         */
+        function handleAssignClick(studentEmail) {
+            toast(`Preparing to create an assignment for ${studentEmail}.`);
+            // Here you would likely scroll to the assignment section or pre-fill the student selector.
+            studentSelectEl.value = studentEmail;
         }
 
         /**
@@ -618,7 +610,6 @@
                 renderOverdueTasks();
             } catch (error) {
                 console.error('Error fetching overdue tasks:', error);
-                // Renders an empty list with a message on error
                 renderList(overdueTasksListEl, [], () => '', 'Could not load overdue tasks.');
             }
         }
@@ -638,7 +629,8 @@
         }
 
         /**
-         * Fetches and renders the list of assigned tasks.
+         * Fetches and renders the list of assigned tasks that need feedback.
+         * These are the tasks that students have submitted.
          */
         async function fetchAssignedTasks() {
             try {
@@ -652,24 +644,35 @@
         }
 
         /**
-         * Renders assigned tasks list.
+         * Renders assigned tasks list with feedback forms.
          */
         function renderAssignedTasks() {
-            renderList(assignedTasksListEl, assignedTasks, (t) => `
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
-                    <span class="flex-1 text-gray-800 text-base font-medium mb-2 sm:mb-0">
-                        <span class="font-bold">${sanitizeInput(t.student_email)}</span>: ${sanitizeInput(t.title)} (${sanitizeInput(t.subject)}) due ${new Date(t.due_datetime).toLocaleString()}
-                    </span>
-                    <div class="flex gap-2 mt-2 sm:mt-0">
-                        ${t.attachment ? `<a href="${API_BASE}/uploads/${t.attachment}" target="_blank" class="px-3 py-1 bg-gray-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-gray-600 transition-colors">📎</a>` : ''}
-                        <button onclick="sendMessage('${sanitizeInput(t.student_email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-blue-600 transition-colors">Message</button>
-                    </div>
+            renderList(assignedTasksListEl, assignedTasks, (task) => `
+                <div class="task-card p-4 bg-gray-50 rounded-lg my-4 shadow-sm">
+                    <p class="mb-1 text-gray-700"><strong>Assignment:</strong> ${sanitizeInput(task.title)}</p>
+                    <p class="mb-1 text-gray-700"><strong>Student:</strong> ${sanitizeInput(task.student_email)}</p>
+                    <p class="mb-2 text-gray-500 text-sm">Submitted on: ${new Date(task.submitted_at).toLocaleString()}</p>
+                    ${task.submission_url ? `<a href="${sanitizeInput(task.submission_url)}" target="_blank" class="text-blue-500 hover:underline text-sm font-semibold mb-2 block">View Submission File</a>` : `<p class="text-gray-500 text-sm mb-2">No file attached.</p>`}
+                    
+                    <form id="feedback-form-${sanitizeInput(task._id)}" class="feedback-form mt-2 border-t pt-4">
+                        <input type="hidden" name="taskId" value="${sanitizeInput(task._id)}">
+                        <label class="block font-semibold mb-1 text-gray-700">Feedback Grade:</label>
+                        <input type="number" name="grade" class="w-full p-2 border border-gray-300 rounded mb-2 text-gray-800" placeholder="e.g., 95" min="0" max="100" required>
+                        
+                        <label class="block font-semibold mb-1 text-gray-700">Comments:</label>
+                        <textarea name="comments" class="w-full p-2 border border-gray-300 rounded mb-2 text-gray-800" placeholder="Write feedback here..."></textarea>
+                        
+                        <label class="block font-semibold mb-1 text-gray-700">Upload Feedback File (Optional):</label>
+                        <input type="file" name="feedbackFile" class="mb-2">
+                        
+                        <button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors font-semibold">Send Feedback</button>
+                    </form>
                 </div>
-            `, 'No tasks assigned yet.');
+            `, 'No assigned tasks that require feedback.');
         }
 
         /**
-         * Fetches and renders the list of student feedback.
+         * Fetches and renders student feedback history.
          */
         async function fetchFeedback() {
             try {
@@ -678,383 +681,291 @@
                 renderFeedback();
             } catch (error) {
                 console.error('Error fetching feedback:', error);
-                renderList(feedbackListEl, [], () => '', 'Could not load student feedback.');
+                renderList(feedbackListEl, [], () => '', 'Could not load feedback history.');
             }
         }
         
         /**
-         * Renders feedback list.
+         * Renders feedback history list.
          */
         function renderFeedback() {
             renderList(feedbackListEl, feedbackList, (f) => `
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
-                    <span class="flex-1 text-gray-800 text-base font-medium mb-2 sm:mb-0">
-                        <span class="font-bold">${sanitizeInput(f.student_email)}</span>: ${sanitizeInput(f.message.slice(0, 100))}${f.message.length > 100 ? '...' : ''}
-                    </span>
-                    <div class="flex gap-2 mt-2 sm:mt-0">
-                        ${f.file_name ? `<a href="${API_BASE}/uploads/${f.file_name}" target="_blank" class="px-3 py-1 bg-gray-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-gray-600 transition-colors">📎</a>` : ''}
-                        <button onclick="sendMessage('${sanitizeInput(f.student_email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-blue-600 transition-colors">Reply</button>
-                    </div>
+                <div class="p-4 my-2 bg-gray-50 rounded-lg shadow-sm">
+                    <p class="mb-1 text-gray-700"><strong>Student:</strong> ${sanitizeInput(f.student_email)}</p>
+                    <p class="mb-1 text-gray-700"><strong>Assignment:</strong> ${sanitizeInput(f.assignment_title)}</p>
+                    <p class="mb-1 text-gray-700"><strong>Grade:</strong> <span class="font-bold text-green-600">${sanitizeInput(f.grade)}%</span></p>
+                    <p class="mb-1 text-gray-700"><strong>Comments:</strong> ${sanitizeInput(f.comments)}</p>
+                    ${f.feedback_url ? `<a href="${sanitizeInput(f.feedback_url)}" target="_blank" class="text-blue-500 hover:underline text-sm font-semibold mt-2 block">View Feedback File</a>` : ''}
                 </div>
-            `, 'No student feedback received.');
+            `, 'No feedback has been sent yet.');
         }
 
+        // --- Event Handlers ---
+
         /**
-         * Toggles the enabled/disabled state of the Send Assignment button based on form validity.
+         * Toggles the state of the send assignment button based on form validity.
          */
         function toggleSendAssignmentButtonState() {
-            const studentSelected = studentSelectEl.value !== '';
-            const title = assignmentTitleEl.value.trim();
-            const dueDate = assignmentDueDateEl.value;
-            const hasContent = title !== '' && dueDate !== '' && (assignmentTextEl.value.trim() !== '' || selectedAssignmentFile !== null);
+            const isStudentSelected = studentSelectEl.value !== '';
+            const isTitleEntered = assignmentTitleEl.value.trim() !== '';
+            const isDueDateSelected = assignmentDueDateEl.value !== '';
+            const isTextEntered = getWordCount(assignmentTextEl.value) > 0;
+            const isFileSelected = selectedAssignmentFile !== null;
 
-            // A more robust check for a valid due date
-            const isDueDateValid = dueDate ? new Date(dueDate) > new Date() : false;
-            
-            const isValid = studentSelected && title !== '' && isDueDateValid && (assignmentTextEl.value.trim() !== '' || selectedAssignmentFile !== null);
-            sendAssignmentButtonEl.disabled = !isValid;
+            const isFormValid = isStudentSelected && isTitleEntered && isDueDateSelected && (isTextEntered || isFileSelected);
+            sendAssignmentButtonEl.disabled = !isFormValid;
+            sendAssignmentButtonEl.classList.toggle('opacity-50', !isFormValid);
+            sendAssignmentButtonEl.classList.toggle('cursor-not-allowed', !isFormValid);
         }
 
         /**
-         * Sends a message to a student.
-         * @param {string} email The student's email.
+         * Handles the submission of a new assignment.
          */
-        async function sendMessage(email) {
-            const text = await showPromptModal(`Message to ${email}`, 'Type your message below:');
-            // Check if the user cancelled the prompt
-            if (text === null) {
-                return;
-            }
-            if (text.trim() === '') {
-                toast('Message cannot be empty.');
-                return;
-            }
-            
+        async function handleSendAssignment() {
+            sendAssignmentButtonEl.disabled = true;
             try {
-                const res = await fetchAPI('/teacher/message', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ to: email, text: sanitizeInput(text) }),
-                });
-                if (res.ok) {
-                    toast('Message sent!');
-                } else {
-                    const errorData = await res.json().catch(() => ({ message: 'Failed to send message.' }));
-                    toast(`Failed to send message: ${errorData.message}`);
+                const formData = new FormData();
+                formData.append('studentEmail', studentSelectEl.value);
+                formData.append('title', assignmentTitleEl.value.trim());
+                formData.append('due_datetime', assignmentDueDateEl.value);
+                
+                if (assignmentTextEl.value.trim()) {
+                    formData.append('description', assignmentTextEl.value.trim());
                 }
+                
+                if (selectedAssignmentFile) {
+                    formData.append('assignmentFile', selectedAssignmentFile);
+                }
+
+                const response = await fetchAPI('/teacher/assignments', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+                showMessageModal('Success', result.message);
+
+                // Clear the form after successful submission
+                assignmentTitleEl.value = '';
+                assignmentDueDateEl.value = '';
+                assignmentTextEl.value = '';
+                assignmentFileEl.value = '';
+                selectedAssignmentFile = null;
+                fileNameEl.textContent = 'No file selected.';
+                clearFileButtonEl.classList.add('hidden');
+                toggleSendAssignmentButtonState();
+                
             } catch (error) {
-                console.error('Error sending message:', error);
-                toast('Failed to send message due to a network error.');
+                console.error('Error sending assignment:', error);
+                // The fetchAPI function already displays a modal.
+            } finally {
+                sendAssignmentButtonEl.disabled = false;
             }
         }
         
         /**
-         * Submits a new assignment.
+         * Handles the submission of feedback for a completed task.
+         * @param {Event} e The form submission event.
          */
-        async function sendAssignment() {
-            const studentEmail = studentSelectEl.value;
-            const title = assignmentTitleEl.value.trim();
-            const dueDate = assignmentDueDateEl.value;
-            const textContent = assignmentTextEl.value.trim();
+        async function handleSubmitFeedback(e) {
+            e.preventDefault();
+            const form = e.target;
+            const taskId = form.querySelector('[name="taskId"]').value;
+            const grade = form.querySelector('[name="grade"]').value;
+            const comments = form.querySelector('[name="comments"]').value;
+            const feedbackFile = form.querySelector('[name="feedbackFile"]').files[0];
 
-            if (!studentEmail || !title || !dueDate || (!textContent && !selectedAssignmentFile)) {
-                showMessageModal('Validation Error', 'Please fill in all required fields (title, due date) and provide either text or a file.');
+            if (!grade) {
+                showMessageModal('Validation Error', 'Please provide a grade.');
                 return;
             }
+            
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
 
-            // Create a FormData object to handle both text and file data
             const formData = new FormData();
-            formData.append('studentEmail', studentEmail);
-            formData.append('title', title);
-            formData.append('dueDate', dueDate);
-            formData.append('description', textContent);
-            if (selectedAssignmentFile) {
-                formData.append('file', selectedAssignmentFile);
+            formData.append('taskId', taskId);
+            formData.append('grade', grade);
+            formData.append('comments', comments);
+            if (feedbackFile) {
+                formData.append('feedbackFile', feedbackFile);
             }
 
-            sendAssignmentButtonEl.disabled = true;
-            sendAssignmentButtonEl.innerHTML = `<div class="spinner border-white border-t-white mx-auto"></div>`;
-
             try {
-                const res = await fetchAPI('/teacher/assignments', {
+                const response = await fetchAPI('/teacher/feedback', {
                     method: 'POST',
-                    body: formData, // No Content-Type header needed for FormData
+                    body: formData,
                 });
+                
+                const result = await response.json();
+                showMessageModal('Feedback Sent', result.message);
 
-                if (res.ok) {
-                    toast('Assignment sent successfully!');
-                    // Reset form fields
-                    assignmentTitleEl.value = '';
-                    assignmentDueDateEl.value = '';
-                    assignmentTextEl.value = '';
-                    clearFile();
-                } else {
-                    const errorData = await res.json().catch(() => ({ message: 'Failed to send assignment.' }));
-                    toast(`Failed to send assignment: ${errorData.message}`);
-                }
+                // Refresh the lists to show updated state
+                await Promise.all([fetchAssignedTasks(), fetchFeedback()]);
+
             } catch (error) {
-                console.error('Error sending assignment:', error);
-                toast('Failed to send assignment due to a network error.');
+                console.error('Error submitting feedback:', error);
+                // Error handled by fetchAPI
             } finally {
-                sendAssignmentButtonEl.innerHTML = 'Send Assignment';
-                toggleSendAssignmentButtonState();
+                submitButton.disabled = false;
             }
         }
 
         /**
-         * Adds points to a student.
+         * Handles the click event for the add points button.
          */
-        async function addPoints() {
+        async function handleAddPoints() {
             const studentEmail = pointsStudentSelectEl.value;
-            const points = parseInt(pointsInputEl.value, 10);
+            const points = pointsInputEl.value;
             const reason = reasonTextEl.value.trim();
-            
-            if (!studentEmail || isNaN(points) || points <= 0) {
+
+            if (!studentEmail || !points || points <= 0) {
                 showMessageModal('Validation Error', 'Please select a student and enter a valid number of points.');
                 return;
             }
-
+            
             addPointsButtonEl.disabled = true;
-            addPointsButtonEl.innerHTML = `<div class="spinner border-white border-t-white mx-auto"></div>`;
 
             try {
-                const res = await fetchAPI('/teacher/add-points', {
+                const response = await fetchAPI('/teacher/points', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ studentEmail, points, reason: sanitizeInput(reason) }),
+                    body: JSON.stringify({ studentEmail, points: parseInt(points, 10), reason }),
                 });
 
-                if (res.ok) {
-                    toast('Points added successfully!');
-                    pointsInputEl.value = '';
-                    reasonTextEl.value = '';
-                } else {
-                    const errorData = await res.json().catch(() => ({ message: 'Failed to add points.' }));
-                    toast(`Failed to add points: ${errorData.message}`);
-                }
+                const result = await response.json();
+                showMessageModal('Success', result.message);
+
+                // Clear the form
+                pointsInputEl.value = '';
+                reasonTextEl.value = '';
+
             } catch (error) {
                 console.error('Error adding points:', error);
-                toast('Failed to add points due to a network error.');
+                // Error handled by fetchAPI
             } finally {
-                addPointsButtonEl.innerHTML = 'Add Points';
                 addPointsButtonEl.disabled = false;
             }
         }
-
+        
         /**
-         * Saves the academic calendar dates.
+         * Handles the academic calendar submission.
          */
-        async function saveCalendar() {
+        async function handleSaveCalendar() {
             const termStart = termStartEl.value;
             const termEnd = termEndEl.value;
+
             if (!termStart || !termEnd) {
-                calendarMsgEl.textContent = 'Please enter both start and end dates.';
-                calendarMsgEl.classList.remove('text-green-500');
-                calendarMsgEl.classList.add('text-red-500');
+                showMessageModal('Validation Error', 'Please select both start and end dates.');
                 return;
             }
-
-            const startDate = new Date(termStart);
-            const endDate = new Date(termEnd);
-            if (startDate > endDate) {
-                calendarMsgEl.textContent = 'Start date cannot be after end date.';
-                calendarMsgEl.classList.remove('text-green-500');
-                calendarMsgEl.classList.add('text-red-500');
-                return;
-            }
-
             saveCalendarButtonEl.disabled = true;
-            calendarMsgEl.textContent = 'Saving...';
-            
+
             try {
-                const res = await fetchAPI('/calendar', {
+                const response = await fetchAPI('/teacher/calendar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ start: termStart, end: termEnd }),
+                    body: JSON.stringify({ termStart, termEnd }),
                 });
-
-                if (res.ok) {
-                    calendarMsgEl.textContent = 'Calendar saved successfully!';
-                    calendarMsgEl.classList.remove('text-red-500');
-                    calendarMsgEl.classList.add('text-green-500');
-                } else {
-                    const errorData = await res.json().catch(() => ({ message: 'Failed to save calendar.' }));
-                    calendarMsgEl.textContent = `Error: ${errorData.message}`;
-                    calendarMsgEl.classList.remove('text-green-500');
-                    calendarMsgEl.classList.add('text-red-500');
-                }
+                const result = await response.json();
+                showMessageModal('Success', result.message);
+                calendarMsgEl.textContent = `Calendar saved successfully! Term from ${new Date(termStart).toLocaleDateString()} to ${new Date(termEnd).toLocaleDateString()}.`;
             } catch (error) {
                 console.error('Error saving calendar:', error);
-                calendarMsgEl.textContent = 'Network error while saving calendar.';
-                calendarMsgEl.classList.remove('text-green-500');
-                calendarMsgEl.classList.add('text-red-500');
+                calendarMsgEl.textContent = 'Failed to save calendar.';
             } finally {
                 saveCalendarButtonEl.disabled = false;
             }
         }
-
+        
         /**
          * Toggles the profile dropdown menu visibility.
          */
         function toggleProfileDropdown() {
             isDropdownVisible = !isDropdownVisible;
             if (isDropdownVisible) {
-                profileDropdownMenu.classList.remove('hidden');
-                setTimeout(() => {
-                    profileDropdownMenu.classList.add('visible');
-                }, 10);
+                profileDropdownMenu.classList.remove('hidden', 'opacity-0');
+                profileDropdownMenu.classList.add('visible');
             } else {
+                profileDropdownMenu.classList.add('opacity-0');
                 profileDropdownMenu.classList.remove('visible');
-                setTimeout(() => {
-                    profileDropdownMenu.classList.add('hidden');
-                }, 200); // Match CSS transition duration
-            }
-        }
-        
-        /**
-         * Hides the profile dropdown menu when clicking outside.
-         */
-        function handleOutsideClick(event) {
-            if (isDropdownVisible && !profileMenuButton.contains(event.target) && !profileDropdownMenu.contains(event.target)) {
-                toggleProfileDropdown();
+                // Use a slight delay to allow the fade-out animation to complete
+                setTimeout(() => profileDropdownMenu.classList.add('hidden'), 200);
             }
         }
 
         /**
-         * Clears the selected file from the assignment form.
+         * Handles user logout.
          */
-        function clearFile() {
-            selectedAssignmentFile = null;
-            assignmentFileEl.value = '';
-            fileNameEl.textContent = 'No file selected.';
-            clearFileButtonEl.classList.add('hidden');
-            toggleSendAssignmentButtonState();
+        async function handleLogout() {
+            try {
+                const response = await fetchAPI('/teacher/logout', { method: 'POST' });
+                if (response.ok) {
+                    showMessageModal('Signed Out', 'You have been successfully signed out. Redirecting to the login page...');
+                    // Redirect to login page after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/public/login.html';
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Logout failed:', error);
+                showMessageModal('Logout Error', 'Failed to sign out. Please try again.');
+            }
         }
 
         // --- Event Listeners ---
-        window.onload = init; // Call the main initialization function on page load
-        
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Assignment form listeners
         assignmentTextEl.addEventListener('input', () => {
             wordCountTextEl.textContent = `Word count: ${getWordCount(assignmentTextEl.value)}`;
             toggleSendAssignmentButtonState();
         });
-
-        assignmentFileEl.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                selectedAssignmentFile = file;
-                fileNameEl.textContent = `Selected: ${file.name}`;
+        assignmentFileEl.addEventListener('change', (e) => {
+            selectedAssignmentFile = e.target.files[0];
+            if (selectedAssignmentFile) {
+                fileNameEl.textContent = selectedAssignmentFile.name;
                 clearFileButtonEl.classList.remove('hidden');
             } else {
-                clearFile();
+                fileNameEl.textContent = 'No file selected.';
+                clearFileButtonEl.classList.add('hidden');
             }
             toggleSendAssignmentButtonState();
         });
+        clearFileButtonEl.addEventListener('click', () => {
+            assignmentFileEl.value = null;
+            selectedAssignmentFile = null;
+            fileNameEl.textContent = 'No file selected.';
+            clearFileButtonEl.classList.add('hidden');
+            toggleSendAssignmentButtonState();
+        });
+        studentSelectEl.addEventListener('change', toggleSendAssignmentButtonState);
+        assignmentTitleEl.addEventListener('input', toggleSendAssignmentButtonState);
+        assignmentDueDateEl.addEventListener('change', toggleSendAssignmentButtonState);
+        sendAssignmentButtonEl.addEventListener('click', handleSendAssignment);
 
-        clearFileButtonEl.addEventListener('click', clearFile);
-        
-        sendAssignmentButtonEl.addEventListener('click', sendAssignment);
-        
-        addPointsButtonEl.addEventListener('click', addPoints);
+        // Delegated event listener for feedback forms
+        document.getElementById('assignedTasksList').addEventListener('submit', handleSubmitFeedback);
 
-        saveCalendarButtonEl.addEventListener('click', saveCalendar);
+        // Add points button listener
+        addPointsButtonEl.addEventListener('click', handleAddPoints);
 
-        profileMenuButton.addEventListener('click', toggleProfileDropdown);
-        document.addEventListener('click', handleOutsideClick);
+        // Calendar button listener
+        saveCalendarButtonEl.addEventListener('click', handleSaveCalendar);
 
-        logoutButtonEl.addEventListener('click', async () => {
-            try {
-                const response = await fetchAPI('/auth/logout', { method: 'POST' });
-                if (response.ok) {
-                    window.location.href = '/login.html';
-                } else {
-                    toast('Logout failed. Please try again.');
-                }
-            } catch (error) {
-                console.error('Logout error:', error);
-                toast('Network error during logout. Please try again.');
+        // Profile dropdown listeners
+        profileMenuButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent the body listener from immediately closing it
+            toggleProfileDropdown();
+        });
+        document.addEventListener('click', (e) => {
+            if (isDropdownVisible && !profileDropdownMenu.contains(e.target) && !profileMenuButton.contains(e.target)) {
+                toggleProfileDropdown();
             }
         });
-
-        // Add a listener to the assignment form inputs to dynamically enable/disable the button
-        [studentSelectEl, assignmentTitleEl, assignmentDueDateEl, assignmentTextEl].forEach(element => {
-            element.addEventListener('input', toggleSendAssignmentButtonState);
-        });
-
-
-    const assignedTasksList = document.getElementById("assignedTasksList");
-     feedbackList = document.getElementById("feedbackList");
-
-    // --- Render Assigned Tasks ---
-    function renderAssignedTasks() {
-        assignedTasksList.innerHTML = ""; // clear
-        assignedTasks.forEach(task => {
-            const taskCard = document.createElement("div");
-            taskCard.className = "task-card p-4 bg-gray-50 rounded-lg mb-4";
-
-            taskCard.innerHTML = `
-                <p><strong>Assignment:</strong> ${task.title}</p>
-                <p><strong>Student:</strong> ${task.student}</p>
-                <p><strong>Submitted At:</strong> ${task.submittedAt}</p>
-
-                <form class="feedback-form mt-2" data-task-id="${task.id}">
-                    <label class="block font-semibold mb-1">Feedback Grade:</label>
-                    <input type="text" name="grade" class="w-full p-2 border border-gray-300 rounded mb-2" placeholder="e.g., 95">
-
-                    <label class="block font-semibold mb-1">Comments:</label>
-                    <textarea name="comments" class="w-full p-2 border border-gray-300 rounded mb-2" placeholder="Write feedback here..."></textarea>
-
-                    <label class="block font-semibold mb-1">Upload Feedback File (Optional):</label>
-                    <input type="file" name="feedbackFile" class="mb-2">
-
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Send Feedback</button>
-                </form>
-            `;
-            assignedTasksList.appendChild(taskCard);
-        });
-    }
-
-    // --- Handle Feedback Submission ---
-    assignedTasksList.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!e.target.classList.contains("feedback-form")) return;
-
-        const form = e.target;
-        const taskId = form.dataset.taskId;
-        const formData = new FormData(form);
-
-        try {
-            const response = await fetch(`/api/assignments/${taskId}/feedback`, {
-                method: "POST",
-                body: formData
-            });
-
-            if (!response.ok) throw new Error("Failed to submit feedback");
-
-            const result = await response.json();
-
-            // Update Student Feedback Overview
-            const feedbackItem = document.createElement("div");
-            feedbackItem.className = "p-2 mb-2 border border-gray-200 rounded";
-            feedbackItem.innerHTML = `
-                <p><strong>${result.student}</strong> – ${result.assignment}</p>
-                <p><strong>Grade:</strong> ${result.grade}</p>
-                <p><strong>Comments:</strong> ${result.comments}</p>
-                ${result.feedbackFileUrl ? `<a href="${result.feedbackFileUrl}" target="_blank" class="text-blue-500 underline">View file</a>` : ""}
-            `;
-            feedbackList.prepend(feedbackItem);
-
-            form.reset();
-            alert("Feedback submitted successfully!");
-        } catch (err) {
-            console.error(err);
-            alert("Error submitting feedback. Check console.");
-        }
-    });
-
-    // --- Initialize ---
-    renderAssignedTasks();
-
+        
+        // Logout button listener
+        logoutButtonEl.addEventListener('click', handleLogout);
     </script>
 </body>
 </html>
