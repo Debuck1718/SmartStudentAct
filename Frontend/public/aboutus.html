@@ -6,6 +6,16 @@
   <title>About – SmartStudentAct</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* Add a subtle hover effect to the feature cards */
+    .feature-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
   <!-- Navbar -->
@@ -29,16 +39,16 @@
     <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto">
       SmartStudentAct aims to modernize education by combining academic excellence 
       with personal growth. Students are empowered to stay consistent with their learning, 
-      manage their budgets wisely, and set achievable goals — all while earning rewards 
+      manage their budgets wisely, set achievable goals, and get data-driven insights to stay on track — all while earning rewards 
       for their efforts.
     </p>
   </section>
 
   <!-- Core Features -->
   <section class="py-12 bg-gray-100">
-    <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-8">
+    <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-8">
       <!-- Teachers -->
-      <div class="bg-white p-6 rounded-2xl shadow">
+      <div class="bg-white p-6 rounded-2xl shadow feature-card">
         <h4 class="text-xl font-bold mb-3 text-blue-600">For Teachers</h4>
         <ul class="list-disc list-inside text-gray-700">
           <li>Create and assign tasks & quizzes</li>
@@ -49,7 +59,7 @@
       </div>
 
       <!-- Students -->
-      <div class="bg-white p-6 rounded-2xl shadow">
+      <div class="bg-white p-6 rounded-2xl shadow feature-card">
         <h4 class="text-xl font-bold mb-3 text-blue-600">For Students</h4>
         <ul class="list-disc list-inside text-gray-700">
           <li>Access quizzes and assignments on dashboard</li>
@@ -62,13 +72,35 @@
       </div>
 
       <!-- Rewards & Growth -->
-      <div class="bg-white p-6 rounded-2xl shadow">
+      <div class="bg-white p-6 rounded-2xl shadow feature-card">
         <h4 class="text-xl font-bold mb-3 text-blue-600">Rewards & Growth</h4>
         <ul class="list-disc list-inside text-gray-700">
           <li>Earn points for completing assignments & goals</li>
           <li>Get rewarded for consistency & achievements</li>
           <li>Unlock titles like “Goal Crusher” or “Assignment Ace”</li>
           <li>Motivation through performance-based rewards</li>
+        </ul>
+      </div>
+      
+      <!-- AI Essay Checker -->
+      <div class="bg-white p-6 rounded-2xl shadow feature-card">
+        <h4 class="text-xl font-bold mb-3 text-blue-600">AI Essay Checker</h4>
+        <ul class="list-disc list-inside text-gray-700">
+          <li>Get instant feedback on grammar, syntax, and style</li>
+          <li>Improve your writing with AI-powered suggestions</li>
+          <li>Check for originality and citation errors</li>
+          <li>Enhance clarity and flow of your essays</li>
+        </ul>
+      </div>
+
+      <!-- Notifications -->
+      <div class="bg-white p-6 rounded-2xl shadow feature-card md:col-span-2 md:col-start-2">
+        <h4 class="text-xl font-bold mb-3 text-blue-600">Real-Time Notifications & Alerts</h4>
+        <ul class="list-disc list-inside text-gray-700">
+          <li>Never miss a beat! Get instant pings for new assignments and quizzes.</li>
+          <li>Stay ahead of the curve with timely reminders for approaching deadlines.</li>
+          <li>Teachers can effortlessly send announcements to classes or individual students.</li>
+          <li>Receive alerts when your AI essay feedback is ready or when a new badge is unlocked.</li>
         </ul>
       </div>
     </div>
@@ -115,11 +147,13 @@
   <section class="py-12 px-6 max-w-5xl mx-auto">
     <h3 class="text-2xl font-semibold mb-6 text-center">Our Comprehensive Approach</h3>
     <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto">
-      SmartStudentAct doesn’t stop at academics.  
+      SmartStudentAct doesn’t stop at academics. 
       By blending <strong>quizzes and assignments</strong> with 
-      <strong>budget tracking</strong>, <strong>goal-setting</strong>, and 
-      <strong>rewards</strong>, we support both the academic and personal growth of every learner.  
-      Teachers guide, students engage, and progress is rewarded.  
+      <strong>budget tracking</strong>, <strong>goal-setting</strong>, 
+      <strong>AI essay checking</strong>, <strong>data-driven insights</strong>, 
+      <strong>real-time notifications</strong> and 
+      <strong>rewards</strong>, we support both the academic and personal growth of every learner. 
+      Teachers guide, students engage, and progress is rewarded. 
     </p>
   </section>
 
