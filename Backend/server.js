@@ -13,7 +13,7 @@ const session = require("express-session");
 const crypto = require("crypto");
 
 // ✅ CSRF middleware
-const csrfProtection = require("./middleware/csrf");
+const csrfProtection = require("./middlewares/csrf");
 
 // ───────────────────────────────────────────────
 // 1️⃣ Environment Validation
