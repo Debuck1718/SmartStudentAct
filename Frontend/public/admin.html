@@ -1,193 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
     <style>
-        /* Custom styles to mimic React Native's StyleSheet.create */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+      /* Custom styles to mimic React Native's StyleSheet.create */
+      body {
+        font-family: "Inter", sans-serif;
+      }
 
-        .container {
-            padding: 20px;
-            background-color: #f5f7fa;
-            min-height: 100vh;
-        }
+      .container {
+        padding: 20px;
+        background-color: #f5f7fa;
+        min-height: 100vh;
+      }
 
-        .loading-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f5f7fa;
-        }
-        
-        .action-button:active, .logout-button:active, .header-icon:active {
-            transform: scale(0.98);
-        }
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f5f7fa;
+      }
 
-        .picker-container {
-            border-width: 1px;
-            border-color: #ccc;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 10px;
-            background-color: #fff;
-            position: relative;
-        }
+      .action-button:active,
+      .logout-button:active,
+      .header-icon:active {
+        transform: scale(0.98);
+      }
 
-        .picker-container::after {
-            content: '\f078';
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: #4b5563;
-        }
+      .picker-container {
+        border-width: 1px;
+        border-color: #ccc;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 10px;
+        background-color: #fff;
+        position: relative;
+      }
 
-        .picker {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            height: 50px;
-            width: 100%;
-            background-color: transparent;
-            padding: 0 15px;
-            font-size: 16px;
-            color: #4b5563;
-        }
+      .picker-container::after {
+        content: "\f078";
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #4b5563;
+      }
 
-        .tab-button {
-            padding: 10px 15px;
-            font-weight: 600;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: border-color 0.3s;
-        }
-        
-        .tab-button.active {
-            border-bottom-color: #3b82f6; /* Blue-500 */
-        }
+      .picker {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        height: 50px;
+        width: 100%;
+        background-color: transparent;
+        padding: 0 15px;
+        font-size: 16px;
+        color: #4b5563;
+      }
+
+      .tab-button {
+        padding: 10px 15px;
+        font-weight: 600;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: border-color 0.3s;
+      }
+
+      .tab-button.active {
+        border-bottom-color: #3b82f6; /* Blue-500 */
+      }
     </style>
-</head>
-<body class="bg-gray-100 antialiased">
+  </head>
+  <body class="bg-gray-100 antialiased">
+    <div id="app-container" class="container"></div>
 
-    <div id="app-container" class="container">
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+        <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
+        <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
+        <div class="flex justify-end space-x-2">
+          <button
+            id="alert-cancel"
+            class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300"
+          >
+            Cancel
+          </button>
+          <button
+            id="alert-confirm"
+            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
+          >
+            OK
+          </button>
         </div>
-
-    <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
-            <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
-            <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
-            <div class="flex justify-end space-x-2">
-                <button id="alert-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300">Cancel</button>
-                <button id="alert-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">OK</button>
-            </div>
-        </div>
+      </div>
     </div>
-    
+
+    <!-- Contact Form Modal -->
+    <div
+      id="contactModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center"
+    >
+      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">📩 Contact Us</h2>
+        <form id="contactForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium">Your Name</label>
+            <input
+              type="text"
+              id="contactName"
+              required
+              class="w-full border rounded p-2"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Your Email</label>
+            <input
+              type="email"
+              id="contactEmail"
+              required
+              class="w-full border rounded p-2"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Message</label>
+            <textarea
+              id="contactMessage"
+              rows="4"
+              required
+              class="w-full border rounded p-2"
+            ></textarea>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              id="closeContact"
+              class="bg-gray-200 px-4 py-2 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Send
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script>
-        const API_BASE = 'https://smartstudentact.onrender.com';
+      const API_BASE = "https://smartstudentact.onrender.com";
 
-        const router = {
-            replace: (path) => window.location.href = path,
-            push: (path) => window.location.href = path,
+      const router = {
+        replace: (path) => (window.location.href = path),
+        push: (path) => (window.location.href = path),
+      };
+
+      const fetchAPI = async (url, options = {}) => {
+        try {
+          const token = localStorage.getItem("jwtToken");
+          const headers = {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          };
+
+          const response = await fetch(`${API_BASE}${url}`, {
+            ...options,
+            headers,
+          });
+
+          if (response.status === 401) {
+            showCustomAlert(
+              "Session Expired",
+              "Your session has expired. Please log in again."
+            );
+            router.replace("/login.html");
+            return { ok: false, status: 401 };
+          }
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "API request failed");
+          }
+
+          return response;
+        } catch (error) {
+          console.error("Fetch error:", error);
+          throw error;
+        }
+      };
+
+      const showCustomAlert = (title, message, options) => {
+        const modal = document.getElementById("alert-modal");
+        const titleEl = document.getElementById("alert-title");
+        const messageEl = document.getElementById("alert-message");
+        const confirmBtn = document.getElementById("alert-confirm");
+        const cancelBtn = document.getElementById("alert-cancel");
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        confirmBtn.onclick = () => {
+          if (options && options.length > 1 && options[1].onPress) {
+            options[1].onPress();
+          }
+          modal.classList.add("hidden");
         };
 
-        const fetchAPI = async (url, options = {}) => {
-            try {
-                const token = localStorage.getItem('jwtToken');
-                const headers = {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                };
-                
-                const response = await fetch(`${API_BASE}${url}`, { ...options, headers });
-                
-                if (response.status === 401) {
-                    showCustomAlert('Session Expired', 'Your session has expired. Please log in again.');
-                    router.replace('/login.html');
-                    return { ok: false, status: 401 };
-                }
+        if (options && options.length > 0 && options[0].text === "Cancel") {
+          cancelBtn.textContent = options[0].text;
+          cancelBtn.onclick = () => modal.classList.add("hidden");
+          cancelBtn.classList.remove("hidden");
+        } else {
+          cancelBtn.classList.add("hidden");
+        }
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'API request failed');
-                }
-                
-                return response;
-            } catch (error) {
-                console.error('Fetch error:', error);
-                throw error;
-            }
-        };
+        modal.classList.remove("hidden");
+      };
 
-        const showCustomAlert = (title, message, options) => {
-            const modal = document.getElementById('alert-modal');
-            const titleEl = document.getElementById('alert-title');
-            const messageEl = document.getElementById('alert-message');
-            const confirmBtn = document.getElementById('alert-confirm');
-            const cancelBtn = document.getElementById('alert-cancel');
-            
-            titleEl.textContent = title;
-            messageEl.textContent = message;
-            
-            confirmBtn.onclick = () => {
-                if (options && options.length > 1 && options[1].onPress) {
-                    options[1].onPress();
-                }
-                modal.classList.add('hidden');
-            };
+      const state = {
+        user: null,
+        users: [],
+        files: [],
+        filteredUsers: [],
+        roleFilter: "all",
+        gradeFilter: "all",
+        searchTerm: "",
+        activeTab: "users",
+        isLoading: true,
+      };
 
-            if (options && options.length > 0 && options[0].text === 'Cancel') {
-                cancelBtn.textContent = options[0].text;
-                cancelBtn.onclick = () => modal.classList.add('hidden');
-                cancelBtn.classList.remove('hidden');
-            } else {
-                cancelBtn.classList.add('hidden');
-            }
+      const render = () => {
+        const container = document.getElementById("app-container");
+        container.innerHTML = "";
 
-            modal.classList.remove('hidden');
-        };
-
-        const state = {
-            user: null,
-            users: [],
-            files: [],
-            filteredUsers: [],
-            roleFilter: 'all',
-            gradeFilter: 'all',
-            searchTerm: '',
-            activeTab: 'users',
-            isLoading: true,
-        };
-
-        const render = () => {
-            const container = document.getElementById('app-container');
-            container.innerHTML = '';
-
-            if (state.isLoading) {
-                container.innerHTML = `
+        if (state.isLoading) {
+          container.innerHTML = `
                     <div class="loading-container">
                         <i class="fas fa-spinner fa-spin text-blue-500 text-5xl"></i>
                         <p class="mt-4 text-base text-gray-600">Loading dashboard...</p>
                     </div>
                 `;
-                return;
-            }
+          return;
+        }
 
-            const header = `
+        const header = `
                 <div class="flex flex-row justify-between items-center mb-5 pb-2 border-b border-gray-200">
                     <div class="flex items-center space-x-4">
-                        <img src="${state.user?.profile_picture_url || 'https://placehold.co/40x40/94a3b8/ffffff?text=U'}" alt="Profile Picture" class="rounded-full w-10 h-10 shadow-md"/>
+                        <img src="${
+                          state.user?.profile_picture_url ||
+                          "https://placehold.co/40x40/94a3b8/ffffff?text=U"
+                        }" alt="Profile Picture" class="rounded-full w-10 h-10 shadow-md"/>
                         <button onclick="router.push('/profile.html')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
                             <i class="fas fa-user-circle text-2xl"></i>
                         </button>
@@ -201,36 +282,48 @@
                     </button>
                 </div>
             `;
-            container.innerHTML += header;
+        container.innerHTML += header;
 
-            const tabs = `
+        const tabs = `
                 <div class="flex border-b border-gray-300 mb-5">
-                    <button id="tab-users" class="tab-button ${state.activeTab === 'users' ? 'active text-blue-600' : 'text-gray-600'}" onclick="changeTab('users')">Manage Users</button>
-                    <button id="tab-files" class="tab-button ${state.activeTab === 'files' ? 'active text-blue-600' : 'text-gray-600'}" onclick="changeTab('files')">Manage Files</button>
+                    <button id="tab-users" class="tab-button ${
+                      state.activeTab === "users"
+                        ? "active text-blue-600"
+                        : "text-gray-600"
+                    }" onclick="changeTab('users')">Manage Users</button>
+                    <button id="tab-files" class="tab-button ${
+                      state.activeTab === "files"
+                        ? "active text-blue-600"
+                        : "text-gray-600"
+                    }" onclick="changeTab('files')">Manage Files</button>
                 </div>
             `;
-            container.innerHTML += tabs;
+        container.innerHTML += tabs;
 
-            if (state.activeTab === 'users') {
-                renderUserManagement();
-            } else if (state.activeTab === 'files') {
-                renderFileManagement();
-            }
+        if (state.activeTab === "users") {
+          renderUserManagement();
+        } else if (state.activeTab === "files") {
+          renderFileManagement();
+        }
 
-            document.getElementById('logout-button').addEventListener('click', handleLogout);
-        };
+        document
+          .getElementById("logout-button")
+          .addEventListener("click", handleLogout);
+      };
 
-        const renderUserManagement = () => {
-            const container = document.getElementById('app-container');
-            const usersSection = document.createElement('div');
-            
-            usersSection.innerHTML = `
+      const renderUserManagement = () => {
+        const container = document.getElementById("app-container");
+        const usersSection = document.createElement("div");
+
+        usersSection.innerHTML = `
                 <div class="bg-white rounded-xl shadow-md p-4 mb-5">
                     <h2 class="text-base sm:text-lg font-semibold text-gray-800">Filters</h2>
                     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="search-term" class="block text-gray-700 font-bold mb-2">Search by Name/Email:</label>
-                            <input type="text" id="search-term" value="${state.searchTerm}" placeholder="Search..." class="w-full p-2 border rounded-lg">
+                            <input type="text" id="search-term" value="${
+                              state.searchTerm
+                            }" placeholder="Search..." class="w-full p-2 border rounded-lg">
                         </div>
                         <div>
                             <label for="grade-filter" class="block text-gray-700 font-bold mb-2">Filter by Grade:</label>
@@ -263,27 +356,55 @@
                     </div>
                 </div>
 
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Users (${state.filteredUsers.length})</h2>
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Users (${
+                  state.filteredUsers.length
+                })</h2>
                 <div id="users-list">
-                    ${state.filteredUsers.length === 0 ? 
-                        `<p class="text-center italic text-gray-500 py-5">No users found matching filters.</p>`
-                        : state.filteredUsers.map(u => `
+                    ${
+                      state.filteredUsers.length === 0
+                        ? `<p class="text-center italic text-gray-500 py-5">No users found matching filters.</p>`
+                        : state.filteredUsers
+                            .map(
+                              (u) => `
                         <div class="bg-white rounded-xl shadow-md p-4 mb-3 relative">
                             <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">
-                                ${u.firstname} ${u.lastname} (<span class="text-gray-600 font-normal">${u.email}</span>)
+                                ${u.firstname} ${
+                                u.lastname
+                              } (<span class="text-gray-600 font-normal">${
+                                u.email
+                              }</span>)
                             </h3>
                             <p class="text-sm text-gray-600 mb-3">
-                                Role: ${u.occupation} | School: ${u.schoolName || u.teacherSchool || 'N/A'}
-                                ${u.occupation === 'student' ? `| Grade: ${u.grade || 'N/A'}` : ''}
+                                Role: ${u.occupation} | School: ${
+                                u.schoolName || u.teacherSchool || "N/A"
+                              }
+                                ${
+                                  u.occupation === "student"
+                                    ? `| Grade: ${u.grade || "N/A"}`
+                                    : ""
+                                }
                             </p>
                             <div class="flex flex-wrap gap-2">
-                                <button onclick="manageUser('${u.email}', 'promote')" class="action-button flex-1 bg-green-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-600 transition duration-300">Promote</button>
-                                <button onclick="manageUser('${u.email}', 'demote')" class="action-button flex-1 bg-yellow-500 text-gray-900 font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-300">Demote</button>
-                                <button onclick="manageUser('${u.email}', 'suspend')" class="action-button flex-1 bg-cyan-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-cyan-600 transition duration-300">Suspend</button>
-                                <button onclick="confirmRemove('${u.email}', '${u.firstname} ${u.lastname}')" class="action-button flex-1 bg-red-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition duration-300">Delete</button>
+                                <button onclick="manageUser('${
+                                  u.email
+                                }', 'promote')" class="action-button flex-1 bg-green-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-600 transition duration-300">Promote</button>
+                                <button onclick="manageUser('${
+                                  u.email
+                                }', 'demote')" class="action-button flex-1 bg-yellow-500 text-gray-900 font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-300">Demote</button>
+                                <button onclick="manageUser('${
+                                  u.email
+                                }', 'suspend')" class="action-button flex-1 bg-cyan-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-cyan-600 transition duration-300">Suspend</button>
+                                <button onclick="confirmRemove('${u.email}', '${
+                                u.firstname
+                              } ${
+                                u.lastname
+                              }')" class="action-button flex-1 bg-red-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition duration-300">Delete</button>
                             </div>
                         </div>
-                    `).join('')}
+                    `
+                            )
+                            .join("")
+                    }
                 </div>
 
                 <div class="mt-6 p-4 bg-gray-200 rounded-lg border-l-4 border-gray-500">
@@ -291,183 +412,261 @@
                     <p class="text-sm text-gray-700">You can only manage users from your school.</p>
                 </div>
             `;
-            container.appendChild(usersSection);
+        container.appendChild(usersSection);
 
-            document.getElementById('search-term').addEventListener('input', (e) => {
-                state.searchTerm = e.target.value;
-                filterUsers();
-            });
-            document.getElementById('grade-filter').addEventListener('change', (e) => {
-                state.gradeFilter = e.target.value;
-                filterUsers();
-            });
-            document.getElementById('grade-filter').value = state.gradeFilter;
-        };
+        document
+          .getElementById("search-term")
+          .addEventListener("input", (e) => {
+            state.searchTerm = e.target.value;
+            filterUsers();
+          });
+        document
+          .getElementById("grade-filter")
+          .addEventListener("change", (e) => {
+            state.gradeFilter = e.target.value;
+            filterUsers();
+          });
+        document.getElementById("grade-filter").value = state.gradeFilter;
+      };
 
-        const renderFileManagement = () => {
-            const container = document.getElementById('app-container');
-            const filesSection = document.createElement('div');
-            filesSection.innerHTML = `
+      const renderFileManagement = () => {
+        const container = document.getElementById("app-container");
+        const filesSection = document.createElement("div");
+        filesSection.innerHTML = `
                 <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Files from Your School</h2>
                 <div id="files-list">
-                    ${state.files.length === 0 ? `<p class="text-center italic text-gray-500 py-5">No files found for your school.</p>` : 
-                        state.files.map(file => `
+                    ${
+                      state.files.length === 0
+                        ? `<p class="text-center italic text-gray-500 py-5">No files found for your school.</p>`
+                        : state.files
+                            .map(
+                              (file) => `
                             <div class="bg-white rounded-xl shadow-md p-4 mb-3">
-                                <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">${file.filename}</h3>
+                                <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">${
+                                  file.filename
+                                }</h3>
                                 <p class="text-sm text-gray-600">
-                                    Type: ${file.type} | Submitted By: ${file.submittedBy || 'N/A'}
+                                    Type: ${file.type} | Submitted By: ${
+                                file.submittedBy || "N/A"
+                              }
                                 </p>
-                                <a href="${file.url}" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">
+                                <a href="${
+                                  file.url
+                                }" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">
                                     <i class="fas fa-eye mr-1"></i>View File
                                 </a>
                             </div>
-                        `).join('')}
+                        `
+                            )
+                            .join("")
+                    }
                 </div>
             `;
-            container.appendChild(filesSection);
-        };
+        container.appendChild(filesSection);
+      };
 
-        const changeTab = (tab) => {
-            state.activeTab = tab;
-            state.isLoading = true;
-            render();
-            if (tab === 'users') {
-                loadUsers();
-            } else if (tab === 'files') {
-                loadFiles();
-            }
-        };
-        
-        const filterUsers = () => {
-            let result = state.users;
-            
-            // Search by name or email
-            if (state.searchTerm) {
-                const term = state.searchTerm.toLowerCase();
-                result = result.filter(u => 
-                    (u.firstname && u.firstname.toLowerCase().includes(term)) ||
-                    (u.lastname && u.lastname.toLowerCase().includes(term)) ||
-                    (u.email && u.email.toLowerCase().includes(term))
+      const changeTab = (tab) => {
+        state.activeTab = tab;
+        state.isLoading = true;
+        render();
+        if (tab === "users") {
+          loadUsers();
+        } else if (tab === "files") {
+          loadFiles();
+        }
+      };
+
+      const filterUsers = () => {
+        let result = state.users;
+
+        // Search by name or email
+        if (state.searchTerm) {
+          const term = state.searchTerm.toLowerCase();
+          result = result.filter(
+            (u) =>
+              (u.firstname && u.firstname.toLowerCase().includes(term)) ||
+              (u.lastname && u.lastname.toLowerCase().includes(term)) ||
+              (u.email && u.email.toLowerCase().includes(term))
+          );
+        }
+
+        // Filter by grade
+        if (state.gradeFilter !== "all") {
+          result = result.filter((u) => String(u.grade) === state.gradeFilter);
+        }
+
+        state.filteredUsers = result;
+        render();
+      };
+
+      const loadUsers = async () => {
+        state.isLoading = true;
+        render();
+        try {
+          const res = await fetchAPI("/api/admin/users");
+          state.users = await res.json();
+          filterUsers();
+        } catch (err) {
+          console.error("Failed to load users", err);
+          showCustomAlert("Error", "Failed to load user data.");
+        } finally {
+          state.isLoading = false;
+          render();
+        }
+      };
+
+      const loadFiles = async () => {
+        state.isLoading = true;
+        render();
+        try {
+          // This is a new endpoint for the file view functionality
+          const res = await fetchAPI("/api/admin/my-school-files");
+          state.files = await res.json();
+        } catch (err) {
+          console.error("Failed to load files", err);
+          showCustomAlert("Error", "Failed to load files from your school.");
+        } finally {
+          state.isLoading = false;
+          render();
+        }
+      };
+
+      const handleLogout = () => {
+        showCustomAlert("Logout", "Are you sure you want to log out?", [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Logout",
+            onPress: async () => {
+              try {
+                await fetchAPI("/api/logout", { method: "POST" });
+                router.replace("/login.html");
+              } catch (error) {
+                console.error("Logout failed:", error);
+                showCustomAlert(
+                  "Logout Error",
+                  "Failed to log out. Please try again."
                 );
-            }
+              }
+            },
+          },
+        ]);
+      };
 
-            // Filter by grade
-            if (state.gradeFilter !== 'all') {
-                result = result.filter(u => String(u.grade) === state.gradeFilter);
-            }
-            
-            state.filteredUsers = result;
-            render();
-        };
-
-        const loadUsers = async () => {
-            state.isLoading = true;
-            render();
-            try {
-                const res = await fetchAPI('/api/admin/users');
-                state.users = await res.json();
-                filterUsers();
-            } catch (err) {
-                console.error('Failed to load users', err);
-                showCustomAlert('Error', 'Failed to load user data.');
-            } finally {
-                state.isLoading = false;
-                render();
-            }
-        };
-        
-        const loadFiles = async () => {
-            state.isLoading = true;
-            render();
-            try {
-                // This is a new endpoint for the file view functionality
-                const res = await fetchAPI('/api/admin/my-school-files'); 
-                state.files = await res.json();
-            } catch (err) {
-                console.error('Failed to load files', err);
-                showCustomAlert('Error', 'Failed to load files from your school.');
-            } finally {
-                state.isLoading = false;
-                render();
-            }
-        };
-
-        const handleLogout = () => {
-            showCustomAlert('Logout', 'Are you sure you want to log out?', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Logout', onPress: async () => {
-                    try {
-                        await fetchAPI('/api/logout', { method: 'POST' });
-                        router.replace('/login.html');
-                    } catch (error) {
-                        console.error('Logout failed:', error);
-                        showCustomAlert('Logout Error', 'Failed to log out. Please try again.');
-                    }
-                }},
-            ]);
-        };
-        
-        const manageUser = async (email, action) => {
-            showCustomAlert(action.charAt(0).toUpperCase() + action.slice(1) + ' User', `Are you sure you want to ${action} this user?`, [
-                { text: 'Cancel', style: 'cancel' },
-                { text: action.charAt(0).toUpperCase() + action.slice(1), onPress: async () => {
-                    try {
-                        const res = await fetchAPI(`/api/admin/${action}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email }),
-                        });
-                        const result = await res.json();
-                        if (res.ok) {
-                            showCustomAlert('Success', result.message);
-                            await loadUsers();
-                        } else {
-                            showCustomAlert('Error', result.message || `Failed to ${action} user.`);
-                        }
-                    } catch (err) {
-                        console.error(`Error managing user (${action}):`, err);
-                        showCustomAlert('Error', `Something went wrong while trying to ${action} the user.`);
-                    }
-                }},
-            ]);
-        };
-        
-        const confirmRemove = (email, userName) => {
-            showCustomAlert('Confirm Delete', `Are you sure you want to delete ${userName}? This action cannot be undone.`, [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', onPress: () => manageUser(email, 'remove-user') },
-            ]);
-        };
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const res = await fetchAPI('/api/profile');
-                if (res.ok) {
-                    const user = await res.json();
-                    if (user.occupation !== 'admin') {
-                        showCustomAlert('Access Denied', 'You do not have permission to view this page.');
-                        router.replace('/admin.html');
-                        return;
-                    }
-                    state.user = user;
-                    state.isLoading = false;
-                    render();
-                    // Load data for the initial active tab
-                    if (state.activeTab === 'users') {
-                        loadUsers();
-                    } else if (state.activeTab === 'files') {
-                        loadFiles();
-                    }
-                } else {
-                    showCustomAlert('Authentication Failed', 'Please log in to continue.');
-                    router.replace('/login.html');
+      const manageUser = async (email, action) => {
+        showCustomAlert(
+          action.charAt(0).toUpperCase() + action.slice(1) + " User",
+          `Are you sure you want to ${action} this user?`,
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: action.charAt(0).toUpperCase() + action.slice(1),
+              onPress: async () => {
+                try {
+                  const res = await fetchAPI(`/api/admin/${action}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email }),
+                  });
+                  const result = await res.json();
+                  if (res.ok) {
+                    showCustomAlert("Success", result.message);
+                    await loadUsers();
+                  } else {
+                    showCustomAlert(
+                      "Error",
+                      result.message || `Failed to ${action} user.`
+                    );
+                  }
+                } catch (err) {
+                  console.error(`Error managing user (${action}):`, err);
+                  showCustomAlert(
+                    "Error",
+                    `Something went wrong while trying to ${action} the user.`
+                  );
                 }
-            } catch (err) {
-                console.error('Session check failed:', err);
-                showCustomAlert('Session Error', 'Could not verify session. Please log in again.');
-                router.replace('/login.html');
+              },
+            },
+          ]
+        );
+      };
+
+      const confirmRemove = (email, userName) => {
+        showCustomAlert(
+          "Confirm Delete",
+          `Are you sure you want to delete ${userName}? This action cannot be undone.`,
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Delete", onPress: () => manageUser(email, "remove-user") },
+          ]
+        );
+      };
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          const res = await fetchAPI("/api/profile");
+          if (res.ok) {
+            const user = await res.json();
+            if (user.occupation !== "admin") {
+              showCustomAlert(
+                "Access Denied",
+                "You do not have permission to view this page."
+              );
+              router.replace("/admin.html");
+              return;
             }
+            state.user = user;
+            state.isLoading = false;
+            render();
+            // Load data for the initial active tab
+            if (state.activeTab === "users") {
+              loadUsers();
+            } else if (state.activeTab === "files") {
+              loadFiles();
+            }
+          } else {
+            showCustomAlert(
+              "Authentication Failed",
+              "Please log in to continue."
+            );
+            router.replace("/login.html");
+          }
+        } catch (err) {
+          console.error("Session check failed:", err);
+          showCustomAlert(
+            "Session Error",
+            "Could not verify session. Please log in again."
+          );
+          router.replace("/login.html");
+        }
+      });
+
+      document
+        .getElementById("homepageContactForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const payload = {
+            name: document.getElementById("homeContactName").value,
+            email: document.getElementById("homeContactEmail").value,
+            message: document.getElementById("homeContactMessage").value,
+          };
+
+          try {
+            const res = await fetch(`${API_BASE}/contact`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) throw new Error("Failed to send");
+
+            alert("✅ Message sent successfully!");
+            e.target.reset();
+          } catch (err) {
+            alert("❌ Could not send message. Try again later.");
+            console.error(err);
+          }
         });
     </script>
-</body>
+  </body>
 </html>

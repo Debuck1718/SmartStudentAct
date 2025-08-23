@@ -161,15 +161,18 @@
 
   // --- Authenticated fetch helper ---
   const authFetch = async (url, options = {}) => {
-    const csrfToken = localStorage.getItem("csrfToken"); // saved after login
+    const csrfToken = localStorage.getItem("csrfToken");
+    const token = localStorage.getItem("token"); // ✅ JWT token saved at login
+
     const headers = {
       ...(options.headers || {}),
       "X-CSRF-Token": csrfToken || "",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
     };
 
     return fetch(url, {
       ...options,
-      credentials: "include", // ✅ send JWT cookie
+      credentials: "include", // ✅ cookies if backend uses them
       headers,
     });
   };
@@ -178,7 +181,7 @@
   const fetchDashboardData = async () => {
     try {
       const res = await authFetch(`${API_BASE}/overseer/dashboard-overview`);
-      if (!res.ok) throw new Error("Failed to fetch dashboard data");
+      if (!res.ok) throw new Error(`Failed to fetch dashboard data (status ${res.status})`);
 
       const data = await res.json();
       const totalSchools = data.managedRegions.reduce(
@@ -206,153 +209,64 @@
     }
   };
 
-  // --- Files fetch ---
-  const fetchAndRenderAllFiles = async () => {
-    state.isFilesLoading = true;
-    renderFilesTable();
-    try {
-      const res = await authFetch(`${API_BASE}/admin/all-files`);
-      if (!res.ok) throw new Error("Failed to fetch files");
-      const data = await res.json();
-      state.allFiles = data.files;
-    } catch (error) {
-      console.error("Failed to fetch all files:", error);
-      showAlert("Error", "Failed to load the list of files.");
-    } finally {
-      state.isFilesLoading = false;
-      render();
+  // --- Render function (Fix for ReferenceError) ---
+  function render() {
+    const container = document.getElementById("app-container");
+
+    if (state.isLoading) {
+      container.innerHTML = `
+        <div class="loading-container">
+          <div class="spinner"></div>
+          <p class="mt-2 text-gray-600">Loading dashboard...</p>
+        </div>
+      `;
+      return;
     }
-  };
 
-  // --- Management actions ---
-  const handlePromoteUser = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const email = form.email.value;
-    const role = form.role.value;
-    const makeAdmin = form.make_admin.checked;
-
-    state.isUserManagementLoading = true;
-    document.getElementById("promote-user-button").innerHTML =
-      '<div class="spinner"></div>';
-
-    try {
-      const res = await authFetch(`${API_BASE}/overseer/manage-user/promote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role, makeAdmin }),
-      });
-
-      if (!res.ok) throw new Error("Failed to promote user");
-      await res.json();
-      showAlert("Success", `User ${email} has been promoted to ${role}.`);
-      document.getElementById("form-modal").classList.add("hidden");
-    } catch (error) {
-      console.error("Error promoting user:", error);
-      showAlert("Error", error.message);
-    } finally {
-      state.isUserManagementLoading = false;
-      render();
+    if (!state.dashboardData) {
+      container.innerHTML = `
+        <div class="p-6 bg-red-100 rounded-xl text-red-700">
+          Failed to load dashboard data.
+        </div>
+      `;
+      return;
     }
-  };
 
-  const handleRemoveUser = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const email = form.email.value;
+    const { totalRegions, totalSchools, totalAdmins, totalUsers, managedRegions } = state.dashboardData;
 
-    const confirmed = await showAlert(
-      "Confirm Removal",
-      `Remove user: ${email}? This cannot be undone.`,
-      true
-    );
-    if (!confirmed) return;
+    container.innerHTML = `
+      <h1 class="text-2xl font-bold mb-6">🌍 Global Overseer Dashboard</h1>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white shadow rounded-xl p-4 text-center">
+          <h2 class="text-xl font-bold">${totalRegions}</h2>
+          <p class="text-gray-600">Regions</p>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4 text-center">
+          <h2 class="text-xl font-bold">${totalSchools}</h2>
+          <p class="text-gray-600">Schools</p>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4 text-center">
+          <h2 class="text-xl font-bold">${totalAdmins}</h2>
+          <p class="text-gray-600">Admins</p>
+        </div>
+        <div class="bg-white shadow rounded-xl p-4 text-center">
+          <h2 class="text-xl font-bold">${totalUsers}</h2>
+          <p class="text-gray-600">Users</p>
+        </div>
+      </div>
 
-    state.isUserManagementLoading = true;
-    document.getElementById("remove-user-button").innerHTML =
-      '<div class="spinner"></div>';
-
-    try {
-      const res = await authFetch(`${API_BASE}/overseer/manage-user/remove`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!res.ok) throw new Error("Failed to remove user");
-      await res.json();
-      showAlert("Success", `User ${email} has been removed.`);
-      document.getElementById("form-modal").classList.add("hidden");
-    } catch (error) {
-      console.error("Error removing user:", error);
-      showAlert("Error", error.message);
-    } finally {
-      state.isUserManagementLoading = false;
-      render();
-    }
-  };
-
-  const handleAddSchool = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const name = form.name.value;
-    const country = form.country.value;
-    const tier = parseInt(form.tier.value, 10);
-
-    state.isSchoolManagementLoading = true;
-    document.getElementById("add-school-button").innerHTML =
-      '<div class="spinner"></div>';
-
-    try {
-      const res = await authFetch(`${API_BASE}/overseer/manage-school/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, country, tier }),
-      });
-
-      if (!res.ok) throw new Error("Failed to add school");
-      await res.json();
-      showAlert("Success", `School "${name}" added in ${country}.`);
-      document.getElementById("form-modal").classList.add("hidden");
-      await fetchDashboardData();
-    } catch (error) {
-      console.error("Error adding school:", error);
-      showAlert("Error", error.message);
-    } finally {
-      state.isSchoolManagementLoading = false;
-      render();
-    }
-  };
-
-  const handleAssignRegion = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const overseerEmail = form.overseer.value;
-    const regionName = form.region.value;
-
-    state.isUserManagementLoading = true;
-    document.getElementById("assign-region-button").innerHTML =
-      '<div class="spinner"></div>';
-
-    try {
-      const res = await authFetch(`${API_BASE}/overseer/manage-region/assign`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ overseerEmail, regionName }),
-      });
-
-      if (!res.ok) throw new Error("Failed to assign region");
-      await res.json();
-      showAlert("Success", `Region "${regionName}" assigned to ${overseerEmail}.`);
-      document.getElementById("form-modal").classList.add("hidden");
-    } catch (error) {
-      console.error("Error assigning region:", error);
-      showAlert("Error", error.message);
-    } finally {
-      state.isUserManagementLoading = false;
-      render();
-    }
-  };
+      <h2 class="text-lg font-bold mb-2">📌 Managed Regions</h2>
+      <div class="space-y-3">
+        ${managedRegions.map(r => `
+          <div class="bg-white p-4 rounded-xl shadow">
+            <h3 class="font-semibold">${r.name}</h3>
+            <p class="text-sm text-gray-600">Schools: ${r.totalSchools || 0}</p>
+            <p class="text-sm text-gray-600">Admins: ${r.totalAdmins || 0}</p>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
 
   // --- Init ---
   document.addEventListener("DOMContentLoaded", () => {
@@ -364,6 +278,5 @@
     fetchDashboardData();
   });
 </script>
-
   </body>
 </html>

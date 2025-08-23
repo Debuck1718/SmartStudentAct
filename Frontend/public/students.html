@@ -209,6 +209,60 @@
         </div>
       </section>
 
+      <!-- Contact Form Modal -->
+      <div
+        id="contactModal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center"
+      >
+        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+          <h2 class="text-xl font-bold mb-4">📩 Contact Us</h2>
+          <form id="contactForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium">Your Name</label>
+              <input
+                type="text"
+                id="contactName"
+                required
+                class="w-full border rounded p-2"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium">Your Email</label>
+              <input
+                type="email"
+                id="contactEmail"
+                required
+                class="w-full border rounded p-2"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium">Message</label>
+              <textarea
+                id="contactMessage"
+                rows="4"
+                required
+                class="w-full border rounded p-2"
+              ></textarea>
+            </div>
+            <div class="flex justify-end gap-2">
+              <button
+                type="button"
+                id="closeContact"
+                class="bg-gray-200 px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                Send
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <footer class="text-center text-gray-500 text-sm mt-8 mb-4">
         &copy; 2025 SmartStudentAct – Empowering Students Globally.
       </footer>
@@ -1050,6 +1104,45 @@
           console.warn("Chart error", e);
         }
       }
+      // Open contact form instead of email link
+      document.getElementById("contactLink").addEventListener("click", () => {
+        document.getElementById("contactModal").classList.remove("hidden");
+      });
+
+      // Close button
+      document.getElementById("closeContact").addEventListener("click", () => {
+        document.getElementById("contactModal").classList.add("hidden");
+      });
+
+      // Handle form submission
+      document
+        .getElementById("contactForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const payload = {
+            name: document.getElementById("contactName").value,
+            email: document.getElementById("contactEmail").value,
+            message: document.getElementById("contactMessage").value,
+          };
+
+          try {
+            const res = await fetch(`${API_BASE}/contact`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) throw new Error("Failed to send message");
+
+            showAlert("Success", "Your message has been sent!");
+            document.getElementById("contactModal").classList.add("hidden");
+            e.target.reset();
+          } catch (err) {
+            showAlert("Error", "Could not send message. Try again later.");
+            console.error(err);
+          }
+        });
 
       // ---------- INIT ----------
       window.addEventListener("DOMContentLoaded", () => {

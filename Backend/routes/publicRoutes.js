@@ -53,6 +53,14 @@ module.exports = (eventBus, agenda) => {
         token: Joi.string().required(),
         newPassword: Joi.string().min(6).required(),
     });
+    
+    // --- Contact Us Route ---
+    const contactSchema = Joi.object({
+        name: Joi.string().min(2).max(100).required(),
+        email: Joi.string().email().required(),
+        message: Joi.string().min(5).max(2000).required()
+    });
+
 
     const validate = (schema) => (req, res, next) => {
         const { error } = schema.validate(req.body, { abortEarly: false });
@@ -254,6 +262,24 @@ publicRouter.post('/users/login', validate(loginSchema), async (req, res) => {
         } catch (error) {
             logger.error('Reset password error:', error);
             res.status(500).json({ message: 'Server error' });
+        }
+    });
+
+    publicRouter.post('/contact', validate(contactSchema), async (req, res) => {
+        const { name, email, message } = req.body;
+
+        try {
+            await sendEmail(
+                'evansbuckman1@gmail.com', // recipient inbox
+                `New Contact Form Message from ${name}`,
+                `<p><strong>Name:</strong> ${name}</p>
+                 <p><strong>Email:</strong> ${email}</p>
+                 <p><strong>Message:</strong><br>${message}</p>`
+            );
+            res.status(200).json({ message: 'Your message has been sent successfully.' });
+        } catch (err) {
+            logger.error('Contact form email error:', err);
+            res.status(500).json({ message: 'Failed to send message. Please try again later.' });
         }
     });
 

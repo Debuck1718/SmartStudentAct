@@ -148,13 +148,9 @@
 
         document.getElementById('aboutLink').addEventListener('click', () => {
             // Replace the alert() with the custom modal
-            showAlert('About', 'This is a placeholder for the About section. In a real app, this would navigate to an About page.');
+            window.location.href = '/aboutus.html'
         });
-
-        document.getElementById('contactLink').addEventListener('click', () => {
-            // This replicates the Linking.openURL behavior for email
-            window.location.href = 'evansbuckman1@gmail.com';
-        });
+        
     </script>
 </body>
 </html>
