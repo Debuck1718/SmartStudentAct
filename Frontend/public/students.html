@@ -477,149 +477,177 @@
 
     <!-- JS -->
     <script>
-      // ---------- CONFIG ----------
-      const BASE_URL = "https://smartstudentact.onrender.com/api";
-      const TOKEN_KEYS = ["jwt", "jwtToken", "token", "authToken"];
-      const ID_KEYS = ["studentId", "userId", "id"];
+      // =========================================================================
+      // Students Dashboard Script - Refactored for Readability and Maintainability
+      // =========================================================================
 
-      const token = getFirst(localStorage, TOKEN_KEYS);
-      const storedId = getFirst(localStorage, ID_KEYS);
-      const userFromJWT = parseJwt(token);
-      const studentId = storedId || userFromJWT?.userId || userFromJWT?.id;
-      const firstname =
-        localStorage.getItem("firstname") ||
-        userFromJWT?.firstname ||
-        "Student";
+      // --- CONFIGURATION & GLOBALS ---
+      const API_BASE_URL = "https://api.smartstudentact.com/api";
+      let csrfToken = null;
 
-      function getFirst(storage, keys) {
-        for (const k of keys) {
-          const v = storage.getItem(k);
-          if (v) return v;
+      // --- DOM REFERENCES (Centralized for easy access) ---
+      const DOMElements = {
+        // Buttons
+        menuBtn: document.getElementById("menu-btn"),
+        logoutBtn: document.getElementById("logout-btn"),
+        addAssignmentBtn: document.getElementById("add-assignment-btn"),
+        addBudgetBtn: document.getElementById("add-budget-btn"),
+        saveGoalBtn: document.getElementById("save-goal-btn"),
+        saveAssignmentBtn: document.getElementById("save-assignment-btn"),
+        cancelAssignmentBtn: document.getElementById("cancel-assignment-btn"),
+        saveBudgetBtn: document.getElementById("save-budget-btn"),
+        cancelBudgetBtn: document.getElementById("cancel-budget-btn"),
+        closeMenuBtn: document.getElementById("close-menu-btn"),
+        menuLogoutBtn: document.getElementById("menu-logout-btn"),
+        alertConfirmBtn: document.getElementById("alert-confirm-btn"),
+        alertCancelBtn: document.getElementById("alert-cancel-btn"),
+        generateInsightsBtn: document.getElementById("generate-insights-btn"),
+        contactLink: document.getElementById("contactLink"),
+
+        // Inputs
+        goalInput: document.getElementById("goal-input"),
+        assignmentTitleInput: document.getElementById("assignment-title-input"),
+        assignmentSubjectInput: document.getElementById(
+          "assignment-subject-input"
+        ),
+        budgetTitleInput: document.getElementById("budget-title-input"),
+        budgetAmountInput: document.getElementById("budget-amount-input"),
+        subscriptionToggle: document.getElementById("subscription-toggle"),
+        contactName: document.getElementById("contactName"),
+        contactEmail: document.getElementById("contactEmail"),
+        contactMessage: document.getElementById("contactMessage"),
+        contactForm: document.getElementById("contactForm"),
+
+        // Display & Feedback
+        goalErrorEl: document.getElementById("goal-error"),
+        savedGoalText: document.getElementById("saved-goal-text"),
+        assignmentsList: document.getElementById("assignments-list"),
+        budgetList: document.getElementById("budget-list"),
+        quizzesList: document.getElementById("quizzes-list"),
+        feedbackList: document.getElementById("feedback-list"),
+        assignmentsLoading: document.getElementById("assignments-loading"),
+        budgetLoading: document.getElementById("budget-loading"),
+        quizzesLoading: document.getElementById("quizzes-loading"),
+        insightsLoading: document.getElementById("insights-loading"),
+        insightsContent: document.getElementById("insights-content"),
+        insightsPlaceholder: document.getElementById("insights-placeholder"),
+        rewardsWrap: document.getElementById("rewards-wrap"),
+        alertTitleEl: document.getElementById("alert-title"),
+        alertMessageEl: document.getElementById("alert-message"),
+
+        // Modals
+        assignmentModal: document.getElementById("assignment-modal"),
+        budgetModal: document.getElementById("budget-modal"),
+        menuModal: document.getElementById("menu-modal"),
+        menuContent: document.getElementById("menu-content"),
+        alertModal: document.getElementById("alert-modal"),
+        contactModal: document.getElementById("contactModal"),
+
+        // Errors
+        assignmentTitleError: document.getElementById("assignment-title-error"),
+        assignmentSubjectError: document.getElementById(
+          "assignment-subject-error"
+        ),
+        budgetTitleError: document.getElementById("budget-title-error"),
+        budgetAmountError: document.getElementById("budget-amount-error"),
+
+        // Chart
+        chartCanvas: document.getElementById("analytics-chart"),
+      };
+
+      // --- API HELPERS (Consolidated & Reusable) ---
+      const authHeaders = () => ({
+        "Content-Type": "application/json",
+        ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+      });
+
+      const get = async (path) => {
+        const res = await fetch(`${API_BASE_URL}${path}`, {
+          method: "GET",
+          credentials: "include", // send cookies (HttpOnly JWT will be attached)
+          headers: authHeaders(),
+        });
+        if (!res.ok) {
+          throw await res.json().catch(() => ({ message: res.statusText }));
         }
-        return null;
-      }
-      function parseJwt(t) {
+        return res.json();
+      };
+
+      const post = async (path, body) => {
+        const res = await fetch(`${API_BASE_URL}${path}`, {
+          method: "POST",
+          credentials: "include", // send cookies
+          headers: authHeaders(),
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          throw await res.json().catch(() => ({ message: res.statusText }));
+        }
+        return res.json();
+      };
+
+      // --- CSRF TOKEN FETCHER ---
+      async function fetchCsrfToken() {
         try {
-          if (!t) return null;
-          const p = t.split(".")[1];
-          return JSON.parse(atob(p.replace(/-/g, "+").replace(/_/g, "/")));
-        } catch {
-          return null;
+          const res = await fetch(`${API_BASE_URL}/csrf-token`, {
+            method: "GET",
+            credentials: "include", // get CSRF cookie + token
+          });
+          if (!res.ok) throw new Error("Failed to fetch CSRF token");
+          const data = await res.json();
+          csrfToken = data.csrfToken;
+        } catch (err) {
+          console.error("CSRF error:", err);
         }
       }
 
-      // ---------- DOM REFS ----------
-      const menuBtn = document.getElementById("menu-btn");
-      const logoutBtn = document.getElementById("logout-btn");
-      const addAssignmentBtn = document.getElementById("add-assignment-btn");
-      const addBudgetBtn = document.getElementById("add-budget-btn");
-      const saveGoalBtn = document.getElementById("save-goal-btn");
-      const goalInput = document.getElementById("goal-input");
-      const goalErrorEl = document.getElementById("goal-error");
-      const savedGoalText = document.getElementById("saved-goal-text");
-      const assignmentsList = document.getElementById("assignments-list");
-      const budgetList = document.getElementById("budget-list");
-      const assignmentsLoading = document.getElementById("assignments-loading");
-      const budgetLoading = document.getElementById("budget-loading");
-      const assignmentModal = document.getElementById("assignment-modal");
-      const budgetModal = document.getElementById("budget-modal");
-      const menuModal = document.getElementById("menu-modal");
-      const alertModal = document.getElementById("alert-modal");
-      const saveAssignmentBtn = document.getElementById("save-assignment-btn");
-      const cancelAssignmentBtn = document.getElementById(
-        "cancel-assignment-btn"
-      );
-      const assignmentTitleInput = document.getElementById(
-        "assignment-title-input"
-      );
-      const assignmentSubjectInput = document.getElementById(
-        "assignment-subject-input"
-      );
-      const assignmentTitleError = document.getElementById(
-        "assignment-title-error"
-      );
-      const assignmentSubjectError = document.getElementById(
-        "assignment-subject-error"
-      );
-      const saveBudgetBtn = document.getElementById("save-budget-btn");
-      const cancelBudgetBtn = document.getElementById("cancel-budget-btn");
-      const budgetTitleInput = document.getElementById("budget-title-input");
-      const budgetAmountInput = document.getElementById("budget-amount-input");
-      const budgetTitleError = document.getElementById("budget-title-error");
-      const budgetAmountError = document.getElementById("budget-amount-error");
-      const closeMenuBtn = document.getElementById("close-menu-btn");
-      const menuContent = document.getElementById("menu-content");
-      const menuLogoutBtn = document.getElementById("menu-logout-btn");
-      const alertTitleEl = document.getElementById("alert-title");
-      const alertMessageEl = document.getElementById("alert-message");
-      const alertConfirmBtn = document.getElementById("alert-confirm-btn");
-      const alertCancelBtn = document.getElementById("alert-cancel-btn");
-      const generateInsightsBtn = document.getElementById(
-        "generate-insights-btn"
-      );
-      const insightsLoading = document.getElementById("insights-loading");
-      const insightsContent = document.getElementById("insights-content");
-      const insightsPlaceholder = document.getElementById(
-        "insights-placeholder"
-      );
-      const subscriptionToggle = document.getElementById("subscription-toggle");
-      const rewardsWrap = document.getElementById("rewards-wrap");
-
-      // ---------- MODALS ----------
+      // --- MODAL & ALERT FUNCTIONS ---
       const showModal = (el) => el.classList.add("active");
       const hideModal = (el) => el.classList.remove("active");
 
-      // ---------- ALERT ----------
       let alertConfirmAction = null;
       const showAlert = (title, message, onConfirm = null) => {
-        alertTitleEl.textContent = title;
-        alertMessageEl.textContent = message;
+        DOMElements.alertTitleEl.textContent = title;
+        DOMElements.alertMessageEl.textContent = message;
         alertConfirmAction = onConfirm;
-        alertConfirmBtn.classList.toggle("hidden", !onConfirm);
-        showModal(alertModal);
+        DOMElements.alertConfirmBtn.classList.toggle("hidden", !onConfirm);
+        showModal(DOMElements.alertModal);
       };
       const closeAlert = () => {
-        hideModal(alertModal);
+        hideModal(DOMElements.alertModal);
         alertConfirmAction = null;
       };
-      alertConfirmBtn.addEventListener("click", () => {
-        if (alertConfirmAction) alertConfirmAction();
-        closeAlert();
-      });
-      alertCancelBtn.addEventListener("click", closeAlert);
 
-      // ---------- API ----------
-      const authHeaders = () =>
-        token ? { Authorization: `Bearer ${token}` } : {};
-      const get = async (p) => {
-        const res = await fetch(`${BASE_URL}${p}`, {
-          headers: { ...authHeaders() },
-        });
-        if (!res.ok)
-          throw await res.json().catch(() => ({ message: res.statusText }));
-        return res.json();
-      };
-      const post = async (p, body) => {
-        const res = await fetch(`${BASE_URL}${p}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok)
-          throw await res.json().catch(() => ({ message: res.statusText }));
-        return res.json();
-      };
-
-      // ---------- ASSIGNMENTS ----------
-      const fetchAssignments = async () => {
-        assignmentsLoading.classList.remove("hidden");
-        assignmentsList.innerHTML = "";
+      // --- DATA FETCHING FUNCTIONS ---
+      const fetchCsrfToken = async () => {
         try {
-          // GET /api/student/assignments/:studentId  (adjust to your real route)
+          const res = await fetch(`${API_BASE_URL}/csrf-token`, {
+            method: "GET",
+            credentials: "include",
+          });
+          if (!res.ok) throw new Error("Failed to fetch CSRF token");
+          const data = await res.json();
+          csrfToken = data.csrfToken;
+        } catch (err) {
+          console.error("CSRF error:", err);
+          showAlert(
+            "Error",
+            "Could not verify session. Please log in again.",
+            () => {
+              window.location.href = "/login.html";
+            }
+          );
+        }
+      };
+
+      const fetchAssignments = async () => {
+        DOMElements.assignmentsLoading.classList.remove("hidden");
+        DOMElements.assignmentsList.innerHTML = "";
+        try {
           const resp = await get(`/student/assignments/${studentId}`);
           const assignments = resp.assignments || resp || [];
           if (assignments.length === 0) {
-            assignmentsList.innerHTML =
+            DOMElements.assignmentsList.innerHTML =
               '<p class="italic text-gray-500 text-center">No assignments added yet.</p>';
           } else {
             assignments.forEach((a) => {
@@ -634,158 +662,67 @@
               div.className =
                 "bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm";
               div.innerHTML = `
-              <div>
-                <h4 class="font-semibold text-lg">${a.title || "Untitled"}</h4>
-                <p class="text-sm text-gray-600">Subject: ${
-                  a.class || a.subject || "—"
-                }</p>
-              </div>
-              <span class="text-xs text-gray-400">Due: ${due}</span>`;
-              assignmentsList.appendChild(div);
+            <div>
+              <h4 class="font-semibold text-lg">${a.title || "Untitled"}</h4>
+              <p class="text-sm text-gray-600">Subject: ${
+                a.class || a.subject || "—"
+              }</p>
+            </div>
+            <span class="text-xs text-gray-400">Due: ${due}</span>`;
+              DOMElements.assignmentsList.appendChild(div);
             });
           }
         } catch (e) {
-          assignmentsList.innerHTML = `<p class="text-red-500 text-center">Failed to load assignments.</p>`;
+          DOMElements.assignmentsList.innerHTML = `<p class="text-red-500 text-center">Failed to load assignments.</p>`;
           console.error(e);
         } finally {
-          assignmentsLoading.classList.add("hidden");
+          DOMElements.assignmentsLoading.classList.add("hidden");
         }
       };
 
-      saveAssignmentBtn.addEventListener("click", async () => {
-        let ok = true;
-        if (!assignmentTitleInput.value.trim()) {
-          assignmentTitleError.textContent = "Assignment title is required.";
-          assignmentTitleError.classList.remove("hidden");
-          ok = false;
-        } else assignmentTitleError.classList.add("hidden");
-        if (!assignmentSubjectInput.value.trim()) {
-          assignmentSubjectError.textContent = "Subject is required.";
-          assignmentSubjectError.classList.remove("hidden");
-          ok = false;
-        } else assignmentSubjectError.classList.add("hidden");
-        if (!ok) return;
-
-        const payload = {
-          title: assignmentTitleInput.value.trim(),
-          description: "No description provided",
-          dueDate: new Date().toISOString(),
-          teacherId: userFromJWT?.userId || userFromJWT?.id || studentId,
-          schoolId: "school-001",
-          classId: assignmentSubjectInput.value.trim(),
-        };
-        try {
-          // POST /api/teacher/assignments  (adjust to your real route)
-          await post("/teacher/assignments", payload);
-          hideModal(assignmentModal);
-          showAlert("Success", "Assignment added successfully!");
-          fetchAssignments();
-        } catch (e) {
-          showAlert("Error", e.message || "Failed to add assignment.");
-        }
-      });
-      addAssignmentBtn.addEventListener("click", () =>
-        showModal(assignmentModal)
-      );
-      cancelAssignmentBtn.addEventListener("click", () =>
-        hideModal(assignmentModal)
-      );
-
-      async function fetchStudentFeedback(studentId) {
-        try {
-          const res = await fetch(`/api/student/feedback/${studentId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
-          });
-          if (!res.ok) throw new Error("Failed to fetch feedback.");
-          const data = await res.json();
-          renderFeedback(data.feedback);
-        } catch (err) {
-          alert("Error: " + err.message);
-        }
-      }
-
-      // ---------- QUIZZES ----------
-      const quizzesList = document.getElementById("quizzes-list");
-      const quizzesLoading = document.getElementById("quizzes-loading");
-
       const fetchQuizzes = async () => {
-        quizzesLoading.classList.remove("hidden");
-        quizzesList.innerHTML = "";
+        DOMElements.quizzesLoading.classList.remove("hidden");
+        DOMEElements.quizzesList.innerHTML = "";
         try {
-          // GET /api/student/quizzes/:studentId
           const resp = await get(`/student/quizzes/${studentId}`);
           const quizzes = resp.quizzes || [];
           if (quizzes.length === 0) {
-            quizzesList.innerHTML =
+            DOMElements.quizzesList.innerHTML =
               '<p class="italic text-gray-500 text-center">No quizzes assigned yet.</p>';
           } else {
             quizzes.forEach((q) => {
               const div = document.createElement("div");
               div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
               div.innerHTML = `
-          <h4 class="font-semibold text-lg mb-2">${q.title}</h4>
-          <p class="text-sm text-gray-600 mb-2">From: ${
-            q.teacherName || "Your teacher"
-          }</p>
-          <button class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors"
-            onclick="startQuiz('${q._id}')">
-            Start Quiz
-          </button>
-        `;
-              quizzesList.appendChild(div);
+            <h4 class="font-semibold text-lg mb-2">${q.title}</h4>
+            <p class="text-sm text-gray-600 mb-2">From: ${
+              q.teacherName || "Your teacher"
+            }</p>
+            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors" onclick="startQuiz('${
+              q._id
+            }')">
+              Start Quiz
+            </button>
+          `;
+              DOMElements.quizzesList.appendChild(div);
             });
           }
         } catch (e) {
-          quizzesList.innerHTML = `<p class="text-red-500 text-center">Failed to load quizzes.</p>`;
+          DOMElements.quizzesList.innerHTML = `<p class="text-red-500 text-center">Failed to load quizzes.</p>`;
           console.error(e);
         } finally {
-          quizzesLoading.classList.add("hidden");
+          DOMElements.quizzesLoading.classList.add("hidden");
         }
       };
 
-      async function startQuiz(quizId) {
-        window.location.href = `/public/student_quiz.html?quizId=${quizId}`;
-      }
-
-      function renderFeedback(feedbacks) {
-        const container = document.getElementById("feedback-list");
-        container.innerHTML = "";
-
-        feedbacks.forEach((fb) => {
-          const card = document.createElement("div");
-          card.className = "bg-white shadow rounded-lg p-4";
-
-          card.innerHTML = `
-      <p><strong>Assignment:</strong> ${fb.assignmentTitle}</p>
-      <p><strong>Submitted At:</strong> ${new Date(
-        fb.submittedAt
-      ).toLocaleString()}</p>
-      <p><strong>Grade:</strong> ${fb.grade ?? "Not graded yet"}</p>
-      <p><strong>Comments:</strong> ${fb.comments ?? "No comments yet"}</p>
-      ${
-        fb.feedbackFile
-          ? `<p><a href="${fb.feedbackFile}" target="_blank" class="text-blue-500 underline">📂 Download Feedback File</a></p>`
-          : ""
-      }
-    `;
-
-          container.appendChild(card);
-        });
-      }
-
-      // Call this after login or when student opens feedback tab
-      // fetchStudentFeedback(studentId);
-
-      // ---------- BUDGET ----------
       const fetchBudget = async () => {
-        budgetLoading.classList.remove("hidden");
-        budgetList.innerHTML = "";
+        DOMElements.budgetLoading.classList.remove("hidden");
+        DOMElements.budgetList.innerHTML = "";
         try {
-          // GET /api/budget
           const resp = await get("/budget");
           const budgets = resp.budgets || resp || [];
           if (budgets.length === 0) {
-            budgetList.innerHTML =
+            DOMElements.budgetList.innerHTML =
               '<p class="italic text-gray-500 text-center">No budget entries yet.</p>';
           } else {
             budgets.forEach((entry) => {
@@ -798,179 +735,50 @@
               div.className =
                 "bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm";
               div.innerHTML = `
-              <div>
-                <h4 class="font-semibold text-lg">${
-                  entry.description || entry.title || "Entry"
-                }</h4>
-                <p class="text-sm text-gray-600">${
-                  entry.type || (isIncome ? "income" : "expense")
-                }</p>
-              </div>
-              <span class="font-bold ${color}">${sign}${Math.abs(
+            <div>
+              <h4 class="font-semibold text-lg">${
+                entry.description || entry.title || "Entry"
+              }</h4>
+              <p class="text-sm text-gray-600">${
+                entry.type || (isIncome ? "income" : "expense")
+              }</p>
+            </div>
+            <span class="font-bold ${color}">${sign}${Math.abs(
                 entry.amount || 0
               ).toFixed(2)} GHS</span>`;
-              budgetList.appendChild(div);
+              DOMElements.budgetList.appendChild(div);
             });
           }
           drawAnalytics(budgets);
         } catch (e) {
-          budgetList.innerHTML = `<p class="text-red-500 text-center">Failed to load budget entries.</p>`;
+          DOMElements.budgetList.innerHTML = `<p class="text-red-500 text-center">Failed to load budget entries.</p>`;
           console.error(e);
         } finally {
-          budgetLoading.classList.add("hidden");
+          DOMElements.budgetLoading.classList.add("hidden");
         }
       };
 
-      saveBudgetBtn.addEventListener("click", async () => {
-        let ok = true;
-        if (!budgetTitleInput.value.trim()) {
-          budgetTitleError.textContent = "Title is required.";
-          budgetTitleError.classList.remove("hidden");
-          ok = false;
-        } else budgetTitleError.classList.add("hidden");
-        if (!budgetAmountInput.value.trim() || isNaN(budgetAmountInput.value)) {
-          budgetAmountError.textContent = "Valid amount is required.";
-          budgetAmountError.classList.remove("hidden");
-          ok = false;
-        } else budgetAmountError.classList.add("hidden");
-        if (!ok) return;
-
-        const amount = parseFloat(budgetAmountInput.value);
-        const payload = {
-          description: budgetTitleInput.value.trim(),
-          amount,
-          type: amount >= 0 ? "income" : "expense",
-        };
-        try {
-          // POST /api/budget
-          await post("/budget", payload);
-          hideModal(budgetModal);
-          showAlert("Success", "Budget entry added successfully!");
-          fetchBudget();
-        } catch (e) {
-          showAlert("Error", e.message || "Failed to add budget entry.");
-        }
-      });
-      addBudgetBtn.addEventListener("click", () => showModal(budgetModal));
-      cancelBudgetBtn.addEventListener("click", () => hideModal(budgetModal));
-
-      // ---------- GOALS (advancedGoals.js -> /api/rewards/goals) ----------
       const fetchGoal = async () => {
         try {
-          // GET /api/rewards/goals  (auth derives user)
           const resp = await get("/rewards/goals");
           const goals = resp.goals || [];
           if (goals.length > 0) {
             const latest = goals[goals.length - 1];
             const text = latest.description || "(no description)";
-            goalInput.value = text;
-            savedGoalText.textContent = `Saved: ${text}`;
-            savedGoalText.classList.remove("hidden");
+            DOMElements.goalInput.value = text;
+            DOMElements.savedGoalText.textContent = `Saved: ${text}`;
+            DOMElements.savedGoalText.classList.remove("hidden");
           } else {
-            savedGoalText.textContent = "No goal saved yet.";
-            savedGoalText.classList.remove("hidden");
+            DOMElements.savedGoalText.textContent = "No goal saved yet.";
+            DOMElements.savedGoalText.classList.remove("hidden");
           }
         } catch (e) {
-          savedGoalText.textContent = "Failed to load goal.";
-          savedGoalText.classList.remove("hidden");
+          DOMElements.savedGoalText.textContent = "Failed to load goal.";
+          DOMElements.savedGoalText.classList.remove("hidden");
           console.error(e);
         }
       };
 
-      const validateGoal = () => {
-        const g = goalInput.value.trim();
-        if (!g) {
-          goalErrorEl.textContent = "Weekly goal cannot be empty.";
-          goalErrorEl.classList.remove("hidden");
-          return false;
-        }
-        goalErrorEl.classList.add("hidden");
-        return true;
-      };
-
-      saveGoalBtn.addEventListener("click", async () => {
-        if (!validateGoal()) return;
-        // Joi schema requires: description, target_date, progress, type
-        const oneWeek = new Date(
-          Date.now() + 7 * 24 * 60 * 60 * 1000
-        ).toISOString();
-        const payload = {
-          description: goalInput.value.trim(),
-          target_date: oneWeek,
-          progress: 0,
-          type: "academic",
-          is_completed: false,
-          points: 0,
-        };
-        try {
-          // POST /api/rewards/goals
-          await post("/rewards/goals", payload);
-          showAlert("Success", "Weekly goal saved!");
-          fetchGoal();
-        } catch (e) {
-          showAlert("Error", e.message || "Failed to save goal.");
-        }
-      });
-
-      // ---------- AI INSIGHTS (advancedGoals.js -> /api/rewards/advice) ----------
-      let isSubscribed = false;
-      const trialUsageLimit = 3;
-      let currentUsage = 0;
-      subscriptionToggle.addEventListener("change", (e) => {
-        isSubscribed = e.target.checked;
-      });
-
-      const generateAiInsights = async () => {
-        insightsPlaceholder.classList.add("hidden");
-        insightsContent.classList.add("hidden");
-        insightsLoading.classList.remove("hidden");
-        generateInsightsBtn.disabled = true;
-
-        if (!isSubscribed) {
-          if (currentUsage >= trialUsageLimit) {
-            showAlert(
-              "Trial Expired",
-              "You reached your trial limit of 3 insights. Please subscribe to continue."
-            );
-            insightsLoading.classList.add("hidden");
-            generateInsightsBtn.disabled = false;
-            return;
-          }
-          currentUsage++;
-        }
-
-        try {
-          // ⚠️ UPDATED: Calling the new endpoint without a studentId parameter.
-          // The backend now gets the user ID from the JWT token.
-          const resp = await get(`/rewards/advice`);
-          const advice = resp.advice || {};
-          const study =
-            advice.studyAdvice || "Keep working hard on your goals!";
-          const spend =
-            advice.spendingAdvice ||
-            "Track your expenses to stay on top of your budget.";
-          insightsContent.innerHTML = `
-      <p class="mb-2"><span class="font-semibold">📚 Study:</span> ${study}</p>
-      <p><span class="font-semibold">💰 Spending:</span> ${spend}</p>`;
-          insightsContent.classList.remove("hidden");
-        } catch (e) {
-          console.error(e);
-          showAlert(
-            "API Error",
-            (e && e.message) ||
-              "Failed to generate insights. Please try again later."
-          );
-          insightsContent.textContent =
-            "Failed to load insights. Please try again.";
-          insightsContent.classList.remove("hidden");
-        } finally {
-          insightsLoading.classList.add("hidden");
-          generateInsightsBtn.disabled = false;
-        }
-      };
-      generateInsightsBtn.addEventListener("click", generateAiInsights);
-
-      // ---------- REWARDS (advancedGoals.js -> /api/rewards/:studentId) ----------
       const fetchRewards = async () => {
         try {
           const resp = await get(`/rewards/${studentId}`);
@@ -983,99 +791,111 @@
             treatSuggestions = [],
             premiumRewards = [],
           } = resp || {};
-          rewardsWrap.innerHTML = `
-      <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
-        <p class="font-semibold">Hey ${name || firstname}! ${
+
+          DOMElements.rewardsWrap.innerHTML = `
+        <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+          <p class="font-semibold">Hey ${name || firstname}! ${
             weeklyMessage || ""
           }</p>
-      </div>
-      <div>
-        <h4 class="font-semibold mb-2">🎖️ Badges</h4>
-        <div class="flex flex-wrap gap-2">${
-          badges.length
-            ? badges
-                .map(
-                  (b) =>
-                    `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">${b}</span>`
-                )
-                .join("")
-            : '<span class="text-gray-500">No badges yet.</span>'
-        }</div>
-      </div>
-      <div>
-        <h4 class="font-semibold mb-1">📜 Term Summary</h4>
-        <p class="text-gray-700">${
-          termSummary || "Keep going—rewards unlock with consistency."
-        }</p>
-        ${
-          termRewards.length
-            ? `<ul class="list-disc ml-6 mt-2">${termRewards
-                .map((r) => `<li>${r}</li>`)
-                .join("")}</ul>`
-            : ""
-        }
-      </div>
-      <div>
-        <h4 class="font-semibold mb-2">🎉 Treat Suggestions</h4>
-        <ul class="list-disc ml-6">${(treatSuggestions || [])
-          .slice(0, 6)
-          .map((t) => `<li>${t}</li>`)
-          .join("")}</ul>
-      </div>
-      <div>
-        <h4 class="font-semibold mb-2">🏅 Premium Rewards</h4>
-        ${
-          premiumRewards.length
-            ? premiumRewards
-                .map(
-                  (p) => `
-          <div class="border rounded-lg p-3 mb-2">
-            <div class="font-semibold">${p.name}</div>
-            <div class="text-sm text-gray-600 mb-1">${p.description}</div>
-            <div class="text-sm"><span class="font-semibold">Reward:</span> ${p.reward}</div>
-          </div>`
-                )
-                .join("")
-            : '<p class="text-gray-500">No premium rewards yet.</p>'
-        }
-      </div>
-    `;
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">🎖️ Badges</h4>
+          <div class="flex flex-wrap gap-2">${
+            badges.length
+              ? badges
+                  .map(
+                    (b) =>
+                      `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">${b}</span>`
+                  )
+                  .join("")
+              : '<span class="text-gray-500">No badges yet.</span>'
+          }</div>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-1">📜 Term Summary</h4>
+          <p class="text-gray-700">${
+            termSummary || "Keep going—rewards unlock with consistency."
+          }</p>
+          ${
+            termRewards.length
+              ? `<ul class="list-disc ml-6 mt-2">${termRewards
+                  .map((r) => `<li>${r}</li>`)
+                  .join("")}</ul>`
+              : ""
+          }
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">🎉 Treat Suggestions</h4>
+          <ul class="list-disc ml-6">${(treatSuggestions || [])
+            .slice(0, 6)
+            .map((t) => `<li>${t}</li>`)
+            .join("")}</ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-2">🏅 Premium Rewards</h4>
+          ${
+            premiumRewards.length
+              ? premiumRewards
+                  .map(
+                    (p) => `
+                <div class="border rounded-lg p-3 mb-2">
+                  <div class="font-semibold">${p.name}</div>
+                  <div class="text-sm text-gray-600 mb-1">${p.description}</div>
+                  <div class="text-sm"><span class="font-semibold">Reward:</span> ${p.reward}</div>
+                </div>`
+                  )
+                  .join("")
+              : '<p class="text-gray-500">No premium rewards yet.</p>'
+          }
+        </div>
+      `;
         } catch (e) {
           console.error(e);
-          rewardsWrap.innerHTML = `<p class="text-red-500 text-center">Failed to load rewards.</p>`;
+          DOMElements.rewardsWrap.innerHTML = `<p class="text-red-500 text-center">Failed to load rewards.</p>`;
         }
       };
-      // ---------- MENU / NAV ----------
-      document.addEventListener("click", (e) => {
-        if (e.target === menuModal) hideModal(menuModal);
-        if (e.target === assignmentModal) hideModal(assignmentModal);
-        if (e.target === budgetModal) hideModal(budgetModal);
-        if (e.target === alertModal) closeAlert();
-      });
-      menuBtn.addEventListener("click", () => {
-        showModal(menuModal);
-        menuContent.classList.remove("-translate-x-full");
-      });
-      closeMenuBtn.addEventListener("click", () => {
-        menuContent.classList.add("-translate-x-full");
-        setTimeout(() => hideModal(menuModal), 300);
-      });
-      const doLogout = () => {
-        localStorage.clear();
-        window.location.href = "/login.html";
-      };
-      logoutBtn.addEventListener("click", () =>
-        showAlert("Log Out", "Are you sure you want to log out?", doLogout)
-      );
-      menuLogoutBtn.addEventListener("click", () =>
-        showAlert("Log Out", "Are you sure you want to log out?", doLogout)
-      );
 
-      // ---------- CHART ----------
+      const fetchStudentFeedback = async () => {
+        try {
+          const res = await get(`/student/feedback/${studentId}`);
+          const data = res.feedback;
+          renderFeedback(data);
+        } catch (err) {
+          showAlert("Error", err.message || "Failed to fetch feedback.");
+        }
+      };
+
+      // --- RENDERING FUNCTIONS ---
+      function renderFeedback(feedbacks) {
+        DOMElements.feedbackList.innerHTML = "";
+        if (feedbacks.length === 0) {
+          DOMElements.feedbackList.innerHTML =
+            '<p class="italic text-gray-500 text-center">No feedback received yet.</p>';
+          return;
+        }
+        feedbacks.forEach((fb) => {
+          const card = document.createElement("div");
+          card.className = "bg-white shadow rounded-lg p-4";
+          card.innerHTML = `
+        <p><strong>Assignment:</strong> ${fb.assignmentTitle}</p>
+        <p><strong>Submitted At:</strong> ${new Date(
+          fb.submittedAt
+        ).toLocaleString()}</p>
+        <p><strong>Grade:</strong> ${fb.grade ?? "Not graded yet"}</p>
+        <p><strong>Comments:</strong> ${fb.comments ?? "No comments yet"}</p>
+        ${
+          fb.feedbackFile
+            ? `<p><a href="${fb.feedbackFile}" target="_blank" class="text-blue-500 underline">📂 Download Feedback File</a></p>`
+            : ""
+        }`;
+          DOMElements.feedbackList.appendChild(card);
+        });
+      }
+
       let chart;
       function drawAnalytics(budgets) {
         try {
-          const ctx = document.getElementById("analytics-chart");
+          const ctx = DOMElements.chartCanvas;
           const totals = budgets.reduce(
             (acc, b) => {
               const t = (b.type || "").toLowerCase();
@@ -1104,68 +924,310 @@
           console.warn("Chart error", e);
         }
       }
-      // Open contact form instead of email link
-      document.getElementById("contactLink").addEventListener("click", () => {
-        document.getElementById("contactModal").classList.remove("hidden");
-      });
 
-      // Close button
-      document.getElementById("closeContact").addEventListener("click", () => {
-        document.getElementById("contactModal").classList.add("hidden");
-      });
+      // --- API CALLS & HANDLERS ---
+      const handleSaveAssignment = async () => {
+        let ok = true;
+        if (!DOMElements.assignmentTitleInput.value.trim()) {
+          DOMElements.assignmentTitleError.textContent =
+            "Assignment title is required.";
+          DOMElements.assignmentTitleError.classList.remove("hidden");
+          ok = false;
+        } else DOMElements.assignmentTitleError.classList.add("hidden");
 
-      // Handle form submission
-      document
-        .getElementById("contactForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
+        if (!DOMElements.assignmentSubjectInput.value.trim()) {
+          DOMElements.assignmentSubjectError.textContent =
+            "Subject is required.";
+          DOMElements.assignmentSubjectError.classList.remove("hidden");
+          ok = false;
+        } else DOMElements.assignmentSubjectError.classList.add("hidden");
 
-          const payload = {
-            name: document.getElementById("contactName").value,
-            email: document.getElementById("contactEmail").value,
-            message: document.getElementById("contactMessage").value,
-          };
+        if (!ok) return;
 
-          try {
-            const res = await fetch(`${API_BASE}/contact`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
+        const payload = {
+          title: DOMElements.assignmentTitleInput.value.trim(),
+          description: "No description provided",
+          dueDate: new Date().toISOString(),
+          teacherId: studentId, // Using studentId as a placeholder for teacherId
+          schoolId: "school-001",
+          classId: DOMElements.assignmentSubjectInput.value.trim(),
+        };
+        try {
+          await post("/teacher/assignments", payload);
+          hideModal(DOMElements.assignmentModal);
+          showAlert("Success", "Assignment added successfully!");
+          fetchAssignments();
+        } catch (e) {
+          showAlert("Error", e.message || "Failed to add assignment.");
+        }
+      };
 
-            if (!res.ok) throw new Error("Failed to send message");
+      const handleSaveBudget = async () => {
+        let ok = true;
+        if (!DOMElements.budgetTitleInput.value.trim()) {
+          DOMElements.budgetTitleError.textContent = "Title is required.";
+          DOMElements.budgetTitleError.classList.remove("hidden");
+          ok = false;
+        } else DOMElements.budgetTitleError.classList.add("hidden");
 
-            showAlert("Success", "Your message has been sent!");
-            document.getElementById("contactModal").classList.add("hidden");
-            e.target.reset();
-          } catch (err) {
-            showAlert("Error", "Could not send message. Try again later.");
-            console.error(err);
-          }
-        });
+        if (
+          !DOMElements.budgetAmountInput.value.trim() ||
+          isNaN(DOMElements.budgetAmountInput.value)
+        ) {
+          DOMElements.budgetAmountError.textContent =
+            "Valid amount is required.";
+          DOMElements.budgetAmountError.classList.remove("hidden");
+          ok = false;
+        } else DOMElements.budgetAmountError.classList.add("hidden");
 
-      // ---------- INIT ----------
-      window.addEventListener("DOMContentLoaded", () => {
-        if (!token) {
-          showAlert(
-            "Not Authenticated",
-            "Please log in again.",
-            () => (window.location.href = "/login.html")
-          );
+        if (!ok) return;
+
+        const amount = parseFloat(DOMElements.budgetAmountInput.value);
+        const payload = {
+          description: DOMElements.budgetTitleInput.value.trim(),
+          amount,
+          type: amount >= 0 ? "income" : "expense",
+        };
+        try {
+          await post("/budget", payload);
+          hideModal(DOMElements.budgetModal);
+          showAlert("Success", "Budget entry added successfully!");
+          fetchBudget();
+        } catch (e) {
+          showAlert("Error", e.message || "Failed to add budget entry.");
+        }
+      };
+
+      const handleSaveGoal = async () => {
+        const goalText = DOMElements.goalInput.value.trim();
+        if (!goalText) {
+          DOMElements.goalErrorEl.textContent = "Weekly goal cannot be empty.";
+          DOMElements.goalErrorEl.classList.remove("hidden");
           return;
         }
-        if (!studentId) {
-          showAlert("Missing ID", "No student ID found in token/storage.");
+        DOMElements.goalErrorEl.classList.add("hidden");
+
+        const oneWeek = new Date(
+          Date.now() + 7 * 24 * 60 * 60 * 1000
+        ).toISOString();
+        const payload = {
+          description: goalText,
+          target_date: oneWeek,
+          progress: 0,
+          type: "academic",
+          is_completed: false,
+          points: 0,
+        };
+        try {
+          await post("/rewards/goals", payload);
+          showAlert("Success", "Weekly goal saved!");
+          fetchGoal();
+        } catch (e) {
+          showAlert("Error", e.message || "Failed to save goal.");
+        }
+      };
+
+      let isSubscribed = false;
+      const trialUsageLimit = 3;
+      let currentUsage = 0;
+
+      const generateAiInsights = async () => {
+        DOMElements.insightsPlaceholder.classList.add("hidden");
+        DOMElements.insightsContent.classList.add("hidden");
+        DOMElements.insightsLoading.classList.remove("hidden");
+        DOMElements.generateInsightsBtn.disabled = true;
+
+        if (!isSubscribed && currentUsage >= trialUsageLimit) {
+          showAlert(
+            "Trial Expired",
+            "You've reached your trial limit of 3 insights. Please subscribe to continue."
+          );
+          DOMElements.insightsLoading.classList.add("hidden");
+          DOMElements.generateInsightsBtn.disabled = false;
+          return;
         }
 
-        fetchAssignments();
-        fetchQuizzes(); // ⬅️ NEW
-        fetchBudget();
-        fetchGoal();
-        fetchRewards();
-      });
+        currentUsage++;
 
-      generateInsightsBtn.addEventListener("click", generateAiInsights);
+        try {
+          const resp = await get(`/rewards/advice`);
+          const advice = resp.advice || {};
+          const study =
+            advice.studyAdvice || "Keep working hard on your goals!";
+          const spend =
+            advice.spendingAdvice ||
+            "Track your expenses to stay on top of your budget.";
+          DOMElements.insightsContent.innerHTML = `
+        <p class="mb-2"><span class="font-semibold">📚 Study:</span> ${study}</p>
+        <p><span class="font-semibold">💰 Spending:</span> ${spend}</p>`;
+          DOMElements.insightsContent.classList.remove("hidden");
+        } catch (e) {
+          console.error(e);
+          showAlert(
+            "API Error",
+            e.message || "Failed to generate insights. Please try again later."
+          );
+          DOMElements.insightsContent.textContent =
+            "Failed to load insights. Please try again.";
+          DOMElements.insightsContent.classList.remove("hidden");
+        } finally {
+          DOMElements.insightsLoading.classList.add("hidden");
+          DOMElements.generateInsightsBtn.disabled = false;
+        }
+      };
+
+      const handleContactFormSubmit = async (e) => {
+        e.preventDefault();
+        const payload = {
+          name: DOMElements.contactName.value,
+          email: DOMElements.contactEmail.value,
+          message: DOMElements.contactMessage.value,
+        };
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/contact`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) throw new Error("Failed to send message");
+
+          showAlert("Success", "Your message has been sent!");
+          hideModal(DOMElements.contactModal);
+          DOMElements.contactForm.reset();
+        } catch (err) {
+          showAlert("Error", "Could not send message. Try again later.");
+          console.error(err);
+        }
+      };
+
+      const doLogout = async () => {
+        try {
+          await fetch(`${API_BASE_URL}/auth/logout`, {
+            method: "POST",
+            credentials: "include", // send cookies to clear them
+            headers: authHeaders(),
+          });
+        } catch (e) {
+          console.warn("Logout error:", e);
+        } finally {
+          // Redirect to login after server clears session
+          window.location.href = "/login.html";
+        }
+      };
+
+      function startQuiz(quizId) {
+        window.location.href = `/public/student_quiz.html?quizId=${quizId}`;
+      }
+
+      // --- EVENT LISTENERS (Centralized & Clean) ---
+      const setupEventListeners = () => {
+        // Modal Listeners
+        DOMElements.menuBtn.addEventListener("click", () => {
+          showModal(DOMElements.menuModal);
+          DOMElements.menuContent.classList.remove("-translate-x-full");
+        });
+        DOMElements.closeMenuBtn.addEventListener("click", () => {
+          DOMElements.menuContent.classList.add("-translate-x-full");
+          setTimeout(() => hideModal(DOMElements.menuModal), 300);
+        });
+        DOMElements.addAssignmentBtn.addEventListener("click", () =>
+          showModal(DOMElements.assignmentModal)
+        );
+        DOMElements.addBudgetBtn.addEventListener("click", () =>
+          showModal(DOMElements.budgetModal)
+        );
+        DOMElements.cancelAssignmentBtn.addEventListener("click", () =>
+          hideModal(DOMElements.assignmentModal)
+        );
+        DOMElements.cancelBudgetBtn.addEventListener("click", () =>
+          hideModal(DOMElements.budgetModal)
+        );
+        DOMElements.contactLink.addEventListener("click", () =>
+          showModal(DOMElements.contactModal)
+        );
+
+        // Global Modal Click to Close
+        document.addEventListener("click", (e) => {
+          if (e.target === DOMElements.menuModal)
+            hideModal(DOMElements.menuModal);
+          if (e.target === DOMElements.assignmentModal)
+            hideModal(DOMElements.assignmentModal);
+          if (e.target === DOMElements.budgetModal)
+            hideModal(DOMElements.budgetModal);
+          if (e.target === DOMElements.alertModal) closeAlert();
+          if (e.target === DOMElements.contactModal)
+            hideModal(DOMElements.contactModal);
+        });
+
+        // Button Actions
+        DOMElements.saveAssignmentBtn.addEventListener(
+          "click",
+          handleSaveAssignment
+        );
+        DOMElements.saveBudgetBtn.addEventListener("click", handleSaveBudget);
+        DOMElements.saveGoalBtn.addEventListener("click", handleSaveGoal);
+        DOMElements.logoutBtn.addEventListener("click", () =>
+          showAlert("Log Out", "Are you sure you want to log out?", doLogout)
+        );
+        DOMElements.menuLogoutBtn.addEventListener("click", () =>
+          showAlert("Log Out", "Are you sure you want to log out?", doLogout)
+        );
+        DOMElements.generateInsightsBtn.addEventListener(
+          "click",
+          generateAiInsights
+        );
+
+        // Alert Actions
+        DOMElements.alertConfirmBtn.addEventListener("click", () => {
+          if (alertConfirmAction) alertConfirmAction();
+          closeAlert();
+        });
+        DOMElements.alertCancelBtn.addEventListener("click", closeAlert);
+
+        // Contact Form
+        DOMElements.contactForm.addEventListener(
+          "submit",
+          handleContactFormSubmit
+        );
+
+        // Checkbox Toggles
+        DOMElements.subscriptionToggle.addEventListener("change", (e) => {
+          isSubscribed = e.target.checked;
+        });
+      };
+
+      // --- INITIALIZATION ---
+      const init = async () => {
+        // Wait for the DOM to be fully loaded
+        window.addEventListener("DOMContentLoaded", async () => {
+          try {
+            await fetchCsrfToken();
+            setupEventListeners();
+            await Promise.all([
+              fetchAssignments(),
+              fetchQuizzes(),
+              fetchBudget(),
+              fetchGoal(),
+              fetchRewards(),
+              fetchStudentFeedback(),
+            ]);
+          } catch (err) {
+            console.error("Initialization failed:", err);
+            showAlert(
+              "Error",
+              "Could not load dashboard. Please log in again.",
+              () => {
+                localStorage.clear();
+                window.location.href = "/login.html";
+              }
+            );
+          }
+        });
+      };
+
+      init();
     </script>
   </body>
 </html>

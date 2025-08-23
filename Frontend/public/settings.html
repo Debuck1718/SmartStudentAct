@@ -381,195 +381,260 @@
         <p class="footer">© 2025 SmartStudentAct</p>
     </div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- State Variables (Mimicking React's useState) ---
-        let userData = {}; // Will be populated by the API call
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- State Variables ---
+    let userData = {}; // Will be populated by the API
 
-        // --- DOM Elements ---
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const profileForm = document.getElementById('profile-form');
-        const saveProfileButton = document.getElementById('save-profile-button');
-        const studentFields = document.getElementById('student-fields');
-        const teacherFields = document.getElementById('teacher-fields');
-        const schoolLevelFields = document.getElementById('school-level-fields');
-        const universityLevelFields = document.getElementById('university-level-fields');
-        const educationLevelSelect = document.getElementById('educationLevel');
-        const backButton = document.getElementById('back-button');
-        const modal = document.getElementById('custom-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalMessage = document.getElementById('modal-message');
+    // --- DOM Elements ---
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const profileForm = document.getElementById('profile-form');
+    const saveProfileButton = document.getElementById('save-profile-button');
+    const studentFields = document.getElementById('student-fields');
+    const teacherFields = document.getElementById('teacher-fields');
+    const schoolLevelFields = document.getElementById('school-level-fields');
+    const universityLevelFields = document.getElementById('university-level-fields');
+    const educationLevelSelect = document.getElementById('educationLevel');
+    const backButton = document.getElementById('back-button');
+    const modal = document.getElementById('custom-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
 
-        // --- Custom Alert/Modal Functionality ---
-        function showModal(title, message) {
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            modal.style.display = 'flex';
-        }
+    // --- Custom Modal Functions ---
+    function showModal(title, message) {
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modal.style.display = 'flex';
+    }
 
-        function closeModal() {
-            modal.style.display = 'none';
-        }
-        window.closeModal = closeModal; // Make it globally accessible for onclick
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-        };
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+    window.closeModal = closeModal;
+    window.onclick = function(event) {
+        if (event.target == modal) closeModal();
+    };
 
-        // --- Helper Functions ---
-        const setUIState = (isLoading = false, isSaving = false) => {
-            loadingOverlay.classList.toggle('hidden', !isLoading);
-            saveProfileButton.disabled = isSaving;
-            saveProfileButton.innerHTML = isSaving ? '<div class="spinner-sm"></div>' : 'Save Profile Changes';
-        };
+    // --- UI Helpers ---
+    const setUIState = (isLoading = false, isSaving = false) => {
+        loadingOverlay.classList.toggle('hidden', !isLoading);
+        saveProfileButton.disabled = isSaving;
+        saveProfileButton.textContent = isSaving ? 'Saving...' : 'Save Profile Changes';
+    };
 
-        const displayErrors = (fieldErrors) => {
-            document.querySelectorAll('.error-text').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
-            
-            Object.keys(fieldErrors).forEach(key => {
-                const errorElement = document.getElementById(`${key}-error`);
-                const inputElement = document.getElementById(key);
+    const displayErrors = (fieldErrors) => {
+        document.querySelectorAll('.error-text').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
 
-                if (errorElement) {
-                    errorElement.textContent = fieldErrors[key];
-                    errorElement.classList.remove('hidden');
-                }
-                if (inputElement) {
-                    inputElement.classList.add('input-error');
-                }
-            });
-        };
-
-        const updateFormWithData = (data) => {
-            userData = data; // Store the fetched data
-            document.getElementById('firstName').value = userData.firstName || '';
-            document.getElementById('lastName').value = userData.lastName || '';
-            document.getElementById('email').value = userData.email || '';
-            document.getElementById('phone').value = userData.phone || '';
-            document.getElementById('occupation').value = userData.occupation ? userData.occupation.charAt(0).toUpperCase() + userData.occupation.slice(1) : '';
-
-            // Conditionally show/hide occupation-specific fields
-            const isStudent = userData.occupation === 'student';
-            const isTeacher = userData.occupation === 'teacher';
-            studentFields.classList.toggle('hidden', !isStudent);
-            teacherFields.classList.toggle('hidden', !isTeacher);
-            
-            if (isStudent) {
-                document.getElementById('educationLevel').value = userData.educationLevel || '';
-                const isSchoolStudent = ['junior', 'high'].includes(userData.educationLevel);
-                const isUniversityStudent = userData.educationLevel === 'university';
-                
-                schoolLevelFields.classList.toggle('hidden', !isSchoolStudent);
-                universityLevelFields.classList.toggle('hidden', !isUniversityStudent);
-
-                if (isSchoolStudent) {
-                    document.getElementById('grade').value = userData.grade || '';
-                    document.getElementById('schoolName').value = userData.schoolName || '';
-                } else if (isUniversityStudent) {
-                    document.getElementById('university').value = userData.university || '';
-                    document.getElementById('uniLevel').value = userData.uniLevel || '';
-                    document.getElementById('program').value = userData.program || '';
-                }
-            } else if (isTeacher) {
-                document.getElementById('teacherSchool').value = userData.teacherSchool || '';
-                document.getElementById('teacherGrade').value = userData.teacherGrade || '';
-            }
-        };
-
-        // --- Fetch and Populate Data on Page Load ---
-        async function fetchUserProfile() {
-            setUIState(true);
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login.html'; // Redirect if not authenticated
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/profile', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const data = await response.json();
-
-                if (response.ok) {
-                    updateFormWithData(data);
-                } else {
-                    showModal('Error', `Failed to load profile: ${data.message}`);
-                }
-            } catch (error) {
-                console.error('Fetch profile error:', error);
-                showModal('Error', 'An unexpected error occurred while loading your profile.');
-            } finally {
-                setUIState(false);
-            }
-        }
-
-        // --- Event Listeners ---
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            setUIState(false, true); // Set saving state
-
-            const token = localStorage.getItem('token');
-            const updateData = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                phone: document.getElementById('phone').value,
-            };
-
-            // Conditionally add student/teacher data
-            const occupation = userData.occupation;
-            if (occupation === 'student') {
-                updateData.educationLevel = document.getElementById('educationLevel').value;
-                if (['junior', 'high'].includes(updateData.educationLevel)) {
-                    updateData.grade = document.getElementById('grade').value;
-                    updateData.schoolName = document.getElementById('schoolName').value;
-                } else if (updateData.educationLevel === 'university') {
-                    updateData.university = document.getElementById('university').value;
-                    updateData.uniLevel = document.getElementById('uniLevel').value;
-                    updateData.program = document.getElementById('program').value;
-                }
-            } else if (occupation === 'teacher') {
-                updateData.teacherSchool = document.getElementById('teacherSchool').value;
-                updateData.teacherGrade = document.getElementById('teacherGrade').value;
-            }
-
-            try {
-                const response = await fetch('/api/profile', {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(updateData)
-                });
-
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showModal('Success', data.message);
-                    // Update the form with the new data from the backend
-                    updateFormWithData(data.user);
-                } else {
-                    displayErrors(data.errors || {});
-                    showModal('Error', data.message || 'Failed to update profile.');
-                }
-            } catch (error) {
-                console.error('Update profile error:', error);
-                showModal('Error', 'An unexpected error occurred. Please try again.');
-            } finally {
-                setUIState(false, false); // Reset state
-            }
+        Object.keys(fieldErrors).forEach(key => {
+            const errorEl = document.getElementById(`${key}-error`);
+            const inputEl = document.getElementById(key);
+            if(errorEl) { errorEl.textContent = fieldErrors[key]; errorEl.classList.remove('hidden'); }
+            if(inputEl) inputEl.classList.add('input-error');
         });
-        
-        // --- Initialization ---
-        fetchUserProfile();
+    };
+
+    const updateFormWithData = (data) => {
+        userData = data;
+        document.getElementById('firstName').value = userData.firstName || '';
+        document.getElementById('lastName').value = userData.lastName || '';
+        document.getElementById('email').value = userData.email || '';
+        document.getElementById('phone').value = userData.phone || '';
+        document.getElementById('occupation').value = userData.occupation || '';
+
+        // Show/hide occupation-specific fields
+        const isStudent = userData.occupation === 'student';
+        const isTeacher = userData.occupation === 'teacher';
+        studentFields.classList.toggle('hidden', !isStudent);
+        teacherFields.classList.toggle('hidden', !isTeacher);
+
+        if(isStudent) {
+            document.getElementById('educationLevel').value = userData.educationLevel || '';
+            const isSchoolStudent = ['junior','high'].includes(userData.educationLevel);
+            const isUniversityStudent = userData.educationLevel === 'university';
+            schoolLevelFields.classList.toggle('hidden', !isSchoolStudent);
+            universityLevelFields.classList.toggle('hidden', !isUniversityStudent);
+
+            if(isSchoolStudent) {
+                document.getElementById('grade').value = userData.grade || '';
+                document.getElementById('schoolName').value = userData.schoolName || '';
+            } else if(isUniversityStudent) {
+                document.getElementById('university').value = userData.university || '';
+                document.getElementById('uniLevel').value = userData.uniLevel || '';
+                document.getElementById('program').value = userData.program || '';
+            }
+        } else if(isTeacher) {
+            document.getElementById('teacherSchool').value = userData.teacherSchool || '';
+            document.getElementById('teacherGrade').value = userData.teacherGrade || '';
+        }
+    };
+
+    // --- Fetch User Profile ---
+    async function fetchUserProfile() {
+        setUIState(true);
+        try {
+            const res = await fetch('/api/profile', { credentials: 'include' });
+            const data = await res.json();
+            if(res.ok) {
+                updateFormWithData(data);
+            } else {
+                showModal('Error', data.message || 'Failed to load profile.');
+            }
+        } catch(err) {
+            console.error('Fetch profile error:', err);
+            showModal('Error', 'An unexpected error occurred while loading profile.');
+        } finally {
+            setUIState(false);
+        }
+    }
+
+    // --- Save Profile Handler ---
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setUIState(false,true);
+
+        const updateData = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            phone: document.getElementById('phone').value
+        };
+
+        const occupation = userData.occupation;
+        if(occupation==='student'){
+            updateData.educationLevel = document.getElementById('educationLevel').value;
+            if(['junior','high'].includes(updateData.educationLevel)){
+                updateData.grade = document.getElementById('grade').value;
+                updateData.schoolName = document.getElementById('schoolName').value;
+            } else if(updateData.educationLevel==='university'){
+                updateData.university = document.getElementById('university').value;
+                updateData.uniLevel = document.getElementById('uniLevel').value;
+                updateData.program = document.getElementById('program').value;
+            }
+        } else if(occupation==='teacher'){
+            updateData.teacherSchool = document.getElementById('teacherSchool').value;
+            updateData.teacherGrade = document.getElementById('teacherGrade').value;
+        }
+
+        try {
+            const res = await fetch('/api/profile', {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            });
+            const data = await res.json();
+            if(res.ok){
+                showModal('Success', data.message);
+                updateFormWithData(data.user);
+            } else {
+                displayErrors(data.errors || {});
+                showModal('Error', data.message || 'Failed to update profile.');
+            }
+        } catch(err){
+            console.error('Update profile error:', err);
+            showModal('Error','An unexpected error occurred. Please try again.');
+        } finally {
+            setUIState(false,false);
+        }
     });
 
-    // The rest of your existing JS logic for password change etc.
-    // can be placed here, but it's not directly related to the new API changes.
+    // --- Initialize ---
+    fetchUserProfile();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM Elements ---
+    const changePasswordButton = document.getElementById('change-password-button');
+    const passwordForm = document.getElementById('password-form');
+    const cancelPasswordButton = document.getElementById('cancel-password-button');
+    const submitPasswordButton = document.getElementById('submit-password-button');
+
+    const currentPasswordInput = document.getElementById('currentPassword');
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+
+    const currentPasswordError = document.getElementById('currentPassword-error');
+    const newPasswordError = document.getElementById('newPassword-error');
+    const confirmNewPasswordError = document.getElementById('confirmNewPassword-error');
+
+    // --- UI Helpers ---
+    const displayPasswordErrors = (errors) => {
+        [currentPasswordError, newPasswordError, confirmNewPasswordError].forEach(el => el.classList.add('hidden'));
+        [currentPasswordInput, newPasswordInput, confirmNewPasswordInput].forEach(el => el.classList.remove('input-error'));
+
+        Object.keys(errors).forEach(key => {
+            const errorEl = document.getElementById(`${key}-error`);
+            const inputEl = document.getElementById(key);
+            if(errorEl){ errorEl.textContent = errors[key]; errorEl.classList.remove('hidden'); }
+            if(inputEl) inputEl.classList.add('input-error');
+        });
+    };
+
+    const setPasswordUIState = (isSaving = false) => {
+        submitPasswordButton.disabled = isSaving;
+        submitPasswordButton.textContent = isSaving ? 'Saving...' : 'Submit New Password';
+    };
+
+    // --- Toggle Password Form ---
+    changePasswordButton.addEventListener('click', () => {
+        passwordForm.classList.remove('hidden');
+        changePasswordButton.parentElement.classList.add('hidden');
+    });
+
+    cancelPasswordButton.addEventListener('click', () => {
+        passwordForm.classList.add('hidden');
+        changePasswordButton.parentElement.classList.remove('hidden');
+        [currentPasswordInput, newPasswordInput, confirmNewPasswordInput].forEach(input => input.value = '');
+        [currentPasswordError, newPasswordError, confirmNewPasswordError].forEach(el => el.classList.add('hidden'));
+    });
+
+    // --- Submit Password Change ---
+    passwordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setPasswordUIState(true);
+
+        // Clear previous errors
+        displayPasswordErrors({});
+
+        const currentPassword = currentPasswordInput.value;
+        const newPassword = newPasswordInput.value;
+        const confirmNewPassword = confirmNewPasswordInput.value;
+
+        if(newPassword !== confirmNewPassword){
+            displayPasswordErrors({ confirmNewPassword: 'Passwords do not match.' });
+            setPasswordUIState(false);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+
+            const data = await res.json();
+
+            if(res.ok){
+                showModal('Success', data.message || 'Password updated successfully.');
+                // Clear the form
+                [currentPasswordInput, newPasswordInput, confirmNewPasswordInput].forEach(input => input.value = '');
+                passwordForm.classList.add('hidden');
+                changePasswordButton.parentElement.classList.remove('hidden');
+            } else {
+                if(data.errors) displayPasswordErrors(data.errors);
+                showModal('Error', data.message || 'Failed to update password.');
+            }
+        } catch(err){
+            console.error('Password change error:', err);
+            showModal('Error', 'An unexpected error occurred. Please try again.');
+        } finally {
+            setPasswordUIState(false);
+        }
+    });
+});
 </script>
+
+</body>
+</html>

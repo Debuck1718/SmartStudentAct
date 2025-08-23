@@ -4,95 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile</title>
-    <!-- Use the Inter font from Google Fonts -->
+    <!-- Inter font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Load Tailwind CSS from CDN for styling -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Apply the Inter font globally */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Custom styles not easily done with Tailwind */
-        .input:disabled {
-            background-color: #f3f4f6; /* bg-gray-100 */
-            color: #6b7280; /* text-gray-500 */
-            cursor: not-allowed;
-        }
-
-        .input-error {
-            border-color: #ef4444; /* border-red-500 */
-        }
-
+        body { font-family: 'Inter', sans-serif; }
+        .input:disabled { background-color: #f3f4f6; color: #6b7280; cursor: not-allowed; }
+        .input-error { border-color: #ef4444; }
         .message-box {
-            position: fixed;
-            bottom: 1.25rem;
-            right: 1.25rem;
-            z-index: 50;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            color: white;
-            font-weight: 600;
-            transform: translateX(100%);
-            transition: transform 300ms ease-in-out;
+            position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 50; padding: 1rem; border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05);
+            color: white; font-weight: 600; transform: translateX(100%); transition: transform 300ms ease-in-out;
         }
-
-        .message-box.show {
-            transform: translateX(0);
-        }
-
-        .message-box.success {
-            background-color: #22c55e; /* bg-green-500 */
-        }
-
-        .message-box.error {
-            background-color: #ef4444; /* bg-red-500 */
-        }
-
-        /* Picker styling for a more modern look */
-        .picker-container {
-            position: relative;
-            width: 100%;
-            border-radius: 0.5rem;
-            border-width: 1px;
-            border-color: #d1d5db; /* border-gray-300 */
-            overflow: hidden;
-            background-color: #ffffff; /* bg-white */
-            margin-bottom: 1rem;
-        }
-
-        .picker {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            width: 100%;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-            background-color: transparent;
-            outline: none;
-            border-width: 0;
-            cursor: pointer;
-        }
-
-        .picker-container::after {
-            content: '▼';
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af; /* text-gray-400 */
-            pointer-events: none;
-        }
+        .message-box.show { transform: translateX(0); }
+        .message-box.success { background-color: #22c55e; }
+        .message-box.error { background-color: #ef4444; }
+        .picker-container { position: relative; width: 100%; border-radius: 0.5rem; border: 1px solid #d1d5db; overflow: hidden; background-color: #fff; margin-bottom: 1rem; }
+        .picker { appearance: none; width: 100%; padding: 0.75rem 1rem; background-color: transparent; border: 0; outline: none; cursor: pointer; }
+        .picker-container::after { content: '▼'; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
     </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
 
-    <!-- Loading Screen (Initially visible) -->
+    <!-- Loading Screen -->
     <div id="loading-screen" class="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
         <div class="flex flex-col items-center">
             <svg class="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -105,581 +43,314 @@
 
     <!-- Main Profile Container -->
     <div id="profile-container" class="w-full max-w-2xl bg-white rounded-xl shadow-xl p-6 md:p-8 mt-8 opacity-0 transition-opacity duration-500">
+
         <!-- Back Button -->
         <button onclick="history.back()" class="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 mb-6 font-medium">
             <span class="text-xl mr-2">←</span> Back
         </button>
 
-        <!-- Title -->
-        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8">
-            <span class="align-middle">👤</span> My Profile
-        </h1>
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8">👤 My Profile</h1>
 
-        <!-- Profile Form -->
         <form id="profile-form" class="space-y-6">
 
-            <!-- Profile Picture Section (UPDATED) -->
+            <!-- Profile Picture -->
             <div class="flex flex-col items-center space-y-4 mb-8">
-                <!-- Image container with default avatar fallback -->
-                <img id="profile-picture-preview" 
-                        src="https://placehold.co/150x150/e5e7eb/4b5563?text=👤" 
-                        alt="Profile Picture" 
-                        class="w-36 h-36 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer transition-transform duration-300 transform hover:scale-105"
-                        onclick="document.getElementById('profile-picture-input').click()">
-                
-                <!-- Hidden file input -->
+                <img id="profile-picture-preview" src="https://placehold.co/150x150/e5e7eb/4b5563?text=👤" alt="Profile Picture" class="w-36 h-36 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer transition-transform duration-300 transform hover:scale-105" onclick="document.getElementById('profile-picture-input').click()">
                 <input type="file" id="profile-picture-input" class="hidden" accept="image/*" aria-label="Upload Profile Picture">
-                
-                <!-- Change picture button -->
-                <button type="button" 
-                        id="change-picture-btn"
-                        class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
-                    Change Picture
-                </button>
+                <button type="button" id="change-picture-btn" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">Change Picture</button>
             </div>
 
-            <!-- Personal Information Section -->
+            <!-- Personal Info -->
             <div class="space-y-4">
                 <h2 class="text-2xl font-bold text-blue-800 border-b-2 border-gray-200 pb-3">Personal Information</h2>
-
-                <!-- First Name -->
-                <div>
-                    <label for="firstName" class="block text-gray-700 font-semibold mb-2">First Name:</label>
-                    <input type="text" id="firstName" name="firstName" placeholder="First Name" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required aria-label="First Name input">
-                    <p id="firstName-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-
-                <!-- Last Name -->
-                <div>
-                    <label for="lastName" class="block text-gray-700 font-semibold mb-2">Last Name:</label>
-                    <input type="text" id="lastName" name="lastName" placeholder="Last Name" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required aria-label="Last Name input">
-                    <p id="lastName-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-
-                <!-- Email (Read-only) -->
-                <div>
-                    <label for="email" class="block text-gray-700 font-semibold mb-2">Email:</label>
-                    <input type="email" id="email" name="email" placeholder="Email" class="input w-full px-4 py-3 rounded-lg border focus:outline-none" readonly disabled aria-label="Email display">
-                </div>
-
-                <!-- Phone Number -->
-                <div>
-                    <label for="phone" class="block text-gray-700 font-semibold mb-2">Phone Number:</label>
-                    <input type="tel" id="phone" name="phone" placeholder="Phone Number" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required aria-label="Phone number input">
-                    <p id="phone-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-
-                <!-- Occupation (Read-only) -->
-                <div>
-                    <label for="occupation" class="block text-gray-700 font-semibold mb-2">Occupation:</label>
-                    <input type="text" id="occupation" name="occupation" placeholder="Occupation" class="input w-full px-4 py-3 rounded-lg border focus:outline-none" readonly disabled aria-label="Occupation display">
-                </div>
+                <div><label class="block text-gray-700 font-semibold mb-2">First Name:</label><input type="text" id="firstName" name="firstName" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"><p id="firstName-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
+                <div><label class="block text-gray-700 font-semibold mb-2">Last Name:</label><input type="text" id="lastName" name="lastName" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"><p id="lastName-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
+                <div><label class="block text-gray-700 font-semibold mb-2">Email:</label><input type="email" id="email" name="email" class="input w-full px-4 py-3 rounded-lg border" readonly disabled></div>
+                <div><label class="block text-gray-700 font-semibold mb-2">Phone:</label><input type="tel" id="phone" name="phone" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"><p id="phone-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
+                <div><label class="block text-gray-700 font-semibold mb-2">Occupation:</label><input type="text" id="occupation" name="occupation" class="input w-full px-4 py-3 rounded-lg border" readonly disabled></div>
             </div>
 
-            <!-- Conditional fields based on occupation -->
-            
-            <!-- Student Fields Section -->
+            <!-- Conditional Sections -->
             <div id="student-section" class="hidden space-y-4 pt-6 border-t border-gray-200">
                 <h3 class="text-xl font-semibold text-gray-700">Academic Details</h3>
-
-                <!-- Education Level -->
-                <div>
-                    <label for="educationLevel" class="block text-gray-700 font-semibold mb-2">Education Level:</label>
-                    <div class="picker-container">
-                        <select id="educationLevel" name="educationLevel" class="picker" aria-label="Select your education level">
-                            <option value="">Select Education Level</option>
-                            <option value="junior">Junior High</option>
-                            <option value="high">Senior High</option>
-                            <option value="university">University</option>
-                        </select>
-                    </div>
+                <div><label class="block text-gray-700 font-semibold mb-2">Education Level:</label>
+                    <div class="picker-container"><select id="educationLevel" name="educationLevel" class="picker"><option value="">Select Education Level</option><option value="junior">Junior High</option><option value="high">Senior High</option><option value="university">University</option></select></div>
                     <p id="educationLevel-error" class="text-red-500 text-sm mt-1 hidden"></p>
                 </div>
-
-                <!-- Junior/Senior High Fields -->
                 <div id="school-fields" class="space-y-4 hidden">
-                    <!-- Grade -->
-                    <div>
-                        <label for="grade" class="block text-gray-700 font-semibold mb-2">Grade:</label>
-                        <input type="text" id="grade" name="grade" placeholder="Grade" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Grade input">
-                        <p id="grade-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                    </div>
-                    <!-- School Name -->
-                    <div>
-                        <label for="schoolName" class="block text-gray-700 font-semibold mb-2">School Name:</label>
-                        <input type="text" id="schoolName" name="schoolName" placeholder="School Name" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="School Name input">
-                        <p id="schoolName-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                    </div>
+                    <div><label>Grade:</label><input type="text" id="grade" name="grade" class="input w-full px-4 py-3 rounded-lg border"><p id="grade-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
+                    <div><label>School Name:</label><input type="text" id="schoolName" name="schoolName" class="input w-full px-4 py-3 rounded-lg border"><p id="schoolName-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
                 </div>
-
-                <!-- University Fields -->
                 <div id="university-fields" class="space-y-4 hidden">
-                    <!-- University -->
-                    <div>
-                        <label for="university" class="block text-gray-700 font-semibold mb-2">University:</label>
-                        <input type="text" id="university" name="university" placeholder="University" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="University name input">
-                        <p id="university-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                    </div>
-                    <!-- University Level -->
-                    <div>
-                        <label for="uniLevel" class="block text-gray-700 font-semibold mb-2">University Level:</label>
-                        <input type="text" id="uniLevel" name="uniLevel" placeholder="e.g., Year 1, 200 Level" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="University level input">
-                        <p id="uniLevel-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                    </div>
-                    <!-- Program -->
-                    <div>
-                        <label for="program" class="block text-gray-700 font-semibold mb-2">Program:</label>
-                        <input type="text" id="program" name="program" placeholder="e.g., Computer Science" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Program input">
-                        <p id="program-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                    </div>
+                    <div><label>University:</label><input type="text" id="university" name="university" class="input w-full px-4 py-3 rounded-lg border"><p id="university-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
+                    <div><label>Level:</label><input type="text" id="uniLevel" name="uniLevel" class="input w-full px-4 py-3 rounded-lg border"><p id="uniLevel-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
+                    <div><label>Program:</label><input type="text" id="program" name="program" class="input w-full px-4 py-3 rounded-lg border"><p id="program-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
                 </div>
             </div>
 
-            <!-- Teacher Fields Section -->
             <div id="teacher-section" class="hidden space-y-4 pt-6 border-t border-gray-200">
                 <h3 class="text-xl font-semibold text-gray-700">Professional Details</h3>
-                <!-- Teacher School -->
-                <div>
-                    <label for="teacherSchool" class="block text-gray-700 font-semibold mb-2">School:</label>
-                    <input type="text" id="teacherSchool" name="teacherSchool" placeholder="School" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Teacher's school input">
-                    <p id="teacherSchool-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
-                <!-- Teacher Grade -->
-                <div>
-                    <label for="teacherGrade" class="block text-gray-700 font-semibold mb-2">Grade Taught:</label>
-                    <input type="text" id="teacherGrade" name="teacherGrade" placeholder="Grade Taught" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Grade taught input">
-                    <p id="teacherGrade-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
+                <div><label>School:</label><input type="text" id="teacherSchool" name="teacherSchool" class="input w-full px-4 py-3 rounded-lg border"><p id="teacherSchool-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
+                <div><label>Grade Taught:</label><input type="text" id="teacherGrade" name="teacherGrade" class="input w-full px-4 py-3 rounded-lg border"><p id="teacherGrade-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
             </div>
 
-            <!-- Admin Fields Section -->
             <div id="admin-section" class="hidden space-y-4 pt-6 border-t border-gray-200">
                 <h3 class="text-xl font-semibold text-gray-700">Admin School Details</h3>
-                <!-- Admin School -->
-                <div>
-                    <label for="adminSchool" class="block text-gray-700 font-semibold mb-2">Assigned School:</label>
-                    <input type="text" id="adminSchool" name="adminSchool" placeholder="Enter School Name" class="input w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Admin's school input">
-                    <p id="adminSchool-error" class="text-red-500 text-sm mt-1 hidden"></p>
-                </div>
+                <div><label>Assigned School:</label><input type="text" id="adminSchool" name="adminSchool" class="input w-full px-4 py-3 rounded-lg border"><p id="adminSchool-error" class="text-red-500 text-sm mt-1 hidden"></p></div>
             </div>
 
-            <!-- Save Button -->
-            <button type="submit" id="save-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all duration-300 transform active:scale-95 flex items-center justify-center">
+            <button type="submit" id="save-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md flex items-center justify-center transition-transform duration-200 transform active:scale-95">
                 <span id="save-button-text">Save Profile Changes</span>
-                <svg id="save-spinner" class="animate-spin h-5 w-5 text-white ml-3 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <svg id="save-spinner" class="animate-spin h-5 w-5 text-white ml-3 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             </button>
         </form>
 
-        <!-- Footer -->
         <p class="text-center text-gray-500 text-sm mt-8">© 2025 SmartStudentAct</p>
     </div>
 
-    <!-- Message Box for alerts -->
     <div id="message-box" class="message-box"></div>
 
-    <script>
-        // Self-contained JavaScript for all page logic
+<script>
+    // --- DOM References ---
+    const loadingScreen = document.getElementById('loading-screen');
+    const profileContainer = document.getElementById('profile-container');
+    const form = document.getElementById('profile-form');
+    const saveButton = document.getElementById('save-button');
+    const saveButtonText = document.getElementById('save-button-text');
+    const saveSpinner = document.getElementById('save-spinner');
+    const messageBox = document.getElementById('message-box');
+    const profilePicturePreview = document.getElementById('profile-picture-preview');
+    const profilePictureInput = document.getElementById('profile-picture-input');
+    const changePictureBtn = document.getElementById('change-picture-btn');
 
-        // --- DOM Element References ---
-        const loadingScreen = document.getElementById('loading-screen');
-        const profileContainer = document.getElementById('profile-container');
-        const form = document.getElementById('profile-form');
-        const saveButton = document.getElementById('save-button');
-        const saveButtonText = document.getElementById('save-button-text');
-        const saveSpinner = document.getElementById('save-spinner');
-        const messageBox = document.getElementById('message-box');
-        const profilePicturePreview = document.getElementById('profile-picture-preview');
-        const profilePictureInput = document.getElementById('profile-picture-input');
-        const changePictureBtn = document.getElementById('change-picture-btn');
-        
-        // --- State Management (equivalent to React's useState) ---
-        let userData = {
-            firstName: '', lastName: '', occupation: '', phone: '', email: '', profilePictureUrl: '',
-            educationLevel: '', grade: '', schoolName: '', university: '', uniLevel: '', program: '',
-            teacherSchool: '', teacherGrade: '', adminSchool: ''
-        };
-        let isSaving = false;
-        let isUploadingPhoto = false; // NEW: Separate state for photo upload
-        let errors = {};
+    // --- State ---
+    let userData = {};
+    let isSaving = false;
+    let isUploadingPhoto = false;
 
-        // --- IMPORTANT: CONFIGURATION ---
-        const API_BASE = 'https://smartstudentact.onrender.com'; // Replace with your actual backend URL
-        const JWT_TOKEN = '5d4272c6c967410b420770265749cd06e6d2dca3c00dcaa4ff1c6c9135f8f435'; // Replace with your user's JWT token
-        // ---------------------------------
+    // --- API Base ---
+    const API_BASE_URL = 'https://api.smartstudentact.com/api';
 
-        // --- Mock Data for Demonstration ---
-        // Added a profilePictureUrl to the mock data for demonstration
-        const mockUserData = {
-            student: {
-                firstName: 'Alice', lastName: 'Smith', occupation: 'student', phone: '123-456-7890', email: 'alice.s@example.com',
-                educationLevel: 'high', grade: '11', schoolName: 'Springfield High', university: '', uniLevel: '', program: '',
-                profilePictureUrl: 'https://placehold.co/150x150/d1d5db/374151?text=A'
-            },
-            teacher: {
-                firstName: 'Bob', lastName: 'Johnson', occupation: 'teacher', phone: '987-654-3210', email: 'bob.j@example.com',
-                teacherSchool: 'Oakwood Middle School', teacherGrade: '8', educationLevel: '', grade: '', schoolName: '', university: '', uniLevel: '', program: '',
-                profilePictureUrl: 'https://placehold.co/150x150/d1d5db/374151?text=B'
-            },
-            admin: {
-                firstName: 'Charlie', lastName: 'Brown', occupation: 'admin', phone: '555-123-4567', email: 'charlie.b@example.com',
-                adminSchool: 'District Office', educationLevel: '', grade: '', schoolName: '', university: '', uniLevel: '', program: '', teacherSchool: '', teacherGrade: '',
-                profilePictureUrl: 'https://placehold.co/150x150/d1d5db/374151?text=C'
-            }
-        };
+    // --- Utility: Show messages ---
+    const showMessage = (type, message) => {
+        messageBox.textContent = message;
+        messageBox.className = `message-box show ${type}`;
+        setTimeout(() => {
+            messageBox.classList.remove('show');
+        }, 3000);
+    };
 
-        // --- API Helper Function (Mocked) ---
-        /**
-         * Simulates an API call to a backend.
-         * In a real application, this would use `fetch()` to hit an endpoint.
-         *
-         * @param {string} url - The API endpoint to call.
-         * @param {object} options - Fetch options (e.g., method, headers, body).
-         * @returns {Promise<object>} A promise that resolves with mock response data.
-         */
-        const fetchAPI = (url, options = {}) => {
-            console.log(`Mock API call to: ${url}`);
-            console.log('Method:', options.method);
-            console.log('Body:', options.body ? JSON.parse(options.body) : 'N/A');
+    // --- Render form ---
+    const render = () => {
+        profilePicturePreview.src = userData.profile_picture_url || 'https://placehold.co/150x150/e5e7eb/4b5563?text=👤';
+        ['firstName','lastName','email','phone','occupation'].forEach(key => {
+            if(document.getElementById(key)) document.getElementById(key).value = userData[key] || '';
+        });
 
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    if (options.method === 'PUT' || url.includes('/profile')) {
-                        // Simulate a successful update after a short delay
-                        resolve({
-                            ok: true,
-                            json: () => Promise.resolve({ message: 'Profile updated successfully' })
-                        });
-                    } else {
-                        reject(new Error('Invalid mock API endpoint or method.'));
-                    }
-                }, 1000); // Simulate network latency
-            });
-        };
+        // Show/hide sections
+        const studentSection = document.getElementById('student-section');
+        const teacherSection = document.getElementById('teacher-section');
+        const adminSection = document.getElementById('admin-section');
+        studentSection.classList.add('hidden');
+        teacherSection.classList.add('hidden');
+        adminSection.classList.add('hidden');
 
-        // --- DOM Rendering and State Update Functions ---
-
-        /**
-         * Updates the UI based on the current `userData` state.
-         * This function is the core of the client-side rendering.
-         */
-        const render = () => {
-            // Update profile picture
-            profilePicturePreview.src = userData.profilePictureUrl || 'https://placehold.co/150x150/e5e7eb/4b5563?text=👤';
-
-            // Update personal information fields
-            document.getElementById('firstName').value = userData.firstName || '';
-            document.getElementById('lastName').value = userData.lastName || '';
-            document.getElementById('email').value = userData.email || '';
-            document.getElementById('phone').value = userData.phone || '';
-            document.getElementById('occupation').value = userData.occupation ? userData.occupation.charAt(0).toUpperCase() + userData.occupation.slice(1) : '';
-
-            // Update conditional sections and their inputs
-            const studentSection = document.getElementById('student-section');
-            const teacherSection = document.getElementById('teacher-section');
-            const adminSection = document.getElementById('admin-section');
-            const schoolFields = document.getElementById('school-fields');
-            const universityFields = document.getElementById('university-fields');
-            
-            // Hide all conditional sections initially
-            studentSection.classList.add('hidden');
-            teacherSection.classList.add('hidden');
-            adminSection.classList.add('hidden');
-            
-            // Show the correct section based on occupation
-            switch (userData.occupation) {
-                case 'student':
-                    studentSection.classList.remove('hidden');
-                    document.getElementById('educationLevel').value = userData.educationLevel || '';
-                    
-                    // Show correct student sub-section
-                    schoolFields.classList.add('hidden');
-                    universityFields.classList.add('hidden');
-                    if (['junior', 'high'].includes(userData.educationLevel)) {
-                        schoolFields.classList.remove('hidden');
-                        document.getElementById('grade').value = userData.grade || '';
-                        document.getElementById('schoolName').value = userData.schoolName || '';
-                    } else if (userData.educationLevel === 'university') {
-                        universityFields.classList.remove('hidden');
-                        document.getElementById('university').value = userData.university || '';
-                        document.getElementById('uniLevel').value = userData.uniLevel || '';
-                        document.getElementById('program').value = userData.program || '';
-                    }
-                    break;
-                case 'teacher':
-                    teacherSection.classList.remove('hidden');
-                    document.getElementById('teacherSchool').value = userData.teacherSchool || '';
-                    document.getElementById('teacherGrade').value = userData.teacherGrade || '';
-                    break;
-                case 'admin':
-                    adminSection.classList.remove('hidden');
-                    document.getElementById('adminSchool').value = userData.adminSchool || '';
-                    break;
-            }
-
-            // Update disabled/enabled states based on isSaving and isUploadingPhoto
-            const allInputs = form.querySelectorAll('input, select, button');
-            allInputs.forEach(input => {
-                if (input.id !== 'email' && input.id !== 'occupation') {
-                    // Disable all inputs while either operation is in progress
-                    input.disabled = isSaving || isUploadingPhoto;
+        switch(userData.occupation){
+            case 'student':
+                studentSection.classList.remove('hidden');
+                document.getElementById('educationLevel').value = userData.educationLevel || '';
+                const schoolFields = document.getElementById('school-fields');
+                const universityFields = document.getElementById('university-fields');
+                schoolFields.classList.add('hidden'); universityFields.classList.add('hidden');
+                if(['junior','high'].includes(userData.educationLevel)){
+                    schoolFields.classList.remove('hidden');
+                    document.getElementById('grade').value = userData.grade || '';
+                    document.getElementById('schoolName').value = userData.schoolName || '';
+                } else if(userData.educationLevel==='university'){
+                    universityFields.classList.remove('hidden');
+                    document.getElementById('university').value = userData.university || '';
+                    document.getElementById('uniLevel').value = userData.uniLevel || '';
+                    document.getElementById('program').value = userData.program || '';
                 }
+                break;
+            case 'teacher':
+                teacherSection.classList.remove('hidden');
+                document.getElementById('teacherSchool').value = userData.teacherSchool || '';
+                document.getElementById('teacherGrade').value = userData.teacherGrade || '';
+                break;
+            case 'admin':
+                adminSection.classList.remove('hidden');
+                document.getElementById('adminSchool').value = userData.adminSchool || '';
+                break;
+        }
+
+        // Disable inputs while saving/uploading
+        form.querySelectorAll('input, select, button').forEach(input=>{
+            if(input.id!=='email' && input.id!=='occupation'){
+                input.disabled = isSaving || isUploadingPhoto;
+            }
+        });
+
+        // Update save button
+        if(isSaving){
+            saveButtonText.textContent='Saving...';
+            saveSpinner.classList.remove('hidden');
+            saveButton.classList.add('cursor-not-allowed','opacity-75');
+        } else {
+            saveButtonText.textContent='Save Profile Changes';
+            saveSpinner.classList.add('hidden');
+            saveButton.classList.remove('cursor-not-allowed','opacity-75');
+        }
+    };
+
+    // --- Validation ---
+    const validateField = (key, value) => {
+        const errorElement = document.getElementById(`${key}-error`);
+        if(!errorElement) return true;
+        let error = '';
+        switch(key){
+            case 'firstName':
+            case 'lastName':
+                if(!value.trim()) error=`${key} is required.`; break;
+            case 'phone':
+                if(!value.trim()) error='Phone number is required.';
+                else if(!/^\+?[0-9]{7,15}$/.test(value)) error='Invalid phone number format.';
+                break;
+            case 'educationLevel':
+                if(userData.occupation==='student' && !value) error='Education Level is required.'; break;
+            case 'grade':
+            case 'schoolName':
+                if(['junior','high'].includes(userData.educationLevel) && !value.trim()) error=`${key} is required.`; break;
+            case 'university':
+            case 'uniLevel':
+            case 'program':
+                if(userData.educationLevel==='university' && !value.trim()) error=`${key} is required.`; break;
+            case 'teacherSchool':
+            case 'teacherGrade':
+                if(userData.occupation==='teacher' && !value.trim()) error=`${key} is required.`; break;
+            case 'adminSchool':
+                if(userData.occupation==='admin' && !value.trim()) error='School name is required.'; break;
+        }
+        if(error){
+            errorElement.textContent=error;
+            errorElement.classList.remove('hidden');
+            document.getElementById(key).classList.add('input-error');
+            return false;
+        } else {
+            errorElement.classList.add('hidden');
+            document.getElementById(key).classList.remove('input-error');
+            return true;
+        }
+    };
+
+    // --- Event Handlers ---
+    const handleInputChange = (e)=>{
+        const {name,value} = e.target;
+        userData[name] = value;
+        render();
+    };
+
+    const handlePhotoUpload = async (e)=>{
+        const file = e.target.files[0];
+        if(!file){ showMessage('error','No file selected.'); return; }
+        const reader = new FileReader();
+        reader.onload = (ev)=>{ userData.profile_picture_url = ev.target.result; render(); };
+        reader.readAsDataURL(file);
+        isUploadingPhoto = true;
+        render();
+        showMessage('success','Uploading photo...');
+        try {
+            const formData = new FormData();
+            formData.append('profilePhoto', file);
+            const res = await fetch(`${API_BASE}/profile/upload-photo`,{
+                method:'POST',
+                credentials:'include',
+                body:formData
             });
-
-            // Update save button UI
-            if (isSaving) {
-                saveButtonText.textContent = 'Saving...';
-                saveSpinner.classList.remove('hidden');
-                saveButton.classList.add('cursor-not-allowed', 'opacity-75');
-            } else {
-                saveButtonText.textContent = 'Save Profile Changes';
-                saveSpinner.classList.add('hidden');
-                saveButton.classList.remove('cursor-not-allowed', 'opacity-75');
-            }
-        };
-
-        /**
-         * Displays a custom message box instead of using `alert()`.
-         * @param {string} type - 'success' or 'error'.
-         * @param {string} message - The message to display.
-         */
-        const showMessage = (type, message) => {
-            messageBox.textContent = message;
-            messageBox.className = `message-box show ${type}`;
-            setTimeout(() => {
-                messageBox.classList.remove('show');
-            }, 3000);
-        };
-
-        // --- Validation Logic ---
-        
-        /**
-         * Validates a single form field and updates the UI.
-         * @param {string} key - The field name.
-         * @param {string} value - The field value.
-         * @returns {boolean} - True if valid, false otherwise.
-         */
-        const validateField = (key, value) => {
-            const errorElement = document.getElementById(`${key}-error`);
-            if (!errorElement) return true; // Skip validation for non-existent error elements
-            
-            let error = '';
-
-            switch (key) {
-                case 'firstName':
-                case 'lastName':
-                    if (!value.trim()) error = `${key.replace(/([A-Z])/g, ' $1').trim()} is required.`;
-                    break;
-                case 'phone':
-                    if (!value.trim()) error = 'Phone number is required.';
-                    else if (!/^\+?[0-9]{7,15}$/.test(value)) error = 'Invalid phone number format.';
-                    break;
-                case 'educationLevel':
-                    if (userData.occupation === 'student' && !value) error = 'Education Level is required.';
-                    break;
-                case 'grade':
-                case 'schoolName':
-                    if (['junior', 'high'].includes(userData.educationLevel) && !value.trim()) error = `${key.replace(/([A-Z])/g, ' $1').trim()} is required.`;
-                    break;
-                case 'university':
-                case 'uniLevel':
-                case 'program':
-                    if (userData.educationLevel === 'university' && !value.trim()) error = `${key.replace(/([A-Z])/g, ' $1').trim()} is required.`;
-                    break;
-                case 'teacherSchool':
-                case 'teacherGrade':
-                    if (userData.occupation === 'teacher' && !value.trim()) error = `${key.replace(/([A-Z])/g, ' $1').trim()} is required.`;
-                    break;
-                case 'adminSchool':
-                    if (userData.occupation === 'admin' && !value.trim()) error = 'School name is required.';
-                    break;
-            }
-
-            if (error) {
-                errorElement.textContent = error;
-                errorElement.classList.remove('hidden');
-                document.getElementById(key).classList.add('input-error');
-                return false;
-            } else {
-                errorElement.classList.add('hidden');
-                document.getElementById(key).classList.remove('input-error');
-                return true;
-            }
-        };
-
-        // --- Event Handlers ---
-
-        /**
-         * Handles input changes and updates the global state.
-         * @param {Event} event - The input event.
-         */
-        const handleInputChange = (event) => {
-            const { name, value } = event.target;
-            userData = { ...userData, [name]: value };
-            render(); // Re-render the form to update conditional fields
-        };
-
-        /**
-         * Handles the photo upload process.
-         * This function is triggered when a user selects a file.
-         * @param {Event} event - The file input change event.
-         */
-        const handlePhotoUpload = async (event) => {
-            const file = event.target.files[0];
-            if (!file) {
-                showMessage('error', 'No file selected.');
-                return;
-            }
-
-            // Display a local preview immediately
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                userData.profilePictureUrl = e.target.result;
-                render();
-            };
-            reader.readAsDataURL(file);
-
-            // Set the uploading state and disable inputs
-            isUploadingPhoto = true;
+            const result = await res.json();
+            if(!res.ok) throw new Error(result.message || 'Upload failed.');
+            userData.profile_picture_url = result.photoUrl;
+            showMessage('success','Photo uploaded successfully!');
+        } catch(err){
+            console.error(err);
+            showMessage('error',err.message);
+        } finally {
+            isUploadingPhoto=false;
             render();
-            showMessage('success', 'Uploading photo...');
+        }
+    };
 
-            try {
-                const formData = new FormData();
-                formData.append('profilePhoto', file); // 'profilePhoto' matches the key in multer.single()
+    const handleSaveProfile = async (e)=>{
+        e.preventDefault();
+        const fields=['firstName','lastName','phone'];
+        if(userData.occupation==='student'){
+            fields.push('educationLevel');
+            if(['junior','high'].includes(userData.educationLevel)) fields.push('grade','schoolName');
+            else if(userData.educationLevel==='university') fields.push('university','uniLevel','program');
+        } else if(userData.occupation==='teacher') fields.push('teacherSchool','teacherGrade');
+        else if(userData.occupation==='admin') fields.push('adminSchool');
 
-                const response = await fetch(`${API_BASE}/profile/upload-photo`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${JWT_TOKEN}` // Send JWT for user authentication
-                    },
-                    body: formData,
-                });
+        let valid=true;
+        fields.forEach(f=>{ if(!validateField(f,userData[f]||'')) valid=false; });
+        if(!valid){ showMessage('error','Please fix the errors.'); return; }
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Photo upload failed.');
-                }
-
-                const result = await response.json();
-                
-                // Update the state with the permanent URL from the server
-                userData.profilePictureUrl = result.photoUrl;
-                showMessage('success', 'Photo uploaded successfully!');
-                
-            } catch (error) {
-                console.error('Upload Error:', error);
-                showMessage('error', `Upload Failed: ${error.message}`);
-            } finally {
-                // Reset the uploading state
-                isUploadingPhoto = false;
-                render();
-            }
-        };
-
-        /**
-         * Handles form submission to save the profile.
-         * @param {Event} event - The form submit event.
-         */
-        const handleSaveProfile = async (event) => {
-            event.preventDefault();
-
-            // Run validation on all relevant fields
-            const fieldsToValidate = ['firstName', 'lastName', 'phone'];
-            if (userData.occupation === 'student') {
-                fieldsToValidate.push('educationLevel');
-                if (['junior', 'high'].includes(userData.educationLevel)) {
-                    fieldsToValidate.push('grade', 'schoolName');
-                } else if (userData.educationLevel === 'university') {
-                    fieldsToValidate.push('university', 'uniLevel', 'program');
-                }
-            } else if (userData.occupation === 'teacher') {
-                fieldsToValidate.push('teacherSchool', 'teacherGrade');
-            } else if (userData.occupation === 'admin') {
-                fieldsToValidate.push('adminSchool');
-            }
-
-            let formIsValid = true;
-            fieldsToValidate.forEach(key => {
-                if (!validateField(key, userData[key] || '')) {
-                    formIsValid = false;
-                }
+        isSaving=true;
+        render();
+        try {
+            const res = await fetch(`${API_BASE}/profile`,{
+                method:'PATCH',
+                credentials:'include',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify(userData)
             });
-
-            if (!formIsValid) {
-                showMessage('error', 'Please correct the errors in your profile information.');
-                return;
+            const result = await res.json();
+            if(res.ok){
+                showMessage('success','Profile updated successfully!');
+                userData = {...userData,...result.user}; // sync updated fields
+            } else {
+                showMessage('error',result.message || 'Failed to update profile.');
             }
-
-            // Simulate saving state
-            isSaving = true;
+        } catch(err){
+            console.error(err);
+            showMessage('error','Could not save profile.');
+        } finally {
+            isSaving=false;
             render();
+        }
+    };
 
-            try {
-                // Mock API call to save profile
-                const res = await fetchAPI('/api/user/profile', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                });
-
-                if (res.ok) {
-                    showMessage('success', 'Profile updated successfully!');
-                } else {
-                    const errorResult = await res.json();
-                    showMessage('error', errorResult.message || 'Failed to update profile.');
-                }
-            } catch (err) {
-                console.error(err);
-                showMessage('error', 'Could not save profile changes.');
-            } finally {
-                isSaving = false;
-                render();
+    // --- Initialization ---
+    const init = async ()=>{
+        try {
+            const res = await fetch(`${API_BASE}/profile`,{credentials:'include'});
+            if(res.ok){
+                userData = await res.json();
+            } else {
+                showMessage('error','Failed to load profile.');
             }
-        };
-
-        // --- Initialization ---
-        
-        /**
-         * Initial function to set up the page.
-         */
-        const init = async () => {
-            // Simulate fetching user data by picking a random user type
-            const userTypes = ['student', 'teacher', 'admin'];
-            const randomUserType = userTypes[Math.floor(Math.random() * userTypes.length)];
-            userData = { ...userData, ...mockUserData[randomUserType] };
-            
-            // Wait a moment to show the loading spinner
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Populate the form and show the UI
+        } catch(err){
+            console.error(err);
+            showMessage('error','Could not fetch profile.');
+        } finally {
             render();
             loadingScreen.classList.add('opacity-0');
             profileContainer.classList.remove('opacity-0');
-            setTimeout(() => {
-                loadingScreen.classList.add('hidden');
-            }, 500);
+            setTimeout(()=>{ loadingScreen.classList.add('hidden'); },500);
+        }
 
-            // Add event listeners
-            form.addEventListener('submit', handleSaveProfile);
-            form.addEventListener('input', handleInputChange);
-            profilePictureInput.addEventListener('change', handlePhotoUpload); // Use the new upload handler
-            changePictureBtn.addEventListener('click', () => {
-                profilePictureInput.click();
-            });
-            form.addEventListener('blur', (e) => {
-                // Blur event listener logic remains the same
-                const { name, value } = e.target;
-                if (name && userData[name] !== undefined) {
-                    validateField(name, value);
-                }
-            }, true);
-        };
+        form.addEventListener('submit',handleSaveProfile);
+        form.addEventListener('input',handleInputChange);
+        profilePictureInput.addEventListener('change',handlePhotoUpload);
+        changePictureBtn.addEventListener('click',()=>{ profilePictureInput.click(); });
+        form.addEventListener('blur',e=>{
+            const {name,value}=e.target;
+            if(name && userData[name]!==undefined) validateField(name,value);
+        },true);
+    };
 
-        window.onload = init;
-    </script>
+    window.onload=init;
+</script>
+
 </body>
 </html>
 
