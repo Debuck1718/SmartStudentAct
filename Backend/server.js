@@ -10,9 +10,10 @@ const EventEmitter = require("events");
 const eventBus = new EventEmitter();
 const cloudinary = require("cloudinary").v2;
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const crypto = require("crypto");
 
-// ✅ CSRF middleware
+// ✅ CSRF middleware (automatic token injection & validation)
 const csrfProtection = require("./middlewares/csrf");
 
 // ───────────────────────────────────────────────
@@ -51,7 +52,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow server-to-server
+      if (!origin) return callback(null, true); // server-to-server
       if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("Not allowed by CORS"));
     },
@@ -64,30 +65,25 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Session Middleware
+// ✅ Session Middleware with MongoStore
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: MONGO_URI,
+      collectionName: "sessions",
+      ttl: 14 * 24 * 60 * 60, // 14 days
+    }),
     cookie: {
-      secure: process.env.NODE_ENV === "production", // Only HTTPS in prod
-      httpOnly: true, // prevent JS access
-      sameSite: "strict", // prevent CSRF
-      domain: ".smartstudentact.com", // allow api.smartstudentact.com + main domain
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "strict",
+      domain: ".smartstudentact.com",
     },
   })
 );
-
-// ───────────────────────────────────────────────
-// 2️⃣½ CSRF Token Generator Route
-// ───────────────────────────────────────────────
-app.get("/csrf-token", (req, res) => {
-  if (!req.session.csrfToken) {
-    req.session.csrfToken = crypto.randomBytes(32).toString("hex");
-  }
-  res.json({ csrfToken: req.session.csrfToken });
-});
 
 // ───────────────────────────────────────────────
 // 3️⃣ Cloudinary Configuration
@@ -105,7 +101,7 @@ try {
 }
 
 // ───────────────────────────────────────────────
-// 4️⃣ MongoDB Connection with Logging
+// 4️⃣ MongoDB Connection
 // ───────────────────────────────────────────────
 async function connectMongo() {
   try {
@@ -146,11 +142,8 @@ async function startAgenda() {
 // ───────────────────────────────────────────────
 try {
   const loadRoutes = require("./routes");
-
-  // Load all routes
   loadRoutes(app, eventBus, agenda);
 
-  // Apply CSRF only to protected routes
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", csrfProtection, protectedRoutes);
 
@@ -194,4 +187,3 @@ app.use((err, req, res, next) => {
     process.exit(1);
   }
 })();
-
