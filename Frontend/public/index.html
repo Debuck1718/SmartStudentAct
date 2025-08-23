@@ -6,6 +6,16 @@
     <title>SmartStudentAct</title>
     <!-- Use Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google tag (gtag.js) -->
+    <!-- Place this script at the top of the <head> section -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-EWMR745QHX');
+    </script>
     <style>
         /* Custom styles to match the React Native design */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -16,7 +26,7 @@
 
         /* Replicate the background image behavior with CSS */
         .background-image-container {
-            background-image: url("/images/bg.png");
+            background-image: url("./images/bg.png");
             background-size: cover;
             background-position: center;
             min-height: 100vh;
@@ -47,7 +57,6 @@
             max-width: 80%;
             text-align: center;
         }
-        
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -122,7 +131,7 @@
         const alertModal = document.getElementById('alert-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
-        
+
         // Function to show the custom alert modal
         function showAlert(title, message) {
             modalTitle.textContent = title;
@@ -137,20 +146,20 @@
 
         // Attach event listeners to the buttons
         document.getElementById('signInBtn').addEventListener('click', () => {
-            // Replace useRouter push with a standard link
-            window.location.href = '/login.html'; // Using a hash for a single-page app feel
+            showAlert("Coming Soon", "The Sign In functionality is not yet implemented.");
         });
 
         document.getElementById('signUpBtn').addEventListener('click', () => {
-            // Replace useRouter push with a standard link
-            window.location.href = '/signup.html';
+            showAlert("Coming Soon", "The Sign Up functionality is not yet implemented.");
         });
 
         document.getElementById('aboutLink').addEventListener('click', () => {
-            // Replace the alert() with the custom modal
-            window.location.href = '/aboutus.html'
+            showAlert("About Us", "SmartStudentAct is designed to help students and teachers. More info coming soon!");
         });
-        
+
+        document.getElementById('contactLink').addEventListener('click', () => {
+            showAlert("Contact Us", "For support, please contact us at support@smartstudentact.com");
+        });
     </script>
 </body>
 </html>
