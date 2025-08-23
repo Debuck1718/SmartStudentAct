@@ -23,7 +23,7 @@
             display: flex;
             flex-direction: column;
         }
-        .input {
+        .input, .picker {
             background-color: #fff;
             padding: 12px;
             border-radius: 8px;
@@ -33,7 +33,7 @@
             font-size: 16px;
             width: 100%;
         }
-        .input.error {
+        .input.error, .picker.error {
             border-color: red;
         }
         .error-text {
@@ -131,7 +131,6 @@
             clip: rect(0,0,0,0);
             border: 0;
         }
-        /* Corrected the CSS property for the transition */
         #messageBox { transition: opacity 0.3s; }
     </style>
 </head>
@@ -158,6 +157,258 @@
             </select>
         </div>
         <p id="occupationError" class="error-text hidden"></p>
+        
+        <!-- Updated: School Country is now a dropdown with all countries -->
+        <div id="schoolCountryField" class="picker-container hidden">
+            <label class="sr-only" for="schoolCountrySelect">School Country</label>
+            <select id="schoolCountrySelect" class="picker">
+                <option value="">Select Country</option>
+                <option value="AF">Afghanistan</option>
+                <option value="AX">Aland Islands</option>
+                <option value="AL">Albania</option>
+                <option value="DZ">Algeria</option>
+                <option value="AS">American Samoa</option>
+                <option value="AD">Andorra</option>
+                <option value="AO">Angola</option>
+                <option value="AI">Anguilla</option>
+                <option value="AQ">Antarctica</option>
+                <option value="AG">Antigua and Barbuda</option>
+                <option value="AR">Argentina</option>
+                <option value="AM">Armenia</option>
+                <option value="AW">Aruba</option>
+                <option value="AU">Australia</option>
+                <option value="AT">Austria</option>
+                <option value="AZ">Azerbaijan</option>
+                <option value="BS">Bahamas</option>
+                <option value="BH">Bahrain</option>
+                <option value="BD">Bangladesh</option>
+                <option value="BB">Barbados</option>
+                <option value="BY">Belarus</option>
+                <option value="BE">Belgium</option>
+                <option value="BZ">Belize</option>
+                <option value="BJ">Benin</option>
+                <option value="BM">Bermuda</option>
+                <option value="BT">Bhutan</option>
+                <option value="BO">Bolivia</option>
+                <option value="BA">Bosnia and Herzegovina</option>
+                <option value="BW">Botswana</option>
+                <option value="BR">Brazil</option>
+                <option value="IO">British Indian Ocean Territory</option>
+                <option value="BN">Brunei Darussalam</option>
+                <option value="BG">Bulgaria</option>
+                <option value="BF">Burkina Faso</option>
+                <option value="BI">Burundi</option>
+                <option value="KH">Cambodia</option>
+                <option value="CM">Cameroon</option>
+                <option value="CA">Canada</option>
+                <option value="CV">Cape Verde</option>
+                <option value="KY">Cayman Islands</option>
+                <option value="CF">Central African Republic</option>
+                <option value="TD">Chad</option>
+                <option value="CL">Chile</option>
+                <option value="CN">China</option>
+                <option value="CX">Christmas Island</option>
+                <option value="CC">Cocos (Keeling) Islands</option>
+                <option value="CO">Colombia</option>
+                <option value="KM">Comoros</option>
+                <option value="CG">Congo</option>
+                <option value="CD">Congo, The Democratic Republic of the</option>
+                <option value="CK">Cook Islands</option>
+                <option value="CR">Costa Rica</option>
+                <option value="CI">Cote d'Ivoire</option>
+                <option value="HR">Croatia</option>
+                <option value="CU">Cuba</option>
+                <option value="CY">Cyprus</option>
+                <option value="CZ">Czech Republic</option>
+                <option value="DK">Denmark</option>
+                <option value="DJ">Djibouti</option>
+                <option value="DM">Dominica</option>
+                <option value="DO">Dominican Republic</option>
+                <option value="EC">Ecuador</option>
+                <option value="EG">Egypt</option>
+                <option value="SV">El Salvador</option>
+                <option value="GQ">Equatorial Guinea</option>
+                <option value="ER">Eritrea</option>
+                <option value="EE">Estonia</option>
+                <option value="ET">Ethiopia</option>
+                <option value="FK">Falkland Islands (Malvinas)</option>
+                <option value="FO">Faroe Islands</option>
+                <option value="FJ">Fiji</option>
+                <option value="FI">Finland</option>
+                <option value="FR">France</option>
+                <option value="GF">French Guiana</option>
+                <option value="PF">French Polynesia</option>
+                <option value="TF">French Southern Territories</option>
+                <option value="GA">Gabon</option>
+                <option value="GM">Gambia</option>
+                <option value="GE">Georgia</option>
+                <option value="DE">Germany</option>
+                <option value="GH">Ghana</option>
+                <option value="GI">Gibraltar</option>
+                <option value="GR">Greece</option>
+                <option value="GL">Greenland</option>
+                <option value="GD">Grenada</option>
+                <option value="GP">Guadeloupe</option>
+                <option value="GU">Guam</option>
+                <option value="GT">Guatemala</option>
+                <option value="GG">Guernsey</option>
+                <option value="GN">Guinea</option>
+                <option value="GW">Guinea-Bissau</option>
+                <option value="GY">Guyana</option>
+                <option value="HT">Haiti</option>
+                <option value="HM">Heard Island and McDonald Islands</option>
+                <option value="VA">Holy See (Vatican City State)</option>
+                <option value="HN">Honduras</option>
+                <option value="HK">Hong Kong</option>
+                <option value="HU">Hungary</option>
+                <option value="IS">Iceland</option>
+                <option value="IN">India</option>
+                <option value="ID">Indonesia</option>
+                <option value="IR">Iran, Islamic Republic of</option>
+                <option value="IQ">Iraq</option>
+                <option value="IE">Ireland</option>
+                <option value="IM">Isle of Man</option>
+                <option value="IL">Israel</option>
+                <option value="IT">Italy</option>
+                <option value="JM">Jamaica</option>
+                <option value="JP">Japan</option>
+                <option value="JE">Jersey</option>
+                <option value="JO">Jordan</option>
+                <option value="KZ">Kazakhstan</option>
+                <option value="KE">Kenya</option>
+                <option value="KI">Kiribati</option>
+                <option value="KP">Korea, Democratic People's Republic of</option>
+                <option value="KR">Korea, Republic of</option>
+                <option value="KW">Kuwait</option>
+                <option value="KG">Kyrgyzstan</option>
+                <option value="LA">Lao People's Democratic Republic</option>
+                <option value="LV">Latvia</option>
+                <option value="LB">Lebanon</option>
+                <option value="LS">Lesotho</option>
+                <option value="LR">Liberia</option>
+                <option value="LY">Libyan Arab Jamahiriya</option>
+                <option value="LI">Liechtenstein</option>
+                <option value="LT">Lithuania</option>
+                <option value="LU">Luxembourg</option>
+                <option value="MO">Macao</option>
+                <option value="MK">Macedonia, The Former Yugoslav Republic of</option>
+                <option value="MG">Madagascar</option>
+                <option value="MW">Malawi</option>
+                <option value="MY">Malaysia</option>
+                <option value="MV">Maldives</option>
+                <option value="ML">Mali</option>
+                <option value="MT">Malta</option>
+                <option value="MH">Marshall Islands</option>
+                <option value="MQ">Martinique</option>
+                <option value="MR">Mauritania</option>
+                <option value="MU">Mauritius</option>
+                <option value="YT">Mayotte</option>
+                <option value="MX">Mexico</option>
+                <option value="FM">Micronesia, Federated States of</option>
+                <option value="MD">Moldova, Republic of</option>
+                <option value="MC">Monaco</option>
+                <option value="MN">Mongolia</option>
+                <option value="ME">Montenegro</option>
+                <option value="MS">Montserrat</option>
+                <option value="MA">Morocco</option>
+                <option value="MZ">Mozambique</option>
+                <option value="MM">Myanmar</option>
+                <option value="NA">Namibia</option>
+                <option value="NR">Nauru</option>
+                <option value="NP">Nepal</option>
+                <option value="NL">Netherlands</option>
+                <option value="AN">Netherlands Antilles</option>
+                <option value="NC">New Caledonia</option>
+                <option value="NZ">New Zealand</option>
+                <option value="NI">Nicaragua</option>
+                <option value="NE">Niger</option>
+                <option value="NG">Nigeria</option>
+                <option value="NU">Niue</option>
+                <option value="NF">Norfolk Island</option>
+                <option value="MP">Northern Mariana Islands</option>
+                <option value="NO">Norway</option>
+                <option value="OM">Oman</option>
+                <option value="PK">Pakistan</option>
+                <option value="PW">Palau</option>
+                <option value="PS">Palestinian Territory, Occupied</option>
+                <option value="PA">Panama</option>
+                <option value="PG">Papua New Guinea</option>
+                <option value="PY">Paraguay</option>
+                <option value="PE">Peru</option>
+                <option value="PH">Philippines</option>
+                <option value="PN">Pitcairn</option>
+                <option value="PL">Poland</option>
+                <option value="PT">Portugal</option>
+                <option value="PR">Puerto Rico</option>
+                <option value="QA">Qatar</option>
+                <option value="RE">Reunion</option>
+                <option value="RO">Romania</option>
+                <option value="RU">Russian Federation</option>
+                <option value="RW">Rwanda</option>
+                <option value="SH">Saint Helena</option>
+                <option value="KN">Saint Kitts and Nevis</option>
+                <option value="LC">Saint Lucia</option>
+                <option value="PM">Saint Pierre and Miquelon</option>
+                <option value="VC">Saint Vincent and the Grenadines</option>
+                <option value="WS">Samoa</option>
+                <option value="SM">San Marino</option>
+                <option value="ST">Sao Tome and Principe</option>
+                <option value="SA">Saudi Arabia</option>
+                <option value="SN">Senegal</option>
+                <option value="RS">Serbia</option>
+                <option value="SC">Seychelles</option>
+                <option value="SL">Sierra Leone</option>
+                <option value="SG">Singapore</option>
+                <option value="SK">Slovakia</option>
+                <option value="SI">Slovenia</option>
+                <option value="SB">Solomon Islands</option>
+                <option value="SO">Somalia</option>
+                <option value="ZA">South Africa</option>
+                <option value="GS">South Georgia and the South Sandwich Islands</option>
+                <option value="ES">Spain</option>
+                <option value="LK">Sri Lanka</option>
+                <option value="SD">Sudan</option>
+                <option value="SR">Suriname</option>
+                <option value="SJ">Svalbard and Jan Mayen</option>
+                <option value="SZ">Swaziland</option>
+                <option value="SE">Sweden</option>
+                <option value="CH">Switzerland</option>
+                <option value="SY">Syrian Arab Republic</option>
+                <option value="TW">Taiwan, Province of China</option>
+                <option value="TJ">Tajikistan</option>
+                <option value="TZ">Tanzania, United Republic of</option>
+                <option value="TH">Thailand</option>
+                <option value="TL">Timor-Leste</option>
+                <option value="TG">Togo</option>
+                <option value="TK">Tokelau</option>
+                <option value="TO">Tonga</option>
+                <option value="TT">Trinidad and Tobago</option>
+                <option value="TN">Tunisia</option>
+                <option value="TR">Turkey</option>
+                <option value="TM">Turkmenistan</option>
+                <option value="TC">Turks and Caicos Islands</option>
+                <option value="TV">Tuvalu</option>
+                <option value="UG">Uganda</option>
+                <option value="UA">Ukraine</option>
+                <option value="AE">United Arab Emirates</option>
+                <option value="GB">United Kingdom</option>
+                <option value="US">United States</option>
+                <option value="UM">United States Minor Outlying Islands</option>
+                <option value="UY">Uruguay</option>
+                <option value="UZ">Uzbekistan</option>
+                <option value="VU">Vanuatu</option>
+                <option value="VE">Venezuela</option>
+                <option value="VN">Vietnam</option>
+                <option value="VG">Virgin Islands, British</option>
+                <option value="VI">Virgin Islands, U.S.</option>
+                <option value="WF">Wallis and Futuna</option>
+                <option value="EH">Western Sahara</option>
+                <option value="YE">Yemen</option>
+                <option value="ZM">Zambia</option>
+                <option value="ZW">Zimbabwe</option>
+            </select>
+        </div>
+        <p id="schoolCountryError" class="error-text hidden"></p>
 
         <!-- Student Fields -->
         <div id="studentFields" class="hidden">
@@ -165,7 +416,7 @@
                 <label class="sr-only" for="educationLevelSelect">Education Level</label>
                 <select id="educationLevelSelect" class="picker">
                     <option value="">Select Education Level</option>
-                    <option value="junior">Junior High</option>
+                    <option value="junior">Junior</option>
                     <option value="high">Senior High</option>
                     <option value="university">University</option>
                 </select>
@@ -207,16 +458,17 @@
                 <label class="sr-only" for="teacherGradeSelect">Grade / Level Taught</label>
                 <select id="teacherGradeSelect" class="picker">
                     <option value="">Select Grade / Level</option>
-                    <option value="100">100</option>
-                    <option value="200">200</option>
-                    <option value="300">300</option>
-                    <option value="400">400</option>
+                    <option value="5-12">Grade 5-12</option>
+                    <option value="100">100 Level</option>
+                    <option value="200">200 Level</option>
+                    <option value="300">300 Level</option>
+                    <option value="400">400 Level</option>
                     <option value="other">Other (Enter manually)</option>
                 </select>
             </div>
             <input id="teacherGradeInput" type="text" placeholder="Enter grade / level" class="input hidden" />
             <p id="teacherGradeError" class="error-text hidden"></p>
-
+            
             <label class="sr-only" for="teacherSubjectInput">Subject Taught</label>
             <input id="teacherSubjectInput" type="text" placeholder="Subject / Program Taught" class="input" />
             <p id="teacherSubjectError" class="error-text hidden"></p>
@@ -224,6 +476,7 @@
 
         <label class="sr-only" for="phoneInput">Phone</label>
         <input id="phoneInput" type="tel" placeholder="Phone Number" class="input" />
+        <p id="phoneError" class="error-text hidden"></p>
 
         <input id="emailInput" type="email" placeholder="Email" class="input" />
         <p id="emailError" class="error-text hidden"></p>
@@ -292,6 +545,8 @@
     const schoolFields = document.getElementById('schoolFields');
     const universityFields = document.getElementById('universityFields');
     const teacherFields = document.getElementById('teacherFields');
+    const teacherGradeSelect = document.getElementById('teacherGradeSelect');
+    const teacherGradeInput = document.getElementById('teacherGradeInput');
     const requestOtpButton = document.getElementById('requestOtpButton');
     const verifyOtpButton = document.getElementById('verifyOtpButton');
     const loginLink = document.getElementById('loginLink');
@@ -301,13 +556,18 @@
     const messageBox = document.getElementById('messageBox');
     const messageText = document.getElementById('messageText');
     const gradeInput = document.getElementById('gradeInput');
+    
+    // NEW DOM Elements for school country
+    const schoolCountryField = document.getElementById('schoolCountryField');
+    const schoolCountrySelect = document.getElementById('schoolCountrySelect');
 
     // Form data object
     const form = {
         firstName: '', lastName: '', occupation: '', educationLevel: '', grade: '',
         schoolName: '', university: '', uniLevel: '', program: '', teacherSchool: '',
         teacherGrade: '', phone: '', email: '', password: '', confirmPassword: '',
-        timezone: 'utc', teacher_level: ''
+        schoolCountry: '',
+        timezone: 'utc',
     };
 
     let otpCode = '';
@@ -353,14 +613,14 @@
 
     /**
      * Displays or hides an error message and applies an error style to the input.
-     * @param {string} inputId - The ID of the input element.
+     * @param {string} elementId - The ID of the input or select element.
      * @param {string | null} message - The error message.
      */
-    function setError(inputId, message) {
-        const inputEl = document.getElementById(inputId);
-        const errorEl = document.getElementById(inputId.replace('Input', 'Error').replace('Select', 'Error'));
-        if (!inputEl || !errorEl) return;
-
+    function setError(elementId, message) {
+        const inputEl = document.getElementById(elementId);
+        if (!inputEl) return;
+        const errorEl = document.getElementById(elementId.replace('Input', 'Error').replace('Select', 'Error'));
+        
         if (message) {
             errorEl.textContent = message;
             errorEl.classList.remove('hidden');
@@ -401,11 +661,13 @@
                 if (value !== form.password) error = 'Passwords do not match.';
                 break;
             case 'phone':
-                if (!value.trim()) error = 'Phone number is required.';
-                else if (!/^\+?[0-9]{7,15}$/.test(value)) error = 'Invalid phone number format.';
+                if (value.trim() && !/^\+?[0-9]{7,15}$/.test(value)) error = 'Invalid phone number format.';
                 break;
             case 'occupation':
                 if (!value) error = 'Occupation is required.';
+                break;
+            case 'schoolCountry':
+                if (!value) error = 'School Country is required.';
                 break;
             case 'educationLevel':
                 if (form.occupation === 'student' && !value) error = 'Education Level is required.';
@@ -441,7 +703,9 @@
                 if (form.occupation === 'teacher' && !value.trim()) error = 'School is required.';
                 break;
             case 'teacherGrade':
-                if (form.occupation === 'teacher' && !value.trim()) error = 'Grade Taught is required.';
+                if (form.occupation === 'teacher' && !value.trim()) {
+                    error = 'Grade Taught is required.';
+                }
                 break;
         }
         return error;
@@ -457,6 +721,10 @@
             'firstName', 'lastName', 'occupation', 'phone', 'email', 'password', 'confirmPassword'
         ];
 
+        // Add conditional fields to the validation list
+        if (['student', 'teacher', 'admin'].includes(form.occupation)) {
+            fieldsToValidate.push('schoolCountry');
+        }
         if (form.occupation === 'student') {
             fieldsToValidate.push('educationLevel');
             if (['junior', 'high'].includes(form.educationLevel)) {
@@ -469,9 +737,17 @@
         }
 
         fieldsToValidate.forEach(key => {
-            const value = document.getElementById(`${key}Input`)?.value || document.getElementById(`${key}Select`)?.value;
+            const inputId = `${key}Input`;
+            const selectId = `${key}Select`;
+            const element = document.getElementById(inputId) || document.getElementById(selectId);
+            if (!element) return;
+            const value = element.value;
             const error = validateField(key, value);
-            setError(`${key}Input`, error);
+            // Don't set error on phone if its empty and optional
+            if (key === 'phone' && !value.trim() && !error) {
+              return;
+            }
+            setError(element.id, error);
             if (error) isValid = false;
         });
 
@@ -479,7 +755,6 @@
     }
 
     // --- Event Listeners ---
-
     document.querySelectorAll('input, select').forEach(element => {
         element.addEventListener('input', (e) => {
             const key = e.target.id.replace('Input', '').replace('Select', '');
@@ -495,10 +770,24 @@
 
     occupationSelect.addEventListener('change', (e) => {
         form.occupation = e.target.value;
+        const requiredRoles = ['student', 'teacher', 'admin'];
+
+        // Show/hide School Country field
+        if (requiredRoles.includes(form.occupation)) {
+            schoolCountryField.classList.remove('hidden');
+        } else {
+            schoolCountryField.classList.add('hidden');
+            form.schoolCountry = ''; // Clear value when hidden
+        }
+
+        // Hide all other conditional fields first
         studentFields.classList.add('hidden');
         teacherFields.classList.add('hidden');
         schoolFields.classList.add('hidden');
         universityFields.classList.add('hidden');
+        teacherGradeInput.classList.add('hidden');
+
+        // Clear conditional field values
         form.educationLevel = '';
         form.grade = '';
         form.schoolName = '';
@@ -508,6 +797,7 @@
         form.teacherSchool = '';
         form.teacherGrade = '';
         
+        // Show fields based on occupation
         if (form.occupation === 'student') {
             studentFields.classList.remove('hidden');
         } else if (form.occupation === 'teacher') {
@@ -540,6 +830,19 @@
         setError('educationLevelSelect', null);
     });
 
+    teacherGradeSelect.addEventListener('change', (e) => {
+        const value = e.target.value;
+        if (value === 'other') {
+            teacherGradeInput.classList.remove('hidden');
+            teacherGradeInput.value = '';
+            form.teacherGrade = '';
+        } else {
+            teacherGradeInput.classList.add('hidden');
+            form.teacherGrade = value;
+        }
+        setError('teacherGradeSelect', null);
+    });
+
     termsLink.addEventListener('click', (e) => {
         e.preventDefault();
         termsModal.style.display = 'flex';
@@ -555,6 +858,38 @@
     });
 
     requestOtpButton.addEventListener('click', async () => {
+        // Collect all input values into the form object
+        form.firstName = document.getElementById('firstNameInput').value;
+        form.lastName = document.getElementById('lastNameInput').value;
+        form.occupation = document.getElementById('occupationSelect').value;
+        form.schoolCountry = document.getElementById('schoolCountrySelect').value;
+        form.phone = document.getElementById('phoneInput').value;
+        form.email = document.getElementById('emailInput').value;
+        form.password = document.getElementById('passwordInput').value;
+        form.confirmPassword = document.getElementById('confirmPasswordInput').value;
+
+        if (form.occupation === 'student') {
+            form.educationLevel = document.getElementById('educationLevelSelect').value;
+            if (['junior', 'high'].includes(form.educationLevel)) {
+                form.grade = document.getElementById('gradeInput').value;
+                form.schoolName = document.getElementById('schoolNameInput').value;
+            } else if (form.educationLevel === 'university') {
+                form.university = document.getElementById('universityInput').value;
+                form.uniLevel = document.getElementById('uniLevelInput').value;
+                form.program = document.getElementById('programInput').value;
+            }
+        } else if (form.occupation === 'teacher') {
+            form.teacherSchool = document.getElementById('teacherSchoolInput').value;
+            const teacherGradeValue = document.getElementById('teacherGradeSelect').value;
+            if (teacherGradeValue === 'other') {
+                form.teacherGrade = document.getElementById('teacherGradeInput').value;
+            } else if (teacherGradeValue === '5-12') {
+                form.teacherGrade = document.getElementById('teacherGradeInput').value;
+            } else {
+                form.teacherGrade = teacherGradeValue;
+            }
+        }
+
         if (!validateAllFields() || isSubmitting) {
             showMessage("Please correct all errors before submitting.");
             return;
@@ -563,24 +898,40 @@
         setLoadingState(requestOtpButton, true, 'Sign Up');
 
         try {
+            // Prepare payload
             const payload = {
                 firstname: form.firstName,
                 lastname: form.lastName,
                 occupation: form.occupation,
-                educationLevel: form.educationLevel,
-                grade: form.grade ? Number(form.grade) : null,
-                schoolName: form.schoolName,
-                university: form.university,
-                uniLevel: form.uniLevel,
-                program: form.program,
-                teacherSchool: form.teacherSchool,
-                teacherGrade: form.teacherGrade ? Number(form.teacherGrade) : null,
                 phone: form.phone,
                 email: form.email,
                 password: form.password,
+                schoolCountry: form.schoolCountry,
+                role: form.occupation,
                 timezone: form.timezone,
-                teacher_level: form.teacher_level,
             };
+
+            // Add conditional fields to payload
+            if (form.occupation === 'student') {
+                payload.educationLevel = form.educationLevel;
+                if (['junior', 'high'].includes(form.educationLevel)) {
+                    payload.grade = form.grade ? Number(form.grade) : null;
+                    payload.schoolName = form.schoolName;
+                } else if (form.educationLevel === 'university') {
+                    payload.university = form.university;
+                    payload.uniLevel = form.uniLevel;
+                    payload.program = form.program;
+                }
+            } else if (form.occupation === 'teacher') {
+                payload.teacherSchool = form.teacherSchool;
+                // Handle teacherGrade: number or string
+                const teacherGradeValue = form.teacherGrade;
+                if (teacherGradeValue === '5-12' || !isNaN(Number(teacherGradeValue))) {
+                    payload.teacherGrade = Number(teacherGradeValue);
+                } else {
+                    payload.teacherGrade = teacherGradeValue;
+                }
+            }
             
             const response = await fetch(API_SIGNUP_OTP, {
                 method: 'POST',
@@ -646,4 +997,3 @@
 </script>
 </body>
 </html>
-

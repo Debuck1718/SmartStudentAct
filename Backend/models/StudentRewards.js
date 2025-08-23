@@ -6,7 +6,7 @@ const studentRewardsSchema = new mongoose.Schema({
     // Student's unique identifier.
     studentId: { type: String, required: true, unique: true },
     name: { type: String, required: true },
-    level: { type: String, enum: ['High School', 'University', 'Worker'], default: 'High School' },
+    level: { type: String, enum: ['Junior', 'High School', 'University', 'Worker'], default: 'High School' },
     
     // Performance metrics updated by teachers/admins.
     weeklyGoalsAchieved: { type: Boolean, default: false },

@@ -871,14 +871,14 @@ protectedRouter.post('/teacher/quiz', authenticateJWT, hasRole('teacher'), async
             return res.status(400).json({ message: 'Quiz must have a title and at least one question.' });
         }
 
-        // Create the assignment
+        // Use 'created_by' consistently
         const quizAssignment = new Assignment({
-            teacher_id: teacherId,
+            created_by: teacherId,
             title,
             description,
             due_date: new Date(dueDate),
             type: 'quiz',
-            questions, // array of Question IDs
+            questions,
             assigned_to_users: assignTo?.users || [],
             assigned_to_grades: assignTo?.grades || [],
             assigned_to_schools: assignTo?.schools || []
@@ -898,6 +898,7 @@ protectedRouter.post('/teacher/quiz', authenticateJWT, hasRole('teacher'), async
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 /**
  * @route GET /api/teacher/quiz/:assignmentId/results
@@ -1009,32 +1010,35 @@ protectedRouter.get('/teacher/assigned-tasks', authenticateJWT, hasRole('teacher
  */
 protectedRouter.get('/teacher/feedback', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
-        // Find all submissions that have feedback/grades
         const submissionsWithFeedback = await Submission.find({
             $or: [
                 { feedback_grade: { $ne: null } },
                 { feedback_comments: { $ne: null } }
             ]
-        }).populate('user_id', 'email'); // Populate user data to get email
+        }).populate('user_id', 'email'); // Populate user email
 
-        // Filter submissions to only those where the associated assignment was created by the current teacher
-        const teacherSubmissions = await Promise.all(submissionsWithFeedback.filter(async (sub) => {
+        // Filter asynchronously for submissions belonging to this teacher
+        const teacherSubmissions = [];
+        for (const sub of submissionsWithFeedback) {
             const assignment = await Assignment.findById(sub.assignment_id);
-            return assignment && assignment.created_by.toString() === req.user.id;
-        }));
+            if (assignment && assignment.created_by.toString() === req.user.id) {
+                teacherSubmissions.push(sub);
+            }
+        }
 
         const formattedFeedback = teacherSubmissions.map(f => ({
             student_email: f.user_id?.email,
             message: f.feedback_comments || `Graded: ${f.feedback_grade}`,
             file_name: f.feedback_file,
         }));
-        
+
         res.status(200).json(formattedFeedback);
     } catch (error) {
         logger.error('Error fetching feedback:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 
 /**
@@ -1458,27 +1462,33 @@ protectedRouter.get('/pricing', async (req, res) => {
         return res.status(400).json({ error: 'User country not found.' });
     }
 
+    // Block overseer and global_overseer from fetching pricing
+    if (['overseer', 'global_overseer'].includes(occupation)) {
+        return res.status(403).json({ error: 'Forbidden: This role does not require pricing.' });
+    }
+
     try {
         const price = await paymentController.getUserPrice(user.country, occupation, school);
-        res.json(price);
+        res.json(price); // Frontend expects the same response format
     } catch (err) {
         logger.error('Error getting user price:', err);
         res.status(500).json({ error: 'Failed to retrieve pricing information.' });
     }
 });
 
+
 // Initiate a payment transaction
 protectedRouter.post('/payment/initiate', validate(paymentSchema), async (req, res) => {
     const { gateway } = req.body;
     const { email, id, occupation, school } = req.user;
-    const user = await User.findById(id).select('country');
 
+    const user = await User.findById(id).select('country');
     if (!user || !user.country) {
         return res.status(400).json({ error: 'User country not found.' });
     }
 
-    // Users who don't pay shouldn't initiate payments.
-    if (['student', 'overseer', 'global_overseer'].includes(occupation)) {
+    // Block overseer and global_overseer from paying
+    if (['overseer', 'global_overseer'].includes(occupation)) {
         return res.status(403).json({ error: 'Forbidden: This role does not require payment.' });
     }
 
@@ -1492,53 +1502,72 @@ protectedRouter.post('/payment/initiate', validate(paymentSchema), async (req, r
         }
 
         let paymentData;
-        if (gateway === 'flutterwave') {
-            paymentData = await paymentController.initFlutterwavePayment(email, amount, currency);
-        } else if (gateway === 'paystack') {
-            paymentData = await paymentController.initPaystackPayment(email, amount, currency);
+        switch (gateway) {
+            case 'flutterwave':
+                paymentData = await paymentController.initFlutterwavePayment(email, amount, currency);
+                break;
+            case 'paystack':
+                paymentData = await paymentController.initPaystackPayment(email, amount, currency);
+                break;
+            default:
+                return res.status(400).json({ error: 'Unsupported payment gateway.' });
         }
 
-        if (paymentData) {
-            res.json({ message: 'Payment initiated successfully.', data: paymentData });
-        } else {
-            res.status(500).json({ error: 'Failed to initiate payment.' });
-        }
+        res.json({ message: 'Payment initiated successfully.', data: paymentData });
     } catch (err) {
         logger.error('Error initiating payment:', err);
         res.status(500).json({ error: 'Failed to initiate payment.' });
     }
 });
+
     
     // Start a free trial for a user
     protectedRouter.post('/trial/start', authenticateJWT, async (req, res) => {
-        const userId = req.user.id;
-        try {
-            const user = await User.findById(userId);
-    
-            if (!user) {
-                return res.status(404).json({ error: 'User not found.' });
-            }
-    
-            if (user.is_on_trial || user.has_used_trial) {
-                return res.status(400).json({ error: 'Trial has already been used or is currently active.' });
-            }
-    
-            // Set trial flags
-            user.is_on_trial = true;
-            user.trial_starts_at = new Date();
-            user.has_used_trial = true;
-            await user.save();
-    
-            // Schedule an Agenda job to end the trial after 14 days
-            agenda.schedule('in 30 days', 'end-trial', { userId: user._id });
-    
-            logger.info('Free trial started for user:', userId);
-            res.json({ message: 'Free trial started successfully. It will end in 30 days.' });
-        } catch (err) {
-            logger.error('Error starting free trial:', err);
-            res.status(500).json({ error: 'Failed to start free trial.' });
+    const userId = req.user.id;
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
         }
-    });
+
+        if (user.is_on_trial || user.has_used_trial) {
+            return res.status(400).json({ error: 'Trial has already been used or is currently active.' });
+        }
+
+        user.is_on_trial = true;
+        user.trial_starts_at = new Date();
+        user.has_used_trial = true;
+        await user.save();
+
+        // Schedule Agenda job for 30 days
+        agenda.schedule('in 30 days', 'end-trial', { userId: user._id });
+
+        logger.info('Free trial started for user:', userId);
+        res.json({ message: 'Free trial started successfully. It will end in 30 days.' });
+    } catch (err) {
+        logger.error('Error starting free trial:', err);
+        res.status(500).json({ error: 'Failed to start free trial.' });
+    }
+});
+
+// ──────────── SMS Test Route ────────────
+protectedRouter.post('/test/sms', authenticateJWT, async (req, res) => {
+    const { phone, message } = req.body;
+
+    if (!phone || !message) {
+        return res.status(400).json({ error: 'phone and message are required.' });
+    }
+
+    try {
+        await sendSMS(phone, message);
+        res.json({ message: `SMS sent successfully to ${phone}` });
+    } catch (err) {
+        logger.error('SMS test failed:', err);
+        res.status(500).json({ error: 'Failed to send SMS.' });
+    }
+});
+
 
 
 // NOTE: Sub-routers must be mounted here

@@ -2,12 +2,24 @@ const EventEmitter = require('events');
 const webpush = require('web-push');
 const smsApi = require('./sms');
 const logger = require('./logger');
-const mailer = require('./mailer'); // 🆕 Import the mailer utility
-const emailTemplates = require('./emailTemplate'); // 🆕 Import the email templates
+const mailer = require('./email'); // Brevo email util
 
 const eventBus = new EventEmitter();
 
-/* ──────────── Notification Helpers (moved to top-level) ──────────── */
+// Map template IDs for clarity
+const emailTemplates = {
+  otp: 3,
+  welcome: 2,
+  passwordReset: 4,
+  assignmentNotification: 6,
+  quizNotification: 5,
+  feedbackReceived: 7,
+  gradedAssignment: 8,
+  rewardNotification: 9,
+  goalBudgetUpdate: 10,
+};
+
+/* ──────────── SMS Helper ──────────── */
 async function sendSMS(phone, message) {
   if (!phone) return;
   const recipient = phone.startsWith('+') ? phone : `+${phone}`;
@@ -23,219 +35,206 @@ async function sendSMS(phone, message) {
   }
 }
 
-/* ──────────── The new configuration function ──────────── */
+/* ──────────── Push Notification Helper ──────────── */
+async function sendPushToUser(PushSub, payload) {
+  try {
+    if (PushSub?.subscription) {
+      await webpush.sendNotification(PushSub.subscription, JSON.stringify(payload));
+    }
+  } catch (err) {
+    logger.error(`Push notification failed: ${err.message}`);
+  }
+}
+
+/* ──────────── User Notification Helper ──────────── */
+async function notifyUser(user, title, message, url, emailTemplateId, templateVariables = {}) {
+  try {
+    // Push
+    await sendPushToUser(user.PushSub, { title, body: message, url });
+
+    // SMS
+    await sendSMS(user.phone, `${title}: ${message}`);
+
+    // Email via Brevo
+    if (user.email && emailTemplateId) {
+      await mailer.sendTemplateEmail(user.email, emailTemplateId, templateVariables);
+      logger.info(`[Brevo Email] Sent "${title}" to ${user.email}`);
+    }
+  } catch (err) {
+    logger.error(`notifyUser failed for ${user._id}: ${err.message}`);
+  }
+}
+
+/* ──────────── EventBus Configuration ──────────── */
 function configureEventBus(agenda, mongoose) {
-  // Mongoose models are now accessed here, inside the function
   const User = mongoose.models.User;
   const Assignment = mongoose.models.Assignment;
   const PushSub = mongoose.models.PushSub;
+  const Quiz = mongoose.models.Quiz;
 
-  async function sendPushToUser(userId, payload) {
-    try {
-      const sub = await PushSub.findOne({ user_id: userId });
-      if (sub?.subscription) {
-        await webpush.sendNotification(sub.subscription, JSON.stringify(payload));
-      }
-    } catch (err) {
-      logger.error(`Failed to send push notification to ${userId}: ${err.message}`);
-    }
-  }
-
-  async function notifyUser(userId, title, message, url) {
-    try {
-      const user = await User.findById(userId).select('phone email');
-      await sendPushToUser(userId, { title, body: message, url });
-      await sendSMS(user?.phone, `${title}: ${message}`);
-    } catch (err) {
-      logger.error(`notifyUser failed for user ${userId}: ${err.message}`);
-    }
-  }
-
-  /* ──────────── Agenda Job ──────────── */
-  agenda.define('send assignment reminder', async (job) => {
-    const { assignmentId, label, title } = job.attrs.data;
+  /* ──────────── Assignment Created ──────────── */
+  eventBus.on('assignment_created', async ({ assignmentId, title, creatorId }) => {
     try {
       const assignment = await Assignment.findById(assignmentId);
       if (!assignment) return;
-      
+
       const students = await User.find({
         $or: [
           { schoolName: { $in: assignment.assigned_to_schools } },
           { grade: { $in: assignment.assigned_to_grades } },
           { email: { $in: assignment.assigned_to_users } },
         ],
-      }).select('_id phone email');
-  
+      }).select('_id phone email firstname');
+
       for (const student of students) {
-        await sendPushToUser(student._id, {
-          title: `Assignment Reminder`,
-          body: `"${title}" is due in ${label}!`,
-          url: '/student/assignments',
+        // Send SMS immediately
+        await sendSMS(student.phone, `New Assignment: "${title}" is due on ${assignment.due_date.toDateString()}`);
+
+        // Send Email
+        await mailer.sendTemplateEmail(student.email, emailTemplates.assignmentNotification, {
+          firstname: student.firstname,
+          assignmentTitle: title,
+          dueDate: assignment.due_date.toDateString(),
         });
-        await sendSMS(student.phone, `Reminder: "${title}" is due in ${label}`);
-        // 🆕 You could also send an email reminder here if desired
       }
-    } catch (err) {
-      logger.error(`Failed to send assignment reminder job: ${err.message}`);
-    }
-  });
 
-  /* ──────────── Helper to Schedule Reminders ──────────── */
-  async function scheduleReminder(assignmentId, dueDate, title, hoursBefore, label) {
-    try {
-      const remindTime = new Date(dueDate);
-      remindTime.setHours(remindTime.getHours() - hoursBefore);
-
-      if (remindTime <= new Date()) {
-        logger.info(`Reminder time (${label}) for assignment "${title}" already passed.`);
-        return;
-      }
-      
-      await agenda.schedule(remindTime, 'send assignment reminder', {
-        assignmentId,
-        label,
-        title,
+      // Schedule reminders: 24, 6, 2 hours before
+      const reminderHours = [24, 6, 2];
+      reminderHours.forEach(async (hoursBefore) => {
+        const remindTime = new Date(assignment.due_date);
+        remindTime.setHours(remindTime.getHours() - hoursBefore);
+        if (remindTime > new Date()) {
+          await agenda.schedule(remindTime, 'assignment_reminder', {
+            assignmentId,
+            hoursBefore,
+          });
+        }
       });
-  
-      logger.info(`Scheduled assignment reminder (${label}) for "${title}" at ${remindTime}`);
     } catch (err) {
-      logger.error(`Failed to schedule reminder (${label}) for assignment "${title}": ${err.message}`);
-    }
-  }
-
-  /* ──────────── Event Listeners ──────────── */
-  eventBus.on('assignment_created', async ({ assignmentId, title, creatorId }) => {
-    try {
-      const assignment = await Assignment.findById(assignmentId);
-      if (!assignment) return;
-      
-      const teacher = await User.findById(creatorId).select('phone');
-      await sendSMS(teacher?.phone, `Assignment "${title}" created. Due: ${assignment.due_date}`);
-      
-      await scheduleReminder(assignmentId, assignment.due_date, title, 24, '24 hours');
-      await scheduleReminder(assignmentId, assignment.due_date, title, 6, '6 hours');
-      await scheduleReminder(assignmentId, assignment.due_date, title, 2, '2 hours');
-    } catch (err) {
-      logger.error(`Error in assignment_created event: ${err.message}`);
+      logger.error(`assignment_created event failed: ${err.message}`);
     }
   });
 
-  // ✅ Renamed from 'new_submission' to match the router logic
-  eventBus.on('assignment_submitted', async ({ assignmentId, studentId }) => {
-    try {
-      const assignment = await Assignment.findById(assignmentId);
-      const student = await User.findById(studentId);
-      const teacher = await User.findById(assignment.created_by);
-      
-      // Notify the teacher via push/SMS
-      await notifyUser(
-        teacher._id,
-        'Assignment Submission',
-        `${student.firstname} ${student.lastname} submitted "${assignment.title}"`,
-        '/teacher/assignments'
-      );
+  /* ──────────── Assignment Reminder ──────────── */
+  agenda.define('assignment_reminder', async (job) => {
+    const { assignmentId, hoursBefore } = job.attrs.data;
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) return;
 
-      // 🆕 Email the student to confirm their submission
-      const viewUrl = `/student/assignments/${assignment._id}`;
-      const submissionDate = new Date().toLocaleDateString('en-US');
-      const studentEmailBody = emailTemplates.submissionConfirmation(
-        student.firstname,
-        assignment.title,
-        submissionDate,
-        viewUrl
-      );
-      await mailer.sendEmail(student.email, `Submission Confirmed: ${assignment.title}`, studentEmailBody);
+    const students = await User.find({
+      $or: [
+        { schoolName: { $in: assignment.assigned_to_schools } },
+        { grade: { $in: assignment.assigned_to_grades } },
+        { email: { $in: assignment.assigned_to_users } },
+      ],
+    }).select('_id phone email firstname');
 
-    } catch (err) {
-      logger.error(`Error in assignment_submitted event: ${err.message}`);
+    for (const student of students) {
+      const message = `Reminder: "${assignment.title}" is due in ${hoursBefore} hours`;
+      await sendSMS(student.phone, message);
+      await mailer.sendTemplateEmail(student.email, emailTemplates.assignmentNotification, {
+        firstname: student.firstname,
+        assignmentTitle: assignment.title,
+        dueDate: assignment.due_date.toDateString(),
+        hoursBefore,
+      });
     }
   });
 
+  /* ──────────── Quiz Created ──────────── */
+  eventBus.on('quiz_created', async ({ quizId, title }) => {
+    try {
+      const quiz = await Quiz.findById(quizId);
+      if (!quiz) return;
+
+      const students = await User.find({ email: { $in: quiz.assigned_to_users } }).select(
+        '_id phone email firstname'
+      );
+
+      for (const student of students) {
+        await sendSMS(student.phone, `New Quiz: "${title}" is now available!`);
+        await mailer.sendTemplateEmail(student.email, emailTemplates.quizNotification, {
+          firstname: student.firstname,
+          quizTitle: title,
+        });
+      }
+    } catch (err) {
+      logger.error(`quiz_created event failed: ${err.message}`);
+    }
+  });
+
+  /* ──────────── Feedback Given ──────────── */
   eventBus.on('feedback_given', async ({ assignmentId, studentId, feedback }) => {
     try {
       const assignment = await Assignment.findById(assignmentId);
       const student = await User.findById(studentId);
-      
-      await notifyUser(
-        studentId,
-        'Feedback Received',
-        `You received feedback for "${assignment.title}": ${feedback}`,
-        '/student/assignments'
-      );
 
-      // 🆕 Email the student about the new feedback
-      const viewUrl = `/student/assignments/${assignment._id}`;
-      const emailBody = emailTemplates.feedbackReceived(
-        student.firstname,
-        assignment.title,
-        viewUrl
-      );
-      await mailer.sendEmail(student.email, `New Feedback: ${assignment.title}`, emailBody);
-
+      await notifyUser(student, 'Feedback Received', `You received feedback for "${assignment.title}"`, '/student/assignments', emailTemplates.feedbackReceived, {
+        firstname: student.firstname,
+        assignmentTitle: assignment.title,
+        feedback,
+      });
     } catch (err) {
-      logger.error(`Error in feedback_given event: ${err.message}`);
+      logger.error(`feedback_given event failed: ${err.message}`);
     }
   });
 
-  // 🆕 New event listener for when an assignment is graded
+  /* ──────────── Assignment Graded ──────────── */
   eventBus.on('assignment_graded', async ({ assignmentId, studentId, grade }) => {
     try {
       const assignment = await Assignment.findById(assignmentId);
       const student = await User.findById(studentId);
 
-      await notifyUser(
-        studentId,
-        'Assignment Graded',
-        `Your assignment "${assignment.title}" received a grade of ${grade}.`,
-        '/student/assignments'
-      );
-
-      // 🆕 Email the student with their grade and a link to the feedback
-      const viewUrl = `/student/assignments/${assignment._id}`;
-      const emailBody = emailTemplates.gradedFeedback(
-        student.firstname,
-        assignment.title,
+      await notifyUser(student, 'Assignment Graded', `Your grade: ${grade}`, '/student/assignments', emailTemplates.gradedAssignment, {
+        firstname: student.firstname,
+        assignmentTitle: assignment.title,
         grade,
-        viewUrl
-      );
-      await mailer.sendEmail(student.email, `Assignment Graded: ${assignment.title}`, emailBody);
-
+      });
     } catch (err) {
-      logger.error(`Error in assignment_graded event: ${err.message}`);
+      logger.error(`assignment_graded event failed: ${err.message}`);
     }
   });
 
+  /* ──────────── Reward Notification ──────────── */
+  eventBus.on('reward_granted', async ({ userId, type }) => {
+    try {
+      const user = await User.findById(userId);
+      await notifyUser(user, 'Reward Earned', `You just earned the "${type}" reward!`, '/student/rewards', emailTemplates.rewardNotification, {
+        firstname: user.firstname,
+        rewardType: type,
+      });
+    } catch (err) {
+      logger.error(`reward_granted event failed: ${err.message}`);
+    }
+  });
+
+  /* ──────────── Goal/Budget Notification ──────────── */
+  eventBus.on('goal_notification', async ({ userId, message }) => {
+    try {
+      const user = await User.findById(userId);
+      await notifyUser(user, 'Goal Update', message, '/student/goals', emailTemplates.goalBudgetUpdate, {
+        firstname: user.firstname,
+        message,
+      });
+    } catch (err) {
+      logger.error(`goal_notification event failed: ${err.message}`);
+    }
+  });
 
   eventBus.on('budget_notification', async ({ userId, message }) => {
     try {
-      await notifyUser(userId, 'Budget Update', message, '/student/budget');
+      const user = await User.findById(userId);
+      await notifyUser(user, 'Budget Update', message, '/student/budget', emailTemplates.goalBudgetUpdate, {
+        firstname: user.firstname,
+        message,
+      });
     } catch (err) {
-      logger.error(`Error in budget_notification event: ${err.message}`);
+      logger.error(`budget_notification event failed: ${err.message}`);
     }
   });
 
-  eventBus.on('goal_notification', async ({ userId, message }) => {
-    try {
-      await notifyUser(userId, 'Goal Update', message, '/student/goals');
-    } catch (err) {
-      logger.error(`Error in goal_notification event: ${err.message}`);
-    }
-  });
-
-  eventBus.on('reward_granted', async ({ userId, type }) => {
-    try {
-      await notifyUser(
-        userId,
-        '🎁 Reward Earned!',
-        `You just earned the "${type}" reward.`,
-        '/student/rewards'
-      );
-    } catch (err) {
-      logger.error(`Error in reward_granted event: ${err.message}`);
-    }
-  });
-
-  return { eventBus, scheduleReminder, notifyUser };
+  return { eventBus };
 }
+
 eventBus.setMaxListeners(50);
-module.exports = { configureEventBus };
+module.exports = { configureEventBus, emailTemplates };
