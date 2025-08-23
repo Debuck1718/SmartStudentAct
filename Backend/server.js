@@ -142,13 +142,18 @@ async function startAgenda() {
 }
 
 // ───────────────────────────────────────────────
-// 6️⃣ Routes Loader (with CSRF Protection)
+// 6️⃣ Routes Loader (Public + Protected w/ CSRF)
 // ───────────────────────────────────────────────
 try {
   const loadRoutes = require("./routes");
-  // All routes that need CSRF validation go behind csrfProtection
-  app.use("/auth", csrfProtection, require("./routes/auth"));
+
+  // Load all routes
   loadRoutes(app, eventBus, agenda);
+
+  // Apply CSRF only to protected routes
+  const protectedRoutes = require("./routes/protectedRoutes");
+  app.use("/api", csrfProtection, protectedRoutes);
+
   console.log("✅ Routes loaded successfully!");
 } catch (err) {
   console.error(`❌ Routes loading error at ${new Date().toISOString()}:`, err);
@@ -189,3 +194,4 @@ app.use((err, req, res, next) => {
     process.exit(1);
   }
 })();
+
