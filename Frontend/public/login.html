@@ -6,328 +6,149 @@
     <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      /* Custom styles to match the original React Native design */
-      body {
-        font-family: "Inter", sans-serif;
-      }
-      .container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        min-height: 100vh;
-        background-color: #f5f5f5;
-        padding: 20px;
-      }
-      .form-container {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-      .title {
-        font-size: 1.75rem; /* 28px */
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 30px;
-        color: #333;
-      }
-      .input-group {
-        position: relative;
-        margin-bottom: 15px;
-      }
-      .input {
-        width: 100%;
-        height: 50px;
-        border-color: #ddd;
-        border-width: 1px;
-        padding-left: 15px;
-        padding-right: 15px;
-        border-radius: 8px;
-        background-color: #fff;
-        font-size: 16px;
-      }
-      .input.error {
-        border-color: #e74c3c;
-      }
-      .password-input-container {
-        display: flex;
-        align-items: center;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        background-color: #fff;
-        margin-bottom: 15px;
-      }
-      .password-input-container .input {
-        border: none;
-        flex: 1;
-        margin-bottom: 0;
-      }
-      .password-toggle {
-        padding: 10px 15px;
-        cursor: pointer;
-      }
-      .password-toggle-text {
-        color: #007bff;
-        font-weight: bold;
-      }
-      .error-text {
-        color: #e74c3c;
-        font-size: 12px;
-        margin-bottom: 10px;
-        align-self: flex-start;
-        margin-left: 5px;
-      }
-      .button {
-        background-color: #007bff;
-        padding: 15px;
-        border-radius: 8px;
-        margin-top: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 50px;
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out;
-      }
-      .button:hover {
-        background-color: #0056b3;
-      }
-      .button:disabled {
-        background-color: #a0c4e7;
-        cursor: not-allowed;
-      }
-      .button-text {
-        color: #fff;
-        font-weight: bold;
-        font-size: 18px;
-      }
-      .link-text {
-        text-align: center;
-        color: #007bff;
-        margin-top: 15px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-      /* Loading spinner animation */
-      .spinner {
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        border-top: 4px solid #fff;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
+      body { font-family: "Inter", sans-serif; background-color: #f5f5f5; padding: 20px; }
+      .container { display: flex; flex-direction: column; justify-content: center; min-height: 100vh; }
+      .form-container { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; max-width: 400px; margin: auto; }
+      .title { font-size: 1.75rem; font-weight: bold; text-align: center; margin-bottom: 30px; color: #333; }
+      .input-group { position: relative; margin-bottom: 15px; }
+      .input { width: 100%; height: 50px; border-color: #ddd; border-width: 1px; padding: 0 15px; border-radius: 8px; background-color: #fff; font-size: 16px; }
+      .input.error { border-color: #e74c3c; }
+      .password-input-container { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; background-color: #fff; margin-bottom: 15px; }
+      .password-input-container .input { border: none; flex: 1; margin-bottom: 0; }
+      .password-toggle { padding: 10px 15px; cursor: pointer; }
+      .password-toggle-text { color: #007bff; font-weight: bold; }
+      .error-text { color: #e74c3c; font-size: 12px; margin-bottom: 10px; align-self: flex-start; margin-left: 5px; }
+      .button { background-color: #007bff; padding: 15px; border-radius: 8px; margin-top: 10px; display: flex; align-items: center; justify-content: center; min-height: 50px; cursor: pointer; transition: background-color 0.2s ease-in-out; }
+      .button:hover { background-color: #0056b3; }
+      .button:disabled { background-color: #a0c4e7; cursor: not-allowed; }
+      .button-text { color: #fff; font-weight: bold; font-size: 18px; }
+      .link-text { text-align: center; color: #007bff; margin-top: 15px; font-size: 16px; cursor: pointer; }
+      .spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid #fff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      #banner { display: none; color: #e74c3c; text-align: center; margin-bottom: 10px; }
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="form-container max-w-sm mx-auto">
+      <div class="form-container">
         <h1 class="title">SmartStudentAct Login</h1>
+        <div id="banner"></div>
+
         <div class="input-group">
-          <!-- REVERTED BACK TO EMAIL -->
-          <input
-            id="emailInput"
-            type="email"
-            class="input"
-            placeholder="Email"
-            autocomplete="email"
-          />
-          <!-- REVERTED BACK TO EMAIL -->
-          <p id="emailError" class="error-text hidden"></p>
+          <input id="emailInput" type="email" class="input" placeholder="Email" autocomplete="email" />
+          <p id="emailError" class="error-text"></p>
         </div>
+
         <div class="input-group">
           <div class="password-input-container">
-            <input
-              id="passwordInput"
-              type="password"
-              class="input"
-              placeholder="Password"
-              autocomplete="current-password"
-            />
-            <div id="passwordToggle" class="password-toggle">
-              <p class="password-toggle-text">Show</p>
-            </div>
+            <input id="passwordInput" type="password" class="input" placeholder="Password" autocomplete="current-password" />
+            <div id="passwordToggle" class="password-toggle"><p class="password-toggle-text">Show</p></div>
           </div>
-          <p id="passwordError" class="error-text hidden"></p>
+          <p id="passwordError" class="error-text"></p>
         </div>
-        <button id="loginButton" class="button">
-          <p class="button-text">Login</p>
-        </button>
-        <a href="#" id="signupLink" class="link-text"
-          >Don’t have an account? Sign up</a
-        >
-        <a href="#" id="forgotPasswordLink" class="link-text"
-          >Forgot Password?</a
-        >
+
+        <button id="loginButton" class="button"><p class="button-text">Login</p></button>
+        <a href="/signup.html" class="link-text">Don’t have an account? Sign up</a>
+        <a href="/forgot-password.html" class="link-text">Forgot Password?</a>
       </div>
     </div>
-<script>
-  // API base URL
-  const API_BASE_URL = 'https://api.smartstudentact.com/api';
 
-  // DOM elements
-  const emailInput = document.getElementById("emailInput");
-  const passwordInput = document.getElementById("passwordInput");
-  const loginButton = document.getElementById("loginButton");
-  const passwordToggle = document.getElementById("passwordToggle");
-  const passwordToggleText = passwordToggle.querySelector(".password-toggle-text");
-  const emailErrorEl = document.getElementById("emailError");
-  const passwordErrorEl = document.getElementById("passwordError");
-  const signupLink = document.getElementById("signupLink");
-  const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+    <script>
+      const API_BASE_URL = "https://api.smartstudentact.com/api";
+      const emailInput = document.getElementById("emailInput");
+      const passwordInput = document.getElementById("passwordInput");
+      const loginButton = document.getElementById("loginButton");
+      const passwordToggle = document.getElementById("passwordToggle");
+      const passwordToggleText = passwordToggle.querySelector(".password-toggle-text");
+      const emailErrorEl = document.getElementById("emailError");
+      const passwordErrorEl = document.getElementById("passwordError");
+      const bannerEl = document.getElementById("banner");
 
-  // Optional banner for global messages
-  const bannerEl = document.createElement("div");
-  bannerEl.id = "banner";
-  bannerEl.className = "hidden text-red-600 text-center mb-4";
-  emailInput.closest(".form-container").prepend(bannerEl);
+      let showPassword = false;
 
-  // State
-  let showPassword = false;
+      function setLoading(isLoading) {
+        loginButton.disabled = isLoading;
+        loginButton.innerHTML = isLoading ? '<div class="spinner"></div>' : '<p class="button-text">Login</p>';
+      }
 
-  // --- Helpers ---
-  function setLoading(isLoading) {
-    loginButton.disabled = isLoading;
-    loginButton.innerHTML = isLoading
-      ? `<div class="spinner"></div>`
-      : `<p class="button-text">Login</p>`;
-  }
+      function setError(element, message, inputElement) {
+        if (message) { element.textContent = message; inputElement.classList.add("error"); }
+        else { element.textContent = ""; inputElement.classList.remove("error"); }
+      }
 
-  function setError(element, message, inputElement) {
-    if (message) {
-      element.textContent = message;
-      element.classList.remove("hidden");
-      inputElement.classList.add("error");
-    } else {
-      element.textContent = "";
-      element.classList.add("hidden");
-      inputElement.classList.remove("error");
-    }
-  }
+      function validateEmail(text) {
+        if (!text.trim()) return "Email cannot be empty.";
+        if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
+        return null;
+      }
 
-  function validateEmail(text) {
-    if (!text.trim()) return "Email cannot be empty.";
-    if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
-    return null;
-  }
+      function validatePassword(text) {
+        if (!text.trim()) return "Password cannot be empty.";
+        if (text.length < 6) return "Password must be at least 6 characters long.";
+        return null;
+      }
 
-  function validatePassword(text) {
-    if (!text.trim()) return "Password cannot be empty.";
-    if (text.length < 6) return "Password must be at least 6 characters long.";
-    return null;
-  }
+      emailInput.addEventListener("input", () => { setError(emailErrorEl, null, emailInput); bannerEl.style.display="none"; });
+      passwordInput.addEventListener("input", () => { setError(passwordErrorEl, null, passwordInput); });
 
-  // --- Event Handlers ---
-  emailInput.addEventListener("input", (e) => {
-    setError(emailErrorEl, null, emailInput);
-    bannerEl.classList.add("hidden");
-  });
-  passwordInput.addEventListener("input", () => {
-    setError(passwordErrorEl, null, passwordInput);
-  });
-
-  passwordToggle.addEventListener("click", () => {
-    showPassword = !showPassword;
-    passwordInput.type = showPassword ? "text" : "password";
-    passwordToggleText.textContent = showPassword ? "Hide" : "Show";
-  });
-
-  signupLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    window.location.href = "/signup.html";
-  });
-  forgotPasswordLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    window.location.href = "/forgot-password.html";
-  });
-
-  // --- Login Handler ---
-  async function handleLogin() {
-    setError(emailErrorEl, null, emailInput);
-    setError(passwordErrorEl, null, passwordInput);
-    bannerEl.classList.add("hidden");
-
-    const emailValidationResult = validateEmail(emailInput.value);
-    const passwordValidationResult = validatePassword(passwordInput.value);
-
-    setError(emailErrorEl, emailValidationResult, emailInput);
-    setError(passwordErrorEl, passwordValidationResult, passwordInput);
-    if (emailValidationResult || passwordValidationResult) return;
-
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ Important: allow cookies
-        body: JSON.stringify({
-          email: emailInput.value.trim().toLowerCase(),
-          password: passwordInput.value,
-        }),
+      passwordToggle.addEventListener("click", () => {
+        showPassword = !showPassword;
+        passwordInput.type = showPassword ? "text" : "password";
+        passwordToggleText.textContent = showPassword ? "Hide" : "Show";
       });
 
-      const data = await response.json();
+      async function handleLogin() {
+        setError(emailErrorEl, null, emailInput);
+        setError(passwordErrorEl, null, passwordInput);
+        bannerEl.style.display = "none";
 
-      if (!response.ok) {
-        const message = data.error || "An unexpected error occurred.";
-        if (message.includes("credentials")) {
-          setError(passwordErrorEl, message, passwordInput);
-        } else if (message.includes("locked")) {
-          bannerEl.textContent = message;
-          bannerEl.classList.remove("hidden");
-        } else {
-          setError(passwordErrorEl, message, passwordInput);
+        const emailValidationResult = validateEmail(emailInput.value);
+        const passwordValidationResult = validatePassword(passwordInput.value);
+        setError(emailErrorEl, emailValidationResult, emailInput);
+        setError(passwordErrorEl, passwordValidationResult, passwordInput);
+        if (emailValidationResult || passwordValidationResult) return;
+
+        setLoading(true);
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/users/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ email: emailInput.value.trim().toLowerCase(), password: passwordInput.value })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            bannerEl.textContent = data.error || "Login failed.";
+            bannerEl.style.display = "block";
+            setLoading(false);
+            return;
+          }
+
+          // CSRF token is now automatically included in future JSON responses by backend
+          localStorage.setItem("csrfToken", data.csrfToken);
+
+          // Role-based navigation
+          switch (data.user.role) {
+            case "global_overseer": window.location.href = "/global_overseer.html"; break;
+            case "overseer": window.location.href = "/overseer.html"; break;
+            case "student": window.location.href = "/students.html"; break;
+            case "teacher": window.location.href = "/teachers.html"; break;
+            case "admin": window.location.href = "/admin.html"; break;
+            default: window.location.href = "/login.html"; break;
+          }
+        } catch (error) {
+          bannerEl.textContent = "An unexpected error occurred. Please try again later.";
+          bannerEl.style.display = "block";
+          console.error("Login error:", error);
+        } finally {
+          setLoading(false);
         }
-        console.error("Login failed:", response.status, data);
-        setLoading(false);
-        return;
       }
 
-      // ✅ CSRF token stored for subsequent requests
-      localStorage.setItem("csrfToken", data.csrfToken);
-
-      console.log("User logged in successfully:", data.user);
-
-      // Role-based navigation
-      switch (data.user.role) {
-        case "global_overseer":
-          window.location.href = "/global_overseer.html";
-          break;
-        case "overseer":
-          window.location.href = "/overseer.html";
-          break;
-        case "student":
-          window.location.href = "/students.html";
-          break;
-        case "teacher":
-          window.location.href = "/teachers.html";
-          break;
-        case "admin":
-          window.location.href = "/admin.html";
-          break;
-        default:
-          window.location.href = "/login.html";
-          break;
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      setError(passwordErrorEl, "An unexpected error occurred. Please try again later.", passwordInput);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  loginButton.addEventListener("click", handleLogin);
-</script>
-
+      loginButton.addEventListener("click", handleLogin);
+    </script>
   </body>
 </html>
