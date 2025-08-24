@@ -557,64 +557,60 @@
         class="fixed top-5 left-1/2 -translate-x-1/2 z-50 p-4 rounded-lg shadow-xl text-center min-w-80 hidden"
       ></div>
 
-      <!-- Terms of Service Modal -->
-      <div id="termsModal" class="modal-overlay hidden">
-        <div
-          class="modal-content bg-white rounded-lg shadow-lg max-w-2xl mx-auto p-6"
-        >
-          <h2 class="text-xl font-bold mb-4" data-i18n="terms_of_service_title">
-            Terms of Service
-          </h2>
-          <div
-            class="modal-body text-sm text-gray-700 space-y-4"
-            data-i18n="terms_of_service_content"
-          >
-            <p>
-              Welcome to our platform. These Terms of Service ("Terms") govern
-              your access to and use of our services, including our websites,
-              APIs, applications, and any content, data, or materials provided
-              by us (collectively, the "Service").
-            </p>
-            <p>
-              By accessing or using the Service, you agree to be bound by these
-              Terms and our Privacy Policy. If you do not agree to these Terms,
-              you may not use the Service.
-            </p>
-            <p>
-              We reserve the right to modify these Terms at any time. We will
-              notify you of any changes by posting the new Terms on our website.
-              Your continued use of the Service after any such changes
-              constitutes your acceptance of the new Terms.
-            </p>
-            <p>
-              You must be at least 13 years old to use the Service. By using the
-              Service, you represent and warrant that you are at least 13 years
-              old.
-            </p>
-            <p>
-              You are responsible for maintaining the confidentiality of your
-              account and password and for restricting access to your computer.
-              You agree to accept responsibility for all activities that occur
-              under your account or password.
-            </p>
-            <p>
-              The Service and its original content, features, and functionality
-              are and will remain the exclusive property of our company and its
-              licensors. The Service is protected by copyright, trademark, and
-              other laws of both the United States and foreign countries.
-            </p>
-          </div>
+      <!-- The Modal for Terms and Conditions -->
+    <div id="termsModal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="flex justify-between items-center mb-4">
+          <h2
+            class="text-xl font-bold"
+            data-i18n="terms_and_conditions_title"
+          ></h2>
           <button
             id="closeModalButton"
-            class="w-full mt-6 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 transition-colors"
-            data-i18n="close"
+            class="text-gray-500 hover:text-gray-700 text-2xl"
           >
-            Close
+            &times;
           </button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-4" data-i18n="terms_text_1">
+            Welcome to SmartStudentAct! By accessing or using our services, you
+            agree to be bound by the terms and conditions outlined below. These
+            terms constitute a legally binding agreement between you and
+            SmartStudentAct.
+          </p>
+          <p class="mb-4" data-i18n="terms_text_2">
+            **1. Service Description:** SmartStudentAct provides a platform for
+            students and teachers to manage academic activities, including
+            assignments, quizzes, budgets, and rewards. Our goal is to create a
+            supportive and efficient learning environment.
+          </p>
+          <p class="mb-4" data-i18n="terms_text_3">
+            **2. User Responsibilities:** You are responsible for maintaining
+            the confidentiality of your account information and for all
+            activities that occur under your account. You agree to use the
+            service in a manner consistent with all applicable laws and
+            regulations.
+          </p>
+          <p class="mb-4" data-i18n="terms_text_4">
+            **3. Intellectual Property:** All content, trademarks, and data on
+            our platform are the property of SmartStudentAct or its licensors.
+            You may not copy, reproduce, or distribute any part of the service
+            without our prior written consent.
+          </p>
+          <p class="mb-4" data-i18n="terms_text_5">
+            **4. Limitation of Liability:** SmartStudentAct is provided "as is"
+            without warranties of any kind. We are not liable for any damages,
+            direct or indirect, arising from your use of the service.
+          </p>
+          <p class="mb-4" data-i18n="terms_text_6">
+            **5. Changes to Terms:** We reserve the right to modify these terms
+            at any time. Your continued use of the service after any such
+            changes constitutes your acceptance of the new terms.
+          </p>
         </div>
       </div>
     </div>
-
     <script>
       // API URL placeholder
       const API_BASE_URL = "https://api.smartstudentact.com/api";
@@ -1365,17 +1361,26 @@
         }
       });
 
-      // Initial translation and country population on page load
-      document.addEventListener("DOMContentLoaded", () => {
-        // Corrected: Move event listeners inside this block
-        DOMElements.viewTermsLink.addEventListener("click", () => {
-          DOMElements.termsModal.style.display = "flex";
+      // Modal functionality for Terms and Conditions
+        DOMElements.openModalButton.addEventListener("click", (e) => {
+          e.preventDefault();
+          DOMElements.termsModal.classList.remove("hidden");
+          DOMElements.termsModal.classList.add("flex");
         });
 
         DOMElements.closeModalButton.addEventListener("click", () => {
-          DOMElements.termsModal.style.display = "none";
+          DOMElements.termsModal.classList.remove("flex");
+          DOMElements.termsModal.classList.add("hidden");
         });
 
+        // Optional: close modal if user clicks outside content
+        DOMElements.termsModal.addEventListener("click", (e) => {
+          if (e.target === DOMElements.termsModal) {
+            DOMElements.termsModal.classList.remove("flex");
+            DOMElements.termsModal.classList.add("hidden");
+          }
+        });
+        
         // Toggles for showing/hiding password
         DOMElements.passwordToggle.addEventListener("click", function () {
           const passwordInput = DOMElements.passwordInput;
@@ -1408,30 +1413,13 @@
           }
         );
 
-        const modal = document.getElementById("termsModal");
-        const openBtn = document.getElementById("openModalButton");
-        const closeBtn = document.getElementById("closeModalButton");
-
-        openBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          modal.classList.remove("hidden");
-        });
-
-        closeBtn.addEventListener("click", () => {
-          modal.classList.add("hidden");
-        });
-
-        // Optional: close modal if user clicks outside content
-        modal.addEventListener("click", (e) => {
-          if (e.target === modal) {
-            modal.classList.add("hidden");
-          }
-        });
-
         const lang = "en"; // Default language
         translatePage(lang);
         populateCountries();
-      });
+      ;
     </script>
   </body>
 </html>
+
+
+

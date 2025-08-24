@@ -38,6 +38,42 @@
     </style>
 </head>
 <body>
+    
+    <!-- Navbar with Language Switcher -->
+    <nav class="bg-white shadow p-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-blue-600">SmartStudentAct</h1>
+        <div class="language-switcher flex space-x-2">
+            <button id="en-btn" onclick="translatePage('en')" class="text-blue-500 hover:underline">EN</button>
+            <span>|</span>
+            <button id="fr-btn" onclick="translatePage('fr')" class="text-blue-500 hover:underline">FR</button>
+        </div>
+    </nav>
+    
+    <!-- Login Form -->
+    <div class="container">
+        <div class="form-container">
+            <h1 class="title" data-i18n="title"></h1>
+            <div id="banner"></div>
+
+            <div class="input-group">
+                <input id="emailInput" type="email" class="input" data-i18n="email_placeholder" autocomplete="email" />
+                <p id="emailError" class="error-text"></p>
+            </div>
+
+            <div class="input-group">
+                <div class="password-input-container">
+                    <input id="passwordInput" type="password" class="input" data-i18n="password_placeholder" autocomplete="current-password" />
+                    <div id="passwordToggle" class="password-toggle"><p class="password-toggle-text" data-i18n="show_password"></p></div>
+                </div>
+                <p id="passwordError" class="error-text"></p>
+            </div>
+
+            <button id="loginButton" class="button"><p class="button-text" data-i18n="login_button"></p></button>
+            <a href="/signup.html" class="link-text" data-i18n="signup_link"></a>
+            <a href="/forgot-password.html" class="link-text" data-i18n="forgot_password_link"></a>
+        </div>
+    </div>
+
     <script>
         // Create an object to hold your translation data
         const translations = {
@@ -224,40 +260,5 @@
             translatePage(lang);
         });
     </script>
-    
-    <!-- Navbar with Language Switcher -->
-    <nav class="bg-white shadow p-4 flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-blue-600">SmartStudentAct</h1>
-        <div class="language-switcher flex space-x-2">
-            <button id="en-btn" onclick="translatePage('en')" class="text-blue-500 hover:underline">EN</button>
-            <span>|</span>
-            <button id="fr-btn" onclick="translatePage('fr')" class="text-blue-500 hover:underline">FR</button>
-        </div>
-    </nav>
-    
-    <!-- Login Form -->
-    <div class="container">
-        <div class="form-container">
-            <h1 class="title" data-i18n="title"></h1>
-            <div id="banner"></div>
-
-            <div class="input-group">
-                <input id="emailInput" type="email" class="input" data-i18n="email_placeholder" autocomplete="email" />
-                <p id="emailError" class="error-text"></p>
-            </div>
-
-            <div class="input-group">
-                <div class="password-input-container">
-                    <input id="passwordInput" type="password" class="input" data-i18n="password_placeholder" autocomplete="current-password" />
-                    <div id="passwordToggle" class="password-toggle"><p class="password-toggle-text" data-i18n="show_password"></p></div>
-                </div>
-                <p id="passwordError" class="error-text"></p>
-            </div>
-
-            <button id="loginButton" class="button"><p class="button-text" data-i18n="login_button"></p></button>
-            <a href="/signup.html" class="link-text" data-i18n="signup_link"></a>
-            <a href="/forgot-password.html" class="link-text" data-i18n="forgot_password_link"></a>
-        </div>
-    </div>
 </body>
 </html>
