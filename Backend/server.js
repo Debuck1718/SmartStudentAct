@@ -12,7 +12,7 @@ const cloudinary = require("cloudinary").v2;
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 
-// ✅ CSRF middleware (automatic token injection & validation)
+// ✅ CSRF middleware
 const csrfProtection = require("./middlewares/csrf");
 
 // ───────────────────────────────────────────────
@@ -43,15 +43,12 @@ const isProd = NODE_ENV === "production";
 // 2️⃣ Express App Setup
 // ───────────────────────────────────────────────
 const app = express();
+app.set("trust proxy", 1); // ✅ trust proxy for HTTPS + cookies
 
-// ✅ Trust proxy (needed for HTTPS & secure cookies when behind proxy/CDN)
-app.set("trust proxy", 1);
-
-// ✅ Allowed domains
 const allowedOrigins = [
   "https://smartstudentact.com",
   "https://www.smartstudentact.com",
-  ...(NODE_ENV !== "production" ? ["http://localhost:3000"] : []), // for dev
+  ...(NODE_ENV !== "production" ? ["http://localhost:3000"] : []), // dev only
 ];
 
 app.use(
@@ -71,11 +68,11 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ───────────────────────────────────────────────
-// 3️⃣ Session Middleware with MongoStore
+// 3️⃣ Session Middleware
 // ───────────────────────────────────────────────
 app.use(
   session({
-    name: "ssid", // ✅ custom session cookie name
+    name: "ssid", // custom cookie name
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -85,17 +82,17 @@ app.use(
       ttl: 14 * 24 * 60 * 60, // 14 days
     }),
     cookie: {
-      httpOnly: true,                   // ✅ cannot be accessed via JS
-      secure: isProd,                   // ✅ HTTPS only in production
-      sameSite: "strict",               // ✅ prevents CSRF
-      domain: isProd ? ".smartstudentact.com" : undefined, // ✅ prod only
-      maxAge: 1000 * 60 * 60 * 24 * 7,  // ✅ 1 week session expiry
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "strict",
+      domain: isProd ? ".smartstudentact.com" : undefined,
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
     },
   })
 );
 
 // ───────────────────────────────────────────────
-// 4️⃣ Cloudinary Configuration
+// 4️⃣ Cloudinary
 // ───────────────────────────────────────────────
 try {
   cloudinary.config({
@@ -105,12 +102,12 @@ try {
   });
   console.log("✅ Cloudinary configured successfully!");
 } catch (error) {
-  console.error("❌ Failed to configure Cloudinary. Check your .env file.", error);
+  console.error("❌ Cloudinary config error", error);
   process.exit(1);
 }
 
 // ───────────────────────────────────────────────
-// 5️⃣ MongoDB Connection
+// 5️⃣ MongoDB
 // ───────────────────────────────────────────────
 async function connectMongo() {
   try {
@@ -118,20 +115,18 @@ async function connectMongo() {
     await mongoose.connect(MONGO_URI);
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
-    console.error(`❌ MongoDB connection error at ${new Date().toISOString()}:`, err);
+    console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   }
 }
 
 // ───────────────────────────────────────────────
-// 6️⃣ Agenda Job Scheduler Setup
+// 6️⃣ Agenda Jobs
 // ───────────────────────────────────────────────
 let agenda;
 async function startAgenda() {
   try {
-    agenda = new Agenda({
-      db: { address: MONGO_URI, collection: "agendaJobs" },
-    });
+    agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
 
     agenda.define("test job", async () => {
       console.log(`⏳ Running test job at ${new Date().toISOString()}`);
@@ -142,23 +137,25 @@ async function startAgenda() {
 
     console.log("📅 Agenda job scheduler started!");
   } catch (err) {
-    console.error(`❌ Agenda startup error at ${new Date().toISOString()}:`, err);
+    console.error("❌ Agenda startup error:", err);
   }
 }
 
 // ───────────────────────────────────────────────
-// 7️⃣ Routes Loader (Public + Protected w/ CSRF)
+// 7️⃣ Routes
 // ───────────────────────────────────────────────
 try {
-  const loadRoutes = require("./routes");
-  loadRoutes(app, eventBus, agenda);
+  // ✅ Mount public routes first
+  const publicRoutes = require("./routes/publicRoutes");
+  app.use("/", publicRoutes(eventBus, agenda));
 
+  // ✅ Mount protected routes under /api
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", csrfProtection, protectedRoutes);
 
   console.log("✅ Routes loaded successfully!");
 } catch (err) {
-  console.error(`❌ Routes loading error at ${new Date().toISOString()}:`, err);
+  console.error("❌ Routes loading error:", err);
   process.exit(1);
 }
 
@@ -192,7 +189,7 @@ app.use((err, req, res, next) => {
       console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
     });
   } catch (err) {
-    console.error(`❌ Fatal startup error at ${new Date().toISOString()}:`, err);
+    console.error("❌ Fatal startup error:", err);
     process.exit(1);
   }
 })();
