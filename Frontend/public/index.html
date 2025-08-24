@@ -109,7 +109,7 @@
                     © <span id="current-year"></span> SmartStudentAct | <span data-i18n="footer_text"></span>
                 </p>
                 <div class="flex justify-center space-x-6">
-                    <a href="aboutus.html" data-i18n="footer_about_link" class="text-blue-500 font-semibold hover:underline"></a>
+                    <a href="/Frontend/public/aboutus.html" data-i18n="footer_about_link" class="text-blue-500 font-semibold hover:underline"></a>
                     <a href="contact.html" data-i18n="footer_contact_link" class="text-blue-500 font-semibold hover:underline"></a>
                 </div>
             </footer>
@@ -192,13 +192,13 @@
             alertModal.style.display = 'none';
         }
 
-        // Attach event listeners to the buttons
+        // Attach event listeners to the buttons to redirect
         document.getElementById('signInBtn').addEventListener('click', () => {
-            showAlert(translations[document.documentElement.lang].modal_title, translations[document.documentElement.lang].modal_message);
+            window.location.href = '/login.html';
         });
 
         document.getElementById('signUpBtn').addEventListener('click', () => {
-            showAlert(translations[document.documentElement.lang].modal_title, translations[document.documentElement.lang].modal_message);
+            window.location.href = '/signup.html';
         });
 
         // Set up event listeners for language switcher
@@ -212,5 +212,4 @@
     </script>
 </body>
 </html>
-
 

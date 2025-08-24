@@ -858,7 +858,7 @@
         setLoadingState(requestOtpButton, true, 'signup_button');
 
         try {
-            const response = await fetch(`${API_BASE_URL}/users/request-otp`, {
+            const response = await fetch(`${API_BASE_URL}/users/signup-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form)
