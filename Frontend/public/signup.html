@@ -183,9 +183,6 @@
             <label class="sr-only" for="schoolCountrySelect" data-i18n="school_country_label"></label>
             <select id="schoolCountrySelect" class="picker">
                 <option value="" data-i18n="select_country"></option>
-                <option value="GH">Ghana</option>
-                <!-- All other countries would be listed here -->
-                <!-- The full list is too long to show here but would be in the final file -->
             </select>
         </div>
         <p id="schoolCountryError" class="error-text hidden" data-i18n="school_country_error"></p>
@@ -255,7 +252,7 @@
         <label class="sr-only" for="phoneInput" data-i18n="phone_label"></label>
         <input id="phoneInput" type="tel" data-i18n="phone_placeholder" class="input" />
         <p id="phoneError" class="error-text hidden" data-i18n="phone_error"></p>
-
+        
         <input id="emailInput" type="email" data-i18n="email_placeholder" class="input" autocomplete="email" />
         <p id="emailError" class="error-text hidden" data-i18n="email_error"></p>
 
@@ -286,238 +283,164 @@
         </div>
         <p id="termsError" class="error-text hidden" data-i18n="terms_error"></p>
 
-        <button id="requestOtpButton" type="submit" class="submit-button">
-            <span class="button-text" data-i18n="signup_button"></span>
-        </button>
-        <a href="/login.html" class="link-text" data-i18n="login_link"></a>
+        <button id="requestOtpButton" type="submit" class="submit-button" data-i18n="signup_btn"></button>
+        
+        <p class="text-center text-sm text-gray-600 mt-4">
+            <span data-i18n="have_account"></span>
+            <a href="login.html" class="text-blue-500 hover:underline font-semibold" data-i18n="login_link"></a>
+        </p>
     </div>
 
     <!-- OTP Verification Section -->
-    <div id="otpSection" class="form-section hidden">
-        <p class="text-center text-gray-600 mb-4" data-i18n="otp_instruction"></p>
+    <div id="otpVerificationSection" class="form-section hidden">
+        <h2 class="text-center text-xl font-bold mb-4 text-gray-800" data-i18n="otp_heading"></h2>
+        <p class="text-center text-gray-600 mb-4" data-i18n="otp_message"></p>
         <label class="sr-only" for="otpInput" data-i18n="otp_label"></label>
         <input id="otpInput" type="text" data-i18n="otp_placeholder" class="input" />
         <p id="otpError" class="error-text hidden" data-i18n="otp_error"></p>
-        
-        <button id="verifyOtpButton" type="button" class="submit-button mt-4">
-            <span class="button-text" data-i18n="verify_otp_button"></span>
-        </button>
-        <button id="resendOtpButton" type="button" class="link-text" data-i18n="resend_otp_button"></button>
+        <button id="verifyOtpButton" type="submit" class="submit-button" data-i18n="verify_btn"></button>
+        <button id="resendOtpButton" type="button" class="mt-4 text-sm text-blue-500 hover:underline" data-i18n="resend_otp"></button>
     </div>
-
-    <!-- Message Box -->
-    <div id="messageBox" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg opacity-0" style="min-width: 250px;">
-        <span id="messageText"></span>
-    </div>
+    
+    <!-- Custom message box to replace alerts -->
+    <div id="messageBox" class="fixed top-4 left-1/2 -translate-x-1/2 bg-blue-500 text-white py-3 px-6 rounded-lg shadow-lg z-50 opacity-0" style="min-width: 250px;"></div>
 
     <!-- Terms and Conditions Modal -->
     <div id="termsModal" class="modal-overlay">
         <div class="modal-content">
-            <h2 class="text-xl font-bold mb-4" data-i18n="terms_title"></h2>
-            <div class="modal-body text-sm text-gray-700 leading-relaxed">
-                <p class="mb-2" data-i18n="terms_p1"></p>
-                <p class="mb-2" data-i18n="terms_p2"></p>
-                <p class="mb-2" data-i18n="terms_p3"></p>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" data-i18n="terms_title"></h3>
+                <button id="closeModalButton" class="text-gray-500 hover:text-gray-700">&times;</button>
             </div>
-            <button id="closeModalButton" class="submit-button bg-gray-500 hover:bg-gray-600" data-i18n="close_modal"></button>
+            <div id="termsBody" class="modal-body text-sm text-gray-700">
+                <p data-i18n="terms_content"></p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Translations object
+    const API_BASE_URL = "https://api.smartstudentact.com/api";
+    const requestOtpButton = document.getElementById('requestOtpButton');
+    const verifyOtpButton = document.getElementById('verifyOtpButton');
+    const resendOtpButton = document.getElementById('resendOtpButton');
+    const occupationSelect = document.getElementById('occupationSelect');
+    const studentFields = document.getElementById('studentFields');
+    const teacherFields = document.getElementById('teacherFields');
+    const educationLevelSelect = document.getElementById('educationLevelSelect');
+    const schoolFields = document.getElementById('schoolFields');
+    const universityFields = document.getElementById('universityFields');
+    const signupFormSection = document.getElementById('signupFormSection');
+    const otpVerificationSection = document.getElementById('otpVerificationSection');
+    const termsModal = document.getElementById('termsModal');
+    const viewTermsLink = document.getElementById('viewTermsLink');
+    const closeModalButton = document.getElementById('closeModalButton');
+    const messageBox = document.getElementById('messageBox');
+    const schoolCountrySelect = document.getElementById('schoolCountrySelect');
+    const schoolCountryField = document.getElementById('schoolCountryField');
+
+    // State for form data and submission status
+    let form = {
+        firstName: '',
+        lastName: '',
+        occupation: '',
+        country: '',
+        educationLevel: '',
+        grade: '',
+        schoolName: '',
+        university: '',
+        uniLevel: '',
+        program: '',
+        teacherSchool: '',
+        teacherGrade: '',
+        teacherSubject: '',
+        phone: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        termsAccepted: false
+    };
+    let otpCode = '';
+    let isSubmitting = false;
+
+    // Translation Data
     const translations = {
         en: {
-            "signup_title": "📝 Create Your Account",
-            "firstname_label": "First Name",
-            "firstname_placeholder": "First Name",
-            "lastname_label": "Last Name",
-            "lastname_placeholder": "Last Name",
-            "firstname_error": "First name cannot be empty.",
-            "lastname_error": "Last name cannot be empty.",
-            "occupation_label": "Occupation",
-            "select_occupation": "Select Occupation",
-            "student": "Student",
-            "teacher": "Teacher",
-            "occupation_error": "Please select your occupation.",
-            "school_country_label": "School Country",
-            "select_country": "Select Country",
-            "school_country_error": "Please select your country.",
-            "education_level_label": "Education Level",
-            "select_education_level": "Select Education Level",
-            "junior": "Junior",
-            "senior_high": "Senior High",
-            "university": "University",
-            "education_level_error": "Please select your education level.",
-            "grade_label": "Grade",
-            "grade_placeholder": "Grade",
-            "grade_error": "Please enter your grade.",
-            "school_name_label": "School Name",
-            "school_name_placeholder": "School Name",
-            "school_name_error": "Please enter your school name.",
-            "university_label": "University",
-            "university_placeholder": "University",
-            "university_error": "Please enter your university.",
-            "university_level_label": "University Level",
-            "university_level_placeholder": "University Level",
-            "university_level_error": "Please enter your university level.",
-            "program_label": "Program",
-            "program_placeholder": "Program",
-            "program_error": "Please enter your program.",
-            "teacher_school_label": "School",
-            "teacher_school_placeholder": "School",
-            "teacher_school_error": "Please enter your school.",
-            "teacher_grade_label": "Grade / Level Taught",
-            "select_teacher_grade": "Select Grade / Level",
-            "grade_5_12": "Grade 5-12",
-            "100_level": "100 Level",
-            "200_level": "200 Level",
-            "300_level": "300 Level",
-            "400_level": "400 Level",
-            "other": "Other (Enter manually)",
-            "enter_grade_placeholder": "Enter grade / level",
-            "teacher_grade_error": "Please select or enter the grade/level you teach.",
-            "teacher_subject_label": "Subject Taught",
-            "teacher_subject_placeholder": "Subject / Program Taught",
-            "teacher_subject_error": "Please enter the subject or program you teach.",
-            "phone_label": "Phone Number",
-            "phone_placeholder": "Phone Number",
-            "phone_error": "Please enter a valid phone number.",
-            "email_placeholder": "Email",
-            "email_error": "Please enter a valid email address.",
-            "password_label": "Password",
-            "password_placeholder": "Password",
-            "password_error": "Password must be at least 6 characters long.",
-            "confirm_password_label": "Confirm Password",
-            "confirm_password_placeholder": "Confirm Password",
-            "confirm_password_error": "Passwords do not match.",
-            "show_password": "Show",
-            "hide_password": "Hide",
-            "agree_terms": "I agree to the Terms of Service and Privacy Policy",
-            "view_terms": "View Terms",
-            "terms_error": "You must agree to the terms.",
-            "signup_button": "Sign Up",
-            "login_link": "Already have an account? Log in",
-            "otp_instruction": "A 6-digit OTP has been sent to your email. Please check your spam folder.",
-            "otp_label": "OTP Code",
-            "otp_placeholder": "Enter OTP Code",
-            "otp_error": "Please enter the OTP code.",
-            "verify_otp_button": "Verify OTP",
-            "resend_otp_button": "Resend OTP",
-            "terms_title": "Terms of Service and Privacy Policy",
-            "terms_p1": "By signing up, you agree to our Terms of Service and Privacy Policy. This service is provided 'as is' and without any warranty.",
-            "terms_p2": "We reserve the right to modify these terms at any time. Your continued use of the service constitutes your acceptance of the updated terms.",
-            "terms_p3": "Your data will be used to provide and improve the service, and to communicate with you about your account. We will not share your personal information with third parties without your consent.",
-            "otp_sent_success": "OTP sent successfully! Please check your email.",
-            "otp_sent_fail": "Failed to request OTP. Please try again.",
-            "verify_otp_fail": "OTP verification failed. Please try again.",
-            "account_created": "Account created successfully! You can now log in.",
-            "signup_error": "Sign up failed. Please try again.",
-            "resend_fail": "Failed to resend OTP. Please try again."
+            "signup_title": "Create Your Account",
+            "firstname_label": "First Name", "firstname_placeholder": "First Name", "firstname_error": "First name is required.",
+            "lastname_label": "Last Name", "lastname_placeholder": "Last Name", "lastname_error": "Last name is required.",
+            "occupation_label": "I am a...", "select_occupation": "Select your occupation", "student": "Student", "teacher": "Teacher", "occupation_error": "Please select your occupation.",
+            "school_country_label": "Country", "select_country": "Select a country", "school_country_error": "Please select a country.",
+            "education_level_label": "Education Level", "select_education_level": "Select your education level", "junior": "Junior High School", "senior_high": "Senior High School", "university": "University", "education_level_error": "Please select an education level.",
+            "grade_label": "Grade", "grade_placeholder": "Grade", "grade_error": "Grade is required.",
+            "school_name_label": "School Name", "school_name_placeholder": "School Name", "school_name_error": "School name is required.",
+            "university_label": "University", "university_placeholder": "University", "university_error": "University is required.",
+            "university_level_label": "University Level", "university_level_placeholder": "University Level", "university_level_error": "University level is required.",
+            "program_label": "Program", "program_placeholder": "Program", "program_error": "Program is required.",
+            "teacher_school_label": "School Name", "teacher_school_placeholder": "School Name", "teacher_school_error": "School name is required.",
+            "teacher_grade_label": "Grades Taught", "select_teacher_grade": "Select grades taught", "grade_5_12": "5-12", "100_level": "100-level", "200_level": "200-level", "300_level": "300-level", "400_level": "400-level", "other": "Other", "teacher_grade_error": "Grades taught is required.",
+            "enter_grade_placeholder": "Enter grade (e.g., K-4)",
+            "teacher_subject_label": "Subject", "teacher_subject_placeholder": "Subject taught", "teacher_subject_error": "Subject is required.",
+            "phone_label": "Phone Number", "phone_placeholder": "Phone Number", "phone_error": "A valid phone number is required.",
+            "email_placeholder": "Email Address", "email_error": "A valid email is required.",
+            "password_label": "Password", "password_placeholder": "Password", "password_error": "Password must be at least 8 characters.",
+            "confirm_password_label": "Confirm Password", "confirm_password_placeholder": "Confirm Password", "confirm_password_error": "Passwords do not match.",
+            "agree_terms": "I agree to the", "view_terms": "Terms and Conditions", "terms_error": "You must accept the terms and conditions.",
+            "signup_btn": "Sign Up",
+            "have_account": "Already have an account?", "login_link": "Log In",
+            "otp_heading": "Verify your email", "otp_message": "A 6-digit verification code has been sent to your email.", "otp_label": "Verification Code", "otp_placeholder": "Enter OTP", "otp_error": "Please enter a valid OTP.",
+            "verify_btn": "Verify OTP",
+            "resend_otp": "Resend OTP",
+            "resend_fail": "Failed to resend OTP.",
+            "otp_sent_success": "A new OTP has been sent to your email.",
+            "terms_title": "Terms and Conditions",
+            "terms_content": "These are the terms and conditions for using the SmartStudentAct application. By signing up, you agree to these terms. ...",
+            "unknown_error": "An unknown error occurred. Please try again."
         },
         fr: {
-            "signup_title": "📝 Créer votre compte",
-            "firstname_label": "Prénom",
-            "firstname_placeholder": "Prénom",
-            "lastname_label": "Nom de famille",
-            "lastname_placeholder": "Nom de famille",
-            "firstname_error": "Le prénom ne peut pas être vide.",
-            "lastname_error": "Le nom de famille ne peut pas être vide.",
-            "occupation_label": "Profession",
-            "select_occupation": "Sélectionner la profession",
-            "student": "Étudiant",
-            "teacher": "Enseignant",
-            "occupation_error": "Veuillez sélectionner votre profession.",
-            "school_country_label": "Pays de l'école",
-            "select_country": "Sélectionner le pays",
-            "school_country_error": "Veuillez sélectionner votre pays.",
-            "education_level_label": "Niveau d'études",
-            "select_education_level": "Sélectionner le niveau d'études",
-            "junior": "Junior",
-            "senior_high": "Lycée",
-            "university": "Université",
-            "education_level_error": "Veuillez sélectionner votre niveau d'études.",
-            "grade_label": "Classe",
-            "grade_placeholder": "Classe",
-            "grade_error": "Veuillez entrer votre classe.",
-            "school_name_label": "Nom de l'école",
-            "school_name_placeholder": "Nom de l'école",
-            "school_name_error": "Veuillez entrer le nom de votre école.",
-            "university_label": "Université",
-            "university_placeholder": "Université",
-            "university_error": "Veuillez entrer le nom de votre université.",
-            "university_level_label": "Niveau universitaire",
-            "university_level_placeholder": "Niveau universitaire",
-            "university_level_error": "Veuillez entrer votre niveau universitaire.",
-            "program_label": "Programme",
-            "program_placeholder": "Programme",
-            "program_error": "Veuillez entrer votre programme.",
-            "teacher_school_label": "École",
-            "teacher_school_placeholder": "École",
-            "teacher_school_error": "Veuillez entrer le nom de votre école.",
-            "teacher_grade_label": "Classe / Niveau enseigné",
-            "select_teacher_grade": "Sélectionner la classe / le niveau",
-            "grade_5_12": "Classes 5-12",
-            "100_level": "Niveau 100",
-            "200_level": "Niveau 200",
-            "300_level": "Niveau 300",
-            "400_level": "Niveau 400",
-            "other": "Autre (entrer manuellement)",
-            "enter_grade_placeholder": "Entrer la classe / le niveau",
-            "teacher_grade_error": "Veuillez sélectionner ou entrer la classe/le niveau que vous enseignez.",
-            "teacher_subject_label": "Matière enseignée",
-            "teacher_subject_placeholder": "Matière / Programme enseigné",
-            "teacher_subject_error": "Veuillez entrer la matière ou le programme que vous enseignez.",
-            "phone_label": "Numéro de téléphone",
-            "phone_placeholder": "Numéro de téléphone",
-            "phone_error": "Veuillez entrer un numéro de téléphone valide.",
-            "email_placeholder": "Adresse e-mail",
-            "email_error": "Veuillez entrer une adresse e-mail valide.",
-            "password_label": "Mot de passe",
-            "password_placeholder": "Mot de passe",
-            "password_error": "Le mot de passe doit contenir au moins 6 caractères.",
-            "confirm_password_label": "Confirmer le mot de passe",
-            "confirm_password_placeholder": "Confirmer le mot de passe",
-            "confirm_password_error": "Les mots de passe ne correspondent pas.",
-            "show_password": "Afficher",
-            "hide_password": "Masquer",
-            "agree_terms": "J'accepte les conditions d'utilisation et la politique de confidentialité",
-            "view_terms": "Voir les conditions",
-            "terms_error": "Vous devez accepter les conditions.",
-            "signup_button": "S'inscrire",
-            "login_link": "Vous avez déjà un compte ? Se connecter",
-            "otp_instruction": "Un code OTP à 6 chiffres a été envoyé à votre e-mail. Veuillez vérifier votre dossier de spams.",
-            "otp_label": "Code OTP",
-            "otp_placeholder": "Entrez le code OTP",
-            "otp_error": "Veuillez entrer le code OTP.",
-            "verify_otp_button": "Vérifier l'OTP",
-            "resend_otp_button": "Renvoyer l'OTP",
-            "terms_title": "Conditions d'utilisation et politique de confidentialité",
-            "terms_p1": "En vous inscrivant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité. Ce service est fourni 'tel quel' et sans aucune garantie.",
-            "terms_p2": "Nous nous réservons le droit de modifier ces conditions à tout moment. Votre utilisation continue du service constitue votre acceptation des conditions mises à jour.",
-            "terms_p3": "Vos données seront utilisées pour fournir et améliorer le service, et pour communiquer avec vous concernant votre compte. Nous ne partagerons pas vos informations personnelles avec des tiers sans votre consentement.",
-            "otp_sent_success": "OTP envoyé avec succès ! Veuillez vérifier votre e-mail.",
-            "otp_sent_fail": "Échec de la demande d'OTP. Veuillez réessayer.",
-            "verify_otp_fail": "Échec de la vérification de l'OTP. Veuillez réessayer.",
-            "account_created": "Compte créé avec succès ! Vous pouvez maintenant vous connecter.",
-            "signup_error": "Échec de l'inscription. Veuillez réessayer.",
-            "resend_fail": "Échec du renvoi de l'OTP. Veuillez réessayer."
+            "signup_title": "Créer votre compte",
+            "firstname_label": "Prénom", "firstname_placeholder": "Prénom", "firstname_error": "Le prénom est requis.",
+            "lastname_label": "Nom de famille", "lastname_placeholder": "Nom de famille", "lastname_error": "Le nom de famille est requis.",
+            "occupation_label": "Je suis un(e)...", "select_occupation": "Sélectionnez votre profession", "student": "Étudiant", "teacher": "Enseignant", "occupation_error": "Veuillez sélectionner votre profession.",
+            "school_country_label": "Pays", "select_country": "Sélectionnez un pays", "school_country_error": "Veuillez sélectionner un pays.",
+            "education_level_label": "Niveau d'éducation", "select_education_level": "Sélectionnez votre niveau d'éducation", "junior": "Collège", "senior_high": "Lycée", "university": "Université", "education_level_error": "Veuillez sélectionner un niveau d'éducation.",
+            "grade_label": "Niveau", "grade_placeholder": "Niveau", "grade_error": "Le niveau est requis.",
+            "school_name_label": "Nom de l'école", "school_name_placeholder": "Nom de l'école", "school_name_error": "Le nom de l'école est requis.",
+            "university_label": "Université", "university_placeholder": "Université", "university_error": "L'université est requise.",
+            "university_level_label": "Niveau universitaire", "university_level_placeholder": "Niveau universitaire", "university_level_error": "Le niveau universitaire est requis.",
+            "program_label": "Programme", "program_placeholder": "Programme", "program_error": "Le programme est requis.",
+            "teacher_school_label": "Nom de l'école", "teacher_school_placeholder": "Nom de l'école", "teacher_school_error": "Le nom de l'école est requis.",
+            "teacher_grade_label": "Classes enseignées", "select_teacher_grade": "Sélectionnez les classes enseignées", "grade_5_12": "5-12", "100_level": "Niveau 100", "200_level": "Niveau 200", "300_level": "Niveau 300", "400_level": "Niveau 400", "other": "Autre", "teacher_grade_error": "Les classes enseignées sont requises.",
+            "enter_grade_placeholder": "Entrez le niveau (ex. : Maternelle-CM2)",
+            "teacher_subject_label": "Sujet", "teacher_subject_placeholder": "Sujet enseigné", "teacher_subject_error": "Le sujet est requis.",
+            "phone_label": "Numéro de téléphone", "phone_placeholder": "Numéro de téléphone", "phone_error": "Un numéro de téléphone valide est requis.",
+            "email_placeholder": "Adresse e-mail", "email_error": "Une adresse e-mail valide est requise.",
+            "password_label": "Mot de passe", "password_placeholder": "Mot de passe", "password_error": "Le mot de passe doit contenir au moins 8 caractères.",
+            "confirm_password_label": "Confirmer le mot de passe", "confirm_password_placeholder": "Confirmer le mot de passe", "confirm_password_error": "Les mots de passe ne correspondent pas.",
+            "agree_terms": "J'accepte les", "view_terms": "Termes et Conditions", "terms_error": "Vous devez accepter les termes et conditions.",
+            "signup_btn": "S'inscrire",
+            "have_account": "Vous avez déjà un compte?", "login_link": "Se connecter",
+            "otp_heading": "Vérifiez votre e-mail", "otp_message": "Un code de vérification à 6 chiffres a été envoyé à votre adresse e-mail.", "otp_label": "Code de vérification", "otp_placeholder": "Entrez le code OTP", "otp_error": "Veuillez entrer un code OTP valide.",
+            "verify_btn": "Vérifier le code",
+            "resend_otp": "Renvoyer le code",
+            "resend_fail": "Échec du renvoi du code OTP.",
+            "otp_sent_success": "Un nouveau code OTP a été envoyé à votre adresse e-mail.",
+            "terms_title": "Termes et Conditions",
+            "terms_content": "Voici les termes et conditions d'utilisation de l'application SmartStudentAct. En vous inscrivant, vous acceptez ces termes. ...",
+            "unknown_error": "Une erreur inconnue est survenue. Veuillez réessayer."
         }
     };
-
-    let currentLang = 'en';
-
+    
     // Function to translate the page based on the language key
     function translatePage(lang) {
-        currentLang = lang;
         const elements = document.querySelectorAll('[data-i18n]');
         elements.forEach(element => {
             const key = element.getAttribute('data-i18n');
             if (translations[lang] && translations[lang][key]) {
-                if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
                     element.placeholder = translations[lang][key];
-                } else if (element.tagName === "BUTTON" || element.tagName === "SPAN" || element.tagName === "P" || element.tagName === "H1" || element.tagName === "H2" || element.tagName === "LABEL" || element.tagName === "A") {
-                    element.textContent = translations[lang][key];
+                } else {
+                    element.innerHTML = translations[lang][key];
                 }
             }
         });
@@ -526,399 +449,189 @@
         // Update active state of language buttons
         document.getElementById('en-btn').classList.remove('active');
         document.getElementById('fr-btn').classList.remove('active');
-        document.getElementById(`${lang}-btn`).classList.add('active');
+        const activeBtn = document.getElementById(`${lang}-btn`);
+        if (activeBtn) activeBtn.classList.add('active');
+    }
 
-        // Re-translate all <option> elements inside <select>
-        document.querySelectorAll('select.picker option').forEach(option => {
-            const key = option.getAttribute('data-i18n');
-            if (key && translations[lang] && translations[lang][key]) {
-                option.textContent = translations[lang][key];
-            }
-        });
-
-        // Re-translate password toggle text
-        const passwordToggleText = document.getElementById('passwordToggle');
-        if (passwordToggleText) {
-            passwordToggleText.textContent = passwordInput.type === 'text' ? translations[lang].hide_password : translations[lang].show_password;
+    // Function to show custom message box
+    function showMessage(message, isSuccess = false) {
+        if (translations[document.documentElement.lang] && translations[document.documentElement.lang][message]) {
+            message = translations[document.documentElement.lang][message];
         }
-        const confirmPasswordToggleText = document.getElementById('confirmPasswordToggle');
-        if (confirmPasswordToggleText) {
-            confirmPasswordToggleText.textContent = confirmPasswordInput.type === 'text' ? translations[lang].hide_password : translations[lang].show_password;
-        }
-    }
-
-    // Initialize state and elements
-    const API_BASE_URL = "https://api.smartstudentact.com/api";
-    let isSubmitting = false;
-    let form = {};
-
-    // Get all necessary elements by ID
-    const signupFormSection = document.getElementById('signupFormSection');
-    const otpSection = document.getElementById('otpSection');
-    const requestOtpButton = document.getElementById('requestOtpButton');
-    const verifyOtpButton = document.getElementById('verifyOtpButton');
-    const resendOtpButton = document.getElementById('resendOtpButton');
-    const messageBox = document.getElementById('messageBox');
-    const messageText = document.getElementById('messageText');
-    const termsModal = document.getElementById('termsModal');
-    const viewTermsLink = document.getElementById('viewTermsLink');
-    const closeModalButton = document.getElementById('closeModalButton');
-
-    // Form fields
-    const firstNameInput = document.getElementById('firstNameInput');
-    const lastNameInput = document.getElementById('lastNameInput');
-    const occupationSelect = document.getElementById('occupationSelect');
-    const schoolCountrySelect = document.getElementById('schoolCountrySelect');
-    const educationLevelSelect = document.getElementById('educationLevelSelect');
-    const gradeInput = document.getElementById('gradeInput');
-    const schoolNameInput = document.getElementById('schoolNameInput');
-    const universityInput = document.getElementById('universityInput');
-    const uniLevelInput = document.getElementById('uniLevelInput');
-    const programInput = document.getElementById('programInput');
-    const teacherSchoolInput = document.getElementById('teacherSchoolInput');
-    const teacherGradeSelect = document.getElementById('teacherGradeSelect');
-    const teacherGradeInput = document.getElementById('teacherGradeInput');
-    const teacherSubjectInput = document.getElementById('teacherSubjectInput');
-    const phoneInput = document.getElementById('phoneInput');
-    const emailInput = document.getElementById('emailInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const confirmPasswordInput = document.getElementById('confirmPasswordInput');
-    const termsCheckbox = document.getElementById('termsCheckbox');
-    const otpInput = document.getElementById('otpInput');
-    
-    // Error elements
-    const firstNameError = document.getElementById('firstNameError');
-    const lastNameError = document.getElementById('lastNameError');
-    const occupationError = document.getElementById('occupationError');
-    const schoolCountryError = document.getElementById('schoolCountryError');
-    const educationLevelError = document.getElementById('educationLevelError');
-    const gradeError = document.getElementById('gradeError');
-    const schoolNameError = document.getElementById('schoolNameError');
-    const universityError = document.getElementById('universityError');
-    const uniLevelError = document.getElementById('uniLevelError');
-    const programError = document.getElementById('programError');
-    const teacherSchoolError = document.getElementById('teacherSchoolError');
-    const teacherGradeError = document.getElementById('teacherGradeError');
-    const teacherSubjectError = document.getElementById('teacherSubjectError');
-    const phoneError = document.getElementById('phoneError');
-    const emailError = document.getElementById('emailError');
-    const passwordError = document.getElementById('passwordError');
-    const confirmPasswordError = document.getElementById('confirmPasswordError');
-    const termsError = document.getElementById('termsError');
-    const otpError = document.getElementById('otpError');
-    
-    const studentFields = document.getElementById('studentFields');
-    const teacherFields = document.getElementById('teacherFields');
-    const schoolCountryField = document.getElementById('schoolCountryField');
-    const schoolFields = document.getElementById('schoolFields');
-    const universityFields = document.getElementById('universityFields');
-
-    // Toggle password visibility
-    function setupPasswordToggle(passwordInput, toggleButton) {
-        let showPassword = false;
-        toggleButton.addEventListener('click', () => {
-            showPassword = !showPassword;
-            passwordInput.type = showPassword ? 'text' : 'password';
-            toggleButton.textContent = showPassword ? translations[currentLang].hide_password : translations[currentLang].show_password;
-        });
-    }
-
-    setupPasswordToggle(passwordInput, document.getElementById('passwordToggle'));
-    setupPasswordToggle(confirmPasswordInput, document.getElementById('confirmPasswordToggle'));
-
-    // Validation functions
-    function validateName(value, type) {
-        if (!value.trim()) {
-            return type === 'first' ? 'firstname_error' : 'lastname_error';
-        }
-        return null;
-    }
-
-    function validateOccupation(value) {
-        if (!value) return 'occupation_error';
-        return null;
-    }
-    
-    function validateSchoolCountry(value) {
-        if (!value) return 'school_country_error';
-        return null;
-    }
-
-    function validateEducationLevel(value) {
-        if (!value) return 'education_level_error';
-        return null;
-    }
-
-    function validateGrade(value) {
-        if (!value) return 'grade_error';
-        return null;
-    }
-
-    function validateSchoolName(value) {
-        if (!value) return 'school_name_error';
-        return null;
-    }
-
-    function validateUniversity(value) {
-        if (!value) return 'university_error';
-        return null;
-    }
-
-    function validateUniLevel(value) {
-        if (!value) return 'university_level_error';
-        return null;
-    }
-
-    function validateProgram(value) {
-        if (!value) return 'program_error';
-        return null;
-    }
-    
-    function validateTeacherSchool(value) {
-        if (!value) return 'teacher_school_error';
-        return null;
-    }
-
-    function validateTeacherGrade(selectValue, inputValue) {
-        if (selectValue === 'other' && !inputValue.trim()) {
-            return 'teacher_grade_error';
-        }
-        if (!selectValue) return 'teacher_grade_error';
-        return null;
-    }
-    
-    function validateTeacherSubject(value) {
-        if (!value) return 'teacher_subject_error';
-        return null;
-    }
-    
-    function validatePhone(value) {
-        // A simple validation for a non-empty string for now
-        if (!value.trim()) return 'phone_error';
-        return null;
-    }
-
-    function validateEmail(value) {
-        if (!/\S+@\S+\.\S+/.test(value)) return 'email_error';
-        return null;
-    }
-
-    function validatePassword(value) {
-        if (value.length < 6) return 'password_error';
-        return null;
-    }
-
-    function validateConfirmPassword(password, confirmPassword) {
-        if (password !== confirmPassword) return 'confirm_password_error';
-        return null;
-    }
-
-    function validateTerms(checked) {
-        if (!checked) return 'terms_error';
-        return null;
-    }
-
-    function setError(element, messageKey, inputElement) {
-        if (messageKey) {
-            element.textContent = translations[currentLang][messageKey];
-            element.classList.remove('hidden');
-            inputElement.classList.add('error');
-        } else {
-            element.textContent = '';
-            element.classList.add('hidden');
-            inputElement.classList.remove('error');
-        }
-    }
-
-    function setLoadingState(button, isLoading, buttonTextKey) {
-        isSubmitting = isLoading;
-        button.disabled = isLoading;
-        button.innerHTML = isLoading ? '<div class="spinner"></div>' : `<span class="button-text">${translations[currentLang][buttonTextKey]}</span>`;
-    }
-
-    function showMessage(textKey, isSuccess = false) {
-        messageText.textContent = translations[currentLang][textKey];
-        messageBox.className = `fixed bottom-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg opacity-100 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
+        messageBox.textContent = message;
+        messageBox.style.opacity = '1';
+        messageBox.className = `fixed top-4 left-1/2 -translate-x-1/2 py-3 px-6 rounded-lg shadow-lg z-50 transition-opacity duration-300 ${isSuccess ? 'bg-green-500' : 'bg-red-500'} text-white`;
         setTimeout(() => {
-            messageBox.style.opacity = 0;
+            messageBox.style.opacity = '0';
         }, 3000);
     }
+
+    // Validation functions
+    function validateInput(input, errorElement, validationFn, errorMessageKey) {
+        if (validationFn()) {
+            input.classList.remove('error');
+            errorElement.classList.add('hidden');
+            return true;
+        } else {
+            input.classList.add('error');
+            errorElement.textContent = translations[document.documentElement.lang][errorMessageKey];
+            errorElement.classList.remove('hidden');
+            return false;
+        }
+    }
+
+    const validations = {
+        firstNameInput: () => form.firstName.trim() !== '',
+        lastNameInput: () => form.lastName.trim() !== '',
+        occupationSelect: () => form.occupation.trim() !== '',
+        schoolCountrySelect: () => form.country.trim() !== '',
+        phoneInput: () => /^\d{10,15}$/.test(form.phone),
+        emailInput: () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email),
+        passwordInput: () => form.password.length >= 8,
+        confirmPasswordInput: () => form.confirmPassword === form.password,
+        termsCheckbox: () => form.termsAccepted
+    };
+
+    // Helper function to set loading state on buttons
+    function setLoadingState(button, isLoading, originalTextKey) {
+        button.disabled = isLoading;
+        button.innerHTML = isLoading 
+            ? '<div class="spinner"></div>' 
+            : translations[document.documentElement.lang][originalTextKey];
+    }
     
-    // Event listeners for dynamic fields
+    // Function to fetch countries and populate the dropdown
+    async function populateCountries() {
+        try {
+            const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
+            if (!response.ok) {
+                throw new Error('Failed to fetch countries.');
+            }
+            const countries = await response.json();
+            const sortedCountries = countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
+
+            sortedCountries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.cca2;
+                option.textContent = country.name.common;
+                schoolCountrySelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error fetching countries:', error);
+            // Fallback to a single option if the API call fails
+            const option = document.createElement('option');
+            option.value = "GH";
+            option.textContent = "Ghana";
+            schoolCountrySelect.appendChild(option);
+        }
+    }
+
+    // Event listeners
     occupationSelect.addEventListener('change', () => {
-        studentFields.classList.add('hidden');
-        teacherFields.classList.add('hidden');
-        schoolCountryField.classList.add('hidden');
-        
-        const selected = occupationSelect.value;
-        if (selected) {
+        form.occupation = occupationSelect.value;
+        if (form.occupation === 'student') {
+            studentFields.classList.remove('hidden');
+            teacherFields.classList.add('hidden');
             schoolCountryField.classList.remove('hidden');
-            if (selected === 'student') {
-                studentFields.classList.remove('hidden');
-            } else if (selected === 'teacher') {
-                teacherFields.classList.remove('hidden');
-            }
+        } else if (form.occupation === 'teacher') {
+            teacherFields.classList.remove('hidden');
+            studentFields.classList.add('hidden');
+            schoolCountryField.classList.add('hidden');
+        } else {
+            studentFields.classList.add('hidden');
+            teacherFields.classList.add('hidden');
+            schoolCountryField.classList.add('hidden');
         }
     });
 
-    educationLevelSelect.addEventListener('change', () => {
-        schoolFields.classList.add('hidden');
-        universityFields.classList.add('hidden');
-        
-        const selected = educationLevelSelect.value;
-        if (selected === 'junior' || selected === 'high') {
-            schoolFields.classList.remove('hidden');
-        } else if (selected === 'university') {
-            universityFields.classList.remove('hidden');
-        }
-    });
-
-    teacherGradeSelect.addEventListener('change', () => {
-        teacherGradeInput.classList.add('hidden');
-        if (teacherGradeSelect.value === 'other') {
-            teacherGradeInput.classList.remove('hidden');
-        }
-    });
-    
-    // Clear errors on input
-    const inputElements = document.querySelectorAll('.input, .picker');
-    inputElements.forEach(input => {
-        input.addEventListener('input', (e) => {
-            const errorElement = document.getElementById(e.target.id.replace('Input', 'Error').replace('Select', 'Error'));
-            if (errorElement) {
-                errorElement.classList.add('hidden');
-                e.target.classList.remove('error');
-            }
-        });
-    });
-
-    // Request OTP flow
     requestOtpButton.addEventListener('click', async () => {
-        let isValid = true;
-        
-        // General fields
-        if (validateName(firstNameInput.value, 'first')) { setError(firstNameError, validateName(firstNameInput.value, 'first'), firstNameInput); isValid = false; }
-        if (validateName(lastNameInput.value, 'last')) { setError(lastNameError, validateName(lastNameInput.value, 'last'), lastNameInput); isValid = false; }
-        if (validateOccupation(occupationSelect.value)) { setError(occupationError, validateOccupation(occupationSelect.value), occupationSelect); isValid = false; }
-        if (validateSchoolCountry(schoolCountrySelect.value)) { setError(schoolCountryError, validateSchoolCountry(schoolCountrySelect.value), schoolCountrySelect); isValid = false; }
+        // Collect form data
+        form.firstName = document.getElementById('firstNameInput').value;
+        form.lastName = document.getElementById('lastNameInput').value;
+        form.country = document.getElementById('schoolCountrySelect').value;
+        form.email = document.getElementById('emailInput').value;
+        form.password = document.getElementById('passwordInput').value;
+        form.confirmPassword = document.getElementById('confirmPasswordInput').value;
+        form.termsAccepted = document.getElementById('termsCheckbox').checked;
 
-        // Conditional fields
-        if (occupationSelect.value === 'student') {
-            if (validateEducationLevel(educationLevelSelect.value)) { setError(educationLevelError, validateEducationLevel(educationLevelSelect.value), educationLevelSelect); isValid = false; }
-            if (educationLevelSelect.value === 'junior' || educationLevelSelect.value === 'high') {
-                if (validateGrade(gradeInput.value)) { setError(gradeError, validateGrade(gradeInput.value), gradeInput); isValid = false; }
-                if (validateSchoolName(schoolNameInput.value)) { setError(schoolNameError, validateSchoolName(schoolNameInput.value), schoolNameInput); isValid = false; }
-            } else if (educationLevelSelect.value === 'university') {
-                if (validateUniversity(universityInput.value)) { setError(universityError, validateUniversity(universityInput.value), universityInput); isValid = false; }
-                if (validateUniLevel(uniLevelInput.value)) { setError(uniLevelError, validateUniLevel(uniLevelInput.value), uniLevelInput); isValid = false; }
-                if (validateProgram(programInput.value)) { setError(programError, validateProgram(programInput.value), programInput); isValid = false; }
-            }
-        } else if (occupationSelect.value === 'teacher') {
-            if (validateTeacherSchool(teacherSchoolInput.value)) { setError(teacherSchoolError, validateTeacherSchool(teacherSchoolInput.value), teacherSchoolInput); isValid = false; }
-            if (validateTeacherGrade(teacherGradeSelect.value, teacherGradeInput.value)) { setError(teacherGradeError, validateTeacherGrade(teacherGradeSelect.value, teacherGradeInput.value), teacherGradeSelect); isValid = false; }
-            if (validateTeacherSubject(teacherSubjectInput.value)) { setError(teacherSubjectError, validateTeacherSubject(teacherSubjectInput.value), teacherSubjectInput); isValid = false; }
+        // Validation
+        const isFormValid = 
+            validateInput(document.getElementById('firstNameInput'), document.getElementById('firstNameError'), validations.firstNameInput, 'firstname_error') &
+            validateInput(document.getElementById('lastNameInput'), document.getElementById('lastNameError'), validations.lastNameInput, 'lastname_error') &
+            validateInput(occupationSelect, document.getElementById('occupationError'), validations.occupationSelect, 'occupation_error') &
+            validateInput(document.getElementById('emailInput'), document.getElementById('emailError'), validations.emailInput, 'email_error') &
+            validateInput(document.getElementById('passwordInput'), document.getElementById('passwordError'), validations.passwordInput, 'password_error') &
+            validateInput(document.getElementById('confirmPasswordInput'), document.getElementById('confirmPasswordError'), validations.confirmPasswordInput, 'confirm_password_error') &
+            validateInput(document.getElementById('termsCheckbox'), document.getElementById('termsError'), validations.termsCheckbox, 'terms_error');
+
+        if (!isFormValid || isSubmitting) {
+            return;
         }
 
-        // Final mandatory fields
-        if (validatePhone(phoneInput.value)) { setError(phoneError, validatePhone(phoneInput.value), phoneInput); isValid = false; }
-        if (validateEmail(emailInput.value)) { setError(emailError, validateEmail(emailInput.value), emailInput); isValid = false; }
-        if (validatePassword(passwordInput.value)) { setError(passwordError, validatePassword(passwordInput.value), passwordInput); isValid = false; }
-        if (validateConfirmPassword(passwordInput.value, confirmPasswordInput.value)) { setError(confirmPasswordError, validateConfirmPassword(passwordInput.value, confirmPasswordInput.value), confirmPasswordInput); isValid = false; }
-        if (validateTerms(termsCheckbox.checked)) { setError(termsError, validateTerms(termsCheckbox.checked), termsCheckbox); isValid = false; }
-
-        if (!isValid) return;
-
-        form = {
-            firstName: firstNameInput.value,
-            lastName: lastNameInput.value,
-            occupation: occupationSelect.value,
-            schoolCountry: schoolCountrySelect.value,
-            phone: phoneInput.value,
-            email: emailInput.value,
-            password: passwordInput.value,
-            ...(occupationSelect.value === 'student' && {
-                educationLevel: educationLevelSelect.value,
-                ...(educationLevelSelect.value === 'junior' || educationLevelSelect.value === 'high' ? {
-                    grade: gradeInput.value,
-                    schoolName: schoolNameInput.value
-                } : {}),
-                ...(educationLevelSelect.value === 'university' ? {
-                    university: universityInput.value,
-                    uniLevel: uniLevelInput.value,
-                    program: programInput.value
-                } : {})
-            }),
-            ...(occupationSelect.value === 'teacher' && {
-                teacherSchool: teacherSchoolInput.value,
-                teacherGrade: teacherGradeSelect.value === 'other' ? teacherGradeInput.value : teacherGradeSelect.value,
-                teacherSubject: teacherSubjectInput.value
-            })
-        };
-
-        setLoadingState(requestOtpButton, true, 'signup_button');
+        setLoadingState(requestOtpButton, true, 'signup_btn');
 
         try {
             const response = await fetch(`${API_BASE_URL}/users/signup-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form)
+                body: JSON.stringify({ email: form.email })
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || translations.en.otp_sent_fail);
+                throw new Error(errorData.error || "Failed to request OTP. Please try again.");
             }
-            
-            showMessage('otp_sent_success', true);
+
+            showMessage("A 6-digit verification code has been sent to your email.", true);
             signupFormSection.classList.add('hidden');
-            otpSection.classList.remove('hidden');
+            otpVerificationSection.classList.remove('hidden');
 
         } catch (err) {
             console.error("Request OTP error:", err);
-            showMessage(err.message || translations.en.otp_sent_fail);
+            showMessage(err.message || "Failed to request OTP. Please try again.");
         } finally {
-            setLoadingState(requestOtpButton, false, 'signup_button');
+            setLoadingState(requestOtpButton, false, 'signup_btn');
         }
     });
 
     verifyOtpButton.addEventListener('click', async () => {
-        const otpCode = otpInput.value;
+        otpCode = document.getElementById('otpInput').value;
         if (!otpCode.trim() || isSubmitting) {
-            setError(otpError, 'otp_error', otpInput);
+            showMessage("Please enter the OTP code.");
             return;
         }
 
-        setLoadingState(verifyOtpButton, true, 'verify_otp_button');
+        setLoadingState(verifyOtpButton, true, 'verify_btn');
 
         try {
             const response = await fetch(`${API_BASE_URL}/users/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: otpCode, email: form.email, ...form })
+                body: JSON.stringify({ code: otpCode, ...form })
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || translations.en.verify_otp_fail);
+                throw new Error(errorData.error || "OTP verification failed. Please try again.");
             }
             
-            showMessage('account_created', true);
+            showMessage("Account created successfully! You can now log in.", 'success');
             setTimeout(() => {
-                window.location.href = '/login.html';
+                window.location.href = '/login.html'; // Redirect to login page
             }, 1500);
 
         } catch (err) {
             console.error("Verify OTP error:", err);
-            showMessage(err.message || translations.en.verify_otp_fail);
+            showMessage(err.message || "OTP verification failed. Please try again.");
         } finally {
-            setLoadingState(verifyOtpButton, false, 'verify_otp_button');
+            setLoadingState(verifyOtpButton, false, 'verify_btn');
         }
     });
     
     resendOtpButton.addEventListener('click', async () => {
-        setLoadingState(resendOtpButton, true, 'resend_otp_button');
+        setLoadingState(resendOtpButton, true, 'resend_otp');
         try {
-            const response = await fetch(`${API_BASE_URL}/users/request-otp`, {
+            const response = await fetch(`${API_BASE_URL}/users/signup-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: form.email })
@@ -934,7 +647,7 @@
             console.error("Resend OTP error:", err);
             showMessage(err.message || translations.en.resend_fail);
         } finally {
-            setLoadingState(resendOtpButton, false, 'resend_otp_button');
+            setLoadingState(resendOtpButton, false, 'resend_otp');
         }
     });
 
@@ -947,11 +660,29 @@
         termsModal.style.display = 'none';
     });
     
+    // Password visibility toggles
+    function setupPasswordToggle(inputId, toggleId) {
+        const passwordInput = document.getElementById(inputId);
+        const passwordToggle = document.getElementById(toggleId);
+        passwordToggle.textContent = 'Show';
+        passwordToggle.addEventListener('click', () => {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordToggle.textContent = 'Hide';
+            } else {
+                passwordInput.type = 'password';
+                passwordToggle.textContent = 'Show';
+            }
+        });
+    }
+
+    setupPasswordToggle('passwordInput', 'passwordToggle');
+    setupPasswordToggle('confirmPasswordInput', 'confirmPasswordToggle');
+
     // Initial translation on page load
     document.addEventListener('DOMContentLoaded', () => {
-        const lang = 'en'; // Default to English
-        currentLang = lang;
-        translatePage(lang);
+        translatePage('en'); // Default to English
+        populateCountries(); // Populate the country dropdown on page load
     });
 </script>
 </body>
