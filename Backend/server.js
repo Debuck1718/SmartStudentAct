@@ -43,6 +43,9 @@ const MONGO_URI = process.env.MONGODB_URI;
 // ───────────────────────────────────────────────
 const app = express();
 
+// ✅ Trust proxy (important for rate-limiting, sessions, and X-Forwarded headers)
+app.set("trust proxy", 1);
+
 // ✅ Allowed domains
 const allowedOrigins = [
   "https://smartstudentact.com",
