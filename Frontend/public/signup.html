@@ -867,69 +867,86 @@
         }
     });
 
-    // --- Form Submission Logic ---
+// --- Form Submission Logic ---
 
-    // Event listener for the main Sign Up button
-    requestOtpButton.addEventListener('click', async () => {
-        if (isSubmitting) return;
+requestOtpButton.addEventListener('click', async () => {
+    if (isSubmitting) return;
 
-        // Update form object with current values
-        form.firstName = document.getElementById('firstNameInput').value;
-        form.lastName = document.getElementById('lastNameInput').value;
-        form.email = document.getElementById('emailInput').value;
-        form.password = document.getElementById('passwordInput').value;
-        form.confirmPassword = document.getElementById('confirmPasswordInput').value;
-        form.phone = document.getElementById('phoneInput').value;
-        form.schoolCountry = document.getElementById('schoolCountrySelect').value;
-        form.occupation = document.getElementById('occupationSelect').value;
+    // Build form object with only required fields for backend
+    const form = {
+        firstname: document.getElementById('firstNameInput').value.trim(),
+        lastname: document.getElementById('lastNameInput').value.trim(),
+        email: document.getElementById('emailInput').value.trim(),
+        password: document.getElementById('passwordInput').value,
+        phone: document.getElementById('phoneInput').value.trim(),
+        schoolCountry: document.getElementById('schoolCountrySelect').value, // ISO2 code
+        occupation: document.getElementById('occupationSelect').value
+    };
 
-        if (form.occupation === 'student') {
-            form.educationLevel = educationLevelSelect.value;
-            if (form.educationLevel === 'university') {
-                form.university = document.getElementById('universityInput').value;
-                form.uniLevel = universityLevelSelect.value;
-                form.program = document.getElementById('programInput').value;
-            } else if (form.educationLevel === 'junior' || form.educationLevel === 'high') {
-                form.schoolName = document.getElementById('schoolNameInput').value;
-                form.grade = schoolGradeSelect.value;
+    if (form.occupation === 'student') {
+        form.educationLevel = educationLevelSelect.value;
+
+        if (form.educationLevel === 'university') {
+            form.university = document.getElementById('universityInput').value.trim();
+            // 🔹 UI shows "Level 100" but backend expects "100"
+            const uniLevelVal = universityLevelSelect.value; 
+            form.uniLevel = uniLevelVal ? uniLevelVal.replace("Level ", "") : null;
+            form.program = document.getElementById('programInput').value.trim();
+        } else if (form.educationLevel === 'junior' || form.educationLevel === 'high') {
+            const gradeVal = schoolGradeSelect.value; 
+            // 🔹 UI shows "Grade 5" but backend expects 5
+            form.grade = gradeVal ? parseInt(gradeVal.replace("Grade ", ""), 10) : null;
+            form.schoolName = document.getElementById('schoolNameInput').value.trim();
+        }
+    } else if (form.occupation === 'teacher') {
+        const gradeVal = teacherGradeLevelSelect.value;
+
+        if (gradeVal) {
+            if (gradeVal.startsWith("Grade")) {
+                // 🔹 "Grade 12" → 12
+                form.teacherGrade = parseInt(gradeVal.replace("Grade ", ""), 10);
+            } else if (gradeVal.startsWith("Level")) {
+                // 🔹 "Level 200" → "200"
+                form.teacherGrade = gradeVal.replace("Level ", "");
             }
-        } else if (form.occupation === 'teacher') {
-            form.teacherGrade = teacherGradeLevelSelect.value;
-            form.teacherSchool = document.getElementById('teacherSchoolInput').value;
-            form.teacherSubject = document.getElementById('teacherSubjectInput').value;
         }
 
-        // Validate the form
-        if (!validateForm()) {
-            showMessage('Please correct the errors in the form.');
-            return;
+        form.teacherSchool = document.getElementById('teacherSchoolInput').value.trim();
+        form.teacherSubject = document.getElementById('teacherSubjectInput').value.trim();
+    }
+
+    // --- Frontend-only validation ---
+    if (!validateForm()) {
+        showMessage('Please correct the errors in the form.');
+        return;
+    }
+
+    setLoadingState(requestOtpButton, true, 'Sign Up');
+
+    try {
+        const response = await fetch(API_SIGNUP_OTP, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(form)
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            showMessage(data.message, 'success');
+            signupFormSection.classList.add('hidden');
+            otpSection.classList.remove('hidden');
+            otpCode = data.otp; // ⚠️ only for demo
+        } else {
+            showMessage(data.message || 'An error occurred during sign up.');
         }
-
-        setLoadingState(requestOtpButton, true, 'Sign Up');
-
-        try {
-            const response = await fetch(API_SIGNUP_OTP, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form)
-            });
-            const data = await response.json();
-
-            if (data.status === 'success') {
-                showMessage(data.message, 'success');
-                signupFormSection.classList.add('hidden');
-                otpSection.classList.remove('hidden');
-                otpCode = data.otp; // For demonstration, in a real app this wouldn't be sent back.
-            } else {
-                showMessage(data.message || 'An error occurred during sign up.');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showMessage('Network error. Please try again.');
-        } finally {
-            setLoadingState(requestOtpButton, false, 'Sign Up');
-        }
-    });
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Network error. Please try again.');
+    } finally {
+        setLoadingState(requestOtpButton, false, 'Sign Up');
+    }
+});
 
     // Event listener for the Verify OTP button
     verifyOtpButton.addEventListener('click', async () => {
