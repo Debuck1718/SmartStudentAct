@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upgrade Your Account</title>
+    <title data-i18n="pageTitle">Upgrade Your Account</title>
     <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -34,14 +34,22 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Language Selector -->
+    <div class="absolute top-4 right-4 z-20">
+        <select id="language-selector" class="bg-white border border-gray-300 rounded-lg p-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+        </select>
+    </div>
 
     <!-- Custom Modal for Messages -->
     <div id="alert-modal" class="modal">
         <div class="modal-content shadow-lg">
             <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
             <p id="modal-message" class="mb-6"></p>
-            <button onclick="closeModal()" class="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">OK</button>
+            <button onclick="closeModal()" class="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors" data-i18n="okButton">OK</button>
         </div>
     </div>
 
@@ -52,12 +60,12 @@
         <svg class="w-16 h-16 mx-auto text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        <h1 class="text-3xl font-bold text-gray-800 mt-4">Trial Ended</h1>
-        <p class="text-gray-600 mt-2">Your trial period has expired. Please upgrade to continue enjoying all features.</p>
+        <h1 class="text-3xl font-bold text-gray-800 mt-4" data-i18n="trialEndedTitle">Trial Ended</h1>
+        <p class="text-gray-600 mt-2" data-i18n="trialEndedMessage">Your trial period has expired. Please upgrade to continue enjoying all features.</p>
         
         <!-- Payment Details -->
         <div id="payment-details" class="mt-6 p-4 bg-blue-50 rounded-xl">
-            <p class="text-sm text-blue-800 font-semibold">Subscription Fee</p>
+            <p class="text-sm text-blue-800 font-semibold" data-i18n="subscriptionFee">Subscription Fee</p>
             <p id="amount-text" class="text-2xl font-bold text-blue-900 mt-1">
                 Loading...
             </p>
@@ -67,6 +75,7 @@
         <button 
             id="payButton"
             class="w-full mt-8 py-3 px-6 rounded-full bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            data-i18n="payButton"
         >
             Proceed to Payment
         </button>
@@ -80,21 +89,63 @@
     <script src="https://js.paystack.co/v1/inline.js"></script>
 
     <script>
+        // --- TRANSLATION DATA ---
+        const translations = {
+            en: {
+                pageTitle: "Upgrade Your Account",
+                okButton: "OK",
+                trialEndedTitle: "Trial Ended",
+                trialEndedMessage: "Your trial period has expired. Please upgrade to continue enjoying all features.",
+                subscriptionFee: "Subscription Fee",
+                payButton: "Proceed to Payment",
+                loadingPrice: "Getting price...",
+                initiatingPayment: "Initiating payment...",
+                verifyingPayment: "Verifying payment...",
+                paymentCanceled: "Payment canceled. Please try again to upgrade.",
+                paymentSuccess: "✅ Payment successful! Your account has been upgraded.",
+                subscriptionActive: "Your subscription is now active!",
+                error: "Error",
+                verificationFailed: "Verification Failed",
+                paymentError: "Payment Error",
+                networkError: "Failed to get payment details. Please check your network and try again.",
+                paymentProcessError: "Failed to start the payment process. Please try again.",
+            },
+            fr: {
+                pageTitle: "Mettre à niveau votre compte",
+                okButton: "OK",
+                trialEndedTitle: "Essai terminé",
+                trialEndedMessage: "Votre période d'essai a expiré. Veuillez mettre à niveau pour continuer à profiter de toutes les fonctionnalités.",
+                subscriptionFee: "Frais d'abonnement",
+                payButton: "Passer au paiement",
+                loadingPrice: "Obtention du prix...",
+                initiatingPayment: "Initialisation du paiement...",
+                verifyingPayment: "Vérification du paiement...",
+                paymentCanceled: "Paiement annulé. Veuillez réessayer de mettre à niveau.",
+                paymentSuccess: "✅ Paiement réussi ! Votre compte a été mis à niveau.",
+                subscriptionActive: "Votre abonnement est maintenant actif !",
+                error: "Erreur",
+                verificationFailed: "Échec de la vérification",
+                paymentError: "Erreur de paiement",
+                networkError: "Impossible d'obtenir les détails du paiement. Veuillez vérifier votre connexion et réessayer.",
+                paymentProcessError: "Impossible de démarrer le processus de paiement. Veuillez réessayer.",
+            }
+        };
+
+        // --- GLOBAL ELEMENTS & CONFIG ---
         const payButton = document.getElementById('payButton');
         const messageDiv = document.getElementById('message');
         const amountText = document.getElementById('amount-text');
+        const languageSelector = document.getElementById('language-selector');
 
-        // --- IMPORTANT: CONFIGURATION ---
         // You MUST replace this with your actual backend URL.
         const API_BASE_URL = 'https://api.smartstudentact.com/api';
         
-       // ✅ CORRECTED: Retrieve the JWT token and user email dynamically.
-// These should be set when the user logs in successfully.
-const JWT_TOKEN = localStorage.getItem('jwtToken'); 
-const USER_EMAIL = localStorage.getItem('userEmail'); 
+        // Retrieve the JWT token and user email dynamically.
+        const JWT_TOKEN = localStorage.getItem('jwtToken'); 
+        const USER_EMAIL = localStorage.getItem('userEmail'); 
 
-// Paystack public key. It is safe to hardcode this as it's a public key.
-const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
+        // Paystack public key. It is safe to hardcode this as it's a public key.
+        const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
         // ---------------------------------
 
         let finalAmount = 0;
@@ -126,16 +177,32 @@ const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
          */
         function hideLoading() {
             payButton.disabled = false;
-            payButton.innerHTML = `Proceed to Payment`;
+            translatePage(languageSelector.value); // Re-translate the button text
+        }
+
+        /**
+         * Translates all elements with a data-i18n attribute.
+         */
+        function translatePage(lang) {
+            document.documentElement.lang = lang; // Set the HTML lang attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            // Update button text specifically as hideLoading() may override it
+            payButton.textContent = translations[lang].payButton;
         }
 
         /**
          * Fetches payment details from the backend's /pricing route.
          */
         async function fetchPaymentDetails() {
-            showLoading('Getting price...');
+            const currentLang = languageSelector.value;
+            showLoading(translations[currentLang].loadingPrice);
             try {
-                const response = await fetch(`${BACKEND_BASE_URL}/pricing`, {
+                const response = await fetch(`${API_BASE_URL}/pricing`, {
                     headers: {
                         'Authorization': `Bearer ${JWT_TOKEN}`
                     }
@@ -157,9 +224,9 @@ const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
                 hideLoading();
             } catch (error) {
                 console.error('Error fetching payment details:', error);
-                messageDiv.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
+                messageDiv.innerHTML = `<p class="text-red-600">${translations[currentLang].error}: ${error.message || translations[currentLang].networkError}</p>`;
                 hideLoading();
-                showAlert('Error', `Failed to get payment details. Please check your network and try again. ${error.message}`);
+                showAlert(translations[currentLang].error, `${translations[currentLang].networkError} ${error.message}`);
             }
         }
         
@@ -167,11 +234,12 @@ const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
          * Initiates the Paystack payment by first calling the backend's /payment/initiate route.
          */
         async function payWithPaystack() {
-            showLoading('Initiating payment...');
+            const currentLang = languageSelector.value;
+            showLoading(translations[currentLang].initiatingPayment);
             
             try {
                 // Step 1: Call the backend to get a valid payment authorization URL/data
-                const initiateResponse = await fetch(`${BACKEND_BASE_URL}/payment/initiate`, {
+                const initiateResponse = await fetch(`${API_BASE_URL}/payment/initiate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -200,11 +268,11 @@ const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
                     ref: paymentData.reference, // Use the reference from the backend
                     
                     callback: async function(response) {
-                        messageDiv.innerHTML = `<p class="text-blue-600 font-semibold">Verifying payment...</p>`;
+                        messageDiv.innerHTML = `<p class="text-blue-600 font-semibold">${translations[currentLang].verifyingPayment}</p>`;
                         
                         // Step 3: Call the backend's /payment/success route to verify the transaction
                         try {
-                            const successResponse = await fetch(`${BACKEND_BASE_URL}/payment/success`, {
+                            const successResponse = await fetch(`${API_BASE_URL}/payment/success`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -221,21 +289,21 @@ const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
                                 throw new Error(errorData.error || 'Payment verification failed.');
                             }
 
-                            messageDiv.innerHTML = `<p class="text-green-600 font-semibold">✅ Payment successful! Your account has been upgraded.</p>`;
-                            showAlert('Success', 'Your subscription is now active!');
+                            messageDiv.innerHTML = `<p class="text-green-600 font-semibold">${translations[currentLang].paymentSuccess}</p>`;
+                            showAlert(translations[currentLang].success, translations[currentLang].subscriptionActive);
                             // Optional: Redirect the user to their dashboard or a success page
                             // window.location.href = '/dashboard';
 
                         } catch (error) {
-                            messageDiv.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
-                            showAlert('Verification Failed', `Payment was successful but verification failed: ${error.message}`);
+                            messageDiv.innerHTML = `<p class="text-red-600">${translations[currentLang].error}: ${error.message}</p>`;
+                            showAlert(translations[currentLang].verificationFailed, `${translations[currentLang].verificationFailed}: ${error.message}`);
                         }
                         
                         hideLoading();
                     },
                     
                     onClose: function() {
-                        messageDiv.innerHTML = `<p class="text-red-600">Payment canceled. Please try again to upgrade.</p>`;
+                        messageDiv.innerHTML = `<p class="text-red-600">${translations[currentLang].paymentCanceled}</p>`;
                         hideLoading();
                     },
                 });
@@ -243,17 +311,35 @@ const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
 
             } catch (error) {
                 console.error('Error in payment process:', error);
-                messageDiv.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
-                showAlert('Payment Error', `Failed to start the payment process. Please try again. ${error.message}`);
+                messageDiv.innerHTML = `<p class="text-red-600">${translations[currentLang].error}: ${error.message}</p>`;
+                showAlert(translations[currentLang].paymentError, `${translations[currentLang].paymentProcessError} ${error.message}`);
                 hideLoading();
             }
+        }
+
+        // --- INITIALIZATION ---
+        // Set the initial language based on the browser's preference
+        const userLang = navigator.language.split('-')[0];
+        if (translations[userLang]) {
+            languageSelector.value = userLang;
         }
 
         // Add a click event listener to the payment button
         payButton.addEventListener('click', payWithPaystack);
         
-        // Fetch the payment details as soon as the page loads
-        document.addEventListener('DOMContentLoaded', fetchPaymentDetails);
+        // Add a change event listener to the language selector
+        languageSelector.addEventListener('change', (event) => {
+            translatePage(event.target.value);
+            // Re-fetch payment details in case currency/pricing is locale-dependent
+            fetchPaymentDetails();
+        });
+
+        // Fetch the payment details and translate the page as soon as the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            translatePage(languageSelector.value);
+            fetchPaymentDetails();
+        });
     </script>
 </body>
 </html>
+

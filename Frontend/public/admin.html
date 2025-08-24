@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Dashboard</title>
+    <title id="page-title">Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
@@ -34,7 +34,8 @@
 
       .action-button:active,
       .logout-button:active,
-      .header-icon:active {
+      .header-icon:active,
+      .lang-button:active {
         transform: scale(0.98);
       }
 
@@ -88,6 +89,7 @@
   <body class="bg-gray-100 antialiased">
     <div id="app-container" class="container"></div>
 
+    <!-- Alert Modal -->
     <div
       id="alert-modal"
       class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4"
@@ -118,10 +120,10 @@
       class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center"
     >
       <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">📩 Contact Us</h2>
+        <h2 class="text-xl font-bold mb-4">📩 <span id="contact-title">Contact Us</span></h2>
         <form id="contactForm" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium">Your Name</label>
+            <label id="contact-name-label" class="block text-sm font-medium">Your Name</label>
             <input
               type="text"
               id="contactName"
@@ -130,7 +132,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium">Your Email</label>
+            <label id="contact-email-label" class="block text-sm font-medium">Your Email</label>
             <input
               type="email"
               id="contactEmail"
@@ -139,7 +141,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium">Message</label>
+            <label id="contact-message-label" class="block text-sm font-medium">Message</label>
             <textarea
               id="contactMessage"
               rows="4"
@@ -174,6 +176,198 @@
         push: (path) => (window.location.href = path),
       };
 
+      // --- TRANSLATION DATA ---
+      const translations = {
+        en: {
+          title: "Admin Dashboard",
+          loading: "Loading dashboard...",
+          logout: "Logout",
+          manageUsers: "Manage Users",
+          manageFiles: "Manage Files",
+          filters: "Filters",
+          searchLabel: "Search by Name/Email:",
+          searchPlaceholder: "Search...",
+          gradeFilterLabel: "Filter by Grade:",
+          allGrades: "All Grades",
+          upperGrade: "Upper Grade (Class 5-6)",
+          grade: "Grade",
+          juniorHigh: "Junior High (Form 1-3)",
+          seniorHigh: "Senior High (SHS 1-3)",
+          university: "University",
+          level: "Level",
+          firstYear: "(First Year)",
+          secondYear: "(Second Year)",
+          thirdYear: "(Third Year)",
+          finalYear: "(Final Year)",
+          usersHeading: (count) => `Users (${count})`,
+          noUsers: "No users found matching filters.",
+          role: "Role",
+          school: "School",
+          gradeText: "Grade",
+          promote: "Promote",
+          demote: "Demote",
+          suspend: "Suspend",
+          delete: "Delete",
+          note: "Note:",
+          noteText: "You can only manage users from your school.",
+          filesHeading: "Files from Your School",
+          noFiles: "No files found for your school.",
+          type: "Type",
+          submittedBy: "Submitted By",
+          viewFile: "View File",
+          alert: {
+            title: "",
+            message: "",
+            cancel: "Cancel",
+            ok: "OK",
+            logoutConfirmTitle: "Logout",
+            logoutConfirmMessage: "Are you sure you want to log out?",
+            logoutErrorTitle: "Logout Error",
+            logoutErrorMessage: "Failed to log out. Please try again.",
+            sessionExpiredTitle: "Session Expired",
+            sessionExpiredMessage: "Your session has expired. Please log in again.",
+            loadUsersError: "Failed to load user data.",
+            loadFilesError: "Failed to load files from your school.",
+            promoteUserTitle: "Promote User",
+            promoteUserMessage: "Are you sure you want to promote this user?",
+            demoteUserTitle: "Demote User",
+            demoteUserMessage: "Are you sure you want to demote this user?",
+            suspendUserTitle: "Suspend User",
+            suspendUserMessage: "Are you sure you want to suspend this user?",
+            deleteUserTitle: "Delete User",
+            deleteUserMessage: "Are you sure you want to delete this user?",
+            accessDeniedTitle: "Access Denied",
+            accessDeniedMessage: "You do not have permission to view this page.",
+            authFailedTitle: "Authentication Failed",
+            authFailedMessage: "Please log in to continue.",
+            sessionErrorTitle: "Session Error",
+            sessionErrorMessage: "Could not verify session. Please log in again.",
+            confirmDeleteTitle: "Confirm Delete",
+            confirmDeleteMessage: (userName) => `Are you sure you want to delete ${userName}? This action cannot be undone.`,
+            generalError: (action) => `Something went wrong while trying to ${action} the user.`,
+            apiFailed: (message) => message || "API request failed.",
+            successTitle: "Success",
+            sendSuccess: "✅ Message sent successfully!",
+            sendError: "❌ Could not send message. Try again later."
+          },
+          contactForm: {
+            title: "Contact Us",
+            nameLabel: "Your Name",
+            emailLabel: "Your Email",
+            messageLabel: "Message",
+            cancel: "Cancel",
+            send: "Send"
+          }
+        },
+        fr: {
+          title: "Tableau de bord de l'administrateur",
+          loading: "Chargement du tableau de bord...",
+          logout: "Déconnexion",
+          manageUsers: "Gérer les utilisateurs",
+          manageFiles: "Gérer les fichiers",
+          filters: "Filtres",
+          searchLabel: "Rechercher par nom/e-mail :",
+          searchPlaceholder: "Rechercher...",
+          gradeFilterLabel: "Filtrer par niveau :",
+          allGrades: "Tous les niveaux",
+          upperGrade: "Niveau supérieur (Classe 5-6)",
+          grade: "Niveau",
+          juniorHigh: "Collège (Form 1-3)",
+          seniorHigh: "Lycée (SHS 1-3)",
+          university: "Université",
+          level: "Niveau",
+          firstYear: "(Première année)",
+          secondYear: "(Deuxième année)",
+          thirdYear: "(Troisième année)",
+          finalYear: "(Dernière année)",
+          usersHeading: (count) => `Utilisateurs (${count})`,
+          noUsers: "Aucun utilisateur trouvé correspondant aux filtres.",
+          role: "Rôle",
+          school: "École",
+          gradeText: "Niveau",
+          promote: "Promouvoir",
+          demote: "Rétrograder",
+          suspend: "Suspendre",
+          delete: "Supprimer",
+          note: "Note :",
+          noteText: "Vous ne pouvez gérer que les utilisateurs de votre école.",
+          filesHeading: "Fichiers de votre école",
+          noFiles: "Aucun fichier trouvé pour votre école.",
+          type: "Type",
+          submittedBy: "Soumis par",
+          viewFile: "Voir le fichier",
+          alert: {
+            title: "",
+            message: "",
+            cancel: "Annuler",
+            ok: "OK",
+            logoutConfirmTitle: "Déconnexion",
+            logoutConfirmMessage: "Êtes-vous sûr de vouloir vous déconnecter ?",
+            logoutErrorTitle: "Erreur de déconnexion",
+            logoutErrorMessage: "Échec de la déconnexion. Veuillez réessayer.",
+            sessionExpiredTitle: "Session expirée",
+            sessionExpiredMessage: "Votre session a expiré. Veuillez vous reconnecter.",
+            loadUsersError: "Échec du chargement des données utilisateur.",
+            loadFilesError: "Échec du chargement des fichiers de votre école.",
+            promoteUserTitle: "Promouvoir l'utilisateur",
+            promoteUserMessage: "Êtes-vous sûr de vouloir promouvoir cet utilisateur ?",
+            demoteUserTitle: "Rétrograder l'utilisateur",
+            demoteUserMessage: "Êtes-vous sûr de vouloir rétrograder cet utilisateur ?",
+            suspendUserTitle: "Suspendre l'utilisateur",
+            suspendUserMessage: "Êtes-vous sûr de vouloir suspendre cet utilisateur ?",
+            deleteUserTitle: "Supprimer l'utilisateur",
+            deleteUserMessage: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+            accessDeniedTitle: "Accès refusé",
+            accessDeniedMessage: "Vous n'avez pas l'autorisation de voir cette page.",
+            authFailedTitle: "Échec de l'authentification",
+            authFailedMessage: "Veuillez vous connecter pour continuer.",
+            sessionErrorTitle: "Erreur de session",
+            sessionErrorMessage: "Impossible de vérifier la session. Veuillez vous reconnecter.",
+            confirmDeleteTitle: "Confirmer la suppression",
+            confirmDeleteMessage: (userName) => `Êtes-vous sûr de vouloir supprimer ${userName} ? Cette action est irréversible.`,
+            generalError: (action) => `Une erreur s'est produite lors de la tentative de ${action} de l'utilisateur.`,
+            apiFailed: (message) => message || "La requête API a échoué.",
+            successTitle: "Succès",
+            sendSuccess: "✅ Message envoyé avec succès !",
+            sendError: "❌ Le message n'a pas pu être envoyé. Réessayez plus tard."
+          },
+          contactForm: {
+            title: "Nous contacter",
+            nameLabel: "Votre nom",
+            emailLabel: "Votre e-mail",
+            messageLabel: "Message",
+            cancel: "Annuler",
+            send: "Envoyer"
+          }
+        }
+      };
+
+      let currentLang = "en";
+      const t = (key, ...args) => {
+        const value = translations[currentLang][key];
+        return typeof value === 'function' ? value(...args) : value;
+      };
+      
+      const updateLang = (lang) => {
+        currentLang = lang;
+        document.documentElement.lang = lang;
+        render(); // Re-render the UI with the new language
+        
+        // Update modal content manually as they are not part of the main render flow
+        document.getElementById('alert-cancel').textContent = translations[currentLang].alert.cancel;
+        document.getElementById('alert-confirm').textContent = translations[currentLang].alert.ok;
+        document.getElementById('contact-title').textContent = translations[currentLang].contactForm.title;
+        document.getElementById('contact-name-label').textContent = translations[currentLang].contactForm.nameLabel;
+        document.getElementById('contact-email-label').textContent = translations[currentLang].contactForm.emailLabel;
+        document.getElementById('contact-message-label').textContent = translations[currentLang].contactForm.messageLabel;
+        document.getElementById('closeContact').textContent = translations[currentLang].contactForm.cancel;
+        document.querySelector('#contactForm button[type="submit"]').textContent = translations[currentLang].contactForm.send;
+
+        // Manually update placeholder
+        document.getElementById('search-term').placeholder = translations[currentLang].searchPlaceholder;
+      };
+
+
       const fetchAPI = async (url, options = {}) => {
         try {
           const token = localStorage.getItem("jwtToken");
@@ -182,15 +376,15 @@
             Authorization: `Bearer ${token}`,
           };
 
-          const response = await fetch(`${API_BASE}${url}`, {
+          const response = await fetch(`${API_BASE_URL}${url}`, {
             ...options,
             headers,
           });
 
           if (response.status === 401) {
             showCustomAlert(
-              "Session Expired",
-              "Your session has expired. Please log in again."
+              translations[currentLang].alert.sessionExpiredTitle,
+              translations[currentLang].alert.sessionExpiredMessage,
             );
             router.replace("/login.html");
             return { ok: false, status: 401 };
@@ -198,7 +392,7 @@
 
           if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || "API request failed");
+            throw new Error(errorData.message || translations[currentLang].alert.apiFailed(""));
           }
 
           return response;
@@ -225,7 +419,7 @@
           modal.classList.add("hidden");
         };
 
-        if (options && options.length > 0 && options[0].text === "Cancel") {
+        if (options && options.length > 0 && options[0].text === "Cancel" || options && options.length > 0 && options[0].text === "Annuler") {
           cancelBtn.textContent = options[0].text;
           cancelBtn.onclick = () => modal.classList.add("hidden");
           cancelBtn.classList.remove("hidden");
@@ -254,50 +448,54 @@
 
         if (state.isLoading) {
           container.innerHTML = `
-                    <div class="loading-container">
-                        <i class="fas fa-spinner fa-spin text-blue-500 text-5xl"></i>
-                        <p class="mt-4 text-base text-gray-600">Loading dashboard...</p>
-                    </div>
-                `;
+            <div class="loading-container">
+              <i class="fas fa-spinner fa-spin text-blue-500 text-5xl"></i>
+              <p class="mt-4 text-base text-gray-600">${translations[currentLang].loading}</p>
+            </div>
+          `;
           return;
         }
 
         const header = `
-                <div class="flex flex-row justify-between items-center mb-5 pb-2 border-b border-gray-200">
-                    <div class="flex items-center space-x-4">
-                        <img src="${
-                          state.user?.profile_picture_url ||
-                          "https://placehold.co/40x40/94a3b8/ffffff?text=U"
-                        }" alt="Profile Picture" class="rounded-full w-10 h-10 shadow-md"/>
-                        <button onclick="router.push('/profile.html')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
-                            <i class="fas fa-user-circle text-2xl"></i>
-                        </button>
-                        <button onclick="router.push('/settings.html')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
-                            <i class="fas fa-cog text-2xl"></i>
-                        </button>
-                    </div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex-1 text-center">Admin Dashboard</h1>
-                    <button id="logout-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-300">
-                        Logout
-                    </button>
-                </div>
-            `;
+          <div class="flex flex-row justify-between items-center mb-5 pb-2 border-b border-gray-200">
+            <div class="flex items-center space-x-4">
+              <img src="${
+                state.user?.profile_picture_url ||
+                "https://placehold.co/40x40/94a3b8/ffffff?text=U"
+              }" alt="Profile Picture" class="rounded-full w-10 h-10 shadow-md"/>
+              <button onclick="router.push('/profile.html')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
+                <i class="fas fa-user-circle text-2xl"></i>
+              </button>
+              <button onclick="router.push('/settings.html')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
+                <i class="fas fa-cog text-2xl"></i>
+              </button>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex-1 text-center">${translations[currentLang].title}</h1>
+            <div class="flex items-center space-x-2">
+              <button onclick="updateLang('en')" class="lang-button text-gray-600 hover:text-blue-500 transition duration-300 ${currentLang === 'en' ? 'font-bold' : ''}">EN</button>
+              <button onclick="updateLang('fr')" class="lang-button text-gray-600 hover:text-blue-500 transition duration-300 ${currentLang === 'fr' ? 'font-bold' : ''}">FR</button>
+              <button id="logout-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-300 ml-4">
+                ${translations[currentLang].logout}
+              </button>
+            </div>
+          </div>
+        `;
         container.innerHTML += header;
 
         const tabs = `
-                <div class="flex border-b border-gray-300 mb-5">
-                    <button id="tab-users" class="tab-button ${
-                      state.activeTab === "users"
-                        ? "active text-blue-600"
-                        : "text-gray-600"
-                    }" onclick="changeTab('users')">Manage Users</button>
-                    <button id="tab-files" class="tab-button ${
-                      state.activeTab === "files"
-                        ? "active text-blue-600"
-                        : "text-gray-600"
-                    }" onclick="changeTab('files')">Manage Files</button>
-                </div>
-            `;
+          <div class="flex border-b border-gray-300 mb-5">
+            <button id="tab-users" class="tab-button ${
+              state.activeTab === "users"
+                ? "active text-blue-600"
+                : "text-gray-600"
+            }" onclick="changeTab('users')">${translations[currentLang].manageUsers}</button>
+            <button id="tab-files" class="tab-button ${
+              state.activeTab === "files"
+                ? "active text-blue-600"
+                : "text-gray-600"
+            }" onclick="changeTab('files')">${translations[currentLang].manageFiles}</button>
+          </div>
+        `;
         container.innerHTML += tabs;
 
         if (state.activeTab === "users") {
@@ -316,102 +514,100 @@
         const usersSection = document.createElement("div");
 
         usersSection.innerHTML = `
-                <div class="bg-white rounded-xl shadow-md p-4 mb-5">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-800">Filters</h2>
-                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="search-term" class="block text-gray-700 font-bold mb-2">Search by Name/Email:</label>
-                            <input type="text" id="search-term" value="${
-                              state.searchTerm
-                            }" placeholder="Search..." class="w-full p-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label for="grade-filter" class="block text-gray-700 font-bold mb-2">Filter by Grade:</label>
-                            <div class="picker-container">
-                                <select id="grade-filter" class="picker">
-                                    <option value="all">All Grades</option>
-                                    <optgroup label="Upper Grade (Class 5-6)">
-                                        <option value="5">Grade 5 (Class 5)</option>
-                                        <option value="6">Grade 6 (Class 6)</option>
-                                    </optgroup>
-                                    <optgroup label="Junior High (Form 1-3)">
-                                        <option value="7">Grade 7 (Form 1)</option>
-                                        <option value="8">Grade 8 (Form 2)</option>
-                                        <option value="9">Grade 9 (Form 3)</option>
-                                    </optgroup>
-                                    <optgroup label="Senior High (SHS 1-3)">
-                                        <option value="10">Grade 10 (SHS 1)</option>
-                                        <option value="11">Grade 11 (SHS 2)</option>
-                                        <option value="12">Grade 12 (SHS 3)</option>
-                                    </optgroup>
-                                    <optgroup label="University">
-                                        <option value="100">Level 100 (First Year)</option>
-                                        <option value="200">Level 200 (Second Year)</option>
-                                        <option value="300">Level 300 (Third Year)</option>
-                                        <option value="400">Level 400 (Final Year)</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+          <div class="bg-white rounded-xl shadow-md p-4 mb-5">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-800">${translations[currentLang].filters}</h2>
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="search-term" class="block text-gray-700 font-bold mb-2">${translations[currentLang].searchLabel}</label>
+                <input type="text" id="search-term" value="${
+                  state.searchTerm
+                }" placeholder="${translations[currentLang].searchPlaceholder}" class="w-full p-2 border rounded-lg">
+              </div>
+              <div>
+                <label for="grade-filter" class="block text-gray-700 font-bold mb-2">${translations[currentLang].gradeFilterLabel}</label>
+                <div class="picker-container">
+                  <select id="grade-filter" class="picker">
+                    <option value="all">${translations[currentLang].allGrades}</option>
+                    <optgroup label="${translations[currentLang].upperGrade}">
+                      <option value="5">${translations[currentLang].grade} 5 (Class 5)</option>
+                      <option value="6">${translations[currentLang].grade} 6 (Class 6)</option>
+                    </optgroup>
+                    <optgroup label="${translations[currentLang].juniorHigh}">
+                      <option value="7">${translations[currentLang].grade} 7 (Form 1)</option>
+                      <option value="8">${translations[currentLang].grade} 8 (Form 2)</option>
+                      <option value="9">${translations[currentLang].grade} 9 (Form 3)</option>
+                    </optgroup>
+                    <optgroup label="${translations[currentLang].seniorHigh}">
+                      <option value="10">${translations[currentLang].grade} 10 (SHS 1)</option>
+                      <option value="11">${translations[currentLang].grade} 11 (SHS 2)</option>
+                      <option value="12">${translations[currentLang].grade} 12 (SHS 3)</option>
+                    </optgroup>
+                    <optgroup label="${translations[currentLang].university}">
+                      <option value="100">${translations[currentLang].level} 100 ${translations[currentLang].firstYear}</option>
+                      <option value="200">${translations[currentLang].level} 200 ${translations[currentLang].secondYear}</option>
+                      <option value="300">${translations[currentLang].level} 300 ${translations[currentLang].thirdYear}</option>
+                      <option value="400">${translations[currentLang].level} 400 ${translations[currentLang].finalYear}</option>
+                    </optgroup>
+                  </select>
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Users (${
-                  state.filteredUsers.length
-                })</h2>
-                <div id="users-list">
-                    ${
-                      state.filteredUsers.length === 0
-                        ? `<p class="text-center italic text-gray-500 py-5">No users found matching filters.</p>`
-                        : state.filteredUsers
-                            .map(
-                              (u) => `
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">${translations[currentLang].usersHeading(state.filteredUsers.length)}</h2>
+          <div id="users-list">
+            ${
+              state.filteredUsers.length === 0
+                ? `<p class="text-center italic text-gray-500 py-5">${translations[currentLang].noUsers}</p>`
+                : state.filteredUsers
+                    .map(
+                      (u) => `
                         <div class="bg-white rounded-xl shadow-md p-4 mb-3 relative">
                             <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">
                                 ${u.firstname} ${
                                 u.lastname
-                              } (<span class="text-gray-600 font-normal">${
+                                } (<span class="text-gray-600 font-normal">${
                                 u.email
-                              }</span>)
+                                }</span>)
                             </h3>
                             <p class="text-sm text-gray-600 mb-3">
-                                Role: ${u.occupation} | School: ${
+                                ${translations[currentLang].role}: ${u.occupation} | ${translations[currentLang].school}: ${
                                 u.schoolName || u.teacherSchool || "N/A"
-                              }
+                                }
                                 ${
                                   u.occupation === "student"
-                                    ? `| Grade: ${u.grade || "N/A"}`
+                                    ? `| ${translations[currentLang].gradeText}: ${u.grade || "N/A"}`
                                     : ""
                                 }
                             </p>
                             <div class="flex flex-wrap gap-2">
                                 <button onclick="manageUser('${
                                   u.email
-                                }', 'promote')" class="action-button flex-1 bg-green-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-600 transition duration-300">Promote</button>
+                                }', 'promote')" class="action-button flex-1 bg-green-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-600 transition duration-300">${translations[currentLang].promote}</button>
                                 <button onclick="manageUser('${
                                   u.email
-                                }', 'demote')" class="action-button flex-1 bg-yellow-500 text-gray-900 font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-300">Demote</button>
+                                }', 'demote')" class="action-button flex-1 bg-yellow-500 text-gray-900 font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-300">${translations[currentLang].demote}</button>
                                 <button onclick="manageUser('${
                                   u.email
-                                }', 'suspend')" class="action-button flex-1 bg-cyan-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-cyan-600 transition duration-300">Suspend</button>
+                                }', 'suspend')" class="action-button flex-1 bg-cyan-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-cyan-600 transition duration-300">${translations[currentLang].suspend}</button>
                                 <button onclick="confirmRemove('${u.email}', '${
-                                u.firstname
-                              } ${
-                                u.lastname
-                              }')" class="action-button flex-1 bg-red-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition duration-300">Delete</button>
+                                  u.firstname
+                                } ${
+                                  u.lastname
+                                }')" class="action-button flex-1 bg-red-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition duration-300">${translations[currentLang].delete}</button>
                             </div>
                         </div>
                     `
-                            )
-                            .join("")
-                    }
-                </div>
+                    )
+                    .join("")
+            }
+          </div>
 
-                <div class="mt-6 p-4 bg-gray-200 rounded-lg border-l-4 border-gray-500">
-                    <h4 class="font-bold text-base text-gray-900 mb-1">Note:</h4>
-                    <p class="text-sm text-gray-700">You can only manage users from your school.</p>
-                </div>
-            `;
+          <div class="mt-6 p-4 bg-gray-200 rounded-lg border-l-4 border-gray-500">
+            <h4 class="font-bold text-base text-gray-900 mb-1">${translations[currentLang].note}</h4>
+            <p class="text-sm text-gray-700">${translations[currentLang].noteText}</p>
+          </div>
+        `;
         container.appendChild(usersSection);
 
         document
@@ -433,35 +629,35 @@
         const container = document.getElementById("app-container");
         const filesSection = document.createElement("div");
         filesSection.innerHTML = `
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Files from Your School</h2>
-                <div id="files-list">
-                    ${
-                      state.files.length === 0
-                        ? `<p class="text-center italic text-gray-500 py-5">No files found for your school.</p>`
-                        : state.files
-                            .map(
-                              (file) => `
-                            <div class="bg-white rounded-xl shadow-md p-4 mb-3">
-                                <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">${
-                                  file.filename
-                                }</h3>
-                                <p class="text-sm text-gray-600">
-                                    Type: ${file.type} | Submitted By: ${
-                                file.submittedBy || "N/A"
-                              }
-                                </p>
-                                <a href="${
-                                  file.url
-                                }" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">
-                                    <i class="fas fa-eye mr-1"></i>View File
-                                </a>
-                            </div>
-                        `
-                            )
-                            .join("")
-                    }
-                </div>
-            `;
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">${translations[currentLang].filesHeading}</h2>
+          <div id="files-list">
+            ${
+              state.files.length === 0
+                ? `<p class="text-center italic text-gray-500 py-5">${translations[currentLang].noFiles}</p>`
+                : state.files
+                    .map(
+                      (file) => `
+                        <div class="bg-white rounded-xl shadow-md p-4 mb-3">
+                            <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">${
+                              file.filename
+                            }</h3>
+                            <p class="text-sm text-gray-600">
+                                ${translations[currentLang].type}: ${file.type} | ${translations[currentLang].submittedBy}: ${
+                              file.submittedBy || "N/A"
+                            }
+                            </p>
+                            <a href="${
+                              file.url
+                            }" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">
+                                <i class="fas fa-eye mr-1"></i>${translations[currentLang].viewFile}
+                            </a>
+                        </div>
+                    `
+                    )
+                    .join("")
+            }
+          </div>
+        `;
         container.appendChild(filesSection);
       };
 
@@ -503,12 +699,12 @@
         state.isLoading = true;
         render();
         try {
-          const res = await fetchAPI("/api/admin/users");
+          const res = await fetchAPI("/admin/users");
           state.users = await res.json();
           filterUsers();
         } catch (err) {
           console.error("Failed to load users", err);
-          showCustomAlert("Error", "Failed to load user data.");
+          showCustomAlert(translations[currentLang].alert.title, translations[currentLang].alert.loadUsersError);
         } finally {
           state.isLoading = false;
           render();
@@ -520,11 +716,11 @@
         render();
         try {
           // This is a new endpoint for the file view functionality
-          const res = await fetchAPI("/api/admin/my-school-files");
+          const res = await fetchAPI("/admin/my-school-files");
           state.files = await res.json();
         } catch (err) {
           console.error("Failed to load files", err);
-          showCustomAlert("Error", "Failed to load files from your school.");
+          showCustomAlert(translations[currentLang].alert.title, translations[currentLang].alert.loadFilesError);
         } finally {
           state.isLoading = false;
           render();
@@ -532,56 +728,64 @@
       };
 
       const handleLogout = () => {
-        showCustomAlert("Logout", "Are you sure you want to log out?", [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Logout",
-            onPress: async () => {
-              try {
-                await fetchAPI("/api/logout", { method: "POST" });
-                router.replace("/login.html");
-              } catch (error) {
-                console.error("Logout failed:", error);
-                showCustomAlert(
-                  "Logout Error",
-                  "Failed to log out. Please try again."
-                );
-              }
+        showCustomAlert(
+          translations[currentLang].alert.logoutConfirmTitle, 
+          translations[currentLang].alert.logoutConfirmMessage,
+          [
+            { text: translations[currentLang].alert.cancel, style: "cancel" },
+            {
+              text: translations[currentLang].alert.logout,
+              onPress: async () => {
+                try {
+                  await fetchAPI("/logout", { method: "POST" });
+                  router.replace("/login.html");
+                } catch (error) {
+                  console.error("Logout failed:", error);
+                  showCustomAlert(
+                    translations[currentLang].alert.logoutErrorTitle,
+                    translations[currentLang].alert.logoutErrorMessage,
+                  );
+                }
+              },
             },
-          },
-        ]);
+          ]
+        );
       };
 
       const manageUser = async (email, action) => {
+        const actionText = translations[currentLang][action];
+        const title = `${actionText} ${translations[currentLang].alert.deleteUserTitle.split(" ")[1]}`; // This is a bit of a hack to get "Promote User" etc.
+        const message = translations[currentLang].alert[`${action}UserMessage`];
+        
         showCustomAlert(
-          action.charAt(0).toUpperCase() + action.slice(1) + " User",
-          `Are you sure you want to ${action} this user?`,
+          title,
+          message,
           [
-            { text: "Cancel", style: "cancel" },
+            { text: translations[currentLang].alert.cancel, style: "cancel" },
             {
-              text: action.charAt(0).toUpperCase() + action.slice(1),
+              text: actionText,
               onPress: async () => {
                 try {
-                  const res = await fetchAPI(`/api/admin/${action}`, {
+                  const res = await fetchAPI(`/admin/${action}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email }),
                   });
                   const result = await res.json();
                   if (res.ok) {
-                    showCustomAlert("Success", result.message);
+                    showCustomAlert(translations[currentLang].alert.successTitle, result.message);
                     await loadUsers();
                   } else {
                     showCustomAlert(
-                      "Error",
-                      result.message || `Failed to ${action} user.`
+                      translations[currentLang].alert.title,
+                      result.message || translations[currentLang].alert.apiFailed("").replace("API request failed", `Failed to ${action} user.`)
                     );
                   }
                 } catch (err) {
                   console.error(`Error managing user (${action}):`, err);
                   showCustomAlert(
-                    "Error",
-                    `Something went wrong while trying to ${action} the user.`
+                    translations[currentLang].alert.title,
+                    translations[currentLang].alert.generalError(action)
                   );
                 }
               },
@@ -592,24 +796,24 @@
 
       const confirmRemove = (email, userName) => {
         showCustomAlert(
-          "Confirm Delete",
-          `Are you sure you want to delete ${userName}? This action cannot be undone.`,
+          translations[currentLang].alert.confirmDeleteTitle,
+          translations[currentLang].alert.confirmDeleteMessage(userName),
           [
-            { text: "Cancel", style: "cancel" },
-            { text: "Delete", onPress: () => manageUser(email, "remove-user") },
+            { text: translations[currentLang].alert.cancel, style: "cancel" },
+            { text: translations[currentLang].alert.delete, onPress: () => manageUser(email, "remove-user") },
           ]
         );
       };
 
       document.addEventListener("DOMContentLoaded", async () => {
         try {
-          const res = await fetchAPI("/api/profile");
+          const res = await fetchAPI("/profile");
           if (res.ok) {
             const user = await res.json();
             if (user.occupation !== "admin") {
               showCustomAlert(
-                "Access Denied",
-                "You do not have permission to view this page."
+                translations[currentLang].alert.accessDeniedTitle,
+                translations[currentLang].alert.accessDeniedMessage
               );
               router.replace("/admin.html");
               return;
@@ -625,16 +829,16 @@
             }
           } else {
             showCustomAlert(
-              "Authentication Failed",
-              "Please log in to continue."
+              translations[currentLang].alert.authFailedTitle,
+              translations[currentLang].alert.authFailedMessage
             );
             router.replace("/login.html");
           }
         } catch (err) {
           console.error("Session check failed:", err);
           showCustomAlert(
-            "Session Error",
-            "Could not verify session. Please log in again."
+            translations[currentLang].alert.sessionErrorTitle,
+            translations[currentLang].alert.sessionErrorMessage
           );
           router.replace("/login.html");
         }
@@ -652,18 +856,18 @@
           };
 
           try {
-            const res = await fetch(`${API_BASE}/contact`, {
+            const res = await fetch(`${API_BASE_URL}/contact`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
 
-            if (!res.ok) throw new Error("Failed to send");
+            if (!res.ok) throw new Error(translations[currentLang].alert.apiFailed(""));
 
-            alert("✅ Message sent successfully!");
+            showCustomAlert(translations[currentLang].alert.successTitle, translations[currentLang].alert.sendSuccess);
             e.target.reset();
           } catch (err) {
-            alert("❌ Could not send message. Try again later.");
+            showCustomAlert(translations[currentLang].alert.title, translations[currentLang].alert.sendError);
             console.error(err);
           }
         });

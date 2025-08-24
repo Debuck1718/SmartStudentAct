@@ -6,16 +6,6 @@
     <title>SmartStudentAct</title>
     <!-- Use Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Google tag (gtag.js) -->
-    <!-- Place this script at the top of the <head> section -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-EWMR745QHX');
-    </script>
     <style>
         /* Custom styles to match the React Native design */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -26,6 +16,7 @@
 
         /* Replicate the background image behavior with CSS */
         .background-image-container {
+            /* Restoring the original background image as requested */
             background-image: url("./images/bg.png");
             background-size: cover;
             background-position: center;
@@ -57,6 +48,16 @@
             max-width: 80%;
             text-align: center;
         }
+
+        /* Style for language switcher buttons */
+        .language-switcher button {
+            transition: transform 0.2s ease-in-out;
+        }
+        .language-switcher button.active {
+            transform: scale(1.1);
+            font-weight: bold;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -64,66 +65,113 @@
     <!-- Modal for displaying messages, as per instructions to avoid alert() -->
     <div id="alert-modal" class="modal">
         <div class="modal-content shadow-lg">
-            <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
-            <p id="modal-message" class="mb-6"></p>
-            <button onclick="closeModal()" class="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">OK</button>
+            <h3 id="modal-title" data-i18n="modal_title" class="text-xl font-bold mb-4"></h3>
+            <p id="modal-message" data-i18n="modal_message" class="mb-6"></p>
+            <button onclick="closeModal()" data-i18n="modal_ok_btn" class="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">OK</button>
         </div>
     </div>
 
     <div class="background-image-container flex-col p-4 md:p-8">
         <div class="w-full max-w-2xl mx-auto space-y-6">
 
+            <!-- Language Switcher -->
+            <div class="flex justify-center space-x-4 language-switcher">
+                <button id="en-btn" onclick="translatePage('en')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">English</button>
+                <button id="fr-btn" onclick="translatePage('fr')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Français</button>
+            </div>
+
             <!-- Header Section -->
             <div class="bg-blue-500 bg-opacity-80 p-8 rounded-xl shadow-lg text-center">
-                <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-2" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">SmartStudentAct</h1>
-                <p class="text-lg md:text-xl text-white opacity-90" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Track your goals. Budget smart.</p>
+                <h1 data-i18n="site_title" class="text-4xl md:text-5xl font-extrabold text-white mb-2" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);"></h1>
+                <p data-i18n="site_subtitle" class="text-lg md:text-xl text-white opacity-90" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);"></p>
             </div>
 
             <!-- Main Card Section -->
             <div class="bg-white bg-opacity-90 p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-bold mb-3 text-gray-800">Welcome to SmartStudentAct 📚</h2>
-                <p class="text-gray-700 mb-4 leading-relaxed">
-                    SmartStudentAct is designed to help you manage your assignments, track your goals,
-                    control your budget, and earn exciting rewards based on your academic and financial achievements.
-                </p>
-                <p class="text-gray-700 leading-relaxed">
-                    Whether you're a student looking to stay organized or a teacher supporting your class,
-                    SmartStudentAct connects you with the right tools for smart success.
-                </p>
+                <h2 data-i18n="welcome_heading" class="text-2xl font-bold mb-3 text-gray-800"></h2>
+                <p data-i18n="welcome_paragraph_1" class="text-gray-700 mb-4 leading-relaxed"></p>
+                <p data-i18n="welcome_paragraph_2" class="text-gray-700 leading-relaxed"></p>
                 <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mt-6 justify-center">
-                    <button id="signInBtn" class="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 transition-colors flex-1">
-                        🔐 Sign In
-                    </button>
-                    <button id="signUpBtn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-600 transition-colors flex-1">
-                        📝 Sign Up
-                    </button>
+                    <button id="signInBtn" data-i18n="sign_in_btn" class="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 transition-colors flex-1"></button>
+                    <button id="signUpBtn" data-i18n="sign_up_btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-600 transition-colors flex-1"></button>
                 </div>
             </div>
 
             <!-- About Section -->
             <div class="bg-gray-100 bg-opacity-90 p-6 rounded-xl shadow-inner">
-                <h2 class="text-2xl font-bold mb-3 text-gray-800">About SmartStudentAct</h2>
-                <p class="text-gray-700 leading-relaxed">
-                    SmartStudentAct is a student-focused app designed to help you stay on top
-                    of your assignments, budget wisely, and track personal goals. Whether you're tracking due
-                    dates or saving up for your next big project, we’ve got your back.
-                </p>
+                <h2 data-i18n="about_heading" class="text-2xl font-bold mb-3 text-gray-800"></h2>
+                <p data-i18n="about_paragraph" class="text-gray-700 leading-relaxed"></p>
             </div>
 
             <!-- Footer Section -->
             <footer class="text-center text-gray-600 space-y-2 mt-8">
                 <p class="text-sm">
-                    © <span id="current-year"></span> SmartStudentAct | Built with 💙 for learners
+                    © <span id="current-year"></span> SmartStudentAct | <span data-i18n="footer_text"></span>
                 </p>
                 <div class="flex justify-center space-x-6">
-                    <button id="aboutLink" class="text-blue-500 font-semibold hover:underline">About</button>
-                    <button id="contactLink" class="text-blue-500 font-semibold hover:underline">Contact</button>
+                    <a href="aboutus.html" data-i18n="footer_about_link" class="text-blue-500 font-semibold hover:underline"></a>
+                    <a href="contact.html" data-i18n="footer_contact_link" class="text-blue-500 font-semibold hover:underline"></a>
                 </div>
             </footer>
         </div>
     </div>
 
     <script>
+        // Create an object to hold your translation data
+        const translations = {
+            en: {
+                "site_title": "SmartStudentAct",
+                "site_subtitle": "Track your goals. Budget smart.",
+                "welcome_heading": "Welcome to SmartStudentAct 📚",
+                "welcome_paragraph_1": "SmartStudentAct is designed to help you manage your assignments, track your goals, control your budget, and earn exciting rewards based on your academic and financial achievements.",
+                "welcome_paragraph_2": "Whether you're a student looking to stay organized or a teacher supporting your class, SmartStudentAct connects you with the right tools for smart success.",
+                "sign_in_btn": "🔐 Sign In",
+                "sign_up_btn": "📝 Sign Up",
+                "about_heading": "About SmartStudentAct",
+                "about_paragraph": "SmartStudentAct is a student-focused app designed to help you stay on top of your assignments, budget wisely, and track personal goals. Whether you're tracking due dates or saving up for your next big project, we’ve got your back.",
+                "footer_text": "Built with 💙 for learners",
+                "footer_about_link": "About",
+                "footer_contact_link": "Contact",
+                "modal_title": "Coming Soon",
+                "modal_message": "The functionality is not yet implemented.",
+                "modal_ok_btn": "OK"
+            },
+            fr: {
+                "site_title": "SmartStudentAct",
+                "site_subtitle": "Suivez vos objectifs. Gérez votre budget.",
+                "welcome_heading": "Bienvenue sur SmartStudentAct 📚",
+                "welcome_paragraph_1": "SmartStudentAct est conçu pour vous aider à gérer vos devoirs, à suivre vos objectifs, à contrôler votre budget et à gagner des récompenses passionnantes basées sur vos réussites académiques et financières.",
+                "welcome_paragraph_2": "Que vous soyez un étudiant cherchant à rester organisé ou un enseignant soutenant sa classe, SmartStudentAct vous connecte aux bons outils pour un succès intelligent.",
+                "sign_in_btn": "🔐 Se connecter",
+                "sign_up_btn": "📝 S'inscrire",
+                "about_heading": "À propos de SmartStudentAct",
+                "about_paragraph": "SmartStudentAct est une application axée sur les étudiants conçue pour vous aider à rester au top de vos devoirs, à gérer judicieusement votre budget et à suivre vos objectifs personnels. Que vous suiviez des échéances ou que vous économisiez pour votre prochain grand projet, nous sommes là pour vous.",
+                "footer_text": "Créé avec 💙 pour les apprenants",
+                "footer_about_link": "À propos",
+                "footer_contact_link": "Contact",
+                "modal_title": "Bientôt disponible",
+                "modal_message": "La fonctionnalité n'est pas encore implémentée.",
+                "modal_ok_btn": "OK"
+            }
+        };
+
+        // Function to translate the page based on the language key
+        function translatePage(lang) {
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.innerHTML = translations[lang][key];
+                }
+            });
+            document.documentElement.lang = lang;
+            
+            // Update active state of language buttons
+            document.getElementById('en-btn').classList.remove('active');
+            document.getElementById('fr-btn').classList.remove('active');
+            document.getElementById(`${lang}-btn`).classList.add('active');
+        }
+
         // Get the current year and set it in the footer
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
@@ -146,19 +194,20 @@
 
         // Attach event listeners to the buttons
         document.getElementById('signInBtn').addEventListener('click', () => {
-            showAlert("Coming Soon", "The Sign In functionality is not yet implemented.");
+            showAlert(translations[document.documentElement.lang].modal_title, translations[document.documentElement.lang].modal_message);
         });
 
         document.getElementById('signUpBtn').addEventListener('click', () => {
-            showAlert("Coming Soon", "The Sign Up functionality is not yet implemented.");
+            showAlert(translations[document.documentElement.lang].modal_title, translations[document.documentElement.lang].modal_message);
         });
 
-        document.getElementById('aboutLink').addEventListener('click', () => {
-            showAlert("About Us", "SmartStudentAct is designed to help students and teachers. More info coming soon!");
-        });
+        // Set up event listeners for language switcher
+        document.getElementById('en-btn').addEventListener('click', () => translatePage('en'));
+        document.getElementById('fr-btn').addEventListener('click', () => translatePage('fr'));
 
-        document.getElementById('contactLink').addEventListener('click', () => {
-            showAlert("Contact Us", "For support, please contact us at support@smartstudentact.com");
+        // Initial translation on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            translatePage('en'); // Default to English
         });
     </script>
 </body>

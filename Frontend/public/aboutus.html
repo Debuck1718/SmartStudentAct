@@ -1,165 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About – SmartStudentAct</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About – SmartStudentAct</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
     /* Add a subtle hover effect to the feature cards */
     .feature-card {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .feature-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     }
-  </style>
+    /* Style for language switcher buttons */
+    .language-switcher button {
+        transition: transform 0.2s ease-in-out;
+    }
+    .language-switcher button.active {
+        transform: scale(1.1);
+        font-weight: bold;
+        text-decoration: underline;
+    }
+</style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
-  <!-- Navbar -->
-  <nav class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-blue-600">SmartStudentAct</h1>
-    <a href="index.html" class="text-blue-500 hover:underline">Home</a>
-  </nav>
+    <script>
+        // Create an object to hold your translation data
+        const translations = {
+            en: {
+                "nav_title": "SmartStudentAct",
+                "nav_home": "Home",
+                "hero_heading": "About SmartStudentAct",
+                "hero_text": "A smart, collaborative platform designed to connect teachers and students through assignments, quizzes, financial planning, and rewarding achievements.",
+                "vision_heading": "Our Vision",
+                "vision_text": "SmartStudentAct aims to modernize education by combining academic excellence with personal growth. Students are empowered to stay consistent with their learning, manage their budgets wisely, set achievable goals, and get data-driven insights to stay on track — all while earning rewards for their efforts.",
+                "teachers_heading": "For Teachers",
+                "teachers_list_1": "Create and assign tasks & quizzes",
+                "teachers_list_2": "Target students by class, grade, or school",
+                "teachers_list_3": "Automatically receive student scores",
+                "teachers_list_4": "Track progress over time",
+                "students_heading": "For Students",
+                "students_list_1": "Access quizzes and assignments on dashboard",
+                "students_list_2": "Answer questions with instant feedback",
+                "students_list_3": "See score breakdown of correct/wrong answers",
+                "students_list_4": "Stay on top of deadlines",
+                "students_list_5": "Track budgets and manage personal finance",
+                "students_list_6": "Set and complete weekly/monthly goals",
+                "rewards_growth_heading": "Rewards & Growth",
+                "rewards_growth_list_1": "Earn points for completing assignments & goals",
+                "rewards_growth_list_2": "Get rewarded for consistency & achievements",
+                "rewards_growth_list_3": "Unlock titles like “Goal Crusher” or “Assignment Ace”",
+                "rewards_growth_list_4": "Motivation through performance-based rewards",
+                "ai_heading": "AI Essay Checker",
+                "ai_list_1": "Get instant feedback on grammar, syntax, and style",
+                "ai_list_2": "Improve your writing with AI-powered suggestions",
+                "ai_list_3": "Check for originality and citation errors",
+                "ai_list_4": "Enhance clarity and flow of your essays",
+                "notifications_heading": "Real-Time Notifications & Alerts",
+                "notifications_list_1": "Never miss a beat! Get instant pings for new assignments and quizzes.",
+                "notifications_list_2": "Stay ahead of the curve with timely reminders for approaching deadlines.",
+                "notifications_list_3": "Teachers can effortlessly send announcements to classes or individual students.",
+                "notifications_list_4": "Receive alerts when your AI essay feedback is ready or when a new badge is unlocked.",
+                "rewards_showcase_heading": "Rewards & Badges",
+                "goal_crusher_title": "Goal Crusher",
+                "goal_crusher_text": "Achieved set goals consistently",
+                "budget_boss_title": "Budget Boss",
+                "budget_boss_text": "Maintained weekly/monthly budgets",
+                "assignment_ace_title": "Assignment Ace",
+                "assignment_ace_text": "Completed assignments on time",
+                "top_scholar_title": "Top Scholar",
+                "top_scholar_text": "Scored high in quizzes & exams",
+                "consistency_champ_title": "Consistency Champ",
+                "consistency_champ_text": "Kept steady performance over months",
+                "custom_title": "Custom",
+                "custom_text": "Special rewards by teachers/admins",
+                "approach_heading": "Our Comprehensive Approach",
+                "approach_text_1": "SmartStudentAct doesn’t stop at academics. By blending",
+                "approach_text_2": "quizzes and assignments",
+                "approach_text_3": "with",
+                "approach_text_4": "budget tracking",
+                "approach_text_5": "goal-setting",
+                "approach_text_6": "AI essay checking",
+                "approach_text_7": "data-driven insights",
+                "approach_text_8": "real-time notifications",
+                "approach_text_9": "and",
+                "approach_text_10": "rewards",
+                "approach_text_11": "we support both the academic and personal growth of every learner. Teachers guide, students engage, and progress is rewarded.",
+                "footer_text": "© 2025 SmartStudentAct. All rights reserved."
+            },
+            fr: {
+                "nav_title": "SmartStudentAct",
+                "nav_home": "Accueil",
+                "hero_heading": "À propos de SmartStudentAct",
+                "hero_text": "Une plateforme intelligente et collaborative conçue pour connecter les enseignants et les étudiants à travers des devoirs, des quiz, la planification financière et des réalisations récompensées.",
+                "vision_heading": "Notre vision",
+                "vision_text": "SmartStudentAct vise à moderniser l'éducation en combinant l'excellence académique avec le développement personnel. Les étudiants sont encouragés à rester constants dans leur apprentissage, à gérer judicieusement leur budget, à fixer des objectifs réalisables et à obtenir des informations basées sur les données pour rester sur la bonne voie, tout en gagnant des récompenses pour leurs efforts.",
+                "teachers_heading": "Pour les enseignants",
+                "teachers_list_1": "Créer et attribuer des tâches et des quiz",
+                "teachers_list_2": "Cibler les étudiants par classe, niveau ou école",
+                "teachers_list_3": "Recevoir automatiquement les scores des étudiants",
+                "teachers_list_4": "Suivre les progrès dans le temps",
+                "students_heading": "Pour les étudiants",
+                "students_list_1": "Accéder aux quiz et aux devoirs sur le tableau de bord",
+                "students_list_2": "Répondre aux questions avec un feedback instantané",
+                "students_list_3": "Voir la répartition des scores des réponses correctes/incorrectes",
+                "students_list_4": "Respecter les délais",
+                "students_list_5": "Suivre les budgets et gérer les finances personnelles",
+                "students_list_6": "Fixer et atteindre des objectifs hebdomadaires/mensuels",
+                "rewards_growth_heading": "Récompenses et croissance",
+                "rewards_growth_list_1": "Gagner des points en complétant des devoirs et des objectifs",
+                "rewards_growth_list_2": "Être récompensé pour la constance et les réussites",
+                "rewards_growth_list_3": "Débloquer des titres comme «Goal Crusher» ou «Assignment Ace»",
+                "rewards_growth_list_4": "Motivation par des récompenses basées sur la performance",
+                "ai_heading": "Vérificateur d'essais IA",
+                "ai_list_1": "Obtenir un feedback instantané sur la grammaire, la syntaxe et le style",
+                "ai_list_2": "Améliorer votre écriture avec des suggestions basées sur l'IA",
+                "ai_list_3": "Vérifier l'originalité et les erreurs de citation",
+                "ai_list_4": "Améliorer la clarté et la fluidité de vos essais",
+                "notifications_heading": "Notifications et alertes en temps réel",
+                "notifications_list_1": "Ne manquez jamais rien! Recevez des pings instantanés pour les nouveaux devoirs et quiz.",
+                "notifications_list_2": "Gardez une longueur d'avance avec des rappels opportuns pour les délais qui approchent.",
+                "notifications_list_3": "Les enseignants peuvent envoyer sans effort des annonces aux classes ou aux étudiants individuels.",
+                "notifications_list_4": "Recevez des alertes lorsque votre feedback d'essai IA est prêt ou qu'un nouveau badge est débloqué.",
+                "rewards_showcase_heading": "Récompenses et badges",
+                "goal_crusher_title": "Broyeur d'Objectifs",
+                "goal_crusher_text": "A atteint constamment les objectifs fixés",
+                "budget_boss_title": "Boss du Budget",
+                "budget_boss_text": "A maintenu les budgets hebdomadaires/mensuels",
+                "assignment_ace_title": "As des Devoirs",
+                "assignment_ace_text": "A complété les devoirs à temps",
+                "top_scholar_title": "Meilleur Étudiant",
+                "top_scholar_text": "A obtenu des scores élevés aux quiz et examens",
+                "consistency_champ_title": "Champion de la Constance",
+                "consistency_champ_text": "A maintenu une performance stable sur plusieurs mois",
+                "custom_title": "Personnalisé",
+                "custom_text": "Récompenses spéciales par les enseignants/administrateurs",
+                "approach_heading": "Notre approche globale",
+                "approach_text_1": "SmartStudentAct ne s'arrête pas aux études. En mêlant",
+                "approach_text_2": "quizzes et devoirs",
+                "approach_text_3": "avec",
+                "approach_text_4": "le suivi du budget",
+                "approach_text_5": "la fixation d'objectifs",
+                "approach_text_6": "le vérificateur d'essais IA",
+                "approach_text_7": "des informations basées sur les données",
+                "approach_text_8": "des notifications en temps réel",
+                "approach_text_9": "et des",
+                "approach_text_10": "récompenses",
+                "approach_text_11": "nous soutenons à la fois la croissance académique et personnelle de chaque apprenant. Les enseignants guident, les étudiants s'engagent et les progrès sont récompensés.",
+                "footer_text": "© 2025 SmartStudentAct. Tous droits réservés."
+            }
+        };
 
-  <!-- Hero -->
-  <section class="text-center py-16 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-    <h2 class="text-4xl font-bold mb-4">About SmartStudentAct</h2>
-    <p class="text-lg max-w-2xl mx-auto">
-      A smart, collaborative platform designed to connect teachers and students
-      through assignments, quizzes, financial planning, and rewarding achievements.
-    </p>
-  </section>
+        // Function to translate the page based on the language key
+        function translatePage(lang) {
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.innerHTML = translations[lang][key];
+                }
+            });
+            document.documentElement.lang = lang;
+            
+            // Update active state of language buttons
+            document.getElementById('en-btn').classList.remove('active');
+            document.getElementById('fr-btn').classList.remove('active');
+            document.getElementById(`${lang}-btn`).classList.add('active');
+        }
 
-  <!-- Core Vision -->
-  <section class="py-12 px-6 max-w-5xl mx-auto">
-    <h3 class="text-2xl font-semibold mb-6 text-center">Our Vision</h3>
-    <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto">
-      SmartStudentAct aims to modernize education by combining academic excellence 
-      with personal growth. Students are empowered to stay consistent with their learning, 
-      manage their budgets wisely, set achievable goals, and get data-driven insights to stay on track — all while earning rewards 
-      for their efforts.
-    </p>
-  </section>
+        // Initial translation on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            translatePage('en'); // Default to English
+        });
+    </script>
 
-  <!-- Core Features -->
-  <section class="py-12 bg-gray-100">
-    <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-8">
-      <!-- Teachers -->
-      <div class="bg-white p-6 rounded-2xl shadow feature-card">
-        <h4 class="text-xl font-bold mb-3 text-blue-600">For Teachers</h4>
-        <ul class="list-disc list-inside text-gray-700">
-          <li>Create and assign tasks & quizzes</li>
-          <li>Target students by class, grade, or school</li>
-          <li>Automatically receive student scores</li>
-          <li>Track progress over time</li>
-        </ul>
-      </div>
+    <!-- Navbar -->
+    <nav class="bg-white shadow p-4 flex justify-between items-center">
+        <h1 data-i18n="nav_title" class="text-2xl font-bold text-blue-600"></h1>
+        <!-- Language Switcher -->
+        <div class="language-switcher flex space-x-2">
+            <button id="en-btn" onclick="translatePage('en')" class="text-blue-500 hover:underline">EN</button>
+            <span>|</span>
+            <button id="fr-btn" onclick="translatePage('fr')" class="text-blue-500 hover:underline">FR</button>
+        </div>
+        <a href="index.html" data-i18n="nav_home" class="text-blue-500 hover:underline"></a>
+    </nav>
 
-      <!-- Students -->
-      <div class="bg-white p-6 rounded-2xl shadow feature-card">
-        <h4 class="text-xl font-bold mb-3 text-blue-600">For Students</h4>
-        <ul class="list-disc list-inside text-gray-700">
-          <li>Access quizzes and assignments on dashboard</li>
-          <li>Answer questions with instant feedback</li>
-          <li>See score breakdown of correct/wrong answers</li>
-          <li>Stay on top of deadlines</li>
-          <li>Track budgets and manage personal finance</li>
-          <li>Set and complete weekly/monthly goals</li>
-        </ul>
-      </div>
+    <!-- Hero -->
+    <section class="text-center py-16 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+        <h2 data-i18n="hero_heading" class="text-4xl font-bold mb-4"></h2>
+        <p data-i18n="hero_text" class="text-lg max-w-2xl mx-auto"></p>
+    </section>
 
-      <!-- Rewards & Growth -->
-      <div class="bg-white p-6 rounded-2xl shadow feature-card">
-        <h4 class="text-xl font-bold mb-3 text-blue-600">Rewards & Growth</h4>
-        <ul class="list-disc list-inside text-gray-700">
-          <li>Earn points for completing assignments & goals</li>
-          <li>Get rewarded for consistency & achievements</li>
-          <li>Unlock titles like “Goal Crusher” or “Assignment Ace”</li>
-          <li>Motivation through performance-based rewards</li>
-        </ul>
-      </div>
-      
-      <!-- AI Essay Checker -->
-      <div class="bg-white p-6 rounded-2xl shadow feature-card">
-        <h4 class="text-xl font-bold mb-3 text-blue-600">AI Essay Checker</h4>
-        <ul class="list-disc list-inside text-gray-700">
-          <li>Get instant feedback on grammar, syntax, and style</li>
-          <li>Improve your writing with AI-powered suggestions</li>
-          <li>Check for originality and citation errors</li>
-          <li>Enhance clarity and flow of your essays</li>
-        </ul>
-      </div>
+    <!-- Core Vision -->
+    <section class="py-12 px-6 max-w-5xl mx-auto">
+        <h3 data-i18n="vision_heading" class="text-2xl font-semibold mb-6 text-center"></h3>
+        <p data-i18n="vision_text" class="text-lg text-gray-700 text-center max-w-3xl mx-auto"></p>
+    </section>
 
-      <!-- Notifications -->
-      <div class="bg-white p-6 rounded-2xl shadow feature-card md:col-span-2 md:col-start-2">
-        <h4 class="text-xl font-bold mb-3 text-blue-600">Real-Time Notifications & Alerts</h4>
-        <ul class="list-disc list-inside text-gray-700">
-          <li>Never miss a beat! Get instant pings for new assignments and quizzes.</li>
-          <li>Stay ahead of the curve with timely reminders for approaching deadlines.</li>
-          <li>Teachers can effortlessly send announcements to classes or individual students.</li>
-          <li>Receive alerts when your AI essay feedback is ready or when a new badge is unlocked.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
+    <!-- Core Features -->
+    <section class="py-12 bg-gray-100">
+        <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-8">
+            <!-- Teachers -->
+            <div class="bg-white p-6 rounded-2xl shadow feature-card">
+                <h4 data-i18n="teachers_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
+                <ul class="list-disc list-inside text-gray-700">
+                    <li data-i18n="teachers_list_1"></li>
+                    <li data-i18n="teachers_list_2"></li>
+                    <li data-i18n="teachers_list_3"></li>
+                    <li data-i18n="teachers_list_4"></li>
+                </ul>
+            </div>
 
-  <!-- Rewards Showcase -->
-  <section class="py-16 px-6 max-w-6xl mx-auto text-center">
-    <h3 class="text-2xl font-semibold mb-10">Rewards & Badges</h3>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-      <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-        <i class="fas fa-bullseye text-3xl text-red-500 mb-3"></i>
-        <h4 class="font-bold">Goal Crusher</h4>
-        <p class="text-sm text-gray-600">Achieved set goals consistently</p>
-      </div>
-      <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-        <i class="fas fa-piggy-bank text-3xl text-green-500 mb-3"></i>
-        <h4 class="font-bold">Budget Boss</h4>
-        <p class="text-sm text-gray-600">Maintained weekly/monthly budgets</p>
-      </div>
-      <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-        <i class="fas fa-book-open text-3xl text-blue-500 mb-3"></i>
-        <h4 class="font-bold">Assignment Ace</h4>
-        <p class="text-sm text-gray-600">Completed assignments on time</p>
-      </div>
-      <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-        <i class="fas fa-graduation-cap text-3xl text-purple-500 mb-3"></i>
-        <h4 class="font-bold">Top Scholar</h4>
-        <p class="text-sm text-gray-600">Scored high in quizzes & exams</p>
-      </div>
-      <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-        <i class="fas fa-calendar-check text-3xl text-indigo-500 mb-3"></i>
-        <h4 class="font-bold">Consistency Champ</h4>
-        <p class="text-sm text-gray-600">Kept steady performance over months</p>
-      </div>
-      <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-        <i class="fas fa-star text-3xl text-yellow-500 mb-3"></i>
-        <h4 class="font-bold">Custom</h4>
-        <p class="text-sm text-gray-600">Special rewards by teachers/admins</p>
-      </div>
-    </div>
-  </section>
+            <!-- Students -->
+            <div class="bg-white p-6 rounded-2xl shadow feature-card">
+                <h4 data-i18n="students_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
+                <ul class="list-disc list-inside text-gray-700">
+                    <li data-i18n="students_list_1"></li>
+                    <li data-i18n="students_list_2"></li>
+                    <li data-i18n="students_list_3"></li>
+                    <li data-i18n="students_list_4"></li>
+                    <li data-i18n="students_list_5"></li>
+                    <li data-i18n="students_list_6"></li>
+                </ul>
+            </div>
 
-  <!-- Our Approach -->
-  <section class="py-12 px-6 max-w-5xl mx-auto">
-    <h3 class="text-2xl font-semibold mb-6 text-center">Our Comprehensive Approach</h3>
-    <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto">
-      SmartStudentAct doesn’t stop at academics. 
-      By blending <strong>quizzes and assignments</strong> with 
-      <strong>budget tracking</strong>, <strong>goal-setting</strong>, 
-      <strong>AI essay checking</strong>, <strong>data-driven insights</strong>, 
-      <strong>real-time notifications</strong> and 
-      <strong>rewards</strong>, we support both the academic and personal growth of every learner. 
-      Teachers guide, students engage, and progress is rewarded. 
-    </p>
-  </section>
+            <!-- Rewards & Growth -->
+            <div class="bg-white p-6 rounded-2xl shadow feature-card">
+                <h4 data-i18n="rewards_growth_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
+                <ul class="list-disc list-inside text-gray-700">
+                    <li data-i18n="rewards_growth_list_1"></li>
+                    <li data-i18n="rewards_growth_list_2"></li>
+                    <li data-i18n="rewards_growth_list_3"></li>
+                    <li data-i18n="rewards_growth_list_4"></li>
+                </ul>
+            </div>
+            
+            <!-- AI Essay Checker -->
+            <div class="bg-white p-6 rounded-2xl shadow feature-card">
+                <h4 data-i18n="ai_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
+                <ul class="list-disc list-inside text-gray-700">
+                    <li data-i18n="ai_list_1"></li>
+                    <li data-i18n="ai_list_2"></li>
+                    <li data-i18n="ai_list_3"></li>
+                    <li data-i18n="ai_list_4"></li>
+                </ul>
+            </div>
 
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-gray-300 text-center py-6">
-    <p>© 2025 SmartStudentAct. All rights reserved.</p>
-  </footer>
+            <!-- Notifications -->
+            <div class="bg-white p-6 rounded-2xl shadow feature-card md:col-span-2 md:col-start-2">
+                <h4 data-i18n="notifications_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
+                <ul class="list-disc list-inside text-gray-700">
+                    <li data-i18n="notifications_list_1"></li>
+                    <li data-i18n="notifications_list_2"></li>
+                    <li data-i18n="notifications_list_3"></li>
+                    <li data-i18n="notifications_list_4"></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rewards Showcase -->
+    <section class="py-16 px-6 max-w-6xl mx-auto text-center">
+        <h3 data-i18n="rewards_showcase_heading" class="text-2xl font-semibold mb-10"></h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
+                <i class="fas fa-bullseye text-3xl text-red-500 mb-3"></i>
+                <h4 data-i18n="goal_crusher_title" class="font-bold"></h4>
+                <p data-i18n="goal_crusher_text" class="text-sm text-gray-600"></p>
+            </div>
+            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
+                <i class="fas fa-piggy-bank text-3xl text-green-500 mb-3"></i>
+                <h4 data-i18n="budget_boss_title" class="font-bold"></h4>
+                <p data-i18n="budget_boss_text" class="text-sm text-gray-600"></p>
+            </div>
+            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
+                <i class="fas fa-book-open text-3xl text-blue-500 mb-3"></i>
+                <h4 data-i18n="assignment_ace_title" class="font-bold"></h4>
+                <p data-i18n="assignment_ace_text" class="text-sm text-gray-600"></p>
+            </div>
+            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
+                <i class="fas fa-graduation-cap text-3xl text-purple-500 mb-3"></i>
+                <h4 data-i18n="top_scholar_title" class="font-bold"></h4>
+                <p data-i18n="top_scholar_text" class="text-sm text-gray-600"></p>
+            </div>
+            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
+                <i class="fas fa-calendar-check text-3xl text-indigo-500 mb-3"></i>
+                <h4 data-i18n="consistency_champ_title" class="font-bold"></h4>
+                <p data-i18n="consistency_champ_text" class="text-sm text-gray-600"></p>
+            </div>
+            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
+                <i class="fas fa-star text-3xl text-yellow-500 mb-3"></i>
+                <h4 data-i18n="custom_title" class="font-bold"></h4>
+                <p data-i18n="custom_text" class="text-sm text-gray-600"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Approach -->
+    <section class="py-12 px-6 max-w-5xl mx-auto">
+        <h3 data-i18n="approach_heading" class="text-2xl font-semibold mb-6 text-center"></h3>
+        <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto">
+            <span data-i18n="approach_text_1"></span> <strong><span data-i18n="approach_text_2"></span></strong> <span data-i18n="approach_text_3"></span> <strong><span data-i18n="approach_text_4"></span></strong>, <strong><span data-i18n="approach_text_5"></span></strong>, <strong><span data-i18n="approach_text_6"></span></strong>, <strong><span data-i18n="approach_text_7"></span></strong>, <strong><span data-i18n="approach_text_8"></span></strong> <span data-i18n="approach_text_9"></span> <strong><span data-i18n="approach_text_10"></span></strong>, <span data-i18n="approach_text_11"></span>
+        </p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 text-center py-6">
+        <p data-i18n="footer_text"></p>
+    </footer>
 </body>
 </html>
