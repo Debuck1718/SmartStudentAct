@@ -11,7 +11,6 @@ const eventBus = new EventEmitter();
 const cloudinary = require("cloudinary").v2;
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
-const crypto = require("crypto");
 
 // ✅ CSRF middleware (automatic token injection & validation)
 const csrfProtection = require("./middlewares/csrf");
@@ -37,19 +36,22 @@ requiredEnvVars.forEach((key) => {
 
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
+const NODE_ENV = process.env.NODE_ENV || "development";
+const isProd = NODE_ENV === "production";
 
 // ───────────────────────────────────────────────
 // 2️⃣ Express App Setup
 // ───────────────────────────────────────────────
 const app = express();
 
-// ✅ Trust proxy (important for rate-limiting, sessions, and X-Forwarded headers)
+// ✅ Trust proxy (needed for HTTPS & secure cookies when behind proxy/CDN)
 app.set("trust proxy", 1);
 
 // ✅ Allowed domains
 const allowedOrigins = [
   "https://smartstudentact.com",
   "https://www.smartstudentact.com",
+  ...(NODE_ENV !== "production" ? ["http://localhost:3000"] : []), // for dev
 ];
 
 app.use(
@@ -68,9 +70,12 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Session Middleware with MongoStore
+// ───────────────────────────────────────────────
+// 3️⃣ Session Middleware with MongoStore
+// ───────────────────────────────────────────────
 app.use(
   session({
+    name: "ssid", // ✅ custom session cookie name
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -80,16 +85,17 @@ app.use(
       ttl: 14 * 24 * 60 * 60, // 14 days
     }),
     cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: "strict",
-      domain: ".smartstudentact.com",
+      httpOnly: true,                   // ✅ cannot be accessed via JS
+      secure: isProd,                   // ✅ HTTPS only in production
+      sameSite: "strict",               // ✅ prevents CSRF
+      domain: isProd ? ".smartstudentact.com" : undefined, // ✅ prod only
+      maxAge: 1000 * 60 * 60 * 24 * 7,  // ✅ 1 week session expiry
     },
   })
 );
 
 // ───────────────────────────────────────────────
-// 3️⃣ Cloudinary Configuration
+// 4️⃣ Cloudinary Configuration
 // ───────────────────────────────────────────────
 try {
   cloudinary.config({
@@ -104,7 +110,7 @@ try {
 }
 
 // ───────────────────────────────────────────────
-// 4️⃣ MongoDB Connection
+// 5️⃣ MongoDB Connection
 // ───────────────────────────────────────────────
 async function connectMongo() {
   try {
@@ -118,7 +124,7 @@ async function connectMongo() {
 }
 
 // ───────────────────────────────────────────────
-// 5️⃣ Agenda Job Scheduler Setup
+// 6️⃣ Agenda Job Scheduler Setup
 // ───────────────────────────────────────────────
 let agenda;
 async function startAgenda() {
@@ -141,7 +147,7 @@ async function startAgenda() {
 }
 
 // ───────────────────────────────────────────────
-// 6️⃣ Routes Loader (Public + Protected w/ CSRF)
+// 7️⃣ Routes Loader (Public + Protected w/ CSRF)
 // ───────────────────────────────────────────────
 try {
   const loadRoutes = require("./routes");
@@ -157,25 +163,25 @@ try {
 }
 
 // ───────────────────────────────────────────────
-// 7️⃣ Root Route
+// 8️⃣ Root Route
 // ───────────────────────────────────────────────
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
 // ───────────────────────────────────────────────
-// 8️⃣ Global Error Handler
+// 9️⃣ Global Error Handler
 // ───────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error("❌ Global error handler caught:", err.stack);
   res.status(err.status || 500).json({
     error: "An unexpected server error occurred.",
-    details: process.env.NODE_ENV === "development" ? err.message : undefined,
+    details: NODE_ENV === "development" ? err.message : undefined,
   });
 });
 
 // ───────────────────────────────────────────────
-// 9️⃣ Start Server
+// 🔟 Start Server
 // ───────────────────────────────────────────────
 (async () => {
   try {
@@ -183,7 +189,7 @@ app.use((err, req, res, next) => {
     await startAgenda();
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV}]`);
+      console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
     });
   } catch (err) {
     console.error(`❌ Fatal startup error at ${new Date().toISOString()}:`, err);
