@@ -180,7 +180,7 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-  // --- Corrected Login with rate limiting and account lockout ---
+ // --- Corrected Login with JWT token generation ---
 publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -191,7 +191,6 @@ publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (re
       return res.status(401).json({ error: "Invalid email or password." });
     }
     
-    // Check for account lockout
     if (user.lockUntil && user.lockUntil > Date.now()) {
       return res.status(429).json({ error: "Your account is temporarily locked due to too many failed login attempts. Please try again later." });
     }
@@ -199,43 +198,45 @@ publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (re
     const isMatch = await user.comparePassword(password);
     
     if (!isMatch) {
-      // Increment login attempts and potentially lock the account
       const updatedUser = await User.findOneAndUpdate(
         { _id: user._id },
         { $inc: { loginAttempts: 1 } },
-        { new: true } // Return the updated document
+        { new: true }
       );
 
-      // Check if the user has exceeded the max login attempts (e.g., 5)
       if (updatedUser.loginAttempts >= 5) {
-        // Lock the account for a specific duration (e.g., 1 hour)
         const lockUntil = Date.now() + 3600000;
         await User.findOneAndUpdate(
           { _id: user._id },
           { $set: { lockUntil: lockUntil } }
         );
       }
-      
-      // Return a generic error to prevent user enumeration
       return res.status(401).json({ error: "Invalid email or password." });
     }
     
-    // If login is successful, reset login attempts
     if (user.loginAttempts > 0) {
       await User.findOneAndUpdate(
         { _id: user._id },
         { $set: { loginAttempts: 0 } }
       );
     }
-    
-    // ✅ CORRECT FIX: Store user data on the session
-    req.session.userId = user._id;
-    req.session.role = user.role;
-    await new Promise(resolve => req.session.save(() => resolve())); // Ensure session is saved before continuing
+
+    // ✅ Re-enable JWT token generation
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES / 1000 }
+    );
 
     const csrfToken = crypto.randomBytes(24).toString("hex");
 
-    // The `res.cookie` logic for the JWT is now removed, as it's not needed.
+    // ✅ Set the JWT as an HttpOnly cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      maxAge: JWT_EXPIRES,
+    });
 
     res.json({ user: { id: user._id, email: user.email, role: user.role }, csrfToken });
   } catch (err) {
@@ -243,7 +244,6 @@ publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (re
     res.status(500).json({ error: "Server error during login." });
   }
 });
-
   // --- Forgot Password ---
   publicRouter.post(
     "/auth/forgot-password",
