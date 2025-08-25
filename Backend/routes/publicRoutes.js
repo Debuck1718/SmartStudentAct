@@ -181,75 +181,83 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-// --- Corrected Login with JWT token generation ---
 publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select("+password +loginAttempts +lockUntil");
-    
-    if (!user) {
-      return res.status(401).json({ error: "Invalid email or password." });
-    }
-    
-    if (user.lockUntil && user.lockUntil > Date.now()) {
-      return res.status(429).json({ error: "Your account is temporarily locked due to too many failed login attempts. Please try again later." });
-    }
+    // 1. Find user with password
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .select("+password +failedLoginAttempts +lockoutUntil");
 
-    const isMatch = await user.comparePassword(password);
-    
-    if (!isMatch) {
-      const updatedUser = await User.findOneAndUpdate(
-        { _id: user._id },
-        { $inc: { loginAttempts: 1 } },
-        { new: true }
-      );
+    if (!user) {
+      return res.status(401).json({ error: "Invalid email or password." });
+    }
 
-      if (updatedUser.loginAttempts >= 5) {
-        const lockUntil = Date.now() + 3600000;
-        await User.findOneAndUpdate(
-          { _id: user._id },
-          { $set: { lockUntil: lockUntil } }
-        );
-      }
-      return res.status(401).json({ error: "Invalid email or password." });
-    }
-    
-    if (user.loginAttempts > 0) {
-      await User.findOneAndUpdate(
-        { _id: user._id },
-        { $set: { loginAttempts: 0 } }
-      );
-    }
+    // 2. Check lockout
+    if (user.lockoutUntil && user.lockoutUntil > Date.now()) {
+      return res.status(429).json({
+        error: "Your account is temporarily locked due to too many failed login attempts. Please try again later."
+      });
+    }
 
-    // ✅ Re-enable JWT token generation
-    const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES / 1000 }
-    );
+    // 3. Check password
+    const isMatch = await user.comparePassword(password);
 
-    const csrfToken = crypto.randomBytes(24).toString("hex");
+    if (!isMatch) {
+      const updatedUser = await User.findByIdAndUpdate(
+        user._id,
+        { $inc: { failedLoginAttempts: 1 } },
+        { new: true }
+      );
 
-    // ✅ Set the JWT as an HttpOnly cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: JWT_EXPIRES,
-    });
+      if (updatedUser.failedLoginAttempts >= 5) {
+        const lockoutUntil = Date.now() + 3600000; // 1 hour lockout
+        await User.findByIdAndUpdate(user._id, {
+          $set: { lockoutUntil }
+        });
+      }
 
-    // ✅ CRITICAL FIX: Also send the token back in the response body
-    res.json({
-      user: { id: user._id, email: user.email, role: user.role },
-      csrfToken,
-      token // Send the token here for the frontend to use
-    });
-  } catch (err) {
-    console.error("❌ Login error:", err);
-    res.status(500).json({ error: "Server error during login." });
-  }
+      return res.status(401).json({ error: "Invalid email or password." });
+    }
+
+    // 4. Reset attempts
+    if (user.failedLoginAttempts > 0) {
+      await User.findByIdAndUpdate(user._id, {
+        $set: { failedLoginAttempts: 0, lockoutUntil: null }
+      });
+    }
+
+    // 5. Generate JWT
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: Math.floor(JWT_EXPIRES / 1000) } // ensure seconds
+    );
+
+    // 6. Generate + store CSRF token (in session or DB)
+    const csrfToken = crypto.randomBytes(24).toString("hex");
+    req.session.csrfToken = csrfToken; // <-- critical fix
+
+    // 7. Set HttpOnly cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      maxAge: JWT_EXPIRES,
+    });
+
+    // 8. Respond
+    res.json({
+      user: { id: user._id, email: user.email, role: user.role },
+      csrfToken,
+      token
+    });
+  } catch (err) {
+    console.error("❌ Login error:", err);
+    res.status(500).json({ error: "Server error during login." });
+  }
 });
+
 
   
   // --- Forgot Password ---

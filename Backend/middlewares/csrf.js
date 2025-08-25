@@ -1,7 +1,7 @@
 // middleware/csrf.js
 const crypto = require("crypto");
 
-// 🚫 Routes that skip CSRF validation
+// 🚫 Routes that skip CSRF validation (supports /api/ prefix too)
 const CSRF_EXEMPT = [
   "/users/login",
   "/users/signup",
@@ -10,9 +10,13 @@ const CSRF_EXEMPT = [
   "/auth/reset-password",
 ];
 
+function isExempt(path) {
+  return CSRF_EXEMPT.some(route => path.endsWith(route));
+}
+
 module.exports = function csrfProtection(req, res, next) {
   try {
-    // Ensure session has a CSRF token
+    // 1. Ensure session has a CSRF token
     if (!req.session.csrfToken) {
       req.session.csrfToken = crypto.randomBytes(32).toString("hex");
     }
@@ -20,8 +24,8 @@ module.exports = function csrfProtection(req, res, next) {
     const sessionToken = req.session.csrfToken;
     const csrfHeader = req.headers["x-csrf-token"];
 
-    // ✅ Skip CSRF check for exempt routes
-    if (!CSRF_EXEMPT.includes(req.path)) {
+    // 2. Skip CSRF check for exempt routes
+    if (!isExempt(req.path)) {
       const methodNeedsCheck = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
 
       if (methodNeedsCheck) {
@@ -37,11 +41,11 @@ module.exports = function csrfProtection(req, res, next) {
       }
     }
 
-    // 🪄 Inject CSRF token into all JSON responses
+    // 3. Inject current CSRF token into all JSON responses
     const originalJson = res.json.bind(res);
     res.json = (body) => {
       if (typeof body === "object" && body !== null) {
-        body.csrfToken = sessionToken;
+        body.csrfToken = req.session.csrfToken; // always latest session token
       }
       return originalJson(body);
     };
