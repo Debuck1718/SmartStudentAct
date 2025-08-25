@@ -238,12 +238,19 @@ publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (re
       maxAge: JWT_EXPIRES,
     });
 
-    res.json({ user: { id: user._id, email: user.email, role: user.role }, csrfToken });
+    // ✅ CRITICAL FIX: Also send the token back in the response body
+    res.json({
+      user: { id: user._id, email: user.email, role: user.role },
+      csrfToken,
+      token // Send the token here for the frontend to use
+    });
   } catch (err) {
     console.error("❌ Login error:", err);
     res.status(500).json({ error: "Server error during login." });
   }
 });
+
+  
   // --- Forgot Password ---
   publicRouter.post(
     "/auth/forgot-password",
