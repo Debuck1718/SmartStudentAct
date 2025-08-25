@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <title>Smart Student Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -33,7 +33,7 @@
 
         <!-- Email -->
         <div class="mb-4">
-            <input id="emailInput" type="email" 
+            <input id="emailInput" type="email"
                    class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                    placeholder="Email" autocomplete="email" />
             <p id="emailError" class="text-red-500 text-sm mt-1"></p>
@@ -42,7 +42,7 @@
         <!-- Password -->
         <div class="mb-4">
             <div class="flex items-center border border-gray-300 rounded-lg bg-white">
-                <input id="passwordInput" type="password" 
+                <input id="passwordInput" type="password"
                        class="w-full h-12 px-4 rounded-l-lg focus:outline-none"
                        placeholder="Password" autocomplete="current-password" />
                 <button id="passwordToggle" type="button" class="px-4 text-blue-600 font-bold">Show</button>
@@ -51,7 +51,7 @@
         </div>
 
         <!-- Login Button -->
-        <button id="loginButton" 
+        <button id="loginButton"
                 class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
             Login
         </button>
@@ -88,7 +88,8 @@
     }
 
     // --- UI and State Management ---
-    const API_BASE_URL = "https://smartstudentact.onrender.com";
+    // ✅ CRITICAL FIX: The correct API base URL
+    const API_BASE_URL = "https://smartstudentact.onrender.com/api";
     const emailInput = document.getElementById("emailInput");
     const passwordInput = document.getElementById("passwordInput");
     const loginButton = document.getElementById("loginButton");
@@ -164,7 +165,6 @@
             const response = await fetch(`${API_BASE_URL}/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include", // ✅ Ensures the browser sends the session cookie automatically
                 body: JSON.stringify({
                     email: emailInput.value.trim().toLowerCase(),
                     password: passwordInput.value
@@ -181,22 +181,23 @@
                 return;
             }
             
-            const data = await response.json().catch(() => {
-                throw new Error("Server did not return JSON");
-            });
-
-            // ✅ Store CSRF token. The session cookie is handled by the browser.
-            if (data.csrfToken) {
-                localStorage.setItem("csrfToken", data.csrfToken);
-            }
+            const data = await response.json();
+            
+            // ✅ CRITICAL FIX: Store the JWT token for future requests
+            localStorage.setItem("authToken", data.token);
+            // ✅ Store the CSRF token
+            localStorage.setItem("csrfToken", data.csrfToken);
 
             // ✅ Redirect based on role
             switch (data.user?.role) {
                 case "global_overseer":
                     window.location.href = "/global_overseer.html";
                     break;
-                case "overseer":
-                    window.location.href = "/overseer.html";
+                case "school_admin":
+                    window.location.href = "/school_admin.html";
+                    break;
+                case "regional_overseer":
+                    window.location.href = "/regional_overseer.html";
                     break;
                 case "student":
                     window.location.href = "/students.html";
