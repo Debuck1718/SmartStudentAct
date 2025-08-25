@@ -7,10 +7,10 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
-  body { font-family: "Inter", sans-serif; }
-  .container { padding: 20px; background-color: #f5f7fa; min-height: 100vh; }
-  .loading-container { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
-  .spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #3b82f6; animation: spin 1s ease infinite; }
+  body { font-family: "Inter", sans-serif; }
+  .container { padding: 20px; background-color: #f5f7fa; min-height: 100vh; }
+  .loading-container { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
+  .spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #3b82f6; animation: spin 1s ease infinite; }
 </style>
 </head>
 <body class="bg-gray-100 antialiased">
@@ -19,38 +19,38 @@
 
 <!-- Alert Modal -->
 <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
-    <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
-    <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
-    <div class="flex justify-end space-x-2">
-      <button id="alert-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300">Cancel</button>
-      <button id="alert-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">OK</button>
-    </div>
-  </div>
+  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
+    <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
+    <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
+    <div class="flex justify-end space-x-2">
+      <button id="alert-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300">Cancel</button>
+      <button id="alert-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">OK</button>
+    </div>
+  </div>
 </div>
 
 <!-- Assign Region Modal -->
 <div id="assign-region-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="font-bold text-lg">Assign Region to Overseer</h3>
-      <button id="assign-region-close" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="space-y-3">
-      <div>
-        <label class="block text-sm font-semibold mb-1">Overseer Email</label>
-        <input type="email" id="overseer-email" class="w-full p-2 border rounded-lg" placeholder="overseer@example.com" />
-      </div>
-      <div>
-        <label class="block text-sm font-semibold mb-1">Region Name</label>
-        <input type="text" id="region-name" class="w-full p-2 border rounded-lg" placeholder="Region Name" />
-      </div>
-      <div class="flex justify-end space-x-2">
-        <button id="assign-region-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300">Cancel</button>
-        <button id="assign-region-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">Assign</button>
-      </div>
-    </div>
-  </div>
+  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg">Assign Region to Overseer</h3>
+      <button id="assign-region-close" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-semibold mb-1">Overseer Email</label>
+        <input type="email" id="overseer-email" class="w-full p-2 border rounded-lg" placeholder="overseer@example.com" />
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1">Region Name</label>
+        <input type="text" id="region-name" class="w-full p-2 border rounded-lg" placeholder="Region Name" />
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button id="assign-region-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300">Cancel</button>
+        <button id="assign-region-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">Assign</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -59,41 +59,41 @@ const state = { dashboardData: null, files: [] };
 
 // --- Utility: Auth fetch with cookie + CSRF handling ---
 async function authFetch(url, options = {}) {
-  const csrfToken = localStorage.getItem("csrfToken");
-  const headers = {
-    "Content-Type": "application/json",
-    ...(options.headers || {}),
-  };
-  
-  // ✅ Fix: Always include the CSRF token if it exists
-  if (csrfToken) {
-    headers["X-CSRF-Token"] = csrfToken;
-  }
+  const csrfToken = localStorage.getItem("csrfToken");
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+  
+  // ✅ Fix: Always include the CSRF token if it exists
+  if (csrfToken) {
+    headers["X-CSRF-Token"] = csrfToken;
+  }
 
-  const res = await fetch(url, {
-    ...options,
-    credentials: "include",
-    headers,
-  });
+  const res = await fetch(url, {
+    ...options,
+    credentials: "include",
+    headers,
+  });
 
-  // ✅ Fix: Throw an error instead of redirecting immediately
-  if (res.status === 401) {
+  // ✅ Fix: Throw an error instead of redirecting immediately
+  if (res.status === 401) {
     // This allows the calling function to handle the redirect
-    throw new Error("Unauthorized");
-  }
-  if (!res.ok) {
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) {
     throw new Error(`API call failed with status: ${res.status}`);
-  }
+  }
 
-  return res;
+  return res;
 }
 
 // --- Alert modal ---
 function showAlert(title, message) {
-  const modal = document.getElementById("alert-modal");
-  document.getElementById("alert-title").textContent = title;
-  document.getElementById("alert-message").textContent = message;
-  modal.classList.remove("hidden");
+  const modal = document.getElementById("alert-modal");
+  document.getElementById("alert-title").textContent = title;
+  document.getElementById("alert-message").textContent = message;
+  modal.classList.remove("hidden");
 }
 document.getElementById("alert-cancel").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
 document.getElementById("alert-confirm").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
@@ -108,26 +108,26 @@ document.getElementById("assign-region-cancel").addEventListener("click", closeA
 
 // Assign region with safe loading
 async function assignRegion() {
-  const email = document.getElementById("overseer-email").value.trim();
-  const region = document.getElementById("region-name").value.trim();
-  if (!email || !region) return showAlert("Error", "Both fields are required.");
+  const email = document.getElementById("overseer-email").value.trim();
+  const region = document.getElementById("region-name").value.trim();
+  if (!email || !region) return showAlert("Error", "Both fields are required.");
 
-  const btn = document.getElementById("assign-region-confirm");
-  btn.disabled = true;
-  try {
-    const res = await authFetch(`${API_BASE_URL}/admin/assign-region`, {
-      method: "POST",
-      body: JSON.stringify({ overseerEmail: email, region })
-    });
-    const data = await res.json();
-    showAlert("Success", data.message);
-    closeAssignRegionModal();
-  } catch (err) {
-    console.error("Assign error:", err);
-    showAlert("Error", err.message);
-  } finally {
-    btn.disabled = false;
-  }
+  const btn = document.getElementById("assign-region-confirm");
+  btn.disabled = true;
+  try {
+    const res = await authFetch(`${API_BASE_URL}/admin/assign-region`, {
+      method: "POST",
+      body: JSON.stringify({ overseerEmail: email, region })
+    });
+    const data = await res.json();
+    showAlert("Success", data.message);
+    closeAssignRegionModal();
+  } catch (err) {
+    console.error("Assign error:", err);
+    showAlert("Error", err.message);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 document.getElementById("assign-region-confirm").addEventListener("click", assignRegion);
@@ -135,93 +135,93 @@ document.getElementById("region-name").addEventListener("keyup", (e) => { if(e.k
 
 // --- Fetch dashboard overview ---
 async function fetchDashboardOverview() {
-  try {
-    const res = await authFetch(`${API_BASE_URL}/global-overseer/dashboard-overview`);
-    const data = await res.json();
-    state.dashboardData = data;
-  } catch (err) {
-    console.error("Dashboard fetch error:", err);
-    if (err.message === "Unauthorized") {
-      window.location.href = "/login.html"; // Handle redirect here
-    } else {
-      showAlert("Error", "Failed to load dashboard overview.");
-    }
-  }
+  try {
+    const res = await authFetch(`${API_BASE_URL}/global-overseer/dashboard-overview`);
+    const data = await res.json();
+    state.dashboardData = data;
+  } catch (err) {
+    console.error("Dashboard fetch error:", err);
+    if (err.message === "Unauthorized") {
+      window.location.href = "/login.html"; // Handle redirect here
+    } else {
+      showAlert("Error", "Failed to load dashboard overview.");
+    }
+  }
 }
 
 // --- Fetch all files ---
 async function fetchAllFiles() {
-  try {
-    const res = await authFetch(`${API_BASE_URL}/admin/all-files`);
-    const data = await res.json();
-    state.files = data.files || [];
-  } catch (err) {
-    console.error("Files fetch error:", err);
-    if (err.message === "Unauthorized") {
-      window.location.href = "/login.html"; // Handle redirect here
-    } else {
-      showAlert("Error", "Failed to load files.");
-    }
-  }
+  try {
+    const res = await authFetch(`${API_BASE_URL}/admin/all-files`);
+    const data = await res.json();
+    state.files = data.files || [];
+  } catch (err) {
+    console.error("Files fetch error:", err);
+    if (err.message === "Unauthorized") {
+      window.location.href = "/login.html"; // Handle redirect here
+    } else {
+      showAlert("Error", "Failed to load files.");
+    }
+  }
 }
 
 // --- Download file safely ---
 function downloadFile(type, filename) {
-  const url = `${API_BASE_URL}/admin/view-file/${encodeURIComponent(type)}/${encodeURIComponent(filename)}`;
-  window.open(url, "_blank");
+  const url = `${API_BASE_URL}/admin/view-file/${encodeURIComponent(type)}/${encodeURIComponent(filename)}`;
+  window.open(url, "_blank");
 }
 
 // --- Render dashboard ---
 function render() {
-  const container = document.getElementById("app-container");
-  if (!state.dashboardData) {
-    container.innerHTML = `<div class="loading-container"><div class="spinner"></div><p class="mt-2 text-gray-600">Loading dashboard...</p></div>`;
-    return;
-  }
+  const container = document.getElementById("app-container");
+  if (!state.dashboardData) {
+    container.innerHTML = `<div class="loading-container"><div class="spinner"></div><p class="mt-2 text-gray-600">Loading dashboard...</p></div>`;
+    return;
+  }
 
-  const overview = state.dashboardData.managedRegions || [];
-  const totalRegions = overview.length;
-  const totalSchools = overview.reduce((sum,r) => sum + (r.totalSchools || 0),0);
-  const totalAdmins = overview.reduce((sum,r) => sum + (r.totalAdmins || 0),0);
-  const totalUsers = state.dashboardData.totalUsers || 0;
+  const overview = state.dashboardData.managedRegions || [];
+  const totalRegions = overview.length;
+  const totalSchools = overview.reduce((sum,r) => sum + (r.totalSchools || 0),0);
+  const totalAdmins = overview.reduce((sum,r) => sum + (r.totalAdmins || 0),0);
+  const totalUsers = state.dashboardData.totalUsers || 0;
 
-  container.innerHTML = `
-    <h1 class="text-2xl font-bold mb-6">🌍 Global Overseer Dashboard</h1>
-    <div class="flex justify-end mb-4"><button onclick="openAssignRegionModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Assign Region</button></div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalRegions}</h2><p class="text-gray-600">Regions</p></div>
-      <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalSchools}</h2><p class="text-gray-600">Schools</p></div>
-      <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalAdmins}</h2><p class="text-gray-600">Admins</p></div>
-      <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalUsers}</h2><p class="text-gray-600">Users</p></div>
-    </div>
+  container.innerHTML = `
+    <h1 class="text-2xl font-bold mb-6">🌍 Global Overseer Dashboard</h1>
+    <div class="flex justify-end mb-4"><button onclick="openAssignRegionModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Assign Region</button></div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalRegions}</h2><p class="text-gray-600">Regions</p></div>
+      <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalSchools}</h2><p class="text-gray-600">Schools</p></div>
+      <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalAdmins}</h2><p class="text-gray-600">Admins</p></div>
+      <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalUsers}</h2><p class="text-gray-600">Users</p></div>
+    </div>
 
-    <h2 class="text-lg font-bold mb-2">📌 Managed Regions</h2>
-    <div class="space-y-3">${overview.map(r => `
-      <div class="bg-white p-4 rounded-xl shadow">
-        <h3 class="font-semibold">${r.name}</h3>
-        <p class="text-sm text-gray-600">Schools: ${r.totalSchools || 0}</p>
-        <p class="text-sm text-gray-600">Admins: ${r.totalAdmins || 0}</p>
-      </div>`).join("")}</div>
+    <h2 class="text-lg font-bold mb-2">📌 Managed Regions</h2>
+    <div class="space-y-3">${overview.map(r => `
+      <div class="bg-white p-4 rounded-xl shadow">
+        <h3 class="font-semibold">${r.name}</h3>
+        <p class="text-sm text-gray-600">Schools: ${r.totalSchools || 0}</p>
+        <p class="text-sm text-gray-600">Admins: ${r.totalAdmins || 0}</p>
+      </div>`).join("")}</div>
 
-    <h2 class="text-lg font-bold mt-6 mb-2">📂 Uploaded Files</h2>
-    <div class="space-y-2">
-      ${state.files.map(f => `
-        <div class="bg-white p-3 rounded-xl shadow flex justify-between items-center">
-          <span>${f.filename} (${f.type})</span>
-          <button class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700"
-                  onclick='downloadFile("${f.type.toLowerCase()}", "${f.filename}")'>View</button>
-        </div>`).join("")}
-    </div>
-  `;
+    <h2 class="text-lg font-bold mt-6 mb-2">📂 Uploaded Files</h2>
+    <div class="space-y-2">
+      ${state.files.map(f => `
+        <div class="bg-white p-3 rounded-xl shadow flex justify-between items-center">
+          <span>${f.filename} (${f.type})</span>
+          <button class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700"
+                  onclick='downloadFile("${f.type.toLowerCase()}", "${f.filename}")'>View</button>
+        </div>`).join("")}
+    </div>
+  `;
 }
 
 // --- Init ---
 document.addEventListener("DOMContentLoaded", async () => {
-  render(); // show loading
-  await fetchDashboardOverview();
-  render();
-  await fetchAllFiles();
-  render();
+  render(); // show loading
+  await fetchDashboardOverview();
+  render();
+  await fetchAllFiles();
+  render();
 });
 </script>
 </body>
