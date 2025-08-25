@@ -1,6 +1,14 @@
 // middleware/csrf.js
 const crypto = require("crypto");
 
+const CSRF_EXEMPT = [
+  "/api/users/login",
+  "/api/users/signup",
+  "/api/users/verify-otp",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
+];
+
 module.exports = function csrfProtection(req, res, next) {
   try {
     // Ensure session has a CSRF token
@@ -11,18 +19,20 @@ module.exports = function csrfProtection(req, res, next) {
     const sessionToken = req.session.csrfToken;
     const csrfHeader = req.headers["x-csrf-token"];
 
-    // Only validate for state-changing requests (POST, PUT, PATCH, DELETE)
-    const methodNeedsCheck = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
+    // Skip CSRF for exempt routes
+    if (!CSRF_EXEMPT.includes(req.path)) {
+      const methodNeedsCheck = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
 
-    if (methodNeedsCheck) {
-      if (!csrfHeader) {
-        console.warn(`[CSRF] Missing token for ${req.method} ${req.originalUrl} from IP ${req.ip}`);
-        return res.status(403).json({ error: "CSRF token missing" });
-      }
+      if (methodNeedsCheck) {
+        if (!csrfHeader) {
+          console.warn(`[CSRF] Missing token for ${req.method} ${req.originalUrl} from IP ${req.ip}`);
+          return res.status(403).json({ error: "CSRF token missing" });
+        }
 
-      if (csrfHeader !== sessionToken) {
-        console.warn(`[CSRF] Invalid token for ${req.method} ${req.originalUrl} from IP ${req.ip}`);
-        return res.status(403).json({ error: "Invalid CSRF token" });
+        if (csrfHeader !== sessionToken) {
+          console.warn(`[CSRF] Invalid token for ${req.method} ${req.originalUrl} from IP ${req.ip}`);
+          return res.status(403).json({ error: "Invalid CSRF token" });
+        }
       }
     }
 
