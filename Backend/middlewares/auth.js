@@ -24,15 +24,16 @@ const isPublicRoute = (url) => {
 
 /**
  * Middleware to authenticate a user using a JWT.
- * Checks the HttpOnly cookie.
+ * Checks the Authorization header.
  */
 const authenticateJWT = (req, res, next) => {
   if (isPublicRoute(req.originalUrl)) {
     return next();
   }
 
-  // ✅ CRITICAL FIX: Only check the HttpOnly cookie.
-  const jwtToken = req.cookies?.token;
+  // ✅ CRITICAL FIX: Get the token from the Authorization header
+  const authHeader = req.headers.authorization;
+  const jwtToken = authHeader && authHeader.split(" ")[1];
 
   if (!jwtToken) {
     return res.status(401).json({ message: "Authentication token missing." });
