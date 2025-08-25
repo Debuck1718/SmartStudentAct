@@ -57,17 +57,28 @@
 const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 const state = { dashboardData: null, files: [], isLoading: true };
 
-// --- Auth fetch helper ---
+// --- Auth fetch helper using cookies (Option 1) ---
 const authFetch = async (url, options = {}) => {
-  const csrfToken = localStorage.getItem("csrfToken");
-  const headers = { ...(options.headers || {}), ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}) };
-  return fetch(url, { ...options, credentials: "include", headers });
+  const csrfToken = localStorage.getItem("csrfToken"); // assumed saved at login
+  return fetch(url, {
+    ...options,
+    credentials: "include", // ✅ send HttpOnly cookies
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+      ...(options.headers || {}),
+    },
+  });
 };
 
 // --- Dashboard Overview ---
 async function fetchDashboardOverview() {
   try {
     const res = await authFetch(`${API_BASE_URL}/global-overseer/dashboard-overview`);
+    if (res.status === 401) {
+      window.location.href = "/login.html"; // redirect to login if not authorized
+      return;
+    }
     if (!res.ok) throw new Error(`Status ${res.status}`);
     const data = await res.json();
     state.dashboardData = data;
@@ -81,6 +92,10 @@ async function fetchDashboardOverview() {
 async function fetchAllFiles() {
   try {
     const res = await authFetch(`${API_BASE_URL}/admin/all-files`);
+    if (res.status === 401) {
+      window.location.href = "/login.html"; // redirect to login
+      return;
+    }
     if (!res.ok) throw new Error(`Status ${res.status}`);
     const data = await res.json();
     state.files = data.files || [];
@@ -99,7 +114,6 @@ async function assignRegion() {
   try {
     const res = await authFetch(`${API_BASE_URL}/admin/assign-region`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ overseerEmail: email, region })
     });
     const data = await res.json();
@@ -112,7 +126,7 @@ async function assignRegion() {
   }
 }
 
-// --- Download file helper ---
+// --- Download file ---
 function downloadFile(file) {
   const url = `${API_BASE_URL}/admin/view-file/${file.type.toLowerCase()}/${file.filename}`;
   window.open(url, "_blank");
@@ -124,7 +138,6 @@ function showAlert(title, message) {
   document.getElementById("alert-message").textContent = message;
   document.getElementById("alert-modal").classList.remove("hidden");
 }
-
 document.getElementById("alert-cancel").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
 document.getElementById("alert-confirm").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
 
@@ -135,7 +148,7 @@ document.getElementById("assign-region-close").addEventListener("click", closeAs
 document.getElementById("assign-region-cancel").addEventListener("click", closeAssignRegionModal);
 document.getElementById("assign-region-confirm").addEventListener("click", assignRegion);
 
-// --- Render ---
+// --- Render dashboard ---
 function render() {
   const container = document.getElementById("app-container");
 
@@ -175,12 +188,12 @@ function render() {
 
 // --- Init ---
 document.addEventListener("DOMContentLoaded", async () => {
-  state.user = { occupation: "global_overseer" };
   await fetchDashboardOverview();
   await fetchAllFiles();
   render();
 });
 </script>
+
 </body>
 </html>
 
