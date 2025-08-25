@@ -10,24 +10,18 @@
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      xintegrity="sha512-iecdLp6a5NfS/k6y5J0B4e7Q1K7tI3rN5V2M3K/d8tB6d6o9c7mX5v6V6n6x6V6p6p6n6w=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
     <style>
-      /* Custom styles for a clean look */
       body {
         font-family: "Inter", sans-serif;
       }
-
-      /* Responsive container padding */
       .container {
         padding: 20px;
         background-color: #f5f7fa;
         min-height: 100vh;
       }
-
-      /* Centered loading container */
       .loading-container {
         display: flex;
         flex-direction: column;
@@ -37,38 +31,25 @@
         background-color: #f5f7fa;
         text-align: center;
       }
-
-      /* Style for clickable action buttons */
       .action-button:active {
         transform: scale(0.98);
       }
-
-      /* Fade-in animation for content */
       @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
-
       .fade-in {
         animation: fadeIn 0.5s ease-in-out;
       }
-
-      /* Collapsible section transition */
       .collapsible {
         max-height: 0;
         overflow: hidden;
         transition: max-height 0.3s ease-out;
       }
-
       .collapsible.active {
-        max-height: 1000px; /* A large value to allow for content expansion */
+        max-height: 1000px;
         transition: max-height 0.5s ease-in;
       }
-
       .spinner {
         border: 4px solid rgba(0, 0, 0, 0.1);
         width: 36px;
@@ -77,25 +58,17 @@
         border-left-color: #3b82f6;
         animation: spin 1s ease infinite;
       }
-
       @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     </style>
   </head>
 
   <body class="bg-gray-100 antialiased">
-    <!-- Main App Container -->
-    <div id="app-container" class="container">
-      <!-- The UI will be rendered here by the JavaScript -->
-    </div>
+    <div id="app-container" class="container"></div>
 
-    <!-- Custom Alert/Modal Box -->
+    <!-- Alert Modal -->
     <div
       id="alert-modal"
       class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50"
@@ -120,7 +93,7 @@
       </div>
     </div>
 
-    <!-- A modal for complex forms, hidden by default -->
+    <!-- Form Modal -->
     <div
       id="form-modal"
       class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50"
@@ -128,16 +101,11 @@
       <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg">
         <div class="flex justify-between items-center mb-4">
           <h3 id="form-modal-title" class="font-bold text-lg"></h3>
-          <button
-            id="form-modal-close"
-            class="text-gray-500 hover:text-gray-700"
-          >
+          <button id="form-modal-close" class="text-gray-500 hover:text-gray-700">
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <div id="form-modal-content">
-          <!-- Form content will be injected here -->
-        </div>
+        <div id="form-modal-content"></div>
       </div>
     </div>
 
@@ -146,33 +114,23 @@
   const state = {
     user: null,
     dashboardData: null,
-    allFiles: null,
     isLoading: true,
-    isFilesLoading: false,
-    showManagedRegions: false,
-    fileFilters: { query: "", type: "all" },
-    isUserManagementLoading: false,
-    isSchoolManagementLoading: false,
-    mockOverseers: ["overseer1@example.com", "overseer2@example.com"],
-    mockRegions: ["North America", "Europe", "Asia"],
   };
 
-  const API_BASE_URL = 'https://api.smartstudentact.com/api';
+  const API_BASE_URL = "https://api.smartstudentact.com/api";
 
-  // --- Authenticated fetch helper ---
+  // --- Authenticated fetch helper (httpOnly cookies + CSRF) ---
   const authFetch = async (url, options = {}) => {
     const csrfToken = localStorage.getItem("csrfToken");
-    const token = localStorage.getItem("token"); // ✅ JWT token saved at login
 
     const headers = {
       ...(options.headers || {}),
-      "X-CSRF-Token": csrfToken || "",
-      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
     };
 
     return fetch(url, {
       ...options,
-      credentials: "include", // ✅ cookies if backend uses them
+      credentials: "include", // ✅ httpOnly cookies
       headers,
     });
   };
@@ -180,17 +138,15 @@
   // --- Dashboard fetch ---
   const fetchDashboardData = async () => {
     try {
-      const res = await authFetch(`${API_BASE}/overseer/dashboard-overview`);
+      const res = await authFetch(`${API_BASE_URL}/overseer/dashboard-overview`);
       if (!res.ok) throw new Error(`Failed to fetch dashboard data (status ${res.status})`);
 
       const data = await res.json();
       const totalSchools = data.managedRegions.reduce(
-        (sum, r) => sum + (r.totalSchools || 0),
-        0
+        (sum, r) => sum + (r.totalSchools || 0), 0
       );
       const totalAdmins = data.managedRegions.reduce(
-        (sum, r) => sum + (r.totalAdmins || 0),
-        0
+        (sum, r) => sum + (r.totalAdmins || 0), 0
       );
 
       state.dashboardData = {
@@ -209,7 +165,7 @@
     }
   };
 
-  // --- Render function (Fix for ReferenceError) ---
+  // --- Render ---
   function render() {
     const container = document.getElementById("app-container");
 
@@ -218,8 +174,7 @@
         <div class="loading-container">
           <div class="spinner"></div>
           <p class="mt-2 text-gray-600">Loading dashboard...</p>
-        </div>
-      `;
+        </div>`;
       return;
     }
 
@@ -227,8 +182,7 @@
       container.innerHTML = `
         <div class="p-6 bg-red-100 rounded-xl text-red-700">
           Failed to load dashboard data.
-        </div>
-      `;
+        </div>`;
       return;
     }
 
@@ -262,10 +216,16 @@
             <h3 class="font-semibold">${r.name}</h3>
             <p class="text-sm text-gray-600">Schools: ${r.totalSchools || 0}</p>
             <p class="text-sm text-gray-600">Admins: ${r.totalAdmins || 0}</p>
-          </div>
-        `).join("")}
+          </div>`).join("")}
       </div>
     `;
+  }
+
+  // --- Alert Modal Helper ---
+  function showAlert(title, message) {
+    document.getElementById("alert-title").textContent = title;
+    document.getElementById("alert-message").textContent = message;
+    document.getElementById("alert-modal").classList.remove("hidden");
   }
 
   // --- Init ---
