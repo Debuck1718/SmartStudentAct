@@ -2,61 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SmartStudentAct Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      font-family: "Inter", sans-serif;
-      background-color: #f5f5f5;
-    }
-    .spinner {
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-top: 4px solid #fff;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
 </head>
-<body class="flex items-center justify-center min-h-screen px-4">
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+  <div class="max-w-md w-full bg-white p-8 rounded-xl shadow-md">
+    <!-- Banner -->
+    <div id="banner" class="hidden p-3 rounded-md mb-4 text-sm font-medium"></div>
 
-  <div class="w-full max-w-md bg-white shadow-md rounded-2xl p-8">
-    <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">SmartStudentAct Login</h1>
+    <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
 
-    <div id="banner" class="hidden text-center mb-4 p-3 rounded-lg text-sm transition-all duration-300"></div>
-
-    <!-- Login Form -->
+    <!-- ✅ Form -->
     <form id="loginForm" class="space-y-4">
       <!-- Email -->
       <div>
-        <input id="emailInput" type="email"
-               class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-               placeholder="Email" autocomplete="email" required />
-        <p id="emailError" class="text-red-500 text-sm mt-1"></p>
+        <label for="email" class="block text-sm font-medium">Email</label>
+        <input id="email" type="email" required
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"/>
+        <p id="emailError" class="text-sm text-red-500"></p>
       </div>
 
       <!-- Password -->
       <div>
-        <div class="flex items-center border border-gray-300 rounded-lg bg-white">
-          <input id="passwordInput" type="password"
-                 class="w-full h-12 px-4 rounded-l-lg focus:outline-none"
-                 placeholder="Password" autocomplete="current-password" required />
-          <button id="passwordToggle" type="button" class="px-4 text-blue-600 font-bold">Show</button>
+        <label for="password" class="block text-sm font-medium">Password</label>
+        <div class="relative">
+          <input id="password" type="password" required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-12"/>
+          <button type="button" id="passwordToggle"
+            class="absolute inset-y-0 right-0 px-3 text-sm text-gray-500">Show</button>
         </div>
-        <p id="passwordError" class="text-red-500 text-sm mt-1"></p>
+        <p id="passwordError" class="text-sm text-red-500"></p>
       </div>
 
-      <!-- Login Button -->
+      <!-- Button -->
       <button id="loginButton" type="submit"
-              class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
-        Login
-      </button>
+        class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Login</button>
     </form>
 
     <!-- Links -->
@@ -66,142 +47,129 @@
     </div>
   </div>
 
-<script>
-  // --- Banner Helpers ---
-  function showBanner(message, type = 'error') {
-    const bannerEl = document.getElementById("banner");
-    bannerEl.textContent = message;
-    bannerEl.classList.remove("hidden");
-    bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-green-100", "text-green-700", "bg-gray-100", "text-gray-700");
-
-    if (type === 'error') {
-      bannerEl.classList.add("bg-red-100", "text-red-700");
-    } else if (type === 'success') {
-      bannerEl.classList.add("bg-green-100", "text-green-700");
-    } else {
-      bannerEl.classList.add("bg-gray-100", "text-gray-700");
+  <!-- ✅ Script at END so elements exist -->
+  <script>
+    // --- Banner helpers ---
+    function showBanner(message, type = 'error') {
+      const bannerEl = document.getElementById("banner");
+      bannerEl.textContent = message;
+      bannerEl.classList.remove("hidden");
+      if (type === 'error') {
+        bannerEl.className = "p-3 rounded-md mb-4 text-sm font-medium bg-red-100 text-red-700";
+      } else if (type === 'success') {
+        bannerEl.className = "p-3 rounded-md mb-4 text-sm font-medium bg-green-100 text-green-700";
+      } else {
+        bannerEl.className = "p-3 rounded-md mb-4 text-sm font-medium bg-gray-100 text-gray-700";
+      }
     }
-  }
-  function hideBanner() {
-    document.getElementById("banner").classList.add("hidden");
-  }
-
-  // --- State + UI References ---
-  const API_BASE_URL = "https://smartstudentact.onrender.com/api";
-  const emailInput = document.getElementById("emailInput");
-  const passwordInput = document.getElementById("passwordInput");
-  const loginButton = document.getElementById("loginButton");
-  const passwordToggle = document.getElementById("passwordToggle");
-  const emailErrorEl = document.getElementById("emailError");
-  const passwordErrorEl = document.getElementById("passwordError");
-
-  let showPassword = false;
-
-  function setLoading(isLoading) {
-    loginButton.disabled = isLoading;
-    loginButton.innerHTML = isLoading ? '<div class="spinner mx-auto"></div>' : 'Login';
-  }
-  function setError(element, message, inputElement) {
-    if (message) {
-      element.textContent = message;
-      inputElement.classList.add("border-red-500");
-    } else {
-      element.textContent = "";
-      inputElement.classList.remove("border-red-500");
+    function hideBanner() {
+      document.getElementById("banner").classList.add("hidden");
     }
-  }
 
-  // --- Validation ---
-  function validateEmail(text) {
-    if (!text.trim()) return "Email cannot be empty.";
-    if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
-    return null;
-  }
-  function validatePassword(text) {
-    if (!text.trim()) return "Password cannot be empty.";
-    if (text.length < 6) return "Password must be at least 6 characters long.";
-    return null;
-  }
+    // --- UI refs ---
+    const API_BASE_URL = "https://smartstudentact.onrender.com/api";
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const loginButton = document.getElementById("loginButton");
+    const passwordToggle = document.getElementById("passwordToggle");
+    const emailErrorEl = document.getElementById("emailError");
+    const passwordErrorEl = document.getElementById("passwordError");
+    let showPassword = false;
 
-  // --- Global API Fetch Wrapper ---
-  async function apiFetch(endpoint, options = {}) {
-    const authToken = localStorage.getItem("authToken");
-    const csrfToken = localStorage.getItem("csrfToken");
+    function setError(element, message, inputElement) {
+      if (message) {
+        element.textContent = message;
+        inputElement.classList.add("border-red-500");
+      } else {
+        element.textContent = "";
+        inputElement.classList.remove("border-red-500");
+      }
+    }
 
-    const headers = {
-      "Content-Type": "application/json",
-      ...(authToken && { "Authorization": `Bearer ${authToken}` }),
-      ...(csrfToken && { "X-CSRF-Token": csrfToken }),
-      ...options.headers
-    };
+    // Validation
+    function validateEmail(text) {
+      if (!text.trim()) return "Email cannot be empty.";
+      if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
+      return null;
+    }
+    function validatePassword(text) {
+      if (!text.trim()) return "Password cannot be empty.";
+      if (text.length < 6) return "Password must be at least 6 characters long.";
+      return null;
+    }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-      credentials: "include"
+    // Password toggle
+    passwordToggle.addEventListener("click", () => {
+      showPassword = !showPassword;
+      passwordInput.type = showPassword ? "text" : "password";
+      passwordToggle.textContent = showPassword ? "Hide" : "Show";
     });
 
-    const data = await response.json();
-    if (data.csrfToken) localStorage.setItem("csrfToken", data.csrfToken);
-    return data;
-  }
+    // --- API Fetch wrapper ---
+    async function apiFetch(endpoint, options = {}) {
+      const authToken = localStorage.getItem("authToken");
+      const csrfToken = localStorage.getItem("csrfToken");
 
-  // --- Login Handler ---
-  async function handleLogin(e) {
-    e.preventDefault();
-    hideBanner();
+      const headers = {
+        "Content-Type": "application/json",
+        ...(authToken && { "Authorization": `Bearer ${authToken}` }),
+        ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+        ...options.headers
+      };
 
-    const email = emailInput.value.trim().toLowerCase();
-    const password = passwordInput.value;
-
-    // Validate
-    const emailError = validateEmail(email);
-    const passwordError = validatePassword(password);
-    setError(emailErrorEl, emailError, emailInput);
-    setError(passwordErrorEl, passwordError, passwordInput);
-
-    if (emailError || passwordError) return;
-
-    setLoading(true);
-    try {
-      const data = await apiFetch("/users/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password })
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+        credentials: "include"
       });
 
-      if (data.token) {
-        localStorage.setItem("authToken", data.token);
-        if (data.csrfToken) localStorage.setItem("csrfToken", data.csrfToken);
-
-        showBanner("✅ Login successful!", "success");
-        setTimeout(() => window.location.href = "/dashboard.html", 800);
-      } else {
-        showBanner(data.message || "Login failed", "error");
+      const data = await response.json();
+      if (data.csrfToken) {
+        localStorage.setItem("csrfToken", data.csrfToken);
       }
-    } catch (err) {
-      console.error("Login error:", err);
-      showBanner("❌ Login request failed", "error");
-    } finally {
-      setLoading(false);
+      return data;
     }
-  }
 
-  // --- Event Listeners ---
-  emailInput.addEventListener("input", () => {
-    setError(emailErrorEl, null, emailInput);
-    hideBanner();
-  });
-  passwordInput.addEventListener("input", () => {
-    setError(passwordErrorEl, null, passwordInput);
-    hideBanner();
-  });
-  passwordToggle.addEventListener("click", () => {
-    showPassword = !showPassword;
-    passwordInput.type = showPassword ? "text" : "password";
-    passwordToggle.textContent = showPassword ? "Hide" : "Show";
-  });
-  document.getElementById("loginForm").addEventListener("submit", handleLogin);
-</script>
+    // --- Main Login ---
+    async function handleLogin(e) {
+      e.preventDefault();
+      hideBanner();
 
+      // Validate
+      const emailErr = validateEmail(emailInput.value);
+      const passErr = validatePassword(passwordInput.value);
+      setError(emailErrorEl, emailErr, emailInput);
+      setError(passwordErrorEl, passErr, passwordInput);
+      if (emailErr || passErr) return;
+
+      try {
+        const data = await apiFetch("/users/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email: emailInput.value.trim().toLowerCase(),
+            password: passwordInput.value
+          })
+        });
+
+        if (data.token) {
+          localStorage.setItem("authToken", data.token);
+          if (data.csrfToken) {
+            localStorage.setItem("csrfToken", data.csrfToken);
+          }
+          showBanner("✅ Login successful!", "success");
+          window.location.href = "/dashboard.html";
+        } else {
+          showBanner("❌ " + (data.message || "Login failed"), "error");
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        showBanner("❌ Login request failed", "error");
+      }
+    }
+
+    // Attach listener now DOM exists
+    document.getElementById("loginForm").addEventListener("submit", handleLogin);
+  </script>
 </body>
 </html>
+
