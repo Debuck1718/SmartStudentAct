@@ -64,31 +64,29 @@
     </div>
 
 <script>
-    // A helper function to show a banner message
+    // --- Banner Helpers ---
     function showBanner(message, type = 'error') {
         const bannerEl = document.getElementById("banner");
         bannerEl.textContent = message;
         bannerEl.classList.remove("hidden");
+
+        bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-green-100", "text-green-700", "bg-gray-100", "text-gray-700");
+
         if (type === 'error') {
             bannerEl.classList.add("bg-red-100", "text-red-700");
-            bannerEl.classList.remove("bg-green-100", "text-green-700", "bg-gray-100", "text-gray-700");
         } else if (type === 'success') {
             bannerEl.classList.add("bg-green-100", "text-green-700");
-            bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-gray-100", "text-gray-700");
-        } else { // info
+        } else {
             bannerEl.classList.add("bg-gray-100", "text-gray-700");
-            bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-green-100", "text-green-700");
         }
     }
 
-    // A helper function to hide the banner
     function hideBanner() {
         const bannerEl = document.getElementById("banner");
         bannerEl.classList.add("hidden");
     }
 
-    // --- UI and State Management ---
-    // ✅ CRITICAL FIX: The correct API base URL
+    // --- State + UI References ---
     const API_BASE_URL = "https://smartstudentact.onrender.com/api";
     const emailInput = document.getElementById("emailInput");
     const passwordInput = document.getElementById("passwordInput");
@@ -114,7 +112,7 @@
         }
     }
 
-    // --- Validation Logic ---
+    // --- Validation ---
     function validateEmail(text) {
         if (!text.trim()) return "Email cannot be empty.";
         if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
@@ -125,6 +123,74 @@
         if (!text.trim()) return "Password cannot be empty.";
         if (text.length < 6) return "Password must be at least 6 characters long.";
         return null;
+    }
+
+    // --- Global API Fetch Wrapper ---
+    async function apiFetch(endpoint, options = {}) {
+        const authToken = localStorage.getItem("authToken");
+        const csrfToken = localStorage.getItem("csrfToken");
+
+        const headers = {
+            "Content-Type": "application/json",
+            ...(authToken && { "Authorization": `Bearer ${authToken}` }),
+            ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+            ...options.headers
+        };
+
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers,
+            credentials: "include"
+        });
+
+        const data = await response.json();
+
+        // refresh csrf if provided
+        if (data.csrfToken) {
+            localStorage.setItem("csrfToken", data.csrfToken);
+        }
+
+        return data;
+    }
+
+    // --- Login Handler ---
+    async function handleLogin(e) {
+        e.preventDefault();
+        hideBanner();
+
+        const email = emailInput.value.trim().toLowerCase();
+        const password = passwordInput.value;
+
+        // Validate
+        const emailError = validateEmail(email);
+        const passwordError = validatePassword(password);
+        setError(emailErrorEl, emailError, emailInput);
+        setError(passwordErrorEl, passwordError, passwordInput);
+
+        if (emailError || passwordError) return;
+
+        setLoading(true);
+        try {
+            const data = await apiFetch("/users/login", {
+                method: "POST",
+                body: JSON.stringify({ email, password })
+            });
+
+            if (data.token) {
+                localStorage.setItem("authToken", data.token);
+                if (data.csrfToken) localStorage.setItem("csrfToken", data.csrfToken);
+
+                showBanner("✅ Login successful!", "success");
+                setTimeout(() => window.location.href = "/dashboard.html", 800);
+            } else {
+                showBanner(data.message || "Login failed", "error");
+            }
+        } catch (err) {
+            console.error("Login error:", err);
+            showBanner("❌ Login request failed", "error");
+        } finally {
+            setLoading(false);
+        }
     }
 
     // --- Event Listeners ---
@@ -144,67 +210,8 @@
         passwordToggle.textContent = showPassword ? "Hide" : "Show";
     });
 
-    loginButton.addEventListener("click", handleLogin);
-
-    // --- Main Login Function ---
-    // ✅ Global fetch wrapper to always include tokens
-    async function apiFetch(endpoint, options = {}) {
-        const authToken = localStorage.getItem("authToken");
-        const csrfToken = localStorage.getItem("csrfToken");
-
-        const headers = {
-            "Content-Type": "application/json",
-            ...(authToken && { "Authorization": `Bearer ${authToken}` }),
-            ...(csrfToken && { "X-CSRF-Token": csrfToken }),
-            ...options.headers
-        };
-
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
-            headers,
-            credentials: "include" // important for cookies
-        });
-
-        const data = await response.json();
-
-        // If backend sends a new csrfToken, update it
-        if (data.csrfToken) {
-            localStorage.setItem("csrfToken", data.csrfToken);
-        }
-
-        return data;
-    }
-
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const emailInput = document.getElementById("email");
-        const passwordInput = document.getElementById("password");
-
-        try {
-            const data = await apiFetch("/users/login", {
-                method: "POST",
-                body: JSON.stringify({
-                    email: emailInput.value.trim().toLowerCase(),
-                    password: passwordInput.value
-                })
-            });
-
-            if (data.token) {
-                localStorage.setItem("authToken", data.token);
-                if (data.csrfToken) {
-                    localStorage.setItem("csrfToken", data.csrfToken);
-                }
-                alert("✅ Login successful!");
-                window.location.href = "/dashboard.html"; // redirect after login
-            } else {
-                alert("❌ " + (data.message || "Login failed"));
-            }
-        } catch (err) {
-            console.error("Login error:", err);
-            alert("❌ Login request failed");
-        }
-    });
+    document.getElementById("loginForm").addEventListener("submit", handleLogin);
 </script>
+
 </body>
 </html>
