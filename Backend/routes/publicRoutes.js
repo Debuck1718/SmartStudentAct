@@ -224,55 +224,53 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-// --- Login ---
-publicRouter.post(
-  "/users/login",
-  rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }),
-  validate(loginSchema),
-  async (req, res) => {
+/ POST /users/login
+router.post("/login", async (req, res) => {
+  try {
     const { email, password } = req.body;
-    try {
-      const user = await User.findOne({ email }).select("+password");
-      if (!user) return res.status(401).json({ error: "Invalid email or password" });
+    if (!email || !password)
+      return res.status(400).json({ error: "Email and password are required." });
 
-      const isMatch = await user.comparePassword(password);
-      if (!isMatch) return res.status(401).json({ error: "Invalid email or password" });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user)
+      return res.status(401).json({ error: "Invalid email or password." });
 
-      // Sign JWT
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(401).json({ error: "Invalid email or password." });
 
-      // Set HttpOnly cookie
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 3600000,
-      });
+    // ✅ Generate JWT
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES / 1000 } // seconds
+    );
 
-      // Return CSRF token if needed
-      const csrfToken = req.csrfToken ? req.csrfToken() : null;
+    // ✅ Generate CSRF token
+    const csrfToken = crypto.randomBytes(24).toString("hex");
 
-      res.json({
-        message: "Login successful",
-        csrfToken,
-        user: {
-          id: user._id,
-          email: user.email,
-          firstname: user.firstname,
-          lastname: user.lastname,
-          role: user.role,
-        },
-      });
-    } catch (err) {
-      console.error("❌ Login error:", err);
-      res.status(500).json({ error: "Server error" });
-    }
+    // ✅ Set cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // HTTPS only in prod
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      maxAge: JWT_EXPIRES,
+    });
+
+    // ✅ Return minimal user info + CSRF
+    res.json({
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      csrfToken,
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Server error during login." });
   }
-);
+});
 
   // --- Reset Password ---
   publicRouter.post(
