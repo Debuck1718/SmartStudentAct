@@ -224,69 +224,28 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-// --- Login ---
-publicRouter.post(
-  "/users/login",
-  rateLimit({ windowMs: 15 * 60 * 1000, max: 50 }), // reasonable limit
-  validate(loginSchema),
-  async (req, res) => {
-    const { email, password } = req.body;
-    try {
-      const user = await User.findOne({ email });
-      if (!user || !user.password) {
-        return res.status(401).json({ error: "Invalid email or password" });
-      }
-
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(401).json({ error: "Invalid email or password" });
-      }
-
-      if (!process.env.JWT_SECRET) {
-        console.error("❌ Missing JWT_SECRET in environment!");
-        return res.status(500).json({ error: "Server misconfiguration" });
-      }
-
-      // Create JWT payload
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      // Store JWT securely in HttpOnly cookie
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 3600000, // 1 hour
-      });
-
-      // Emit login event (for logs/monitoring)
-      eventBus.emit("user_logged_in", {
-        userId: user._id,
-        email: user.email,
-      });
-
-      // Respond with user info only (no JWT exposed)
-      res.json({
-        message: "Login successful",
-        user: {
-          id: user._id,
-          email: user.email,
-          firstname: user.firstname,
-          lastname: user.lastname,
-          role: user.role,
-        },
-        // CSRF middleware will add csrfToken automatically if active
-      });
-    } catch (err) {
-      console.error("❌ Login error:", err);
-      res.status(500).json({ error: "Server error" });
+publicRouter.post("/users/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log("❌ User not found for email:", email);
+      return res.status(401).json({ error: "Invalid email or password (user not found)" });
     }
-  }
-);
 
+    console.log("✅ User found:", {
+      id: user._id,
+      email: user.email,
+      hashedPassword: user.password // just to check if it’s a hash
+    });
+
+    // Temporarily stop here to confirm existence
+    return res.json({ message: "User exists", user });
+  } catch (err) {
+    console.error("❌ Login error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 
   // --- Reset Password ---
