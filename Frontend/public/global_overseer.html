@@ -66,15 +66,16 @@ async function authFetch(url, options = {}) {
     const csrfToken = localStorage.getItem("csrfToken");
     const token = localStorage.getItem("authToken");
 
+    // ✅ Updated logic: Show error and log, but don't redirect immediately.
     if (!token || !csrfToken) {
-        console.error("Authentication tokens missing. Redirecting to login.");
-        window.location.href = "/login.html";
-        return;
+        const msg = "Authentication tokens missing. Please log in again.";
+        console.error(msg);
+        showAlert("Authentication Error", msg);
+        return null; // Prevent further execution
     }
     
     const headers = {
         "Content-Type": "application/json",
-        // ✅ CRITICAL FIX: Add the Authorization header with the token
         "Authorization": `Bearer ${token}`,
         "X-CSRF-Token": csrfToken,
         ...(options.headers || {})
@@ -82,17 +83,15 @@ async function authFetch(url, options = {}) {
 
     const res = await fetch(url, {
         ...options,
-        // ✅ Still need credentials to handle the HttpOnly CSRF cookie
         credentials: "include", 
         headers,
     });
 
     if (res.status === 401 || res.status === 403) {
-        console.error("Authorization failed. Clearing tokens and redirecting to login.");
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("csrfToken");
-        window.location.href = "/login.html";
-        return;
+        const msg = "Authorization failed. Please log in again.";
+        console.error(msg);
+        showAlert("Authorization Error", msg);
+        return null;
     }
 
     if (!res.ok) {
@@ -135,6 +134,7 @@ async function assignRegion() {
             method: "POST",
             body: JSON.stringify({ overseerEmail: email, region })
         });
+        if (!res) return;
         const data = await res.json();
         showAlert("Success", data.message);
         closeAssignRegionModal();
@@ -153,12 +153,13 @@ document.getElementById("region-name").addEventListener("keyup", (e) => { if(e.k
 async function fetchDashboardOverview() {
     try {
         const res = await authFetch(`${API_BASE_URL}/global-overseer/dashboard-overview`);
-        if (!res) return;
+        if (!res) return null;
         const data = await res.json();
-        state.dashboardData = data;
+        return data;
     } catch (err) {
         console.error("Dashboard fetch error:", err);
         showAlert("Error", "Failed to load dashboard overview.");
+        return null;
     }
 }
 
@@ -166,19 +167,14 @@ async function fetchDashboardOverview() {
 async function fetchAllFiles() {
     try {
         const res = await authFetch(`${API_BASE_URL}/admin/all-files`);
-        if (!res) return;
+        if (!res) return [];
         const data = await res.json();
-        state.files = data.files || [];
+        return data.files || [];
     } catch (err) {
         console.error("Files fetch error:", err);
         showAlert("Error", "Failed to load files.");
+        return [];
     }
-}
-
-// --- Download file safely ---
-function downloadFile(type, filename) {
-    const url = `${API_BASE_URL}/admin/view-file/${encodeURIComponent(type)}/${encodeURIComponent(filename)}`;
-    window.open(url, "_blank");
 }
 
 // --- Render dashboard ---
@@ -227,12 +223,23 @@ function render() {
 
 // --- Init ---
 document.addEventListener("DOMContentLoaded", async () => {
-    render(); // show loading
-    await fetchDashboardOverview();
-    render();
-    await fetchAllFiles();
-    render();
+    render(); // Show loading state immediately
+
+    // Use Promise.all to fetch data concurrently for better performance
+    const [dashboardData, fileData] = await Promise.all([
+        fetchDashboardOverview(),
+        fetchAllFiles()
+    ]);
+    
+    // Update state only if data was fetched successfully
+    if (dashboardData) {
+        state.dashboardData = dashboardData;
+    }
+    state.files = fileData;
+
+    render(); // Render the dashboard with the fetched data
 });
 </script>
 </body>
 </html>
+
