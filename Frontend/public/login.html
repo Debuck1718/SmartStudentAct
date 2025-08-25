@@ -189,6 +189,10 @@
             if (data.csrfToken) {
                 localStorage.setItem("csrfToken", data.csrfToken);
             }
+            // ✅ CRITICAL FIX: Store the authToken as well
+            if (data.token) {
+                localStorage.setItem("authToken", data.token);
+            }
 
             // ✅ Redirect based on role
             switch (data.user?.role) {
@@ -220,3 +224,4 @@
 </script>
 </body>
 </html>
+
