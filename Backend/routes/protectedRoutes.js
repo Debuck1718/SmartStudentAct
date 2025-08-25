@@ -492,33 +492,89 @@ protectedRouter.post('/admin/schools/add', authenticateJWT, hasRole(['overseer',
     }
 });
 
-// ✅ New: Route for Overseer Dashboard Overview
-protectedRouter.get('/overseer/dashboard-overview', authenticateJWT, hasRole(['overseer', 'global_overseer']), async (req, res) => {
+/* ──────────── Overseer Dashboard ──────────── */
+protectedRouter.get(
+  '/overseer/dashboard-overview',
+  authenticateJWT,
+  hasRole(['overseer']),
+  async (req, res) => {
     const { managedRegions } = req.user;
     if (!managedRegions || managedRegions.length === 0) {
-        return res.json({ managedRegions: [] });
+      return res.json({ managedRegions: [] });
     }
     try {
-        const overviewData = await Promise.all(managedRegions.map(async (region) => {
-            // Find schools in the region
-            const schoolsInRegion = await School.find({ country: region });
-            const schoolNames = schoolsInRegion.map(school => school.name);
-            // Count users and admins in those schools
-            const usersInSchools = await User.find({
-                $or: [
-                    { schoolName: { $in: schoolNames } },
-                    { teacherSchool: { $in: schoolNames } }
-                ]
-            });
-            const totalAdmins = usersInSchools.filter(user => user.is_admin).length;
-            return { name: region, totalSchools: schoolNames.length, totalAdmins };
-        }));
-        res.json({ managedRegions: overviewData });
-    } catch (e) {
-        logger.error('Failed to get overseer dashboard data:', e);
-        res.status(500).json({ error: 'Failed to retrieve dashboard data.' });
+      const overviewData = await Promise.all(
+        managedRegions.map(async (region) => {
+          const schoolsInRegion = await School.find({ country: region });
+          const schoolNames = schoolsInRegion.map((s) => s.name);
+
+          const usersInSchools = await User.find({
+            $or: [
+              { schoolName: { $in: schoolNames } },
+              { teacherSchool: { $in: schoolNames } },
+            ],
+          });
+
+          const totalAdmins = usersInSchools.filter((u) => u.is_admin).length;
+
+          return {
+            name: region,
+            totalSchools: schoolNames.length,
+            totalAdmins,
+          };
+        })
+      );
+
+      res.json({ managedRegions: overviewData });
+    } catch (err) {
+      logger.error('Failed to get overseer dashboard data:', err);
+      res.status(500).json({ error: 'Failed to retrieve dashboard data.' });
     }
-});
+  }
+);
+
+/* ──────────── Global Overseer Dashboard ──────────── */
+protectedRouter.get(
+  '/global-overseer/dashboard-overview',
+  authenticateJWT,
+  hasRole(['global_overseer']),
+  async (req, res) => {
+    try {
+      const allRegions = await School.distinct('country');
+
+      const overviewData = await Promise.all(
+        allRegions.map(async (region) => {
+          const schoolsInRegion = await School.find({ country: region });
+          const schoolNames = schoolsInRegion.map((s) => s.name);
+
+          const usersInSchools = await User.find({
+            $or: [
+              { schoolName: { $in: schoolNames } },
+              { teacherSchool: { $in: schoolNames } },
+            ],
+          });
+
+          const totalAdmins = usersInSchools.filter((u) => u.is_admin).length;
+
+          return {
+            name: region,
+            totalSchools: schoolNames.length,
+            totalAdmins,
+          };
+        })
+      );
+
+      res.status(200).json({
+        managedRegions: overviewData,
+        totalUsers: await User.countDocuments(),
+      });
+    } catch (err) {
+      logger.error('Failed to get global overseer dashboard data:', err);
+      res.status(500).json({ error: 'Failed to retrieve dashboard data.' });
+    }
+  }
+);
+
 
 // ✅ New: Route to assign a region to an Overseer
 protectedRouter.post('/admin/assign-region', authenticateJWT, hasRole(['global_overseer']), validate(assignRegionSchema), async (req, res) => {
@@ -841,22 +897,34 @@ protectedRouter.post(
 protectedRouter.get('/teacher/students', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const teacher = await User.findById(req.user.id);
-        if (!teacher || !teacher.schoolName || !teacher.grade) {
+        if (!teacher?.schoolName || !teacher?.grade) {
             return res.status(400).json({ message: 'Teacher school or grade information is missing.' });
         }
-        const students = await User.find({
+
+        const { search } = req.query;
+        const query = {
             role: 'student',
             schoolName: teacher.schoolName,
             grade: teacher.grade
-        }).select('firstname lastname email grade imageUrl');
+        };
 
-        // This endpoint already returns a direct array, which is correct.
+        if (search) {
+            query.$or = [
+                { firstname: { $regex: search, $options: 'i' } },
+                { lastname: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const students = await User.find(query).select('firstname lastname email grade imageUrl');
         res.status(200).json(students);
+
     } catch (error) {
         logger.error('Error fetching students for teacher\'s class:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 /**
  * @route POST /api/teacher/quiz
  * @desc Teacher creates a quiz assignment with multiple questions.
@@ -1068,30 +1136,37 @@ protectedRouter.post('/teacher/message', authenticateJWT, hasRole('teacher'), as
     }
 });
 
-/**
- * @route GET /api/teacher/students/other
- * @desc Fetches all students from the same school but NOT the same grade as the logged-in teacher.
- * @access Private (Teacher Only)
- */
 protectedRouter.get('/teacher/students/other', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const teacher = await User.findById(req.user.id);
-        if (!teacher || !teacher.schoolName || !teacher.grade) {
+        if (!teacher?.schoolName || !teacher?.grade) {
             return res.status(400).json({ message: 'Teacher school or grade information is missing.' });
         }
-        const otherStudents = await User.find({
+
+        const { search } = req.query;
+        const query = {
             role: 'student',
             schoolName: teacher.schoolName,
             grade: { $ne: teacher.grade }
-        }).select('firstname lastname email grade imageUrl');
+        };
 
-        // ✅ Corrected: Return the students array directly, not as part of an object.
+        if (search) {
+            query.$or = [
+                { firstname: { $regex: search, $options: 'i' } },
+                { lastname: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const otherStudents = await User.find(query).select('firstname lastname email grade imageUrl');
         res.status(200).json(otherStudents);
+
     } catch (error) {
         logger.error('Error fetching students from other classes:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 // --- Student Routes ---
 /**

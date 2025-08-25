@@ -1,159 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teachers List</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Add a custom font and base styling for the body */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teachers List</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    /* Skeleton Loader */
+    .skeleton { 
+      background-color: #e0e0e0; 
+      border-radius: 8px; 
+      min-height: 60px; 
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
 
-    <main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
-        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8">Teachers in Your School</h1>
+  <main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8">Teachers in Your School</h1>
+
+    <!-- Loading Skeleton -->
+    <div id="loading-skeleton" class="space-y-4">
+      <div class="skeleton w-full h-20"></div>
+      <div class="skeleton w-full h-20"></div>
+      <div class="skeleton w-full h-20"></div>
+    </div>
+
+    <!-- Error and Empty Messages -->
+    <div id="error-message" class="text-center text-red-500 font-medium py-4 hidden" role="alert"></div>
+    <div id="no-teachers-message" class="text-center text-gray-500 font-medium py-4 hidden">No teachers found in your school.</div>
+
+    <!-- Teachers List -->
+    <div id="teachers-list" class="space-y-4"></div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const teachersList = document.getElementById('teachers-list');
+      const loadingSkeleton = document.getElementById('loading-skeleton');
+      const errorMessage = document.getElementById('error-message');
+      const noTeachersMessage = document.getElementById('no-teachers-message');
+
+      // Helper: render single teacher card
+      const renderTeacherItem = (teacher) => {
+        const card = document.createElement('div');
+        card.classList.add(
+          'bg-white', 'p-4', 'rounded-lg', 'border', 'border-gray-200', 
+          'shadow-sm', 'hover:shadow-md', 'transition-shadow'
+        );
+        card.setAttribute('aria-label', `Teacher ${teacher.firstName} ${teacher.lastName}, Subject: ${teacher.teacherSubject}`);
         
-        <!-- Loading and error messages will appear here -->
-        <div id="loading-message" class="text-center text-gray-500 font-medium py-4 hidden">
-            <svg class="animate-spin h-5 w-5 mr-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Loading teachers...
-        </div>
-        <div id="error-message" class="text-center text-red-500 font-medium py-4 hidden">
-            Failed to load teachers. Please try again later.
-        </div>
-        <div id="no-teachers-message" class="text-center text-gray-500 font-medium py-4 hidden">
-            No teachers found in your school.
-        </div>
+        const nameEl = document.createElement('p');
+        nameEl.textContent = `${teacher.firstName} ${teacher.lastName}`;
+        nameEl.classList.add('text-lg', 'font-semibold', 'text-gray-800');
 
-        <!-- This container will be populated by JavaScript -->
-        <div id="teachers-list" class="space-y-4">
-            <!-- Teacher items will be dynamically inserted here -->
-        </div>
+        const subjectEl = document.createElement('p');
+        subjectEl.textContent = `Subject: ${teacher.teacherSubject || 'Not Specified'}`;
+        subjectEl.classList.add('text-sm', 'text-gray-600', 'mt-1');
 
-    </main>
+        const emailEl = document.createElement('a');
+        emailEl.href = `mailto:${teacher.email}`;
+        emailEl.textContent = teacher.email;
+        emailEl.classList.add('text-sm', 'text-blue-600', 'hover:underline', 'mt-1', 'block');
+        emailEl.setAttribute('aria-label', `Email ${teacher.firstName} ${teacher.lastName}`);
 
-    <!-- Main JavaScript Logic -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        card.appendChild(nameEl);
+        card.appendChild(subjectEl);
+        card.appendChild(emailEl);
+        teachersList.appendChild(card);
+      };
 
-            const teacherListContainer = document.getElementById('teachers-list');
-            const loadingMessage = document.getElementById('loading-message');
-            const errorMessage = document.getElementById('error-message');
-            const noTeachersMessage = document.getElementById('no-teachers-message');
+      // Fetch teachers for student
+      const fetchTeachers = async () => {
+        // Reset UI
+        teachersList.innerHTML = '';
+        errorMessage.classList.add('hidden');
+        noTeachersMessage.classList.add('hidden');
+        loadingSkeleton.classList.remove('hidden');
 
-            /**
-             * Renders a single teacher item and appends it to the list.
-             * This function now correctly handles the `firstName` and `lastName` from the API.
-             * @param {object} teacher The teacher item object with firstName, lastName, and email.
-             */
-            const renderTeacherItem = (teacher) => {
-                const teacherItemEl = document.createElement('div');
-                teacherItemEl.classList.add(
-                    'bg-white', 
-                    'p-4', 
-                    'rounded-lg', 
-                    'mb-3', 
-                    'border', 
-                    'border-gray-200',
-                    'shadow-sm',
-                    'hover:shadow-md',
-                    'transition-shadow'
-                );
+        try {
+          const response = await fetch('/api/student/teachers/my-school', {
+            method: 'GET',
+            credentials: 'include', // httpOnly cookie authentication
+            headers: { 'Content-Type': 'application/json' } 
+          });
 
-                const nameEl = document.createElement('p');
-                nameEl.classList.add('text-lg', 'font-semibold', 'text-gray-800');
-                // Correctly use firstName and lastName from the API response
-                nameEl.textContent = `${teacher.firstName} ${teacher.lastName}`;
+          if (!response.ok) {
+            if (response.status === 401) throw new Error('Unauthorized: Please log in.');
+            if (response.status === 403) throw new Error('Forbidden: You do not have permission.');
+            throw new Error(`HTTP error: ${response.status}`);
+          }
 
-                // The backend does not provide a 'subject' field, so we add a placeholder.
-                const subjectEl = document.createElement('p');
-                subjectEl.classList.add('text-sm', 'text-gray-600', 'mt-1');
-                subjectEl.textContent = 'Subject: Not Specified';
+          const data = await response.json();
 
-                const emailEl = document.createElement('a');
-                emailEl.href = `mailto:${teacher.email}`;
-                emailEl.classList.add('text-sm', 'text-blue-600', 'hover:underline', 'mt-1', 'block');
-                emailEl.textContent = teacher.email;
+          if (data.teachers && Array.isArray(data.teachers)) {
+            if (data.teachers.length === 0) {
+              noTeachersMessage.classList.remove('hidden');
+            } else {
+              data.teachers.forEach(renderTeacherItem);
+            }
+          } else {
+            throw new Error('Invalid data format received from API.');
+          }
+        } catch (err) {
+          console.error('Failed to fetch teachers:', err);
+          errorMessage.textContent = `Failed to load teachers: ${err.message}`;
+          errorMessage.classList.remove('hidden');
+        } finally {
+          loadingSkeleton.classList.add('hidden');
+        }
+      };
 
-                teacherItemEl.appendChild(nameEl);
-                teacherItemEl.appendChild(subjectEl);
-                teacherItemEl.appendChild(emailEl);
-
-                teacherListContainer.appendChild(teacherItemEl);
-            };
-
-            /**
-             * Fetches the teachers list from the backend API.
-             */
-            const fetchTeachers = async () => {
-                // Show loading indicator and hide other messages
-                loadingMessage.classList.remove('hidden');
-                errorMessage.classList.add('hidden');
-                noTeachersMessage.classList.add('hidden');
-                teacherListContainer.innerHTML = ''; // Clear previous content
-
-                try {
-                    // NOTE: You will need to get the JWT token from your authentication system.
-                    // This is a placeholder for demonstration purposes.
-                    const token = 'YOUR_JWT_TOKEN'; 
-
-                    // The backend route is prefixed with '/api'
-                    const response = await fetch('/api/student/teachers/my-school', {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            // The Authorization header is required for this private route
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    if (!response.ok) {
-                        // Handle specific HTTP errors from the backend
-                        if (response.status === 401) {
-                             throw new Error('Unauthorized: Please log in.');
-                        } else if (response.status === 403) {
-                            throw new Error('Forbidden: You do not have permission.');
-                        } else {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                    }
-
-                    const data = await response.json();
-
-                    // Assuming the API response has a 'teachers' key containing an array
-                    if (data.teachers && Array.isArray(data.teachers)) {
-                        if (data.teachers.length > 0) {
-                            data.teachers.forEach(renderTeacherItem);
-                        } else {
-                            // Show a specific message if no teachers are found
-                            noTeachersMessage.classList.remove('hidden');
-                        }
-                    } else {
-                        throw new Error('Invalid data format received from the API.');
-                    }
-                } catch (error) {
-                    console.error('Failed to fetch teachers:', error);
-                    errorMessage.textContent = `Failed to load teachers: ${error.message}`;
-                    errorMessage.classList.remove('hidden');
-                } finally {
-                    // Hide loading indicator
-                    loadingMessage.classList.add('hidden');
-                }
-            };
-
-            // Fetch the teachers list when the page loads
-            fetchTeachers();
-        });
-    </script>
-
+      fetchTeachers();
+    });
+  </script>
 </body>
 </html>

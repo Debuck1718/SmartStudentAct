@@ -129,7 +129,7 @@
     let isUploadingPhoto = false;
 
     // --- API Base ---
-    const API_BASE_URL = 'https://api.smartstudentact.com/api';
+    const API_BASE_URL = "https://smartstudentact.onrender.com";
 
     // --- Utility: Show messages ---
     const showMessage = (type, message) => {
@@ -262,7 +262,7 @@
         try {
             const formData = new FormData();
             formData.append('profilePhoto', file);
-            const res = await fetch(`${API_BASE}/profile/upload-photo`,{
+            const res = await fetch(`${API_BASE_URL}/profile/upload-photo`,{
                 method:'POST',
                 credentials:'include',
                 body:formData
@@ -297,7 +297,7 @@
         isSaving=true;
         render();
         try {
-            const res = await fetch(`${API_BASE}/profile`,{
+            const res = await fetch(`${API_BASE_URL}/profile`,{
                 method:'PATCH',
                 credentials:'include',
                 headers:{'Content-Type':'application/json'},
@@ -322,7 +322,7 @@
     // --- Initialization ---
     const init = async ()=>{
         try {
-            const res = await fetch(`${API_BASE}/profile`,{credentials:'include'});
+            const res = await fetch(`${API_BASE_URL}/profile`,{credentials:'include'});
             if(res.ok){
                 userData = await res.json();
             } else {

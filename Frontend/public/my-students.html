@@ -34,14 +34,14 @@
 
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <!-- Main container matching the React Native component's structure -->
+    <!-- Main container -->
     <div class="container bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full">
 
         <!-- Header and Navigation -->
-        <header class="flex flex-col sm:flex-row justify-between items-center mb-6">
+        <header class="flex flex-col sm:flex-row justify-between items-center mb-4">
             <h1 id="page-title" class="text-3xl font-bold text-gray-800 text-center sm:text-left mb-4 sm:mb-0">My Class
                 Students</h1>
-            <div class="flex space-x-2">
+            <div class="flex space-x-2 mb-4 sm:mb-0">
                 <button id="my-class-btn"
                     class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:bg-blue-700 transition duration-300">My
                     Class</button>
@@ -51,7 +51,13 @@
             </div>
         </header>
 
-        <!-- Container for the students, populated by JavaScript -->
+        <!-- Search bar -->
+        <div class="mb-6">
+            <input type="text" id="search-input" placeholder="Search students..."
+                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Container for the students -->
         <div id="content-area">
             <!-- Loading, Error, or Student list will be dynamically added here -->
         </div>
@@ -60,12 +66,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE_URL = 'https://api.smartstudentact.com/api';
+    const API_BASE_URL = "https://smartstudentact.onrender.com";
 
     const pageTitle = document.getElementById('page-title');
     const contentArea = document.getElementById('content-area');
     const myClassBtn = document.getElementById('my-class-btn');
     const otherStudentsBtn = document.getElementById('other-students-btn');
+    const searchInput = document.getElementById('search-input');
 
     const API_ENDPOINTS = {
         'my-class': '/teacher/students',
@@ -73,13 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let currentView = 'my-class';
+    let searchTimeout;
 
     // Helper fetch with credentials and CSRF token
     const authFetch = async (url, options = {}) => {
-        const csrfToken = localStorage.getItem('csrfToken'); // assumed saved at login
+        const csrfToken = localStorage.getItem('csrfToken'); 
         return fetch(url, {
             ...options,
-            credentials: 'include', // send HttpOnly cookies
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-Token': csrfToken || '',
@@ -134,9 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return div;
     }
 
-    async function fetchStudentsAndRender(view) {
+    async function fetchStudentsAndRender(view, searchTerm = '') {
         showLoading(view);
-        const endpoint = API_ENDPOINTS[view];
+        const endpoint = API_ENDPOINTS[view] + (searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '');
 
         try {
             const response = await authFetch(`${API_BASE_URL}${endpoint}`);
@@ -180,9 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Button event listeners
     myClassBtn.addEventListener('click', () => {
         currentView = 'my-class';
-        fetchStudentsAndRender(currentView);
+        fetchStudentsAndRender(currentView, searchInput.value);
         myClassBtn.classList.replace('bg-gray-200', 'bg-blue-600');
         myClassBtn.classList.replace('text-gray-800', 'text-white');
         otherStudentsBtn.classList.replace('bg-blue-600', 'bg-gray-200');
@@ -191,11 +200,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     otherStudentsBtn.addEventListener('click', () => {
         currentView = 'other-students';
-        fetchStudentsAndRender(currentView);
+        fetchStudentsAndRender(currentView, searchInput.value);
         otherStudentsBtn.classList.replace('bg-gray-200', 'bg-blue-600');
         otherStudentsBtn.classList.replace('text-gray-800', 'text-white');
         myClassBtn.classList.replace('bg-blue-600', 'bg-gray-200');
         myClassBtn.classList.replace('text-white', 'text-gray-800');
+    });
+
+    // Search input listener with debounce
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            fetchStudentsAndRender(currentView, searchInput.value.trim());
+        }, 300); // 300ms debounce
     });
 
     fetchStudentsAndRender(currentView);
