@@ -48,6 +48,7 @@ app.set("trust proxy", 1); // ✅ trust proxy for HTTPS + cookies
 const allowedOrigins = [
   "https://smartstudentact.com",
   "https://www.smartstudentact.com",
+  "https://smartstudentact.onrender.com", // ✅ Added this line to allow your test environment
   ...(NODE_ENV !== "production" ? ["http://localhost:3000"] : []), // dev only
 ];
 
