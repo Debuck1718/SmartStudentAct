@@ -147,77 +147,64 @@
     loginButton.addEventListener("click", handleLogin);
 
     // --- Main Login Function ---
-    async function handleLogin() {
-        setError(emailErrorEl, null, emailInput);
-        setError(passwordErrorEl, null, passwordInput);
-        hideBanner();
+    // ✅ Global fetch wrapper to always include tokens
+    async function apiFetch(endpoint, options = {}) {
+        const authToken = localStorage.getItem("authToken");
+        const csrfToken = localStorage.getItem("csrfToken");
 
-        const emailValidationResult = validateEmail(emailInput.value);
-        const passwordValidationResult = validatePassword(passwordInput.value);
+        const headers = {
+            "Content-Type": "application/json",
+            ...(authToken && { "Authorization": `Bearer ${authToken}` }),
+            ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+            ...options.headers
+        };
 
-        setError(emailErrorEl, emailValidationResult, emailInput);
-        setError(passwordErrorEl, passwordValidationResult, passwordInput);
-        if (emailValidationResult || passwordValidationResult) return;
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers,
+            credentials: "include" // important for cookies
+        });
 
-        setLoading(true);
+        const data = await response.json();
+
+        // If backend sends a new csrfToken, update it
+        if (data.csrfToken) {
+            localStorage.setItem("csrfToken", data.csrfToken);
+        }
+
+        return data;
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const emailInput = document.getElementById("email");
+        const passwordInput = document.getElementById("password");
 
         try {
-            const response = await fetch(`${API_BASE_URL}/users/login`, {
+            const data = await apiFetch("/users/login", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     email: emailInput.value.trim().toLowerCase(),
                     password: passwordInput.value
                 })
             });
 
-            if (!response.ok) {
-                if (response.status === 429) {
-                    showBanner("Too many login attempts. Your account is temporarily locked.", 'error');
-                } else {
-                    const data = await response.json().catch(() => {});
-                    showBanner(data?.error || "Login failed. Invalid email or password.", 'error');
+            if (data.token) {
+                localStorage.setItem("authToken", data.token);
+                if (data.csrfToken) {
+                    localStorage.setItem("csrfToken", data.csrfToken);
                 }
-                return;
+                alert("✅ Login successful!");
+                window.location.href = "/dashboard.html"; // redirect after login
+            } else {
+                alert("❌ " + (data.message || "Login failed"));
             }
-            
-            const data = await response.json();
-            
-            // ✅ CRITICAL FIX: Store the JWT token for future requests
-            localStorage.setItem("authToken", data.token);
-            // ✅ Store the CSRF token
-            localStorage.setItem("csrfToken", data.csrfToken);
-
-            // ✅ Redirect based on role
-            switch (data.user?.role) {
-                case "global_overseer":
-                    window.location.href = "/global_overseer.html";
-                    break;
-                case "school_admin":
-                    window.location.href = "/school_admin.html";
-                    break;
-                case "regional_overseer":
-                    window.location.href = "/regional_overseer.html";
-                    break;
-                case "student":
-                    window.location.href = "/students.html";
-                    break;
-                case "teacher":
-                    window.location.href = "/teachers.html";
-                    break;
-                case "admin":
-                    window.location.href = "/admin.html";
-                    break;
-                default:
-                    showBanner("Invalid user role.", 'error');
-            }
-        } catch (error) {
-            showBanner("An unexpected error occurred. Please try again later.", 'error');
-            console.error("Login error:", error);
-        } finally {
-            setLoading(false);
+        } catch (err) {
+            console.error("Login error:", err);
+            alert("❌ Login request failed");
         }
-    }
+    });
 </script>
 </body>
 </html>
