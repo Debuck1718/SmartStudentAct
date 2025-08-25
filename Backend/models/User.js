@@ -1,5 +1,6 @@
 // models/User.js
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
@@ -35,8 +36,8 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      select: false,
       minlength: 8,
+      select: false, // never returned by default
     },
     occupation: {
       type: String,
@@ -99,7 +100,7 @@ const userSchema = new mongoose.Schema(
       },
     },
     teacherGrade: {
-      type: mongoose.Schema.Types.Mixed, // can be number or string (e.g., "200")
+      type: mongoose.Schema.Types.Mixed, // can be number or string
       required: function () {
         return this.occupation === "teacher";
       },
@@ -116,7 +117,7 @@ const userSchema = new mongoose.Schema(
     // --- Auth / verification ---
     verified: { type: Boolean, default: false },
     is_admin: { type: Boolean, default: false },
-    role: { type: String, required: true }, // system role vs occupation
+    role: { type: String, required: true },
 
     // --- OTP / Security ---
     otpHash: { type: String, select: false },
@@ -168,6 +169,23 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// 🔒 Password hashing before save
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next(); // only hash if changed
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 🛡 Password comparison method
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 // 🔒 Ensure sensitive fields never leak via JSON
 userSchema.set("toJSON", {

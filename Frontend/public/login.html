@@ -63,104 +63,134 @@
     </div>
   </div>
 
-  <script>
-    const API_BASE_URL = "https://smartstudentact.onrender.com";
-    const emailInput = document.getElementById("emailInput");
-    const passwordInput = document.getElementById("passwordInput");
-    const loginButton = document.getElementById("loginButton");
-    const passwordToggle = document.getElementById("passwordToggle");
-    const emailErrorEl = document.getElementById("emailError");
-    const passwordErrorEl = document.getElementById("passwordError");
-    const bannerEl = document.getElementById("banner");
+<script>
+  const API_BASE_URL = "https://smartstudentact.onrender.com";
+  const emailInput = document.getElementById("emailInput");
+  const passwordInput = document.getElementById("passwordInput");
+  const loginButton = document.getElementById("loginButton");
+  const passwordToggle = document.getElementById("passwordToggle");
+  const emailErrorEl = document.getElementById("emailError");
+  const passwordErrorEl = document.getElementById("passwordError");
+  const bannerEl = document.getElementById("banner");
 
-    let showPassword = false;
+  let showPassword = false;
 
-    function setLoading(isLoading) {
-      loginButton.disabled = isLoading;
-      loginButton.innerHTML = isLoading ? '<div class="spinner mx-auto"></div>' : 'Login';
+  function setLoading(isLoading) {
+    loginButton.disabled = isLoading;
+    loginButton.innerHTML = isLoading ? '<div class="spinner mx-auto"></div>' : 'Login';
+  }
+
+  function setError(element, message, inputElement) {
+    if (message) {
+      element.textContent = message;
+      inputElement.classList.add("border-red-500");
+    } else {
+      element.textContent = "";
+      inputElement.classList.remove("border-red-500");
     }
+  }
 
-    function setError(element, message, inputElement) {
-      if (message) {
-        element.textContent = message;
-        inputElement.classList.add("border-red-500");
-      } else {
-        element.textContent = "";
-        inputElement.classList.remove("border-red-500");
-      }
-    }
+  function validateEmail(text) {
+    if (!text.trim()) return "Email cannot be empty.";
+    if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
+    return null;
+  }
 
-    function validateEmail(text) {
-      if (!text.trim()) return "Email cannot be empty.";
-      if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
-      return null;
-    }
+  function validatePassword(text) {
+    if (!text.trim()) return "Password cannot be empty.";
+    if (text.length < 6) return "Password must be at least 6 characters long.";
+    return null;
+  }
 
-    function validatePassword(text) {
-      if (!text.trim()) return "Password cannot be empty.";
-      if (text.length < 6) return "Password must be at least 6 characters long.";
-      return null;
-    }
+  emailInput.addEventListener("input", () => {
+    setError(emailErrorEl, null, emailInput);
+    bannerEl.classList.add("hidden");
+  });
 
-    emailInput.addEventListener("input", () => { setError(emailErrorEl, null, emailInput); bannerEl.classList.add("hidden"); });
-    passwordInput.addEventListener("input", () => { setError(passwordErrorEl, null, passwordInput); });
+  passwordInput.addEventListener("input", () => {
+    setError(passwordErrorEl, null, passwordInput);
+  });
 
-    passwordToggle.addEventListener("click", () => {
-      showPassword = !showPassword;
-      passwordInput.type = showPassword ? "text" : "password";
-      passwordToggle.textContent = showPassword ? "Hide" : "Show";
-    });
+  passwordToggle.addEventListener("click", () => {
+    showPassword = !showPassword;
+    passwordInput.type = showPassword ? "text" : "password";
+    passwordToggle.textContent = showPassword ? "Hide" : "Show";
+  });
 
-    async function handleLogin() {
-      setError(emailErrorEl, null, emailInput);
-      setError(passwordErrorEl, null, passwordInput);
-      bannerEl.classList.add("hidden");
+  async function handleLogin() {
+    setError(emailErrorEl, null, emailInput);
+    setError(passwordErrorEl, null, passwordInput);
+    bannerEl.classList.add("hidden");
 
-      const emailValidationResult = validateEmail(emailInput.value);
-      const passwordValidationResult = validatePassword(passwordInput.value);
-      setError(emailErrorEl, emailValidationResult, emailInput);
-      setError(passwordErrorEl, passwordValidationResult, passwordInput);
-      if (emailValidationResult || passwordValidationResult) return;
+    const emailValidationResult = validateEmail(emailInput.value);
+    const passwordValidationResult = validatePassword(passwordInput.value);
 
-      setLoading(true);
+    setError(emailErrorEl, emailValidationResult, emailInput);
+    setError(passwordErrorEl, passwordValidationResult, passwordInput);
+    if (emailValidationResult || passwordValidationResult) return;
 
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // ✅ send cookies (HttpOnly JWT)
+        body: JSON.stringify({
+          email: emailInput.value.trim().toLowerCase(),
+          password: passwordInput.value
+        })
+      });
+
+      let data;
       try {
-        const response = await fetch(`${API_BASE_URL}/users/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email: emailInput.value.trim().toLowerCase(), password: passwordInput.value })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          bannerEl.textContent = data.error || "Login failed.";
-          bannerEl.classList.remove("hidden");
-          setLoading(false);
-          return;
-        }
-
-        localStorage.setItem("csrfToken", data.csrfToken);
-
-        switch (data.user.role) {
-          case "global_overseer": window.location.href = "/global_overseer.html"; break;
-          case "overseer": window.location.href = "/overseer.html"; break;
-          case "student": window.location.href = "/students.html"; break;
-          case "teacher": window.location.href = "/teachers.html"; break;
-          case "admin": window.location.href = "/admin.html"; break;
-          default: window.location.href = "/login.html"; break;
-        }
-      } catch (error) {
-        bannerEl.textContent = "An unexpected error occurred. Please try again later.";
-        bannerEl.classList.remove("hidden");
-        console.error("Login error:", error);
-      } finally {
-        setLoading(false);
+        data = await response.json();
+      } catch {
+        throw new Error("Server did not return JSON");
       }
-    }
 
-    loginButton.addEventListener("click", handleLogin);
-  </script>
+      if (!response.ok) {
+        bannerEl.textContent = data.error || "Login failed.";
+        bannerEl.classList.remove("hidden");
+        return;
+      }
+
+      // ✅ Only store CSRF token (never JWT)
+      if (data.csrfToken) {
+        localStorage.setItem("csrfToken", data.csrfToken);
+      }
+
+      // ✅ Redirect based on role
+      switch (data.user?.role) {
+        case "global_overseer":
+          window.location.href = "/global_overseer.html";
+          break;
+        case "overseer":
+          window.location.href = "/overseer.html";
+          break;
+        case "student":
+          window.location.href = "/students.html";
+          break;
+        case "teacher":
+          window.location.href = "/teachers.html";
+          break;
+        case "admin":
+          window.location.href = "/admin.html";
+          break;
+        default:
+          bannerEl.textContent = "Invalid user role.";
+          bannerEl.classList.remove("hidden");
+      }
+    } catch (error) {
+      bannerEl.textContent = "An unexpected error occurred. Please try again later.";
+      bannerEl.classList.remove("hidden");
+      console.error("Login error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  loginButton.addEventListener("click", handleLogin);
+</script>
 </body>
 </html>

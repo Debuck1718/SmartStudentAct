@@ -224,16 +224,16 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-  // --- Login ---
+// --- Login ---
 publicRouter.post(
   "/users/login",
-  rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }),
+  rateLimit({ windowMs: 15 * 60 * 1000, max: 50 }), // reasonable limit
   validate(loginSchema),
   async (req, res) => {
     const { email, password } = req.body;
     try {
       const user = await User.findOne({ email });
-      if (!user) {
+      if (!user || !user.password) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
@@ -242,14 +242,19 @@ publicRouter.post(
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
-      // Sign JWT (adjust secret & expiry)
+      if (!process.env.JWT_SECRET) {
+        console.error("❌ Missing JWT_SECRET in environment!");
+        return res.status(500).json({ error: "Server misconfiguration" });
+      }
+
+      // Create JWT payload
       const token = jwt.sign(
         { id: user._id, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
 
-      // Optional: set cookie for httpOnly sessions
+      // Store JWT securely in HttpOnly cookie
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -257,15 +262,15 @@ publicRouter.post(
         maxAge: 3600000, // 1 hour
       });
 
-      // Emit login event
+      // Emit login event (for logs/monitoring)
       eventBus.emit("user_logged_in", {
         userId: user._id,
         email: user.email,
       });
 
+      // Respond with user info only (no JWT exposed)
       res.json({
         message: "Login successful",
-        token,
         user: {
           id: user._id,
           email: user.email,
@@ -273,6 +278,7 @@ publicRouter.post(
           lastname: user.lastname,
           role: user.role,
         },
+        // CSRF middleware will add csrfToken automatically if active
       });
     } catch (err) {
       console.error("❌ Login error:", err);
@@ -280,6 +286,7 @@ publicRouter.post(
     }
   }
 );
+
 
 
   // --- Reset Password ---
