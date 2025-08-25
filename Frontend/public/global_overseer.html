@@ -61,31 +61,38 @@
 const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 const state = { dashboardData: null, files: [] };
 
-// --- Utility: Auth fetch with cookie + CSRF handling ---
+// --- Utility: Auth fetch with token + CSRF handling ---
 async function authFetch(url, options = {}) {
     const csrfToken = localStorage.getItem("csrfToken");
+    const token = localStorage.getItem("authToken");
+
+    if (!token || !csrfToken) {
+        console.error("Authentication tokens missing. Redirecting to login.");
+        window.location.href = "/login.html";
+        return;
+    }
+    
     const headers = {
         "Content-Type": "application/json",
-        ...(options.headers || {}),
+        // ✅ CRITICAL FIX: Add the Authorization header with the token
+        "Authorization": `Bearer ${token}`,
+        "X-CSRF-Token": csrfToken,
+        ...(options.headers || {})
     };
-    
-    // ✅ Include the CSRF token in the header. The browser handles the HttpOnly cookie.
-    if (csrfToken) {
-        headers["X-CSRF-Token"] = csrfToken;
-    }
 
     const res = await fetch(url, {
         ...options,
-        // ✅ CRITICAL: Ensure credentials is included to send the HttpOnly cookie
-        credentials: "include",
+        // ✅ Still need credentials to handle the HttpOnly CSRF cookie
+        credentials: "include", 
         headers,
     });
 
-    // Check for 401 Unauthorized and redirect
-    if (res.status === 401) {
-        console.error("Authorization failed. Redirecting to login page.");
+    if (res.status === 401 || res.status === 403) {
+        console.error("Authorization failed. Clearing tokens and redirecting to login.");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("csrfToken");
         window.location.href = "/login.html";
-        return; // Stop execution
+        return;
     }
 
     if (!res.ok) {
