@@ -11,13 +11,14 @@ const eventBus = new EventEmitter();
 const cloudinary = require("cloudinary").v2;
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
+const cookieParser = require("cookie-parser"); // ✅ Added cookie-parser
 
 // ✅ CSRF middleware
 const csrfProtection = require("./middlewares/csrf");
 
 // ───────────────────────────────────────────────
 // 1️⃣ Environment Validation
-// ───────────────────────────────────────────────
+// ───────────────────────────────────────────────────
 const requiredEnvVars = [
   "PORT",
   "MONGODB_URI",
@@ -48,7 +49,7 @@ app.set("trust proxy", 1); // ✅ trust proxy for HTTPS + cookies
 const allowedOrigins = [
   "https://smartstudentact.com",
   "https://www.smartstudentact.com",
-  "https://smartstudentact.onrender.com", // ✅ Added this line to allow your test environment
+  "https://smartstudentact.onrender.com", 
   ...(NODE_ENV !== "production" ? ["http://localhost:3000"] : []), // dev only
 ];
 
@@ -67,6 +68,7 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // ✅ Use the cookie-parser middleware here
 
 // ───────────────────────────────────────────────
 // 3️⃣ Session Middleware
