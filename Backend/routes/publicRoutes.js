@@ -86,6 +86,20 @@ module.exports = (eventBus, agenda) => {
   };
 
   /* -------------------------------
+   * Login Limiter & Helpers
+   * ----------------------------- */
+  // New rate limiter specifically for the login endpoint
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 login attempts per IP per window
+    message: "Too many login attempts from this IP, please try again after 15 minutes",
+    handler: (req, res) => {
+      // Custom handler to avoid sending the rate limit headers, making it harder for attackers to deduce the rate limit
+      res.status(429).json({ error: "Too many login attempts. Please try again later." });
+    },
+  });
+
+  /* -------------------------------
    * Routes
    * ----------------------------- */
 
@@ -166,37 +180,76 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  // --- Login with rate limiting and account lockout ---
+  publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
+    try {
+      const { email, password } = req.body;
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select("+password");
-    if (!user) return res.status(401).json({ error: "Invalid email or password." });
+      const user = await User.findOne({ email: email.toLowerCase() }).select("+password +loginAttempts +lockUntil");
+      
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or password." });
+      }
+      
+      // Check for account lockout
+      if (user.lockUntil && user.lockUntil > Date.now()) {
+        return res.status(429).json({ error: "Your account is temporarily locked due to too many failed login attempts. Please try again later." });
+      }
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) return res.status(401).json({ error: "Invalid email or password." });
+      const isMatch = await user.comparePassword(password);
+      
+      if (!isMatch) {
+        // Increment login attempts and potentially lock the account
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: user._id },
+          { $inc: { loginAttempts: 1 } },
+          { new: true } // Return the updated document
+        );
 
-    const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES / 1000 }
-    );
+        // Check if the user has exceeded the max login attempts (e.g., 5)
+        if (updatedUser.loginAttempts >= 5) {
+          // Lock the account for a specific duration (e.g., 1 hour)
+          const lockUntil = Date.now() + 3600000;
+          await User.findOneAndUpdate(
+            { _id: user._id },
+            { $set: { lockUntil: lockUntil } }
+          );
+        }
+        
+        // Return a generic error to prevent user enumeration
+        return res.status(401).json({ error: "Invalid email or password." });
+      }
+      
+      // If login is successful, reset login attempts
+      if (user.loginAttempts > 0) {
+        await User.findOneAndUpdate(
+          { _id: user._id },
+          { $set: { loginAttempts: 0 } }
+        );
+      }
 
-    const csrfToken = crypto.randomBytes(24).toString("hex");
+      const token = jwt.sign(
+        { id: user._id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES / 1000 }
+      );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: JWT_EXPIRES,
-    });
+      const csrfToken = crypto.randomBytes(24).toString("hex");
 
-    res.json({ user: { id: user._id, email: user.email, role: user.role }, csrfToken });
-  } catch (err) {
-    console.error("❌ Login error:", err);
-    res.status(500).json({ error: "Server error during login." });
-  }
-});
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        maxAge: JWT_EXPIRES,
+      });
+
+      res.json({ user: { id: user._id, email: user.email, role: user.role }, csrfToken });
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      res.status(500).json({ error: "Server error during login." });
+    }
+  });
+
 
   // --- Forgot Password ---
   publicRouter.post(
