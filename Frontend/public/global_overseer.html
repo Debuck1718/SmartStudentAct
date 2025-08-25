@@ -65,7 +65,7 @@ async function authFetch(url, options = {}) {
     ...(options.headers || {}),
   };
   
-  // ✅ Fix: Always include the CSRF token if it exists
+  // Always include the CSRF token if it exists
   if (csrfToken) {
     headers["X-CSRF-Token"] = csrfToken;
   }
@@ -76,9 +76,8 @@ async function authFetch(url, options = {}) {
     headers,
   });
 
-  // ✅ Fix: Throw an error instead of redirecting immediately
+  // 👇 REMOVED: The redirect has been removed to allow you to see the error.
   if (res.status === 401) {
-    // This allows the calling function to handle the redirect
     throw new Error("Unauthorized");
   }
   if (!res.ok) {
@@ -141,11 +140,8 @@ async function fetchDashboardOverview() {
     state.dashboardData = data;
   } catch (err) {
     console.error("Dashboard fetch error:", err);
-    if (err.message === "Unauthorized") {
-      window.location.href = "/login.html"; // Handle redirect here
-    } else {
-      showAlert("Error", "Failed to load dashboard overview.");
-    }
+    // 👇 REMOVED: The redirect has been removed.
+    showAlert("Error", "Failed to load dashboard overview.");
   }
 }
 
@@ -157,11 +153,8 @@ async function fetchAllFiles() {
     state.files = data.files || [];
   } catch (err) {
     console.error("Files fetch error:", err);
-    if (err.message === "Unauthorized") {
-      window.location.href = "/login.html"; // Handle redirect here
-    } else {
-      showAlert("Error", "Failed to load files.");
-    }
+    // 👇 REMOVED: The redirect has been removed.
+    showAlert("Error", "Failed to load files.");
   }
 }
 
