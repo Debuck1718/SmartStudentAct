@@ -166,37 +166,54 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-  // --- Login ---
-  publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email: email.toLowerCase() });
-      if (!user) return res.status(401).json({ error: "Invalid email or password." });
+// --- Login ---
+publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) return res.status(401).json({ error: "Invalid email or password." });
+    // Find user
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(401).json({ error: "Invalid email or password." });
 
-      const token = jwt.sign(
-        { id: user._id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES / 1000 }
-      );
-
-      const csrfToken = crypto.randomBytes(24).toString("hex");
-
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-        maxAge: JWT_EXPIRES,
-      });
-
-      res.json({ user: { id: user._id, email: user.email, role: user.role }, csrfToken });
-    } catch (err) {
-      console.error("❌ Login error:", err);
-      res.status(500).json({ error: "Server error during login." });
+    // Ensure password exists
+    if (!user.password) {
+      console.warn(`User ${email} has no password hash stored.`);
+      return res.status(401).json({ error: "Invalid email or password." });
     }
-  });
+
+    // Compare password safely
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: "Invalid email or password." });
+
+    // Generate JWT
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES / 1000 }
+    );
+
+    // Generate CSRF token
+    const csrfToken = crypto.randomBytes(24).toString("hex");
+
+    // Set secure cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      maxAge: JWT_EXPIRES,
+    });
+
+    // Return minimal user info + CSRF
+    res.json({
+      user: { id: user._id, email: user.email, role: user.role },
+      csrfToken,
+    });
+  } catch (err) {
+    console.error("❌ Login error:", err);
+    res.status(500).json({ error: "Server error during login." });
+  }
+});
+
 
   // --- Forgot Password ---
   publicRouter.post(
