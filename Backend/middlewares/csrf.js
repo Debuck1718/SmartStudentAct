@@ -1,12 +1,13 @@
 // middleware/csrf.js
 const crypto = require("crypto");
 
+// 🚫 Routes that skip CSRF validation
 const CSRF_EXEMPT = [
-  "/api/users/login",
-  "/api/users/signup",
-  "/api/users/verify-otp",
-  "/api/auth/forgot-password",
-  "/api/auth/reset-password",
+  "/users/login",
+  "/users/signup",
+  "/users/verify-otp",
+  "/auth/forgot-password",
+  "/auth/reset-password",
 ];
 
 module.exports = function csrfProtection(req, res, next) {
@@ -19,7 +20,7 @@ module.exports = function csrfProtection(req, res, next) {
     const sessionToken = req.session.csrfToken;
     const csrfHeader = req.headers["x-csrf-token"];
 
-    // Skip CSRF for exempt routes
+    // ✅ Skip CSRF check for exempt routes
     if (!CSRF_EXEMPT.includes(req.path)) {
       const methodNeedsCheck = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
 
@@ -36,7 +37,7 @@ module.exports = function csrfProtection(req, res, next) {
       }
     }
 
-    // Inject token into all JSON responses automatically
+    // 🪄 Inject CSRF token into all JSON responses
     const originalJson = res.json.bind(res);
     res.json = (body) => {
       if (typeof body === "object" && body !== null) {
