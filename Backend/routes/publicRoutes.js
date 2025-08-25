@@ -232,16 +232,11 @@ publicRouter.post(
   async (req, res) => {
     const { email, password } = req.body;
     try {
-      // ⚡ Fetch password explicitly
       const user = await User.findOne({ email }).select("+password");
-      if (!user) {
-        return res.status(401).json({ error: "Invalid email or password" });
-      }
+      if (!user) return res.status(401).json({ error: "Invalid email or password" });
 
       const isMatch = await user.comparePassword(password);
-      if (!isMatch) {
-        return res.status(401).json({ error: "Invalid email or password" });
-      }
+      if (!isMatch) return res.status(401).json({ error: "Invalid email or password" });
 
       // Sign JWT
       const token = jwt.sign(
@@ -254,12 +249,16 @@ publicRouter.post(
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 3600000, // 1 hour
+        sameSite: "lax",
+        maxAge: 3600000,
       });
+
+      // Return CSRF token if needed
+      const csrfToken = req.csrfToken ? req.csrfToken() : null;
 
       res.json({
         message: "Login successful",
+        csrfToken,
         user: {
           id: user._id,
           email: user.email,
@@ -274,8 +273,6 @@ publicRouter.post(
     }
   }
 );
-
-
 
   // --- Reset Password ---
   publicRouter.post(

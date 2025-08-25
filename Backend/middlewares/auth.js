@@ -31,21 +31,26 @@ const authenticateJWT = (req, res, next) => {
         return next();
     }
 
+    // 1. Check cookie first
+    const token = req.cookies?.token;
+
+    // 2. Fallback to Authorization header
     const authHeader = req.headers.authorization;
+    const headerToken = authHeader?.split(' ')[1];
 
-    if (authHeader) {
-        const token = authHeader.split(' ')[1];
+    const jwtToken = token || headerToken;
 
-        jwt.verify(token, JWT_SECRET, (err, user) => {
-            if (err) {
-                return res.status(403).json({ message: 'Invalid or expired token.' });
-            }
-            req.user = user;
-            next();
-        });
-    } else {
-        res.status(401).json({ message: 'Authentication token missing.' });
+    if (!jwtToken) {
+        return res.status(401).json({ message: 'Authentication token missing.' });
     }
+
+    jwt.verify(jwtToken, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: 'Invalid or expired token.' });
+        }
+        req.user = user;
+        next();
+    });
 };
 
 /**

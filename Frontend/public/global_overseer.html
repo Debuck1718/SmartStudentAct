@@ -55,62 +55,54 @@
 
 <script>
 const API_BASE_URL = "https://smartstudentact.onrender.com/api";
-const state = { dashboardData: null, files: [], isLoading: true };
+const state = { dashboardData: null, files: [] };
 
-// --- Auth fetch helper using cookies (Option 1) ---
-const authFetch = async (url, options = {}) => {
-  const csrfToken = localStorage.getItem("csrfToken"); // assumed saved at login
-  return fetch(url, {
+// --- Utility: Auth fetch with cookie + CSRF handling ---
+async function authFetch(url, options = {}) {
+  const csrfToken = localStorage.getItem("csrfToken");
+  const res = await fetch(url, {
     ...options,
-    credentials: "include", // ✅ send HttpOnly cookies
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
       ...(options.headers || {}),
     },
   });
-};
 
-// --- Dashboard Overview ---
-async function fetchDashboardOverview() {
-  try {
-    const res = await authFetch(`${API_BASE_URL}/global-overseer/dashboard-overview`);
-    if (res.status === 401) {
-      window.location.href = "/login.html"; // redirect to login if not authorized
-      return;
-    }
-    if (!res.ok) throw new Error(`Status ${res.status}`);
-    const data = await res.json();
-    state.dashboardData = data;
-  } catch (err) {
-    console.error("Dashboard error:", err);
-    showAlert("Error", "Failed to load dashboard overview.");
+  if (res.status === 401) {
+    window.location.href = "/login.html";
+    return;
   }
+  return res;
 }
 
-// --- Fetch all files ---
-async function fetchAllFiles() {
-  try {
-    const res = await authFetch(`${API_BASE_URL}/admin/all-files`);
-    if (res.status === 401) {
-      window.location.href = "/login.html"; // redirect to login
-      return;
-    }
-    if (!res.ok) throw new Error(`Status ${res.status}`);
-    const data = await res.json();
-    state.files = data.files || [];
-  } catch (err) {
-    console.error("Files error:", err);
-    showAlert("Error", "Failed to load files.");
-  }
+// --- Alert modal ---
+function showAlert(title, message) {
+  const modal = document.getElementById("alert-modal");
+  document.getElementById("alert-title").textContent = title;
+  document.getElementById("alert-message").textContent = message;
+  modal.classList.remove("hidden");
 }
+document.getElementById("alert-cancel").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
+document.getElementById("alert-confirm").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
 
-// --- Assign region ---
+// --- Assign region modal ---
+const assignModal = document.getElementById("assign-region-modal");
+function openAssignRegionModal() { assignModal.classList.remove("hidden"); }
+function closeAssignRegionModal() { assignModal.classList.add("hidden"); }
+
+document.getElementById("assign-region-close").addEventListener("click", closeAssignRegionModal);
+document.getElementById("assign-region-cancel").addEventListener("click", closeAssignRegionModal);
+
+// Assign region with safe loading
 async function assignRegion() {
   const email = document.getElementById("overseer-email").value.trim();
   const region = document.getElementById("region-name").value.trim();
   if (!email || !region) return showAlert("Error", "Both fields are required.");
 
+  const btn = document.getElementById("assign-region-confirm");
+  btn.disabled = true;
   try {
     const res = await authFetch(`${API_BASE_URL}/admin/assign-region`, {
       method: "POST",
@@ -123,35 +115,48 @@ async function assignRegion() {
   } catch (err) {
     console.error("Assign error:", err);
     showAlert("Error", err.message);
+  } finally {
+    btn.disabled = false;
   }
 }
 
-// --- Download file ---
-function downloadFile(file) {
-  const url = `${API_BASE_URL}/admin/view-file/${file.type.toLowerCase()}/${file.filename}`;
+document.getElementById("assign-region-confirm").addEventListener("click", assignRegion);
+document.getElementById("region-name").addEventListener("keyup", (e) => { if(e.key==="Enter") assignRegion(); });
+
+// --- Fetch dashboard overview ---
+async function fetchDashboardOverview() {
+  try {
+    const res = await authFetch(`${API_BASE_URL}/global-overseer/dashboard-overview`);
+    if (!res.ok) throw new Error(`Status ${res.status}`);
+    state.dashboardData = await res.json();
+  } catch (err) {
+    console.error("Dashboard fetch error:", err);
+    showAlert("Error", "Failed to load dashboard overview.");
+  }
+}
+
+// --- Fetch all files ---
+async function fetchAllFiles() {
+  try {
+    const res = await authFetch(`${API_BASE_URL}/admin/all-files`);
+    if (!res.ok) throw new Error(`Status ${res.status}`);
+    const data = await res.json();
+    state.files = data.files || [];
+  } catch (err) {
+    console.error("Files fetch error:", err);
+    showAlert("Error", "Failed to load files.");
+  }
+}
+
+// --- Download file safely ---
+function downloadFile(type, filename) {
+  const url = `${API_BASE_URL}/admin/view-file/${encodeURIComponent(type)}/${encodeURIComponent(filename)}`;
   window.open(url, "_blank");
 }
-
-// --- Alert Modal ---
-function showAlert(title, message) {
-  document.getElementById("alert-title").textContent = title;
-  document.getElementById("alert-message").textContent = message;
-  document.getElementById("alert-modal").classList.remove("hidden");
-}
-document.getElementById("alert-cancel").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
-document.getElementById("alert-confirm").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
-
-// --- Assign region modal ---
-function openAssignRegionModal() { document.getElementById("assign-region-modal").classList.remove("hidden"); }
-function closeAssignRegionModal() { document.getElementById("assign-region-modal").classList.add("hidden"); }
-document.getElementById("assign-region-close").addEventListener("click", closeAssignRegionModal);
-document.getElementById("assign-region-cancel").addEventListener("click", closeAssignRegionModal);
-document.getElementById("assign-region-confirm").addEventListener("click", assignRegion);
 
 // --- Render dashboard ---
 function render() {
   const container = document.getElementById("app-container");
-
   if (!state.dashboardData) {
     container.innerHTML = `<div class="loading-container"><div class="spinner"></div><p class="mt-2 text-gray-600">Loading dashboard...</p></div>`;
     return;
@@ -174,25 +179,33 @@ function render() {
     </div>
 
     <h2 class="text-lg font-bold mb-2">📌 Managed Regions</h2>
-    <div class="space-y-3">${overview.map(r => `<div class="bg-white p-4 rounded-xl shadow"><h3 class="font-semibold">${r.name}</h3><p class="text-sm text-gray-600">Schools: ${r.totalSchools || 0}</p><p class="text-sm text-gray-600">Admins: ${r.totalAdmins || 0}</p></div>`).join("")}</div>
+    <div class="space-y-3">${overview.map(r => `
+      <div class="bg-white p-4 rounded-xl shadow">
+        <h3 class="font-semibold">${r.name}</h3>
+        <p class="text-sm text-gray-600">Schools: ${r.totalSchools || 0}</p>
+        <p class="text-sm text-gray-600">Admins: ${r.totalAdmins || 0}</p>
+      </div>`).join("")}</div>
 
     <h2 class="text-lg font-bold mt-6 mb-2">📂 Uploaded Files</h2>
     <div class="space-y-2">
-      ${state.files.map(f => `<div class="bg-white p-3 rounded-xl shadow flex justify-between items-center">
-        <span>${f.filename} (${f.type})</span>
-        <button class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700" onclick='downloadFile(${JSON.stringify(f)})'>View</button>
-      </div>`).join("")}
+      ${state.files.map(f => `
+        <div class="bg-white p-3 rounded-xl shadow flex justify-between items-center">
+          <span>${f.filename} (${f.type})</span>
+          <button class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700"
+                  onclick='downloadFile("${f.type.toLowerCase()}", "${f.filename}")'>View</button>
+        </div>`).join("")}
     </div>
   `;
 }
 
 // --- Init ---
 document.addEventListener("DOMContentLoaded", async () => {
+  render(); // show loading
   await fetchDashboardOverview();
+  render();
   await fetchAllFiles();
   render();
 });
 </script>
 </body>
 </html>
-
