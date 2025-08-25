@@ -116,81 +116,77 @@
     passwordInput.type = showPassword ? "text" : "password";
     passwordToggle.textContent = showPassword ? "Hide" : "Show";
   });
+async function handleLogin() {
+  setError(emailErrorEl, null, emailInput);
+  setError(passwordErrorEl, null, passwordInput);
+  bannerEl.classList.add("hidden");
 
-  async function handleLogin() {
-    setError(emailErrorEl, null, emailInput);
-    setError(passwordErrorEl, null, passwordInput);
-    bannerEl.classList.add("hidden");
+  const emailValidationResult = validateEmail(emailInput.value);
+  const passwordValidationResult = validatePassword(passwordInput.value);
 
-    const emailValidationResult = validateEmail(emailInput.value);
-    const passwordValidationResult = validatePassword(passwordInput.value);
+  setError(emailErrorEl, emailValidationResult, emailInput);
+  setError(passwordErrorEl, passwordValidationResult, passwordInput);
+  if (emailValidationResult || passwordValidationResult) return;
 
-    setError(emailErrorEl, emailValidationResult, emailInput);
-    setError(passwordErrorEl, passwordValidationResult, passwordInput);
-    if (emailValidationResult || passwordValidationResult) return;
+  setLoading(true);
 
-    setLoading(true);
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // ✅ HttpOnly JWT cookie sent automatically
+      body: JSON.stringify({
+        email: emailInput.value.trim().toLowerCase(),
+        password: passwordInput.value
+      })
+    });
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ send cookies (HttpOnly JWT)
-        body: JSON.stringify({
-          email: emailInput.value.trim().toLowerCase(),
-          password: passwordInput.value
-        })
-      });
+    const data = await response.json().catch(() => {
+      throw new Error("Server did not return JSON");
+    });
 
-      let data;
-      try {
-        data = await response.json();
-      } catch {
-        throw new Error("Server did not return JSON");
-      }
-
-      if (!response.ok) {
-        bannerEl.textContent = data.error || "Login failed.";
-        bannerEl.classList.remove("hidden");
-        return;
-      }
-
-      // ✅ Only store CSRF token (never JWT)
-      if (data.csrfToken) {
-        localStorage.setItem("csrfToken", data.csrfToken);
-      }
-
-      // ✅ Redirect based on role
-      switch (data.user?.role) {
-        case "global_overseer":
-          window.location.href = "/global_overseer.html";
-          break;
-        case "overseer":
-          window.location.href = "/overseer.html";
-          break;
-        case "student":
-          window.location.href = "/students.html";
-          break;
-        case "teacher":
-          window.location.href = "/teachers.html";
-          break;
-        case "admin":
-          window.location.href = "/admin.html";
-          break;
-        default:
-          bannerEl.textContent = "Invalid user role.";
-          bannerEl.classList.remove("hidden");
-      }
-    } catch (error) {
-      bannerEl.textContent = "An unexpected error occurred. Please try again later.";
+    if (!response.ok) {
+      bannerEl.textContent = data.error || "Login failed.";
       bannerEl.classList.remove("hidden");
-      console.error("Login error:", error);
-    } finally {
-      setLoading(false);
+      return;
     }
-  }
 
-  loginButton.addEventListener("click", handleLogin);
+    // ✅ Store CSRF token if provided
+    if (data.csrfToken) {
+      localStorage.setItem("csrfToken", data.csrfToken);
+    }
+
+    // ✅ Redirect based on role
+    switch (data.user?.role) {
+      case "global_overseer":
+        window.location.href = "/global_overseer.html";
+        break;
+      case "overseer":
+        window.location.href = "/overseer.html";
+        break;
+      case "student":
+        window.location.href = "/students.html";
+        break;
+      case "teacher":
+        window.location.href = "/teachers.html";
+        break;
+      case "admin":
+        window.location.href = "/admin.html";
+        break;
+      default:
+        bannerEl.textContent = "Invalid user role.";
+        bannerEl.classList.remove("hidden");
+    }
+  } catch (error) {
+    bannerEl.textContent = "An unexpected error occurred. Please try again later.";
+    bannerEl.classList.remove("hidden");
+    console.error("Login error:", error);
+  } finally {
+    setLoading(false);
+  }
+}
+
+loginButton.addEventListener("click", handleLogin);
 </script>
 </body>
 </html>
