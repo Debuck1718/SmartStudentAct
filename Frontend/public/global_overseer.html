@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Global Overseer Dashboard</title>
+    <title>Global Overseer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body { font-family: "Inter", sans-serif; }
-        .container { padding: 20px; background-color: #f5f7fa; min-height: 100vh; }
-        .loading-container { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
+        .loading-spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-top-color: #fff; border-radius: 50%; width: 1.5em; height: 1.5em; animation: spin 1s linear infinite; }
         .spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #3b82f6; animation: spin 1s ease infinite; }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -19,7 +18,7 @@
 </head>
 <body class="bg-gray-100 antialiased">
 
-<div id="app-container" class="container"></div>
+<div id="app-container" class="min-h-screen p-4 flex items-center justify-center"></div>
 
 <!-- Alert Modal -->
 <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
@@ -58,188 +57,295 @@
 </div>
 
 <script>
-const API_BASE_URL = "https://smartstudentact.onrender.com/api";
-const state = { dashboardData: null, files: [] };
-
-// --- Utility: Auth fetch with token + CSRF handling ---
-async function authFetch(url, options = {}) {
-    const csrfToken = localStorage.getItem("csrfToken");
-    const token = localStorage.getItem("authToken");
-
-    // ✅ Updated logic: Show error and log, but don't redirect immediately.
-    if (!token || !csrfToken) {
-        const msg = "Authentication tokens missing. Please log in again.";
-        console.error(msg);
-        showAlert("Authentication Error", msg);
-        return null; // Prevent further execution
-    }
-    
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-        "X-CSRF-Token": csrfToken,
-        ...(options.headers || {})
+    const API_BASE_URL = "https://smartstudentact.onrender.com";
+    const appContainer = document.getElementById("app-container");
+    const state = {
+        loggedIn: false,
+        userRole: null,
+        dashboardData: null,
+        files: [],
+        loading: true,
+        error: null,
     };
 
-    const res = await fetch(url, {
-        ...options,
-        credentials: "include", 
-        headers,
-    });
-
-    if (res.status === 401 || res.status === 403) {
-        const msg = "Authorization failed. Please log in again.";
-        console.error(msg);
-        showAlert("Authorization Error", msg);
-        return null;
+    // --- Core Rendering Logic ---
+    function render() {
+        if (state.loading) {
+            appContainer.innerHTML = `<div class="flex flex-col items-center justify-center min-h-screen text-center"><div class="spinner"></div><p class="mt-2 text-gray-600">Loading...</p></div>`;
+        } else if (state.error) {
+            appContainer.innerHTML = `<div class="text-center p-6 bg-white shadow rounded-xl max-w-sm"><h2 class="text-xl font-bold text-red-600 mb-2">Error</h2><p class="text-sm text-gray-700">${state.error}</p><button onclick="window.location.reload()" class="mt-4 bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Try Again</button></div>`;
+        } else if (state.loggedIn) {
+            renderDashboard();
+        } else {
+            renderLogin();
+        }
     }
 
-    if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || `API call failed with status: ${res.status}`);
+    function renderLogin() {
+        appContainer.innerHTML = `
+            <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-xl">
+                <h2 class="text-3xl font-bold text-center text-gray-900">Sign in</h2>
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                        <input id="email" name="email" type="email" autocomplete="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input id="password" name="password" type="password" autocomplete="current-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm" />
+                    </div>
+                    <div id="login-error" class="text-red-600 text-sm text-center hidden"></div>
+                    <div>
+                        <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Sign in
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.getElementById("login-form").addEventListener("submit", handleLogin);
     }
 
-    return res;
-}
+    function renderDashboard() {
+        const overview = state.dashboardData.managedRegions || [];
+        const totalRegions = overview.length;
+        const totalSchools = overview.reduce((sum, r) => sum + (r.totalSchools || 0), 0);
+        const totalAdmins = overview.reduce((sum, r) => sum + (r.totalAdmins || 0), 0);
+        const totalUsers = state.dashboardData.totalUsers || 0;
 
-// --- Alert modal ---
-function showAlert(title, message) {
-    const modal = document.getElementById("alert-modal");
-    document.getElementById("alert-title").textContent = title;
-    document.getElementById("alert-message").textContent = message;
-    modal.classList.remove("hidden");
-}
+        appContainer.innerHTML = `
+            <div class="w-full max-w-5xl">
+                <header class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">🌍 Global Overseer Dashboard</h1>
+                    <div class="flex space-x-3">
+                        <button id="assign-region-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Assign Region</button>
+                        <button id="logout-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Logout</button>
+                    </div>
+                </header>
 
-document.getElementById("alert-cancel").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
-document.getElementById("alert-confirm").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalRegions}</h2><p class="text-gray-600">Regions</p></div>
+                    <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalSchools}</h2><p class="text-gray-600">Schools</p></div>
+                    <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalAdmins}</h2><p class="text-gray-600">Admins</p></div>
+                    <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalUsers}</h2><p class="text-gray-600">Users</p></div>
+                </div>
 
-// --- Assign region modal ---
-const assignModal = document.getElementById("assign-region-modal");
-function openAssignRegionModal() { assignModal.classList.remove("hidden"); }
-function closeAssignRegionModal() { assignModal.classList.add("hidden"); }
+                <h2 class="text-lg font-bold mb-2">📌 Managed Regions</h2>
+                <div class="space-y-3">${overview.map(r => `
+                    <div class="bg-white p-4 rounded-xl shadow">
+                        <h3 class="font-semibold">${r.name}</h3>
+                        <p class="text-sm text-gray-600">Schools: ${r.totalSchools || 0}</p>
+                        <p class="text-sm text-gray-600">Admins: ${r.totalAdmins || 0}</p>
+                    </div>`).join("")}</div>
 
-document.getElementById("assign-region-close").addEventListener("click", closeAssignRegionModal);
-document.getElementById("assign-region-cancel").addEventListener("click", closeAssignRegionModal);
+                <h2 class="text-lg font-bold mt-6 mb-2">📂 Uploaded Files</h2>
+                <div class="space-y-2">
+                    ${state.files.map(f => `
+                        <div class="bg-white p-3 rounded-xl shadow flex justify-between items-center">
+                            <span>${f.filename} (${f.type})</span>
+                            <button class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700"
+                                    onclick='downloadFile("${f.type.toLowerCase()}", "${f.filename}")'>View</button>
+                        </div>`).join("")}
+                </div>
+            </div>
+        `;
+        document.getElementById("assign-region-btn").addEventListener("click", openAssignRegionModal);
+        document.getElementById("logout-btn").addEventListener("click", handleLogout);
+    }
 
-// Assign region with safe loading
-async function assignRegion() {
-    const email = document.getElementById("overseer-email").value.trim();
-    const region = document.getElementById("region-name").value.trim();
-    if (!email || !region) return showAlert("Error", "Both fields are required.");
+    // --- Utility: Auth fetch with token + CSRF handling ---
+    async function authFetch(url, options = {}) {
+        const csrfToken = localStorage.getItem("csrfToken");
+        const token = localStorage.getItem("authToken");
 
-    const btn = document.getElementById("assign-region-confirm");
-    btn.disabled = true;
-    try {
-        const res = await authFetch(`${API_BASE_URL}/admin/assign-region`, {
-            method: "POST",
-            body: JSON.stringify({ overseerEmail: email, region })
+        if (!token || !csrfToken) {
+            console.error("Authentication tokens missing. Please log in again.");
+            state.loggedIn = false;
+            state.loading = false;
+            state.error = "Authentication tokens missing. Please log in again.";
+            render();
+            return null;
+        }
+
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            "X-CSRF-Token": csrfToken,
+            ...(options.headers || {})
+        };
+
+        const res = await fetch(url, {
+            ...options,
+            credentials: "include",
+            headers,
         });
-        if (!res) return;
-        const data = await res.json();
-        showAlert("Success", data.message);
-        closeAssignRegionModal();
-    } catch (err) {
-        console.error("Assign error:", err);
-        showAlert("Error", err.message);
-    } finally {
-        btn.disabled = false;
-    }
-}
 
-document.getElementById("assign-region-confirm").addEventListener("click", assignRegion);
-document.getElementById("region-name").addEventListener("keyup", (e) => { if(e.key==="Enter") assignRegion(); });
+        if (res.status === 401 || res.status === 403) {
+            console.error("Authorization failed. Please log in again.");
+            state.loggedIn = false;
+            state.loading = false;
+            state.error = "Authorization failed. Please log in again.";
+            render();
+            return null;
+        }
 
-// --- Fetch dashboard overview ---
-async function fetchDashboardOverview() {
-    try {
-        const res = await authFetch(`${API_BASE_URL}/global-overseer/dashboard-overview`);
-        if (!res) return null;
-        const data = await res.json();
-        return data;
-    } catch (err) {
-        console.error("Dashboard fetch error:", err);
-        showAlert("Error", "Failed to load dashboard overview.");
-        return null;
-    }
-}
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.message || `API call failed with status: ${res.status}`);
+        }
 
-// --- Fetch all files ---
-async function fetchAllFiles() {
-    try {
-        const res = await authFetch(`${API_BASE_URL}/admin/all-files`);
-        if (!res) return [];
-        const data = await res.json();
-        return data.files || [];
-    } catch (err) {
-        console.error("Files fetch error:", err);
-        showAlert("Error", "Failed to load files.");
-        return [];
-    }
-}
-
-// --- Render dashboard ---
-function render() {
-    const container = document.getElementById("app-container");
-    if (!state.dashboardData) {
-        container.innerHTML = `<div class="loading-container"><div class="spinner"></div><p class="mt-2 text-gray-600">Loading dashboard...</p></div>`;
-        return;
+        return res;
     }
 
-    const overview = state.dashboardData.managedRegions || [];
-    const totalRegions = overview.length;
-    const totalSchools = overview.reduce((sum,r) => sum + (r.totalSchools || 0),0);
-    const totalAdmins = overview.reduce((sum,r) => sum + (r.totalAdmins || 0),0);
-    const totalUsers = state.dashboardData.totalUsers || 0;
+    // --- Modal Logic ---
+    function showAlert(title, message) {
+        const modal = document.getElementById("alert-modal");
+        document.getElementById("alert-title").textContent = title;
+        document.getElementById("alert-message").textContent = message;
+        modal.classList.remove("hidden");
+    }
+    document.getElementById("alert-cancel").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
+    document.getElementById("alert-confirm").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
 
-    container.innerHTML = `
-        <h1 class="text-2xl font-bold mb-6">🌍 Global Overseer Dashboard</h1>
-        <div class="flex justify-end mb-4"><button onclick="openAssignRegionModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Assign Region</button></div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalRegions}</h2><p class="text-gray-600">Regions</p></div>
-            <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalSchools}</h2><p class="text-gray-600">Schools</p></div>
-            <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalAdmins}</h2><p class="text-gray-600">Admins</p></div>
-            <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalUsers}</h2><p class="text-gray-600">Users</p></div>
-        </div>
+    const assignModal = document.getElementById("assign-region-modal");
+    function openAssignRegionModal() { assignModal.classList.remove("hidden"); }
+    function closeAssignRegionModal() { assignModal.classList.add("hidden"); }
+    document.getElementById("assign-region-close").addEventListener("click", closeAssignRegionModal);
+    document.getElementById("assign-region-cancel").addEventListener("click", closeAssignRegionModal);
+    async function assignRegion() {
+        const email = document.getElementById("overseer-email").value.trim();
+        const region = document.getElementById("region-name").value.trim();
+        if (!email || !region) return showAlert("Error", "Both fields are required.");
 
-        <h2 class="text-lg font-bold mb-2">📌 Managed Regions</h2>
-        <div class="space-y-3">${overview.map(r => `
-            <div class="bg-white p-4 rounded-xl shadow">
-                <h3 class="font-semibold">${r.name}</h3>
-                <p class="text-sm text-gray-600">Schools: ${r.totalSchools || 0}</p>
-                <p class="text-sm text-gray-600">Admins: ${r.totalAdmins || 0}</p>
-            </div>`).join("")}</div>
+        const btn = document.getElementById("assign-region-confirm");
+        btn.disabled = true;
+        try {
+            const res = await authFetch(`${API_BASE_URL}/api/admin/assign-region`, {
+                method: "POST",
+                body: JSON.stringify({ overseerEmail: email, region })
+            });
+            if (!res) return;
+            const data = await res.json();
+            showAlert("Success", data.message);
+            closeAssignRegionModal();
+        } catch (err) {
+            console.error("Assign error:", err);
+            showAlert("Error", err.message);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+    document.getElementById("assign-region-confirm").addEventListener("click", assignRegion);
 
-        <h2 class="text-lg font-bold mt-6 mb-2">📂 Uploaded Files</h2>
-        <div class="space-y-2">
-            ${state.files.map(f => `
-                <div class="bg-white p-3 rounded-xl shadow flex justify-between items-center">
-                    <span>${f.filename} (${f.type})</span>
-                    <button class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700"
-                            onclick='downloadFile("${f.type.toLowerCase()}", "${f.filename}")'>View</button>
-                </div>`).join("")}
-        </div>
-    `;
-}
+    // --- Authentication & Data Fetching ---
+    async function handleLogin(e) {
+        e.preventDefault();
+        const loginButton = document.getElementById("login-button");
+        const errorMessage = document.getElementById("login-error");
+        loginButton.disabled = true;
+        loginButton.innerHTML = '<div class="loading-spinner"></div>';
+        errorMessage.classList.add("hidden");
 
-// --- Init ---
-document.addEventListener("DOMContentLoaded", async () => {
-    render(); // Show loading state immediately
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
-    // Use Promise.all to fetch data concurrently for better performance
-    const [dashboardData, fileData] = await Promise.all([
-        fetchDashboardOverview(),
-        fetchAllFiles()
-    ]);
-    
-    // Update state only if data was fetched successfully
-    if (dashboardData) {
+        try {
+            const csrfRes = await fetch(`${API_BASE_URL}/csrf-token`, { method: 'GET', credentials: 'include' });
+            const csrfData = await csrfRes.json();
+            localStorage.setItem("csrfToken", csrfData.csrfToken);
+
+            const res = await fetch(`${API_BASE_URL}/users/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfData.csrfToken },
+                credentials: "include",
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                localStorage.setItem("authToken", data.token);
+                localStorage.setItem("userRole", data.user?.role);
+                state.loggedIn = true;
+                state.userRole = data.user?.role;
+                await fetchAllData();
+            } else {
+                errorMessage.textContent = data.message || "Login failed. Invalid email or password.";
+                errorMessage.classList.remove("hidden");
+            }
+        } catch (err) {
+            console.error("Login failed:", err);
+            errorMessage.textContent = "An error occurred. Please try again later.";
+            errorMessage.classList.remove("hidden");
+        } finally {
+            loginButton.disabled = false;
+            loginButton.innerHTML = 'Sign in';
+            render();
+        }
+    }
+
+    async function handleLogout() {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("csrfToken");
+        localStorage.removeItem("userRole");
+        state.loggedIn = false;
+        state.userRole = null;
+        state.dashboardData = null;
+        state.files = [];
+        render();
+    }
+
+    async function fetchAllData() {
+        state.loading = true;
+        render(); // Show loading state
+        const [dashboardData, fileData] = await Promise.all([
+            fetchDashboardOverview(),
+            fetchAllFiles()
+        ]);
         state.dashboardData = dashboardData;
+        state.files = fileData;
+        state.loading = false;
+        render(); // Render with new data
     }
-    state.files = fileData;
 
-    render(); // Render the dashboard with the fetched data
-});
+    async function fetchDashboardOverview() {
+        try {
+            const res = await authFetch(`${API_BASE_URL}/api/global-overseer/dashboard-overview`);
+            if (!res) return null;
+            const data = await res.json();
+            return data;
+        } catch (err) {
+            console.error("Dashboard fetch error:", err);
+            showAlert("Error", "Failed to load dashboard overview.");
+            return null;
+        }
+    }
+
+    async function fetchAllFiles() {
+        try {
+            const res = await authFetch(`${API_BASE_URL}/api/admin/all-files`);
+            if (!res) return [];
+            const data = await res.json();
+            return data.files || [];
+        } catch (err) {
+            console.error("Files fetch error:", err);
+            showAlert("Error", "Failed to load files.");
+            return [];
+        }
+    }
+
+    // --- Initial Load ---
+    document.addEventListener("DOMContentLoaded", async () => {
+        const token = localStorage.getItem("authToken");
+        state.loading = true;
+        render();
+        if (token) {
+            state.loggedIn = true;
+            await fetchAllData();
+        } else {
+            state.loading = false;
+            render();
+        }
+    });
 </script>
 </body>
 </html>
-
