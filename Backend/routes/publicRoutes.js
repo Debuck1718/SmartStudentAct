@@ -15,6 +15,9 @@ const {
   sendContactEmail,
 } = require("../utils/email");
 
+const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key";
+const JWT_EXPIRES = 24 * 60 * 60 * 1000; // 24 hours
+
 module.exports = (eventBus, agenda) => {
   const publicRouter = express.Router();
 
@@ -22,9 +25,7 @@ module.exports = (eventBus, agenda) => {
    * Joi Schemas
    * ----------------------------- */
   const signupOtpSchema = Joi.object({
-    phone: Joi.string()
-      .pattern(/^\d{10,15}$/)
-      .required(),
+    phone: Joi.string().pattern(/^\d{10,15}$/).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
     firstname: Joi.string().min(2).max(50).required(),
@@ -32,30 +33,21 @@ module.exports = (eventBus, agenda) => {
     occupation: Joi.string()
       .valid("student", "teacher", "admin", "global_overseer", "overseer")
       .required(),
-
-    // student fields
+    // Student fields
     educationLevel: Joi.string().allow("", null),
     grade: Joi.number().integer().min(5).max(12).allow(null),
-    schoolName: Joi.string().allow("", null), // ✅ added for students
-
-    // teacher fields
+    schoolName: Joi.string().allow("", null),
+    // Teacher fields
     teacherSchool: Joi.string().allow("", null),
     teacherGrade: Joi.alternatives()
-      .try(
-        Joi.number().integer().min(5).max(12),
-        Joi.string().valid("100", "200", "300", "400", "500", "600")
-      )
+      .try(Joi.number().integer().min(5).max(12), Joi.string().valid("100","200","300","400","500","600"))
       .allow(null),
-    teacherSubject: Joi.string().allow("", null), // ✅ added for teachers
-
-    // university fields
+    teacherSubject: Joi.string().allow("", null),
+    // University fields
     university: Joi.string().allow("", null),
-    uniLevel: Joi.string()
-      .valid("100", "200", "300", "400", "500", "600")
-      .allow("", null),
+    uniLevel: Joi.string().valid("100","200","300","400","500","600").allow("", null),
     program: Joi.string().allow("", null),
-
-    // required
+    // Required
     schoolCountry: Joi.string().length(2).required(),
   }).unknown(true);
 
@@ -69,13 +61,14 @@ module.exports = (eventBus, agenda) => {
     email: Joi.string().email().required(),
     password: Joi.string().required(),
   });
-  const forgotPasswordSchema = Joi.object({
-    email: Joi.string().email().required(),
-  });
+
+  const forgotPasswordSchema = Joi.object({ email: Joi.string().email().required() });
+
   const resetPasswordSchema = Joi.object({
     token: Joi.string().required(),
     newPassword: Joi.string().min(8).required(),
   });
+
   const contactSchema = Joi.object({
     name: Joi.string().min(2).max(100).required(),
     email: Joi.string().email().required(),
@@ -85,12 +78,10 @@ module.exports = (eventBus, agenda) => {
   const validate = (schema) => (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
     if (error)
-      return res
-        .status(400)
-        .json({
-          message: "Validation failed",
-          errors: error.details.map((d) => d.message),
-        });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: error.details.map((d) => d.message),
+      });
     next();
   };
 
@@ -98,26 +89,23 @@ module.exports = (eventBus, agenda) => {
    * Routes
    * ----------------------------- */
 
-  // --- Signup: send OTP ---
+  // --- Signup: Send OTP ---
   publicRouter.post(
     "/users/signup-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 3 }),
     validate(signupOtpSchema),
     async (req, res) => {
-      const { phone, email, firstname } = req.body;
-      const code =
-        process.env.NODE_ENV === "production"
-          ? Math.floor(100000 + Math.random() * 900000).toString()
-          : "123456";
+      const { phone, email } = req.body;
+      const code = process.env.NODE_ENV === "production"
+        ? Math.floor(100000 + Math.random() * 900000).toString()
+        : "123456";
+
       req.session.signup = { ...req.body, code, timestamp: Date.now() };
       console.debug("[OTP] Generated for %s: %s", phone, code);
 
       try {
         await sendOTPEmail(email, code);
-
-        // Emit event for logging or SMS
         eventBus.emit("otp_sent", { email, phone, otp: code });
-
         res.json({ step: "verify", message: "OTP sent to your email" });
       } catch (err) {
         console.error("❌ OTP send error:", err);
@@ -133,8 +121,10 @@ module.exports = (eventBus, agenda) => {
     async (req, res) => {
       const { code, email } = req.body;
       const signupData = req.session?.signup;
+
       if (!signupData || signupData.email !== email || signupData.code !== code)
         return res.status(400).json({ error: "Invalid OTP or email" });
+
       if (Date.now() - signupData.timestamp > 10 * 60 * 1000) {
         delete req.session.signup;
         return res.status(400).json({ error: "OTP expired" });
@@ -159,10 +149,7 @@ module.exports = (eventBus, agenda) => {
 
         delete req.session.signup;
 
-        // Send Welcome Email
         await sendWelcomeEmail(newUser.email, newUser.firstname);
-
-        // Emit account created event
         eventBus.emit("user_signed_up", {
           userId: newUser._id,
           email: newUser.email,
@@ -172,14 +159,44 @@ module.exports = (eventBus, agenda) => {
         res.status(201).json({ message: "Account created successfully." });
       } catch (err) {
         if (err.code === 11000)
-          return res
-            .status(409)
-            .json({ error: "Email or phone already registered." });
+          return res.status(409).json({ error: "Email or phone already registered." });
         console.error("❌ Verify OTP error:", err);
         res.status(500).json({ error: "Account creation failed." });
       }
     }
   );
+
+  // --- Login ---
+  publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (!user) return res.status(401).json({ error: "Invalid email or password." });
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(401).json({ error: "Invalid email or password." });
+
+      const token = jwt.sign(
+        { id: user._id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES / 1000 }
+      );
+
+      const csrfToken = crypto.randomBytes(24).toString("hex");
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        maxAge: JWT_EXPIRES,
+      });
+
+      res.json({ user: { id: user._id, email: user.email, role: user.role }, csrfToken });
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      res.status(500).json({ error: "Server error during login." });
+    }
+  });
 
   // --- Forgot Password ---
   publicRouter.post(
@@ -190,87 +207,24 @@ module.exports = (eventBus, agenda) => {
       try {
         const user = await User.findOne({ email });
         if (!user)
-          return res
-            .status(200)
-            .json({
-              message: "If an account exists, a reset link has been sent.",
-            });
+          return res.status(200).json({ message: "If an account exists, a reset link has been sent." });
 
         const token = crypto.randomBytes(32).toString("hex");
         user.reset_password_token = token;
         user.reset_password_expires = Date.now() + 3600000;
         await user.save();
 
-        const resetLink = `${req.protocol}://${req.get(
-          "host"
-        )}/reset-password.html?token=${token}`;
+        const resetLink = `${req.protocol}://${req.get("host")}/reset-password.html?token=${token}`;
         await sendResetEmail(user.email, resetLink);
 
-        // Emit event for possible notifications
-        eventBus.emit("password_reset_requested", {
-          userId: user._id,
-          email: user.email,
-        });
-
-        res
-          .status(200)
-          .json({
-            message: "If an account exists, a reset link has been sent.",
-          });
+        eventBus.emit("password_reset_requested", { userId: user._id, email: user.email });
+        res.status(200).json({ message: "If an account exists, a reset link has been sent." });
       } catch (err) {
         console.error("❌ Forgot password error:", err);
         res.status(500).json({ error: "Server error" });
       }
     }
   );
-
-/ POST /users/login
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password)
-      return res.status(400).json({ error: "Email and password are required." });
-
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user)
-      return res.status(401).json({ error: "Invalid email or password." });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(401).json({ error: "Invalid email or password." });
-
-    // ✅ Generate JWT
-    const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES / 1000 } // seconds
-    );
-
-    // ✅ Generate CSRF token
-    const csrfToken = crypto.randomBytes(24).toString("hex");
-
-    // ✅ Set cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // HTTPS only in prod
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: JWT_EXPIRES,
-    });
-
-    // ✅ Return minimal user info + CSRF
-    res.json({
-      user: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      },
-      csrfToken,
-    });
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ error: "Server error during login." });
-  }
-});
 
   // --- Reset Password ---
   publicRouter.post(
@@ -283,10 +237,7 @@ router.post("/login", async (req, res) => {
           reset_password_token: token,
           reset_password_expires: { $gt: Date.now() },
         });
-        if (!user)
-          return res
-            .status(400)
-            .json({ message: "Password reset token is invalid or expired." });
+        if (!user) return res.status(400).json({ message: "Password reset token is invalid or expired." });
 
         user.password = await bcrypt.hash(newPassword, 10);
         user.reset_password_token = undefined;
@@ -308,11 +259,9 @@ router.post("/login", async (req, res) => {
       await sendContactEmail(
         "evansbuckman1@gmail.com",
         `New Contact Form Message from ${name}`,
-        `<p><strong>Name:</strong>${name}</p><p><strong>Email:</strong>${email}</p><p><strong>Message:</strong><br>${message}</p>`
+        `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong><br>${message}</p>`
       );
-      res
-        .status(200)
-        .json({ message: "Your message has been sent successfully." });
+      res.status(200).json({ message: "Your message has been sent successfully." });
     } catch (err) {
       console.error("❌ Contact form error:", err);
       res.status(500).json({ error: "Failed to send message." });
