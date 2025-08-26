@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      unique: true,
+      unique: true, 
       required: true,
       lowercase: true,
       trim: true,
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      unique: true,
+      unique: true, 
       sparse: true,
       trim: true,
       match: [/^\+?[0-9]{7,15}$/, "Invalid phone number"],
@@ -40,24 +40,20 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
-    // 🚩 UPDATED: Added 'global-overseer' to the role enum.
-    // The role is the single source of truth for a user's permissions.
     role: {
       type: String,
-      enum: ["student", "teacher", "admin", "overseer", "global-overseer"],
+      enum: ["student", "teacher", "admin", "overseer", "global_overseer"],
       required: true,
     },
     occupation: {
       type: String,
       enum: ["student", "teacher", "admin"],
       required: function () {
-        // The occupation field is required for students and teachers
-        // It is not required for admin, overseer, or global-overseer
         return this.role === "student" || this.role === "teacher";
       },
     },
 
-    // --- Student fields ---
+  
     educationLevel: {
       type: String,
       enum: ["junior", "high", "university"],
@@ -70,7 +66,9 @@ const userSchema = new mongoose.Schema(
       min: 1,
       max: 12,
       required: function () {
-        return this.occupation === "student" && this.educationLevel !== "university";
+        return (
+          this.occupation === "student" && this.educationLevel !== "university"
+        );
       },
     },
     schoolName: {
@@ -86,14 +84,20 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: 150,
       required: function () {
-        return this.occupation === "student" && this.educationLevel === "university";
+        return (
+          this.occupation === "student" &&
+          this.educationLevel === "university"
+        );
       },
     },
     uniLevel: {
       type: String,
       enum: ["100", "200", "300", "400"],
       required: function () {
-        return this.occupation === "student" && this.educationLevel === "university";
+        return (
+          this.occupation === "student" &&
+          this.educationLevel === "university"
+        );
       },
     },
     program: {
@@ -102,7 +106,6 @@ const userSchema = new mongoose.Schema(
       maxlength: 100,
     },
 
-    // --- Teacher fields ---
     teacherSchool: {
       type: String,
       trim: true,
@@ -126,21 +129,17 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-    // --- Auth / verification ---
     verified: { type: Boolean, default: false },
-    // 🚩 REMOVED: is_admin is now redundant. Permissions are handled by the 'role' field.
 
-    // --- OTP / Security ---
     otpHash: { type: String, select: false },
     otpExpiry: { type: Date, select: false },
     failedLoginAttempts: { type: Number, default: 0 },
     lockoutUntil: { type: Date, default: null },
 
-    // --- Password reset ---
+
     reset_password_token: { type: String, select: false },
     reset_password_expires: { type: Date, select: false },
 
-    // --- Subscription management ---
     is_on_trial: { type: Boolean, default: true },
     trial_end_date: {
       type: Date,
@@ -162,17 +161,19 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
-    // 🚩 UPDATED: The 'schoolCountry' field is now required only for 'student', 'teacher', and 'admin' roles, as specified.
     schoolCountry: {
       type: String,
       required: function () {
-        return this.role === "student" || this.role === "teacher" || this.role === "admin";
+        return (
+          this.role === "student" ||
+          this.role === "teacher" ||
+          this.role === "admin"
+        );
       },
       trim: true,
       maxlength: 100,
     },
 
-    // --- Gamification / goal setting ---
     earnedBadges: {
       type: [String],
       default: [],
@@ -206,8 +207,5 @@ userSchema.set("toJSON", {
     return ret;
   },
 });
-
-userSchema.index({ email: 1 });
-userSchema.index({ phone: 1 });
 
 module.exports = mongoose.model("User", userSchema);

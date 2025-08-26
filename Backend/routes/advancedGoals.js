@@ -7,20 +7,15 @@ const logger = require('../utils/logger');
 const geminiClient = require('../utils/geminiClient');
 const eventBus = require('../utils/eventBus');
 
-// Import models and middlewares
 const StudentRewards = require('../models/StudentRewards');
 const User = require('../models/User'); 
 const Reward = require('../models/Reward');
 const BudgetEntry = require('../models/BudgetEntry');
-// ✅ FIX: The auth middleware exports 'requireAdmin', not 'hasRole'. 
-// We are importing the correct function now.
 const { authenticateJWT, requireAdmin } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
 
 
-/**
- * Joi Validation Schemas
- */
+
 const studentGoalSchema = Joi.object({
     description: Joi.string().required(),
     target_date: Joi.date().iso().required(),
@@ -40,30 +35,17 @@ const goalUpdateSchema = Joi.object({
 });
 
 
-/**
- * @desc Helper function to grant a reward.
- * @desc It uses an atomic update ($inc) to safely increment smart_points on the User model,
- * @desc preventing race conditions where simultaneous updates might overwrite each other.
- * @param {Object} args
- * @param {string} args.userId - The ID of the user to grant the reward to.
- * @param {string} args.type - The type of reward.
- * @param {number} args.points - The number of points to grant.
- * @param {string} args.description - A description of the reward.
- * @param {string} [args.source='System'] - The source of the reward (e.g., 'System', 'Teacher').
- * @param {string} [args.grantedBy=null] - The ID of the user who granted the reward (if applicable).
- */
 async function grantReward({ userId, type, points, description, source = 'System', grantedBy = null }) {
     try {
-        // Use $inc for atomic point updates to prevent race conditions.
+
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { $inc: { smart_points: points || 0 } },
-            { new: true } // Return the updated document
+            { new: true } 
         );
 
         if (!updatedUser) return;
 
-        // Log the point change in the StudentRewards document
         let studentRewards = await StudentRewards.findOne({ studentId: userId });
         if (studentRewards) {
             studentRewards.pointsLog.push({
@@ -75,7 +57,6 @@ async function grantReward({ userId, type, points, description, source = 'System
             await studentRewards.save();
         }
 
-        // Log the reward in the Reward collection for a comprehensive history
         const reward = new Reward({
             user_id: userId,
             type,
@@ -90,8 +71,6 @@ async function grantReward({ userId, type, points, description, source = 'System
     }
 }
 
-
-// This object defines the tangible, premium rewards and their associated milestones.
 const PREMIUM_MILESTONES = {
     '10-goals-in-a-month': {
         name: 'The Productivity Pro',
@@ -115,11 +94,6 @@ const PREMIUM_MILESTONES = {
     }
 };
 
-/**
- * @desc Calculates and returns basic rewards based on student data.
- * @param {Object} student - The StudentRewards document.
- * @returns {Object} An object containing badges, summaries, and suggestions.
- */
 const calculateBasicRewards = (student) => {
     const badges = [];
     if (student.weeklyGoalsAchieved) badges.push('🏅 Goal Crusher');
@@ -156,11 +130,6 @@ const calculateBasicRewards = (student) => {
     return { badges, termSummary, termRewards, treatSuggestions };
 };
 
-/**
- * @desc Calculates and returns premium rewards based on a user's earned badges.
- * @param {Object} user - The User model document.
- * @returns {Array} An array of premium rewards.
- */
 const calculatePremiumRewards = (user) => {
     const premiumRewards = [];
     if (user && user.earnedBadges) {
@@ -179,7 +148,6 @@ const calculatePremiumRewards = (user) => {
     return premiumRewards;
 };
 
-// A wrapper to combine basic and premium reward calculation
 const calculateAllRewards = (student, user) => {
     const basicRewards = calculateBasicRewards(student);
     const premiumRewards = calculatePremiumRewards(user);
@@ -187,18 +155,14 @@ const calculateAllRewards = (student, user) => {
 };
 
 
-//-----------------------------------------------------------------------------------------------------------------------
-
-// New function to generate advice using the Gemini API
 const generateGeminiAdvice = async (student, budgetEntries) => {
-    // 1. Prepare the prompt with all relevant user data
+    
     const studentInfo = `Student Name: ${student.name}
     Term Percentage: ${student.termPercentage}%
     Consistent Months: ${student.consistentMonths}
     Weekly Goals Achieved: ${student.weeklyGoalsAchieved}
     Current Goals: ${student.goals.map(g => g.description).join(', ')}`;
     
-    // Calculate total expenses and group them by category
     const spendingByCategory = {};
     budgetEntries.filter(e => e.type === 'expense').forEach(entry => {
         spendingByCategory[entry.category] = (spendingByCategory[entry.category] || 0) + entry.amount;
@@ -232,20 +196,15 @@ const generateGeminiAdvice = async (student, budgetEntries) => {
     }
 };
 
-// New Endpoint to get personalized advice
-// ⚠️ FIX: The route path is updated to remove the studentId parameter for security.
-// The frontend must be updated to call '/api/rewards/advice' instead of '/api/rewards/advice/:studentId'
 router.get('/advice', authenticateJWT, checkSubscription, async (req, res) => {
     try {
-        // Use the authenticated user's ID to prevent unauthorized access to other students' data.
         const userId = req.user.userId;
 
-        // Fetch both goal and budget data
+        
         const studentData = await StudentRewards.findOne({ studentId: userId });
-        const budgetData = await BudgetEntry.find({ userId }); // Fetch budget data
+        const budgetData = await BudgetEntry.find({ userId }); 
 
         if (!studentData) {
-            // It's acceptable to return an empty advice object if no student data exists.
             return res.status(200).json({ 
                 advice: {
                     studyAdvice: "Start setting goals to get personalized advice!",
@@ -254,7 +213,6 @@ router.get('/advice', authenticateJWT, checkSubscription, async (req, res) => {
             });
         }
 
-        // Generate personalized advice using the combined data
         const advice = await generateGeminiAdvice(studentData, budgetData);
 
         res.status(200).json({ advice });
@@ -264,11 +222,7 @@ router.get('/advice', authenticateJWT, checkSubscription, async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch advice.' });
     }
 });
-//-----------------------------------------------------------------------------------------------------------------------
 
-// Route for a teacher/admin to add points to a student (Basic)
-// 🆕 Updated path to match frontend
-// ✅ FIX: Changed `hasRole('teacher')` to the `requireAdmin` middleware, as it's the correct function exported by auth.js
 router.post('/teacher/add-points', authenticateJWT, requireAdmin, async (req, res) => {
     try {
         const { studentEmail, points, reason } = req.body;
@@ -280,11 +234,8 @@ router.post('/teacher/add-points', authenticateJWT, requireAdmin, async (req, re
         if (!student) {
             return res.status(404).json({ message: 'Student not found.' });
         }
-        
-        // ⚠️ FIX: Use an atomic operation to prevent race conditions on point updates.
         await User.findByIdAndUpdate(student._id, { $inc: { smart_points: parseInt(points, 10) } });
 
-        // Add a log of the points to the student's rewards document
         const studentRewards = await StudentRewards.findOne({ studentId: student._id });
         if (studentRewards) {
              studentRewards.pointsLog.push({ 
@@ -303,7 +254,6 @@ router.post('/teacher/add-points', authenticateJWT, requireAdmin, async (req, re
     }
 });
 
-// Route to check for and award a premium milestone
 router.post('/milestone-completed', authenticateJWT, checkSubscription, async (req, res) => {
     try {
         const { milestoneId } = req.body;
@@ -341,13 +291,7 @@ router.post('/milestone-completed', authenticateJWT, checkSubscription, async (r
     }
 });
 
-/**
- * @route POST /api/rewards/goals
- * @desc Allows a student to add a new goal.
- * @access Private
- */
 router.post('/goals', authenticateJWT, async (req, res) => {
-    // Validate the incoming request body using Joi
     const { error, value } = studentGoalSchema.validate(req.body);
     if (error) {
         return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
@@ -356,13 +300,11 @@ router.post('/goals', authenticateJWT, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Find the user's goals document or create a new one
         let studentGoals = await StudentRewards.findOne({ studentId: userId });
         if (!studentGoals) {
             studentGoals = new StudentRewards({ studentId: userId, name: req.user.firstname });
         }
 
-        // Add the new goal from the validated value
         studentGoals.goals.push(value);
         await studentGoals.save();
         
@@ -379,11 +321,6 @@ router.post('/goals', authenticateJWT, async (req, res) => {
     }
 });
 
-/**
- * @route GET /api/rewards/goals
- * @desc Gets all goals for the authenticated user.
- * @access Private
- */
 router.get('/goals', authenticateJWT, async (req, res) => {
     try {
         const userId = req.user.id;
@@ -401,13 +338,7 @@ router.get('/goals', authenticateJWT, async (req, res) => {
     }
 });
 
-/**
- * @route PUT /api/rewards/goals/:goalId
- * @desc Updates a specific goal for the authenticated user.
- * @access Private
- */
 router.put('/goals/:goalId', authenticateJWT, async (req, res) => {
-    // Validate the incoming request body using the update schema
     const { error, value } = goalUpdateSchema.validate(req.body);
     if (error) {
         return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
@@ -427,7 +358,6 @@ router.put('/goals/:goalId', authenticateJWT, async (req, res) => {
             return res.status(404).json({ message: 'Goal not found.' });
         }
 
-        // Update the goal fields with the validated data
         Object.assign(goal, value);
         
         await studentGoals.save();
@@ -440,11 +370,6 @@ router.put('/goals/:goalId', authenticateJWT, async (req, res) => {
     }
 });
 
-/**
- * @route DELETE /api/rewards/goals/:goalId
- * @desc Deletes a specific goal for the authenticated user.
- * @access Private
- */
 router.delete('/goals/:goalId', authenticateJWT, async (req, res) => {
     try {
         const userId = req.user.id;
@@ -491,7 +416,6 @@ router.get('/:studentId', authenticateJWT, checkSubscription, async (req, res) =
             return res.status(404).json({ message: 'Student not found.' });
         }
 
-        // Pass both the StudentRewards and the User model data to the calculation function
         const { badges, termSummary, termRewards, treatSuggestions, premiumRewards } = calculateAllRewards(student, user);
         const weeklyMessage = `Keep pushing ${student.name}! You're closer to your next badge. 💪`;
 

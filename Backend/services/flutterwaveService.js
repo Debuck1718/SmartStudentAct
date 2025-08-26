@@ -11,17 +11,15 @@ const config = require('../config/paymentConfig');
  * This function should be called by an API endpoint on your server.
  * The mobile app will then be redirected to the checkout URL returned by this function.
  *
- * @param {string} email - The customer's email address.
- * @param {number} amount - The amount to be charged.
- * @param {string} currency - The currency code (e.g., 'GHS', 'USD').
- * @returns {Promise<object|null>} The payment data from Flutterwave, or null on error.
+ * @param {string} email 
+ * @param {number} amount 
+ * @param {string} currency 
+ * @returns {Promise<object|null>} 
  */
 async function initFlutterwavePayment(email, amount, currency) {
-  // Use a more robust transaction reference to avoid collisions.
-  // A combination of a prefix and a UUID is a good practice.
+ 
   const transactionReference = `TX-${crypto.randomUUID()}`;
 
-  // Log the transaction details for debugging and tracking.
   console.log(`Initiating Flutterwave payment for ${email}, amount: ${amount} ${currency}, ref: ${transactionReference}`);
 
   try {
@@ -36,14 +34,12 @@ async function initFlutterwavePayment(email, amount, currency) {
       },
       {
         headers: {
-          // IMPORTANT: Use the secret key for server-side API calls.
           Authorization: `Bearer ${config.flutterwave.secretKey}`,
           'Content-Type': 'application/json'
         }
       }
     );
 
-    // Check if the API call was successful.
     if (response.data && response.data.status === 'success') {
       return response.data.data;
     } else {
@@ -51,7 +47,6 @@ async function initFlutterwavePayment(email, amount, currency) {
       return null;
     }
   } catch (error) {
-    // Handle network errors, invalid API keys, etc. gracefully.
     console.error('Error initiating Flutterwave payment:', error.response ? error.response.data : error.message);
     return null;
   }

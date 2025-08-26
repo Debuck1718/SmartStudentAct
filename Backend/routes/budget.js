@@ -6,16 +6,13 @@ const logger = require('../utils/logger');
 const Joi = require('joi');
 const eventBus = require('../utils/eventBus');
 
-// Import your middlewares
+
 const { authenticateJWT } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
 
-// Import your new BudgetEntry model
 const BudgetEntry = require('../models/BudgetEntry');
 
-/**
- * Joi Validation Schemas
- */
+
 const budgetEntrySchema = Joi.object({
     amount: Joi.number().positive().required(),
     category: Joi.string().required(),
@@ -37,20 +34,14 @@ const budgetEntryIdSchema = Joi.object({
 });
 
 
-/**
- * @route POST /api/budget/add-entry
- * @desc Adds a new income or expense entry for the user.
- * @access Private (Requires JWT and a valid subscription/trial)
- */
+
 router.post('/add-entry', authenticateJWT, checkSubscription, async (req, res) => {
-    // Joi validation schema for the budget entry
     const { error, value } = budgetEntrySchema.validate(req.body);
     if (error) {
         return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
     }
 
     try {
-        // Create a new budget entry linked to the authenticated user
         const newEntry = new BudgetEntry({
             userId: req.user.userId,
             amount: value.amount,
@@ -61,8 +52,7 @@ router.post('/add-entry', authenticateJWT, checkSubscription, async (req, res) =
         });
 
         await newEntry.save();
-        
-        // Notify the user about the new budget entry
+ 
         eventBus.emit('budget_notification', {
             userId: req.user.userId,
             message: `New ${value.type} entry for $${value.amount} has been added.`
@@ -76,25 +66,17 @@ router.post('/add-entry', authenticateJWT, checkSubscription, async (req, res) =
 });
 
 
-/**
- * @route GET /api/budget/dashboard
- * @desc Fetches and processes all budget data for the authenticated user to display on a dashboard.
- * @access Private (Requires JWT and a valid subscription/trial)
- */
 router.get('/dashboard', authenticateJWT, checkSubscription, async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        // Find all budget entries for the user, sorted by date
         const entries = await BudgetEntry.find({ userId }).sort({ date: 1 });
 
-        // Initialize variables for analysis
         const spendingByCategory = {};
         const incomeByCategory = {};
         let totalIncome = 0;
         let totalExpenses = 0;
 
-        // Loop through all entries to calculate totals and categorize spending/income
         entries.forEach(entry => {
             const amount = entry.amount;
             const category = entry.category;
@@ -114,14 +96,13 @@ router.get('/dashboard', authenticateJWT, checkSubscription, async (req, res) =>
             }
         });
 
-        // Return the structured data for the front end to render
         res.status(200).json({
             totalIncome,
             totalExpenses,
             netBalance: totalIncome - totalExpenses,
             spendingByCategory,
             incomeByCategory,
-            entries // Also send back the raw entries for detailed views
+            entries 
         });
 
     } catch (error) {

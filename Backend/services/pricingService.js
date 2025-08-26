@@ -1,12 +1,8 @@
-// services/pricingService.js
-// This module provides a flexible and robust way to determine user pricing.
 
 const School = require('../models/School');
 const { getRate } = require('../utils/currencyConverter');
-const logger = require('../utils/logger'); // Assuming a logger utility is available
+const logger = require('../utils/logger'); 
 
-// --- Country-to-Currency Mapping for Africa ---
-// This map ensures that we always get the correct local currency for a given country.
 const COUNTRY_CURRENCY_MAP = {
     // North Africa
     'DZ': 'DZD', // Algeria (Dinar)
@@ -16,30 +12,30 @@ const COUNTRY_CURRENCY_MAP = {
     'TN': 'TND', // Tunisia (Dinar)
 
     // West Africa
-    'BJ': 'XOF', // Benin (CFA Franc)
-    'BF': 'XOF', // Burkina Faso (CFA Franc)
-    'CI': 'XOF', // Cote d’Ivoire (CFA Franc)
-    'GM': 'GMD', // Gambia (Dalasi)
-    'GH': 'GHS', // Ghana (Cedi)
-    'GW': 'XOF', // Guinea-Bissau (CFA Franc) - Note: The old GWP is deprecated
-    'GN': 'GNF', // Guinea (Franc)
-    'ML': 'XOF', // Mali (CFA Franc)
-    'MR': 'MRO', // Mauritania (Ouguiya) - Note: The old MRO is deprecated, now MRU is used
-    'NE': 'XOF', // Niger (CFA Franc)
-    'NG': 'NGN', // Nigeria (Naira)
-    'SN': 'XOF', // Senegal (CFA Franc)
-    'SL': 'SLL', // Sierra Leone (Leone)
-    'TG': 'XOF', // Togo (CFA Franc)
+    'BJ': 'XOF', 
+    'BF': 'XOF', 
+    'CI': 'XOF', 
+    'GM': 'GMD', 
+    'GH': 'GHS', 
+    'GW': 'XOF', 
+    'GN': 'GNF', 
+    'ML': 'XOF', 
+    'MR': 'MRO', 
+    'NE': 'XOF', 
+    'NG': 'NGN', 
+    'SN': 'XOF', 
+    'SL': 'SLL', 
+    'TG': 'XOF', 
 
     // Central Africa
-    'AO': 'AOA', // Angola (Kwanza)
-    'CM': 'XAF', // Cameroon (CFA Franc BEAC)
-    'CF': 'XAF', // Central African Republic (CFA Franc)
-    'TD': 'XAF', // Chad (CFA Franc)
-    'CG': 'XAF', // Republic of the Congo (CFA Franc)
-    'CD': 'CDF', // DR Congo (Francs)
-    'GQ': 'XAF', // Equatorial Guinea (CFA Franc BEAC)
-    'GA': 'XAF', // Gabon (CFA Franc)
+    'AO': 'AOA', 
+    'CM': 'XAF', 
+    'CF': 'XAF', 
+    'TD': 'XAF', 
+    'CG': 'XAF', 
+    'CD': 'CDF', 
+    'GQ': 'XAF', 
+    'GA': 'XAF', 
 
     // East Africa
     'BI': 'BIF', // Burundi (Burundi Franc)
@@ -72,15 +68,13 @@ const COUNTRY_CURRENCY_MAP = {
     // Other countries or defaults can be added here
 };
 
-// --- PRICING DATA IN USD ---
-// These are the base prices for different roles and school tiers.
 const pricingData = {
     default: {
         student: 1,
         teacher: 3,
         admin: 3,
     },
-    tier3_4: { // Premium pricing
+    tier3_4: { 
         student: 5,
         teacher: 10,
         admin: 10,
@@ -124,8 +118,6 @@ async function getUserPrice(countryCode, role, schoolName) {
         // Continue with default tier if database call fails.
     }
 
-    // 2. Determine the base USD price using a clean, prioritized lookup.
-    // Tier 3 or 4 pricing has the highest priority.
     if (tier === 3 || tier === 4) {
         usdPrice = pricingData.tier3_4[role];
     } 
@@ -138,19 +130,15 @@ async function getUserPrice(countryCode, role, schoolName) {
         usdPrice = pricingData.default[role];
     }
 
-    // 3. Handle specific edge cases and ensure a default is always set.
-    // If a price wasn't found for the specific role, use the default for a teacher.
     if (!usdPrice) {
         usdPrice = pricingData.default.teacher;
     }
 
-    // A teacher in a region with special pricing should get their price for that region.
-    // We handle the `teacher_free` case as a separate, final check.
+
     if (role === 'teacher' && pricingData.regional[countryCode] && pricingData.regional[countryCode].teacher_free) {
         usdPrice = 0;
     }
 
-    // 4. Get the local currency and perform the conversion.
     const currency = COUNTRY_CURRENCY_MAP[countryCode] || 'USD';
     const rate = await getRate(currency);
     const localPrice = rate ? (usdPrice * rate).toFixed(2) : usdPrice;

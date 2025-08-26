@@ -11,12 +11,9 @@ const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
 const http = require("http");
 
-// ✅ Events
+
 const eventBus = new EventEmitter();
 
-// ───────────────────────────────────────────────
-// 1️⃣ Environment Validation
-// ───────────────────────────────────────────────
 const requiredEnvVars = [
   "PORT",
   "MONGODB_URI",
@@ -37,20 +34,17 @@ const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
-// ───────────────────────────────────────────────
-// 2️⃣ Express App Setup
-// ───────────────────────────────────────────────
-const app = express();
-app.set("trust proxy", 1); // trust proxy for HTTPS + cookies
 
-// ✅ Middleware Mounting
+const app = express();
+app.set("trust proxy", 1); 
+
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ Centralized CORS Configuration
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -59,7 +53,7 @@ app.use(
         "http://localhost:4000",
         "https://smartstudentact.com",
         /.*\.smartstudentact\.com$/,
-        /.*\.onrender\.com$/, // For Render testing
+        /.*\.onrender\.com$/, 
       ];
       if (
         !origin ||
@@ -78,9 +72,6 @@ app.use(
   })
 );
 
-// ───────────────────────────────────────────────
-// 3️⃣ Cloudinary
-// ───────────────────────────────────────────────
 try {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -93,9 +84,7 @@ try {
   process.exit(1);
 }
 
-// ───────────────────────────────────────────────
-// 4️⃣ MongoDB
-// ───────────────────────────────────────────────
+
 async function connectMongo() {
   try {
     console.log(`📡 Connecting to MongoDB...`);
@@ -107,9 +96,6 @@ async function connectMongo() {
   }
 }
 
-// ───────────────────────────────────────────────
-// 5️⃣ Agenda Jobs
-// ───────────────────────────────────────────────
 let agenda;
 async function startAgenda() {
   try {
@@ -139,22 +125,18 @@ try {
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", protectedRoutes);
 
+
   console.log("✅ Routes loaded successfully!");
 } catch (err) {
   console.error("❌ Routes loading error:", err);
   process.exit(1);
 }
 
-// ───────────────────────────────────────────────
-// 7️⃣ Root Route
-// ───────────────────────────────────────────────
+
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-// ───────────────────────────────────────────────
-// 8️⃣ Global Error Handler
-// ───────────────────────────────────────────────
 app.use((err, req, res, next) => {
   if (NODE_ENV === "development") {
     console.error("❌ Global error handler caught:", err);
@@ -169,9 +151,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ───────────────────────────────────────────────
-// 9️⃣ Start Server
-// ───────────────────────────────────────────────
+
 const server = http.createServer(app);
 
 async function startApp() {

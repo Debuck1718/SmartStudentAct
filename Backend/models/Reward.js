@@ -29,7 +29,7 @@ const rewardSchema = new mongoose.Schema({
     },
     granted_by: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // The teacher/admin who granted it, if applicable
+        ref: 'User', 
         default: null
     },
     granted_at: {
@@ -40,7 +40,7 @@ const rewardSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Optional: index for faster queries on user rewards
+
 rewardSchema.index({ user_id: 1, granted_at: -1 });
 
 module.exports = mongoose.model('Reward', rewardSchema);

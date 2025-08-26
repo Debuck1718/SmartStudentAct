@@ -38,7 +38,6 @@ const SchoolCalendarSchema = new mongoose.Schema({
     }]
 }, { timestamps: true });
 
-// Add a unique compound index to prevent duplicate calendars for the same school and year
 SchoolCalendarSchema.index({ school: 1, academicYear: 1 }, { unique: true });
 
 module.exports = mongoose.model('SchoolCalendar', SchoolCalendarSchema);

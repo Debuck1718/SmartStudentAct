@@ -4,25 +4,16 @@ const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
 const logger = require('../utils/logger');
-// Import the centralized Gemini API client
 const geminiClient = require('../utils/geminiClient');
 
-// Import your middlewares
 const { authenticateJWT } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
 
-/**
- * Joi Validation Schema
- */
+
 const essaySchema = Joi.object({
-    essayText: Joi.string().min(50).required() // Require at least 50 characters for a meaningful essay
+    essayText: Joi.string().min(50).required() 
 });
 
-/**
- * @route POST /api/essay/check
- * @desc Sends an essay to the Gemini API for analysis and returns structured feedback.
- * @access Private (Requires JWT and a valid subscription/trial)
- */
 router.post('/check', authenticateJWT, checkSubscription, async (req, res) => {
     // Validate the incoming request body
     const { error, value } = essaySchema.validate(req.body);
@@ -33,7 +24,6 @@ router.post('/check', authenticateJWT, checkSubscription, async (req, res) => {
     try {
         const { essayText } = value;
 
-        // Construct the prompt to instruct the AI
         const prompt = `
             You are a helpful and detailed academic writing tutor. Analyze the following essay and provide constructive feedback on:
             1.  **Grammar & Spelling**: Point out specific errors and suggest corrections.
@@ -47,11 +37,9 @@ router.post('/check', authenticateJWT, checkSubscription, async (req, res) => {
             "${essayText}"
         `;
 
-        // The payload for the Gemini API call
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
-                // This tells the model to return a JSON object that matches the schema
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: "OBJECT",
@@ -65,10 +53,8 @@ router.post('/check', authenticateJWT, checkSubscription, async (req, res) => {
             }
         };
 
-        // Use the geminiClient to make the API call and get the response
         const result = await geminiClient.generateContent(payload);
 
-        // Parse the JSON string from the API response
         const feedback = JSON.parse(result.text);
 
         res.json({ feedback });

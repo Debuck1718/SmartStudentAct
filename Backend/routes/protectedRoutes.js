@@ -76,7 +76,7 @@ const protectedRouter = express.Router();
 // 🚩 NEW: Custom middleware to check user roles based on the JWT payload
 // This function replaces the imported `hasRole` from your previous `auth.js`
 const hasRole = (allowedRoles) => (req, res, next) => {
-    if (!req.userRole || !allowedRoles.includes(req.userRole)) {
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
         return res.status(403).json({
             status: false,
             message: "Sorry, you are not authorized to view this resource.",
@@ -84,6 +84,7 @@ const hasRole = (allowedRoles) => (req, res, next) => {
     }
     next();
 };
+
 
 // ✅ Apply authentication + subscription
 protectedRouter.use(authenticateJWT, checkSubscription);
@@ -440,8 +441,6 @@ protectedRouter.post('/admin/remove-user', authenticateJWT, hasRole(['admin', 'o
             return res.status(404).json({ error: 'User not found.' });
         }
         
-        // 🚩 UPDATED: Logic now uses the new 'role' field for permission checks
-        // Overseers cannot remove other overseers or global-overseers
         if (actor.role === 'overseer' && (targetUser.role === 'overseer' || targetUser.role === 'global-overseer')) {
             return res.status(403).json({ error: 'You do not have permission to remove this user.' });
         }
@@ -481,9 +480,6 @@ protectedRouter.get('/admin/schools', authenticateJWT, hasRole(['admin', 'overse
     }
 });
 
-// 🚩 DEPRECATED & REMOVED: set-admin route is now redundant with the new promote route.
-
-// --- New route to add a school ---
 protectedRouter.post('/admin/schools/add', authenticateJWT, hasRole(['overseer', 'global-overseer']), validate(schoolSchema), async (req, res) => {
     const { name, country, tier } = req.body;
     try {
@@ -499,7 +495,6 @@ protectedRouter.post('/admin/schools/add', authenticateJWT, hasRole(['overseer',
     }
 });
 
-/* ──────────── Overseer Dashboard ──────────── */
 protectedRouter.get(
     '/overseer/dashboard-overview',
     authenticateJWT,
@@ -522,7 +517,6 @@ protectedRouter.get(
                         ],
                     });
 
-                    // 🚩 UPDATED: Now filters by the user's 'role'
                     const totalAdmins = usersInSchools.filter((u) => u.role === 'admin').length;
                     const totalTeachers = usersInSchools.filter((u) => u.role === 'teacher').length;
                     const totalStudents = usersInSchools.filter((u) => u.role === 'student').length;
@@ -545,11 +539,10 @@ protectedRouter.get(
     }
 );
 
-/* ──────────── Global Overseer Dashboard ──────────── */
 protectedRouter.get(
     '/global-overseer/dashboard-overview',
     authenticateJWT,
-    hasRole(['global-overseer']),
+    hasRole(['global_overseer']),
     async (req, res) => {
         try {
             const allRegions = await School.distinct('country');
@@ -566,7 +559,6 @@ protectedRouter.get(
                         ],
                     });
 
-                    // 🚩 UPDATED: Now filters by the user's 'role'
                     const totalAdmins = usersInSchools.filter((u) => u.role === 'admin').length;
                     const totalTeachers = usersInSchools.filter((u) => u.role === 'teacher').length;
                     const totalStudents = usersInSchools.filter((u) => u.role === 'student').length;
@@ -593,8 +585,6 @@ protectedRouter.get(
     }
 );
 
-
-// ✅ New: Route to assign a region to an Overseer
 protectedRouter.post('/admin/assign-region', authenticateJWT, hasRole(['global-overseer']), validate(assignRegionSchema), async (req, res) => {
     const { overseerEmail, region } = req.body;
     try {
@@ -602,12 +592,9 @@ protectedRouter.post('/admin/assign-region', authenticateJWT, hasRole(['global-o
         if (!targetUser) {
             return res.status(404).json({ error: 'Overseer user not found.' });
         }
-        // 🚩 UPDATED: Check for the new 'overseer' and 'global-overseer' roles
-        if (targetUser.role !== 'overseer' && targetUser.role !== 'global-overseer') {
+        if (targetUser.role !== 'overseer' && targetUser.role !== 'global_overseer') {
             return res.status(400).json({ error: 'Target user is not an overseer.' });
         }
-
-        // Push the new region to the managedRegions array if it's not already there
         await User.updateOne({ email: overseerEmail }, {
             $addToSet: { managedRegions: region }
         });
@@ -619,10 +606,10 @@ protectedRouter.post('/admin/assign-region', authenticateJWT, hasRole(['global-o
     }
 });
 
-// 🆕 New route for a Global Overseer to view all uploaded files
-protectedRouter.get('/admin/all-files', authenticateJWT, hasRole(['global-overseer']), async (req, res) => {
+
+protectedRouter.get('/admin/all-files', authenticateJWT, hasRole(['global_overseer']), async (req, res) => {
     try {
-        // Fetch all assignments and their file paths
+
         const assignments = await Assignment.find({ attachment_file: { $ne: null } }).select('title attachment_file created_by');
         const assignmentFiles = assignments.map(a => ({
             id: a._id,
@@ -632,7 +619,6 @@ protectedRouter.get('/admin/all-files', authenticateJWT, hasRole(['global-overse
             created_by: a.created_by,
         }));
 
-        // Fetch all submissions and their file paths
         const submissions = await Submission.find({ $or: [{ submission_file: { $ne: null } }, { feedback_file: { $ne: null } }] }).populate('user_id', 'email');
         const submissionFiles = submissions.flatMap(s => {
             const files = [];
@@ -657,7 +643,6 @@ protectedRouter.get('/admin/all-files', authenticateJWT, hasRole(['global-overse
             return files;
         });
 
-        // Combine all file lists
         const allFiles = [...assignmentFiles, ...submissionFiles];
 
         res.status(200).json({ success: true, files: allFiles });
@@ -667,8 +652,7 @@ protectedRouter.get('/admin/all-files', authenticateJWT, hasRole(['global-overse
     }
 });
 
-// 🆕 New universal file-serving route for Global Overseer
-protectedRouter.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole(['global-overseer']), async (req, res) => {
+protectedRouter.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole(['global_overseer']), async (req, res) => {
     try {
         const { type, filename } = req.params;
         let filePath;
@@ -688,10 +672,8 @@ protectedRouter.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole
                 return res.status(400).json({ message: 'Invalid file type.' });
         }
 
-        // Check if the file exists and is readable
         await fs.access(filePath);
         
-        // Send the file
         res.sendFile(filePath);
 
     } catch (error) {
@@ -704,18 +686,14 @@ protectedRouter.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole
     }
 });
 
-// 🆕 New: Route for Admin to fetch files for their school
 protectedRouter.get('/admin/my-school-files', authenticateJWT, hasRole(['admin']), async (req, res) => {
     try {
         const user = req.user;
 
-        // 🚩 UPDATED: Use the correct user schema fields
         const schoolName = user.schoolName || user.teacherSchool;
         if (!schoolName) {
             return res.status(400).json({ error: 'User is not associated with a school.' });
         }
-        
-        // Find files uploaded in this school
         const files = await File.find({ school_id: schoolName })
             .populate('uploader', 'firstname lastname email');
 
@@ -735,16 +713,8 @@ protectedRouter.get('/admin/my-school-files', authenticateJWT, hasRole(['admin']
     }
 });
 /* ──────────── Teacher Routes - Refactored ──────────── */
-/**
- * @route GET /api/teacher/profile
- * @desc Gets the profile information of the logged-in teacher.
- * @access Private (Teacher Only)
- * @notes Refactored to use req.user.id for security and robustness.
- */
 protectedRouter.get('/teacher/profile', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
-        // Use the ID from the authenticated user to ensure the correct profile is fetched.
-        // This prevents a user from trying to access another teacher's profile.
         const teacher = await User.findById(req.user.id).select('-password');
         if (!teacher) {
             return res.status(404).json({ message: 'Teacher profile not found.' });
@@ -756,34 +726,24 @@ protectedRouter.get('/teacher/profile', authenticateJWT, hasRole('teacher'), asy
     }
 });
 
-/**
- * @route POST /api/teacher/calendar
- * @desc Allows a teacher to submit the academic calendar for their school.
- * @access Private (Teacher Only)
- * @notes This route was already quite good. Minor change to use .id for consistency.
- */
 protectedRouter.post('/teacher/calendar', authenticateJWT, hasRole('teacher'), validate(academicCalendarSchema), async (req, res) => {
     const { schoolName, academicYear, terms } = req.body;
     const teacherId = req.user.id;
 
     try {
-        // Find the teacher's school to get the school ID
         const school = await School.findOne({ name: schoolName });
         if (!school) {
             return res.status(404).json({ message: 'School not found.' });
         }
 
-        // Check if a calendar for this school and year already exists
         let schoolCalendar = await SchoolCalendar.findOne({ school: school._id, academicYear });
 
         if (schoolCalendar) {
-            // If it exists, update it
             schoolCalendar.teacher_id = teacherId;
             schoolCalendar.terms = terms;
             await schoolCalendar.save();
             res.status(200).json({ message: 'Academic calendar updated successfully.', calendar: schoolCalendar });
         } else {
-            // If it doesn't exist, create a new one
             schoolCalendar = new SchoolCalendar({
                 teacher_id: teacherId,
                 school: school._id,
@@ -800,12 +760,6 @@ protectedRouter.post('/teacher/calendar', authenticateJWT, hasRole('teacher'), v
     }
 });
 
-/**
- * @route POST /api/teacher/assignments
- * @desc Creates a new assignment for a student and emits an event.
- * @access Private (Teacher Only)
- * @notes Added robust checks and fixed an assumption about assigned_to_users.
- */
 protectedRouter.post('/teacher/assignments', authenticateJWT, hasRole('teacher'), localUpload.single('file'), async (req, res) => {
     try {
         const { studentEmail, title, description, dueDate } = req.body;
@@ -815,7 +769,6 @@ protectedRouter.post('/teacher/assignments', authenticateJWT, hasRole('teacher')
             return res.status(400).json({ message: 'Missing required fields: studentEmail, title, or dueDate.' });
         }
 
-        // Find the student by email to get their ID and other details
         const student = await User.findOne({ email: studentEmail, role: 'student' });
         if (!student) {
             return res.status(404).json({ message: 'Student not found.' });
@@ -826,7 +779,7 @@ protectedRouter.post('/teacher/assignments', authenticateJWT, hasRole('teacher')
             description,
             due_date: new Date(dueDate),
             created_by: teacherId,
-            // Assign to the specific student and their details
+
             assigned_to_users: [student.email],
             assigned_to_schools: [student.schoolName],
             assigned_to_grades: [student.grade],
@@ -835,7 +788,6 @@ protectedRouter.post('/teacher/assignments', authenticateJWT, hasRole('teacher')
 
         await newAssignment.save();
 
-        // Emit the event for assignment creation to trigger notifications and reminders
         eventBus.emit('assignment_created', {
             assignmentId: newAssignment._id,
             title: newAssignment.title,
@@ -849,15 +801,8 @@ protectedRouter.post('/teacher/assignments', authenticateJWT, hasRole('teacher')
     }
 });
 
-/**
- * @route GET /api/teacher/assignments
- * @desc Gets all assignments created by the logged-in teacher.
- * @access Private (Teacher Only)
- * @notes Replaced the :teacherId URL parameter with the authenticated user's ID for security.
- */
 protectedRouter.get('/teacher/assignments', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
-        // Use req.user.id to prevent a teacher from viewing another teacher's assignments.
         const assignments = await Assignment.find({ created_by: req.user.id });
         res.status(200).json({ assignments });
     } catch (error) {
@@ -866,12 +811,6 @@ protectedRouter.get('/teacher/assignments', authenticateJWT, hasRole('teacher'),
     }
 });
 
-/**
- * @route POST /api/teacher/feedback/:submissionId
- * @desc Teacher leaves feedback and/or a grade on a student submission.
- * @access Private (Teacher Only)
- * @notes Added a check to ensure the teacher is authorized to grade the submission.
- */
 protectedRouter.post(
     '/teacher/feedback/:submissionId',
     authenticateJWT,
@@ -884,20 +823,17 @@ protectedRouter.post(
             const submission = await Submission.findById(submissionId);
             if (!submission) return res.status(404).json({ message: 'Submission not found' });
 
-            // Check if the current teacher is the creator of the assignment.
             const assignment = await Assignment.findById(submission.assignment_id);
             if (!assignment || assignment.created_by.toString() !== req.user.id) {
                 return res.status(403).json({ message: 'Forbidden. You are not authorized to provide feedback on this submission.' });
             }
 
-            // Update submission with feedback/grade
             submission.feedback_grade = grade || null;
             submission.feedback_comments = comments || null;
             submission.feedback_file = req.file ? `/uploads/feedback/${req.file.filename}` : null;
             submission.feedback_given_at = new Date();
             await submission.save();
 
-            // Conditional event emission based on the presence of a grade or comments
             if (grade) {
                 eventBus.emit('assignment_graded', {
                     assignmentId: assignment._id,
@@ -920,12 +856,6 @@ protectedRouter.post(
     }
 );
 
-/**
- * @route GET /api/teacher/students
- * @desc Fetches all students in the same school and class as the logged-in teacher.
- * @access Private (Teacher Only)
- * @notes Minor check for teacher object.
- */
 protectedRouter.get('/teacher/students', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const teacher = await User.findById(req.user.id);
@@ -957,12 +887,6 @@ protectedRouter.get('/teacher/students', authenticateJWT, hasRole('teacher'), as
     }
 });
 
-/**
- * @route POST /api/teacher/quiz
- * @desc Teacher creates a quiz assignment with multiple questions.
- * @access Private (Teacher Only)
- * @notes No changes needed, the route is well-structured.
- */
 protectedRouter.post('/teacher/quiz', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const { title, description, dueDate, questions, assignTo } = req.body;
@@ -999,24 +923,16 @@ protectedRouter.post('/teacher/quiz', authenticateJWT, hasRole('teacher'), async
     }
 });
 
-/**
- * @route GET /api/teacher/quiz/:assignmentId/results
- * @desc Teacher views results of a quiz assignment.
- * @access Private (Teacher Only)
- * @notes Fixed the authorization logic to use `req.user.id` for a better check.
- */
 protectedRouter.get('/teacher/quiz/:assignmentId/results', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const { assignmentId } = req.params;
-        // Populate questions for the correct answers and a quick check for `type: 'quiz'`
+
         const assignment = await Assignment.findById(assignmentId).populate('questions');
 
-        // Verify the assignment exists, is a quiz, and the teacher is the creator.
         if (!assignment || assignment.type !== 'quiz' || assignment.created_by.toString() !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized to view results for this assignment.' });
         }
 
-        // Fetch student submissions
         const submissions = await Submission.find({ assignment_id: assignmentId }).populate('user_id', 'firstname lastname email');
 
         const formattedResults = submissions.map(sub => ({
@@ -1033,36 +949,24 @@ protectedRouter.get('/teacher/quiz/:assignmentId/results', authenticateJWT, hasR
     }
 });
 
-/**
- * @route GET /api/teacher/overdue-tasks
- * @desc Fetches all assignments that are overdue for students in the teacher's class.
- * @access Private (Teacher Only)
- * @notes Rewrote the logic to be more efficient with fewer queries.
- */
 protectedRouter.get('/teacher/overdue-tasks', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const teacher = await User.findById(req.user.id);
         const now = new Date();
 
-        // Find all assignments for this teacher that are overdue.
         const overdueAssignments = await Assignment.find({
             created_by: req.user.id,
             due_date: { $lt: now },
         });
 
-        // Get the list of assignment IDs
         const assignmentIds = overdueAssignments.map(a => a._id);
 
-        // Find all submissions for these overdue assignments
         const submittedAssignmentIds = (await Submission.find({
             assignment_id: { $in: assignmentIds }
         })).map(sub => sub.assignment_id.toString());
 
-        // Filter for assignments that have NOT been submitted
         const unsubmittedOverdue = overdueAssignments.filter(assignment => !submittedAssignmentIds.includes(assignment._id.toString()));
 
-        // Fetch student information in a single batch for all unsubmitted tasks.
-        // This is much more efficient than fetching one by one inside the loop.
         const studentEmails = unsubmittedOverdue.map(assignment => assignment.assigned_to_users[0]);
         const students = await User.find({ email: { $in: studentEmails } }).select('firstname lastname email');
         const studentMap = new Map(students.map(s => [s.email, s]));
@@ -1083,21 +987,14 @@ protectedRouter.get('/teacher/overdue-tasks', authenticateJWT, hasRole('teacher'
     }
 });
 
-
-/**
- * @route GET /api/teacher/assigned-tasks
- * @desc Fetches all assignments assigned by the current teacher.
- * @access Private (Teacher Only)
- * @notes No changes needed, logic is sound.
- */
 protectedRouter.get('/teacher/assigned-tasks', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const assignedTasks = await Assignment.find({ created_by: req.user.id });
         const formattedTasks = assignedTasks.map(t => ({
             title: t.title,
             due_datetime: t.due_date,
-            student_email: t.assigned_to_users[0], // Assuming single student for simplicity
-            subject: 'N/A', // Frontend expects a subject
+            student_email: t.assigned_to_users[0], 
+            subject: 'N/A', 
             attachment: t.attachment_file,
         }));
         res.status(200).json(formattedTasks);
@@ -1107,19 +1004,11 @@ protectedRouter.get('/teacher/assigned-tasks', authenticateJWT, hasRole('teacher
     }
 });
 
-/**
- * @route GET /api/teacher/feedback
- * @desc Fetches all submissions that have received feedback from the current teacher.
- * @access Private (Teacher Only)
- * @notes Rewrote the logic to be significantly more efficient by using a single query.
- */
 protectedRouter.get('/teacher/feedback', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
-        // Find all assignments created by the current teacher.
         const teacherAssignments = await Assignment.find({ created_by: req.user.id }).select('_id');
         const assignmentIds = teacherAssignments.map(a => a._id);
 
-        // Find submissions for those specific assignments that have feedback.
         const submissionsWithFeedback = await Submission.find({
             assignment_id: { $in: assignmentIds },
             $or: [
@@ -1141,13 +1030,6 @@ protectedRouter.get('/teacher/feedback', authenticateJWT, hasRole('teacher'), as
     }
 });
 
-
-/**
- * @route POST /api/teacher/message
- * @desc Sends a notification message to a specific student.
- * @access Private (Teacher Only)
- * @notes No changes needed, logic is sound.
- */
 protectedRouter.post('/teacher/message', authenticateJWT, hasRole('teacher'), async (req, res) => {
     const { to, text } = req.body;
     try {
@@ -1156,7 +1038,6 @@ protectedRouter.post('/teacher/message', authenticateJWT, hasRole('teacher'), as
             return res.status(404).json({ message: 'Student not found.' });
         }
 
-        // Use the eventBus to send the notification
         eventBus.emit('teacher_message', {
             userId: student._id,
             message: text,
@@ -1202,23 +1083,12 @@ protectedRouter.get('/teacher/students/other', authenticateJWT, hasRole('teacher
 });
 
 
-// --- Student Routes - Refactored ---
-/**
- * @route GET /api/student/assignments
- * @desc Gets all assignments for a logged-in student.
- * @access Private (Student Only)
- * @notes Fixed a major security flaw by using req.user.id instead of a URL parameter.
- * The original route was vulnerable to a student accessing another student's assignments.
- */
 protectedRouter.get('/api/student/assignments', authenticateJWT, hasRole('student'), async (req, res) => {
     try {
-        // Use the authenticated user's ID to fetch their own profile.
         const student = await User.findById(req.user.id);
         if (!student) {
             return res.status(404).json({ message: 'Student not found.' });
         }
-
-        // Find assignments assigned to this student by email, grade, or school.
         const assignments = await Assignment.find({
             $or: [
                 { assigned_to_users: student.email },
@@ -1234,12 +1104,6 @@ protectedRouter.get('/api/student/assignments', authenticateJWT, hasRole('studen
     }
 });
 
-/**
- * @route POST /api/student/submissions
- * @desc Submits an assignment (text + optional file).
- * @access Private (Student Only)
- * @notes No changes needed, logic is sound.
- */
 protectedRouter.post(
     '/student/submissions',
     authenticateJWT,
@@ -1248,7 +1112,6 @@ protectedRouter.post(
     async (req, res) => {
         try {
             const { assignmentId, submissionText } = req.body;
-            // Use req.user.id to ensure the submission is from the logged-in student.
             const studentId = req.user.id;
 
             if (!assignmentId) {
@@ -1264,8 +1127,6 @@ protectedRouter.post(
             });
 
             await newSubmission.save();
-
-            // notify teachers
             eventBus.emit('new_submission', {
                 assignmentId,
                 studentId,
@@ -1282,12 +1143,6 @@ protectedRouter.post(
     }
 );
 
-/**
- * @route GET /api/student/teachers/my-school
- * @desc Fetches all teachers from the same school as the logged-in student.
- * @access Private (Student Only)
- * @notes Minor change to use `schoolName` consistently with other routes.
- */
 protectedRouter.get('/student/teachers/my-school', authenticateJWT, hasRole('student'), async (req, res) => {
     try {
         const student = await User.findById(req.user.id);
@@ -1296,7 +1151,7 @@ protectedRouter.get('/student/teachers/my-school', authenticateJWT, hasRole('stu
         }
         const teachers = await User.find({
             role: 'teacher',
-            schoolName: student.schoolName // Use schoolName for consistency
+            schoolName: student.schoolName 
         }).select('firstName lastName email');
 
         res.status(200).json({ teachers });
@@ -1306,12 +1161,6 @@ protectedRouter.get('/student/teachers/my-school', authenticateJWT, hasRole('stu
     }
 });
 
-/**
- * @route GET /api/student/quizzes
- * @desc Gets all quiz assignments available for the logged-in student.
- * @access Private (Student Only)
- * @notes No changes needed, logic is sound.
- */
 protectedRouter.get('/student/quizzes', authenticateJWT, hasRole('student'), async (req, res) => {
     try {
         const student = await User.findById(req.user.id);
@@ -1319,15 +1168,14 @@ protectedRouter.get('/student/quizzes', authenticateJWT, hasRole('student'), asy
             return res.status(404).json({ message: 'Student not found.' });
         }
 
-        // Find quizzes assigned directly, by grade, or by school
         const quizzes = await Assignment.find({
             type: 'quiz',
             $or: [
                 { assigned_to_users: student.email },
                 { assigned_to_grades: student.grade },
-                { assigned_to_schools: student.schoolName } // Use schoolName for consistency
+                { assigned_to_schools: student.schoolName } 
             ]
-        }).populate('questions'); // load question details
+        }).populate('questions'); 
 
         res.status(200).json({ quizzes });
     } catch (error) {
@@ -1336,16 +1184,10 @@ protectedRouter.get('/student/quizzes', authenticateJWT, hasRole('student'), asy
     }
 });
 
-/**
- * @route POST /api/student/quizzes/:assignmentId/submit
- * @desc Student submits answers for a quiz assignment (auto-scored).
- * @access Private (Student Only)
- * @notes No changes needed, logic is sound.
- */
 protectedRouter.post('/student/quizzes/:assignmentId/submit', authenticateJWT, hasRole('student'), async (req, res) => {
     try {
         const { assignmentId } = req.params;
-        const { answers } = req.body; // { questionId: selectedOption }
+        const { answers } = req.body; 
 
         const student = await User.findById(req.user.id);
         if (!student) {
@@ -1356,8 +1198,6 @@ protectedRouter.post('/student/quizzes/:assignmentId/submit', authenticateJWT, h
         if (!assignment || assignment.type !== 'quiz') {
             return res.status(404).json({ message: 'Quiz not found.' });
         }
-
-        // Auto-score the quiz
         let score = 0;
         const results = assignment.questions.map(q => {
             const studentAnswer = answers[q._id] || null;
@@ -1370,7 +1210,6 @@ protectedRouter.post('/student/quizzes/:assignmentId/submit', authenticateJWT, h
             };
         });
 
-        // Save submission
         const newSubmission = new Submission({
             assignment_id: assignmentId,
             user_id: student._id,
@@ -1399,18 +1238,11 @@ protectedRouter.post('/student/quizzes/:assignmentId/submit', authenticateJWT, h
     }
 });
 
-/**
- * @route GET /api/student/quizzes/:assignmentId/result
- * @desc Get logged-in student’s result for a quiz
- * @access Private (Student Only)
- * @notes Fixed logic to use the `Assignment` and `Submission` models correctly.
- */
 protectedRouter.get('/student/quizzes/:assignmentId/result', authenticateJWT, hasRole('student'), async (req, res) => {
     try {
         const assignment = await Assignment.findById(req.params.assignmentId);
         if (!assignment) return res.status(404).json({ message: 'Assignment not found' });
 
-        // find the submission for this student and quiz
         const submission = await Submission.findOne({
             assignment_id: assignment._id,
             user_id: req.user.id
@@ -1432,7 +1264,6 @@ protectedRouter.get('/student/quizzes/:assignmentId/result', authenticateJWT, ha
     }
 });
 
-// --- New Cloudinary Upload Endpoint ---
     protectedRouter.post("/upload/cloudinary", cloudinaryUpload.single("image"), (req, res) => {
         try {
             if (!req.file) {
@@ -1450,7 +1281,6 @@ protectedRouter.get('/student/quizzes/:assignmentId/result', authenticateJWT, ha
         }
     });
 
-    // --- Your existing local upload endpoint, now using 'localUpload' ---
     protectedRouter.post("/upload/local", localUpload.single("file"), (req, res) => {
         try {
             if (!req.file) {
@@ -1468,9 +1298,7 @@ protectedRouter.get('/student/quizzes/:assignmentId/result', authenticateJWT, ha
         }
     });
 
-    // 🆕 New route to securely serve student submissions
     protectedRouter.get('/student/submissions/:filename', hasRole('student', 'teacher', 'admin', 'global_overseer'), async (req, res) => {
-        // ... your file serving logic
         try {
             const { filename } = req.params;
             const filePath = path.join(dirs.submissions, filename);
@@ -1505,7 +1333,6 @@ protectedRouter.get('/student/quizzes/:assignmentId/result', authenticateJWT, ha
         }
     });
 
-    // ... All other protected routes follow the same pattern on protectedRouter ...
     protectedRouter.get('/teacher/assignments/:filename', hasRole('student', 'teacher', 'admin', 'global_overseer'), async (req, res) => {
         try {
             const { filename } = req.params;
@@ -1579,15 +1406,7 @@ protectedRouter.get('/student/quizzes/:assignmentId/result', authenticateJWT, ha
         }
     });
 
-    
-// ──────────────────── Payment & Pricing Routes ────────────────────
-/**
- * Middleware to check for user country and restricted occupations.
- * This prevents code duplication in multiple routes.
- * @param {object} req - The request object.
- * @param {object} res - The response object.
- * @param {function} next - The next middleware function.
- */
+
 const checkUserCountryAndRole = async (req, res, next) => {
     try {
         // Find the user to get their country
@@ -1613,12 +1432,10 @@ const checkUserCountryAndRole = async (req, res, next) => {
 };
 
 protectedRouter.get('/pricing', checkUserCountryAndRole, async (req, res) => {
-    // req.fullUser now contains the user object with the country, thanks to the middleware
     const { occupation, school } = req.user;
     const userCountry = req.fullUser.country;
 
     try {
-        // Fetch the price based on user's country, occupation, and school
         const price = await paymentController.getUserPrice(userCountry, occupation, school);
         res.json(price);
     } catch (err) {
@@ -1627,7 +1444,6 @@ protectedRouter.get('/pricing', checkUserCountryAndRole, async (req, res) => {
     }
 });
 
-// Initiate a payment transaction
 protectedRouter.post('/payment/initiate', validate(paymentSchema), checkUserCountryAndRole, async (req, res) => {
     const { gateway } = req.body;
     const { email, occupation, school } = req.user;
@@ -1661,7 +1477,7 @@ protectedRouter.post('/payment/initiate', validate(paymentSchema), checkUserCoun
     }
 });
 
-// Start a free trial for a user
+
 protectedRouter.post('/trial/start', authenticateJWT, async (req, res) => {
     const userId = req.user.id;
     try {
@@ -1680,7 +1496,6 @@ protectedRouter.post('/trial/start', authenticateJWT, async (req, res) => {
         user.has_used_trial = true;
         await user.save();
 
-        // Schedule Agenda job for 30 days
         agenda.schedule('in 30 days', 'end-trial', { userId: user._id });
 
         logger.info('Free trial started for user:', userId);
@@ -1691,25 +1506,6 @@ protectedRouter.post('/trial/start', authenticateJWT, async (req, res) => {
     }
 });
 
-// ──────────── SMS Test Route ────────────
-protectedRouter.post('/test/sms', authenticateJWT, async (req, res) => {
-    const { phone, message } = req.body;
-
-    if (!phone || !message) {
-        return res.status(400).json({ error: 'phone and message are required.' });
-    }
-
-    try {
-        await sendSMS(phone, message);
-        res.json({ message: `SMS sent successfully to ${phone}` });
-    } catch (err) {
-        logger.error('SMS test failed:', err);
-        res.status(500).json({ error: 'Failed to send SMS.' });
-    }
-});
-
-
-// NOTE: Sub-routers must be mounted here
 protectedRouter.use('/rewards', advancedGoalsRouter);
 protectedRouter.use('/budget', budgetRouter);
 protectedRouter.use('/essay', essayRouter);
