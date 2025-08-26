@@ -4,19 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartStudentAct</title>
-    <!-- Use Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles to match the React Native design */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* A light background color */
+            background-color: #f0f4f8; 
         }
 
-        /* Replicate the background image behavior with CSS */
         .background-image-container {
-            /* Restoring the original background image as requested */
             background-image: url("./images/bg.png");
             background-size: cover;
             background-position: center;
@@ -27,7 +23,6 @@
             padding: 2rem;
         }
 
-        /* Modal for alerts */
         .modal {
             position: fixed;
             top: 0;
@@ -49,7 +44,6 @@
             text-align: center;
         }
 
-        /* Style for language switcher buttons */
         .language-switcher button {
             transition: transform 0.2s ease-in-out;
         }
@@ -62,7 +56,6 @@
 </head>
 <body class="bg-gray-100 font-sans">
 
-    <!-- Modal for displaying messages, as per instructions to avoid alert() -->
     <div id="alert-modal" class="modal">
         <div class="modal-content shadow-lg">
             <h3 id="modal-title" data-i18n="modal_title" class="text-xl font-bold mb-4"></h3>
@@ -74,19 +67,16 @@
     <div class="background-image-container flex-col p-4 md:p-8">
         <div class="w-full max-w-2xl mx-auto space-y-6">
 
-            <!-- Language Switcher -->
             <div class="flex justify-center space-x-4 language-switcher">
                 <button id="en-btn" onclick="translatePage('en')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">English</button>
                 <button id="fr-btn" onclick="translatePage('fr')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Français</button>
             </div>
 
-            <!-- Header Section -->
             <div class="bg-blue-500 bg-opacity-80 p-8 rounded-xl shadow-lg text-center">
                 <h1 data-i18n="site_title" class="text-4xl md:text-5xl font-extrabold text-white mb-2" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);"></h1>
                 <p data-i18n="site_subtitle" class="text-lg md:text-xl text-white opacity-90" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);"></p>
             </div>
 
-            <!-- Main Card Section -->
             <div class="bg-white bg-opacity-90 p-6 rounded-xl shadow-lg">
                 <h2 data-i18n="welcome_heading" class="text-2xl font-bold mb-3 text-gray-800"></h2>
                 <p data-i18n="welcome_paragraph_1" class="text-gray-700 mb-4 leading-relaxed"></p>
@@ -97,13 +87,11 @@
                 </div>
             </div>
 
-            <!-- About Section -->
             <div class="bg-gray-100 bg-opacity-90 p-6 rounded-xl shadow-inner">
                 <h2 data-i18n="about_heading" class="text-2xl font-bold mb-3 text-gray-800"></h2>
                 <p data-i18n="about_paragraph" class="text-gray-700 leading-relaxed"></p>
             </div>
 
-            <!-- Footer Section -->
             <footer class="text-center text-gray-600 space-y-2 mt-8">
                 <p class="text-sm">
                     © <span id="current-year"></span> SmartStudentAct | <span data-i18n="footer_text"></span>
@@ -117,7 +105,7 @@
     </div>
 
     <script>
-        // Create an object to hold your translation data
+
         const translations = {
             en: {
                 "site_title": "SmartStudentAct",
@@ -155,7 +143,6 @@
             }
         };
 
-        // Function to translate the page based on the language key
         function translatePage(lang) {
             const elements = document.querySelectorAll('[data-i18n]');
             elements.forEach(element => {
@@ -166,33 +153,27 @@
             });
             document.documentElement.lang = lang;
             
-            // Update active state of language buttons
             document.getElementById('en-btn').classList.remove('active');
             document.getElementById('fr-btn').classList.remove('active');
             document.getElementById(`${lang}-btn`).classList.add('active');
         }
 
-        // Get the current year and set it in the footer
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
-        // Get elements for the custom alert modal
         const alertModal = document.getElementById('alert-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
 
-        // Function to show the custom alert modal
         function showAlert(title, message) {
             modalTitle.textContent = title;
             modalMessage.textContent = message;
             alertModal.style.display = 'flex';
         }
 
-        // Function to close the custom alert modal
         function closeModal() {
             alertModal.style.display = 'none';
         }
 
-        // Attach event listeners to the buttons to redirect
         document.getElementById('signInBtn').addEventListener('click', () => {
             window.location.href = '/login.html';
         });

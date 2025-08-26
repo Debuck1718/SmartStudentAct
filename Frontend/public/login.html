@@ -31,7 +31,6 @@
 
         <div id="banner" class="hidden text-center mb-4 p-3 rounded-lg text-sm transition-all duration-300"></div>
 
-        <!-- Email -->
         <div class="mb-4">
             <input id="emailInput" type="email" 
                    class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -39,7 +38,6 @@
             <p id="emailError" class="text-red-500 text-sm mt-1"></p>
         </div>
 
-        <!-- Password -->
         <div class="mb-4">
             <div class="flex items-center border border-gray-300 rounded-lg bg-white">
                 <input id="passwordInput" type="password" 
@@ -50,13 +48,11 @@
             <p id="passwordError" class="text-red-500 text-sm mt-1"></p>
         </div>
 
-        <!-- Login Button -->
         <button id="loginButton" 
                 class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
             Login
         </button>
 
-        <!-- Links -->
         <div class="mt-6 text-center space-y-2">
             <a href="/signup.html" class="text-blue-600 hover:underline">Don’t have an account? Sign up</a><br />
             <a href="/forgot-password.html" class="text-blue-600 hover:underline">Forgot Password?</a>
@@ -64,7 +60,7 @@
     </div>
 
 <script>
-    // A helper function to show a banner message
+
     function showBanner(message, type = 'error') {
         const bannerEl = document.getElementById("banner");
         bannerEl.textContent = message;
@@ -81,14 +77,11 @@
         }
     }
 
-    // A helper function to hide the banner
     function hideBanner() {
         const bannerEl = document.getElementById("banner");
         bannerEl.classList.add("hidden");
     }
 
-    // --- UI and State Management ---
-    // Make sure this URL is correct for your backend deployment
     const API_BASE_URL = "https://smartstudentact.onrender.com"; 
     const emailInput = document.getElementById("emailInput");
     const passwordInput = document.getElementById("passwordInput");
@@ -114,7 +107,6 @@
         }
     }
 
-    // --- Validation Logic ---
     function validateEmail(text) {
         if (!text.trim()) return "Email cannot be empty.";
         if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
@@ -127,7 +119,6 @@
         return null;
     }
 
-    // --- Event Listeners ---
     emailInput.addEventListener("input", () => {
         setError(emailErrorEl, null, emailInput);
         hideBanner();
@@ -146,7 +137,6 @@
 
     loginButton.addEventListener("click", handleLogin);
 
-    // --- Main Login Function ---
     async function handleLogin() {
         setError(emailErrorEl, null, emailInput);
         setError(passwordErrorEl, null, passwordInput);
@@ -165,8 +155,7 @@
             const response = await fetch(`${API_BASE_URL}/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                // This is CRUCIAL! It tells the browser to send the HttpOnly session cookie
-                // which the backend uses for authentication.
+
                 credentials: "include", 
                 body: JSON.stringify({
                     email: emailInput.value.trim().toLowerCase(),
@@ -188,9 +177,6 @@
                 throw new Error("Server did not return JSON");
             });
 
-            // ✅ No need to store any tokens here. The browser handles the secure, HttpOnly cookie.
-
-            // ✅ Redirect based on role
             switch (data.user?.role) {
                 case "global_overseer":
                     window.location.href = "/global_overseer.html";

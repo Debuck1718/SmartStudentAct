@@ -125,21 +125,16 @@
         document.getElementById("logout-btn").addEventListener("click", handleLogout);
     }
 
-    // --- Utility: Auth fetch with HttpOnly cookie handling ---
-    // This is the simplified fetch function. It no longer needs to manually handle tokens.
     async function authFetch(url, options = {}) {
         const res = await fetch(url, {
             ...options,
-            // The browser will automatically send the HttpOnly cookie
             credentials: "include",
-            // We need a Content-Type for any request with a body
             headers: {
                 "Content-Type": "application/json",
                 ...(options.headers || {})
             },
         });
 
-        // If the request fails due to authentication, redirect to the login page.
         if (res.status === 401 || res.status === 403) {
             console.error("Authorization failed. Redirecting to login.");
             window.location.href = '/login.html';
@@ -154,7 +149,6 @@
         return res;
     }
 
-    // --- Modal Logic ---
     function showAlert(title, message) {
         const modal = document.getElementById("alert-modal");
         document.getElementById("alert-title").textContent = title;
@@ -218,7 +212,7 @@
             ]);
             
             if (!dashboardRes || !fileRes) {
-                // The authFetch already handles redirection on auth failure
+                
                 return;
             }
 
@@ -228,17 +222,14 @@
         } catch (err) {
             console.error("Data fetch error:", err);
             state.error = "Failed to load dashboard data.";
-            // We don't redirect here, we show the error on the page
+            
         } finally {
             state.loading = false;
             render();
         }
     }
 
-    // --- Initial Load ---
     document.addEventListener("DOMContentLoaded", async () => {
-        // We make a request to a protected endpoint to check if we are authenticated.
-        // authFetch will handle the redirect to login if we are not.
         await fetchAllData();
     });
 </script>
