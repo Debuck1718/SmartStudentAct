@@ -936,7 +936,6 @@ requestOtpButton.addEventListener('click', async () => {
             showMessage(data.message, 'success');
             signupFormSection.classList.add('hidden');
             otpSection.classList.remove('hidden');
-            otpCode = data.otp; // ⚠️ only for demo
         } else {
             showMessage(data.message || 'An error occurred during sign up.');
         }

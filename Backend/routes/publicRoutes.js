@@ -95,10 +95,67 @@ module.exports = (eventBus, agenda) => {
     max: 5, // 5 login attempts per IP per window
     message: "Too many login attempts from this IP, please try again after 15 minutes",
     handler: (req, res) => {
-      // Custom handler to avoid sending the rate limit headers, making it harder for attackers to deduce the rate limit
+      // Custom handler to avoid sending the rate limit headers
       res.status(429).json({ error: "Too many login attempts. Please try again later." });
     },
   });
+  
+  /**
+   * Middleware to handle user existence and login attempts logic.
+   * This simplifies the main login route handler.
+   * @param {object} req - The request object.
+   * @param {object} res - The response object.
+   * @param {function} next - The next middleware function.
+   */
+  const handleLoginAttempts = async (req, res, next) => {
+    const { email, password } = req.body;
+    try {
+      const user = await User.findOne({ email: email.toLowerCase() }).select("+password +loginAttempts +lockUntil");
+      
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or password." });
+      }
+      
+      if (user.lockUntil && user.lockUntil > Date.now()) {
+        return res.status(429).json({ error: "Your account is temporarily locked due to too many failed login attempts. Please try again later." });
+      }
+
+      const isMatch = await user.comparePassword(password);
+      
+      if (!isMatch) {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: user._id },
+          { $inc: { loginAttempts: 1 } },
+          { new: true }
+        );
+
+        if (updatedUser.loginAttempts >= 5) {
+          const lockUntil = Date.now() + 3600000;
+          await User.findOneAndUpdate(
+            { _id: user._id },
+            { $set: { lockUntil: lockUntil } }
+          );
+        }
+        return res.status(401).json({ error: "Invalid email or password." });
+      }
+      
+      if (user.loginAttempts > 0) {
+        await User.findOneAndUpdate(
+          { _id: user._id },
+          { $set: { loginAttempts: 0 } }
+        );
+      }
+      
+      // Attach the authenticated user to the request object
+      req.user = user;
+      next();
+
+    } catch (err) {
+      logger.error("❌ Login middleware error:", err);
+      res.status(500).json({ error: "Server error during login." });
+    }
+  };
+
 
   /* -------------------------------
    * Routes
@@ -181,74 +238,44 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-// --- Corrected Login with JWT token generation ---
-publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
-  try {
-    const { email, password } = req.body;
+// --- Refactored Login with JWT token generation ---
+publicRouter.post(
+  "/users/login",
+  loginLimiter,
+  validate(loginSchema),
+  handleLoginAttempts, // Use the new middleware here
+  async (req, res) => {
+    try {
+      // If we reach here, the user is authenticated, and the user object is on the request
+      const user = req.user;
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select("+password +loginAttempts +lockUntil");
-    
-    if (!user) {
-      return res.status(401).json({ error: "Invalid email or password." });
-    }
-    
-    if (user.lockUntil && user.lockUntil > Date.now()) {
-      return res.status(429).json({ error: "Your account is temporarily locked due to too many failed login attempts. Please try again later." });
-    }
+      // Generate JWT token
+      const token = jwt.sign(
+        { id: user._id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES / 1000 }
+      );
 
-    const isMatch = await user.comparePassword(password);
-    
-    if (!isMatch) {
-      const updatedUser = await User.findOneAndUpdate(
-        { _id: user._id },
-        { $inc: { loginAttempts: 1 } },
-        { new: true }
-      );
+      const csrfToken = crypto.randomBytes(24).toString("hex");
 
-      if (updatedUser.loginAttempts >= 5) {
-        const lockUntil = Date.now() + 3600000;
-        await User.findOneAndUpdate(
-          { _id: user._id },
-          { $set: { lockUntil: lockUntil } }
-        );
-      }
-      return res.status(401).json({ error: "Invalid email or password." });
-    }
-    
-    if (user.loginAttempts > 0) {
-      await User.findOneAndUpdate(
-        { _id: user._id },
-        { $set: { loginAttempts: 0 } }
-      );
-    }
+      // Set the JWT as an HttpOnly cookie
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        maxAge: JWT_EXPIRES,
+      });
 
-    // ✅ Re-enable JWT token generation
-    const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES / 1000 }
-    );
-
-    const csrfToken = crypto.randomBytes(24).toString("hex");
-
-    // ✅ Set the JWT as an HttpOnly cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: JWT_EXPIRES,
-    });
-
-    res.json({ user: { id: user._id, email: user.email, role: user.role }, csrfToken });
-  } catch (err) {
-    console.error("❌ Login error:", err);
-    res.status(500).json({ error: "Server error during login." });
-  }
-});
+      res.json({ user: { id: user._id, email: user.email, role: user.role }, csrfToken });
+    } catch (err) {
+      logger.error("❌ Login JWT/cookie error:", err);
+      res.status(500).json({ error: "Server error during login." });
+    }
+  }
+);
 
 
-  
-  // --- Forgot Password ---
+// --- Forgot Password ---
   publicRouter.post(
     "/auth/forgot-password",
     validate(forgotPasswordSchema),
@@ -276,7 +303,7 @@ publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (re
     }
   );
 
-  // --- Reset Password ---
+// --- Reset Password ---
   publicRouter.post(
     "/auth/reset-password",
     validate(resetPasswordSchema),

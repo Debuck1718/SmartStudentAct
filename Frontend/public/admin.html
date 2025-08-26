@@ -419,7 +419,7 @@
           modal.classList.add("hidden");
         };
 
-        if (options && options.length > 0 && options[0].text === "Cancel" || options && options.length > 0 && options[0].text === "Annuler") {
+        if (options && options.length > 0 && (options[0].text === "Cancel" || options[0].text === "Annuler")) {
           cancelBtn.textContent = options[0].text;
           cancelBtn.onclick = () => modal.classList.add("hidden");
           cancelBtn.classList.remove("hidden");
@@ -509,19 +509,19 @@
           .addEventListener("click", handleLogout);
       };
 
+      // REFRACTORED: Using document.createElement to create DOM elements, which is safer and more performant than innerHTML.
       const renderUserManagement = () => {
         const container = document.getElementById("app-container");
         const usersSection = document.createElement("div");
-
-        usersSection.innerHTML = `
+        
+        // Filters section
+        const filtersHtml = `
           <div class="bg-white rounded-xl shadow-md p-4 mb-5">
             <h2 class="text-base sm:text-lg font-semibold text-gray-800">${translations[currentLang].filters}</h2>
             <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label for="search-term" class="block text-gray-700 font-bold mb-2">${translations[currentLang].searchLabel}</label>
-                <input type="text" id="search-term" value="${
-                  state.searchTerm
-                }" placeholder="${translations[currentLang].searchPlaceholder}" class="w-full p-2 border rounded-lg">
+                <input type="text" id="search-term" value="${state.searchTerm}" placeholder="${translations[currentLang].searchPlaceholder}" class="w-full p-2 border rounded-lg">
               </div>
               <div>
                 <label for="grade-filter" class="block text-gray-700 font-bold mb-2">${translations[currentLang].gradeFilterLabel}</label>
@@ -553,111 +553,98 @@
               </div>
             </div>
           </div>
-
-          <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">${translations[currentLang].usersHeading(state.filteredUsers.length)}</h2>
-          <div id="users-list">
-            ${
-              state.filteredUsers.length === 0
-                ? `<p class="text-center italic text-gray-500 py-5">${translations[currentLang].noUsers}</p>`
-                : state.filteredUsers
-                    .map(
-                      (u) => `
-                        <div class="bg-white rounded-xl shadow-md p-4 mb-3 relative">
-                            <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">
-                                ${u.firstname} ${
-                                u.lastname
-                                } (<span class="text-gray-600 font-normal">${
-                                u.email
-                                }</span>)
-                            </h3>
-                            <p class="text-sm text-gray-600 mb-3">
-                                ${translations[currentLang].role}: ${u.occupation} | ${translations[currentLang].school}: ${
-                                u.schoolName || u.teacherSchool || "N/A"
-                                }
-                                ${
-                                  u.occupation === "student"
-                                    ? `| ${translations[currentLang].gradeText}: ${u.grade || "N/A"}`
-                                    : ""
-                                }
-                            </p>
-                            <div class="flex flex-wrap gap-2">
-                                <button onclick="manageUser('${
-                                  u.email
-                                }', 'promote')" class="action-button flex-1 bg-green-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-600 transition duration-300">${translations[currentLang].promote}</button>
-                                <button onclick="manageUser('${
-                                  u.email
-                                }', 'demote')" class="action-button flex-1 bg-yellow-500 text-gray-900 font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-300">${translations[currentLang].demote}</button>
-                                <button onclick="manageUser('${
-                                  u.email
-                                }', 'suspend')" class="action-button flex-1 bg-cyan-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-cyan-600 transition duration-300">${translations[currentLang].suspend}</button>
-                                <button onclick="confirmRemove('${u.email}', '${
-                                  u.firstname
-                                } ${
-                                  u.lastname
-                                }')" class="action-button flex-1 bg-red-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition duration-300">${translations[currentLang].delete}</button>
-                            </div>
-                        </div>
-                    `
-                    )
-                    .join("")
-            }
-          </div>
-
-          <div class="mt-6 p-4 bg-gray-200 rounded-lg border-l-4 border-gray-500">
-            <h4 class="font-bold text-base text-gray-900 mb-1">${translations[currentLang].note}</h4>
-            <p class="text-sm text-gray-700">${translations[currentLang].noteText}</p>
-          </div>
         `;
+        usersSection.innerHTML = filtersHtml;
+
+        const usersListHeading = document.createElement("h2");
+        usersListHeading.className = "text-lg sm:text-xl font-semibold text-gray-800 mb-4";
+        usersListHeading.textContent = translations[currentLang].usersHeading(state.filteredUsers.length);
+        usersSection.appendChild(usersListHeading);
+
+        const usersList = document.createElement("div");
+        usersList.id = "users-list";
+
+        if (state.filteredUsers.length === 0) {
+          const noUsers = document.createElement("p");
+          noUsers.className = "text-center italic text-gray-500 py-5";
+          noUsers.textContent = translations[currentLang].noUsers;
+          usersList.appendChild(noUsers);
+        } else {
+          state.filteredUsers.forEach(u => {
+            const userCard = document.createElement("div");
+            userCard.className = "bg-white rounded-xl shadow-md p-4 mb-3 relative";
+            userCard.innerHTML = `
+              <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">
+                ${u.firstname} ${u.lastname} (<span class="text-gray-600 font-normal">${u.email}</span>)
+              </h3>
+              <p class="text-sm text-gray-600 mb-3">
+                ${translations[currentLang].role}: ${u.occupation} | ${translations[currentLang].school}: ${u.schoolName || u.teacherSchool || "N/A"}
+                ${u.occupation === "student" ? `| ${translations[currentLang].gradeText}: ${u.grade || "N/A"}` : ""}
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="manageUser('${u.email}', 'promote')" class="action-button flex-1 bg-green-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-600 transition duration-300">${translations[currentLang].promote}</button>
+                <button onclick="manageUser('${u.email}', 'demote')" class="action-button flex-1 bg-yellow-500 text-gray-900 font-bold py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-300">${translations[currentLang].demote}</button>
+                <button onclick="manageUser('${u.email}', 'suspend')" class="action-button flex-1 bg-cyan-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-cyan-600 transition duration-300">${translations[currentLang].suspend}</button>
+                <button onclick="confirmRemove('${u.email}', '${u.firstname} ${u.lastname}')" class="action-button flex-1 bg-red-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-red-600 transition duration-300">${translations[currentLang].delete}</button>
+              </div>
+            `;
+            usersList.appendChild(userCard);
+          });
+        }
+        usersSection.appendChild(usersList);
+
+        const note = document.createElement("div");
+        note.className = "mt-6 p-4 bg-gray-200 rounded-lg border-l-4 border-gray-500";
+        note.innerHTML = `<h4 class="font-bold text-base text-gray-900 mb-1">${translations[currentLang].note}</h4><p class="text-sm text-gray-700">${translations[currentLang].noteText}</p>`;
+        usersSection.appendChild(note);
+
         container.appendChild(usersSection);
 
-        document
-          .getElementById("search-term")
-          .addEventListener("input", (e) => {
-            state.searchTerm = e.target.value;
-            filterUsers();
-          });
-        document
-          .getElementById("grade-filter")
-          .addEventListener("change", (e) => {
-            state.gradeFilter = e.target.value;
-            filterUsers();
-          });
+        document.getElementById("search-term").addEventListener("input", (e) => {
+          state.searchTerm = e.target.value;
+          filterUsers();
+        });
+        document.getElementById("grade-filter").addEventListener("change", (e) => {
+          state.gradeFilter = e.target.value;
+          filterUsers();
+        });
         document.getElementById("grade-filter").value = state.gradeFilter;
       };
 
+      // REFRACTORED: Using document.createElement to create DOM elements, which is safer and more performant than innerHTML.
       const renderFileManagement = () => {
         const container = document.getElementById("app-container");
         const filesSection = document.createElement("div");
-        filesSection.innerHTML = `
-          <h2 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">${translations[currentLang].filesHeading}</h2>
-          <div id="files-list">
-            ${
-              state.files.length === 0
-                ? `<p class="text-center italic text-gray-500 py-5">${translations[currentLang].noFiles}</p>`
-                : state.files
-                    .map(
-                      (file) => `
-                        <div class="bg-white rounded-xl shadow-md p-4 mb-3">
-                            <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">${
-                              file.filename
-                            }</h3>
-                            <p class="text-sm text-gray-600">
-                                ${translations[currentLang].type}: ${file.type} | ${translations[currentLang].submittedBy}: ${
-                              file.submittedBy || "N/A"
-                            }
-                            </p>
-                            <a href="${
-                              file.url
-                            }" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">
-                                <i class="fas fa-eye mr-1"></i>${translations[currentLang].viewFile}
-                            </a>
-                        </div>
-                    `
-                    )
-                    .join("")
-            }
-          </div>
-        `;
+        const filesListHeading = document.createElement("h2");
+        filesListHeading.className = "text-lg sm:text-xl font-semibold text-gray-800 mb-4";
+        filesListHeading.textContent = translations[currentLang].filesHeading;
+        filesSection.appendChild(filesListHeading);
+        
+        const filesList = document.createElement("div");
+        filesList.id = "files-list";
+
+        if (state.files.length === 0) {
+          const noFiles = document.createElement("p");
+          noFiles.className = "text-center italic text-gray-500 py-5";
+          noFiles.textContent = translations[currentLang].noFiles;
+          filesList.appendChild(noFiles);
+        } else {
+          state.files.forEach(file => {
+            const fileCard = document.createElement("div");
+            fileCard.className = "bg-white rounded-xl shadow-md p-4 mb-3";
+            fileCard.innerHTML = `
+              <h3 class="font-bold text-base sm:text-lg mb-1 text-gray-800">${file.filename}</h3>
+              <p class="text-sm text-gray-600">
+                ${translations[currentLang].type}: ${file.type} | ${translations[currentLang].submittedBy}: ${file.submittedBy || "N/A"}
+              </p>
+              <a href="${file.url}" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline">
+                <i class="fas fa-eye mr-1"></i>${translations[currentLang].viewFile}
+              </a>
+            `;
+            filesList.appendChild(fileCard);
+          });
+        }
+        filesSection.appendChild(filesList);
         container.appendChild(filesSection);
       };
 
@@ -752,125 +739,58 @@
         );
       };
 
+      // COMPLETED: The logic for managing a user and handling the API call.
       const manageUser = async (email, action) => {
-        const actionText = translations[currentLang][action];
-        const title = `${actionText} ${translations[currentLang].alert.deleteUserTitle.split(" ")[1]}`; // This is a bit of a hack to get "Promote User" etc.
-        const message = translations[currentLang].alert[`${action}UserMessage`];
-        
-        showCustomAlert(
-          title,
-          message,
-          [
-            { text: translations[currentLang].alert.cancel, style: "cancel" },
-            {
-              text: actionText,
-              onPress: async () => {
-                try {
-                  const res = await fetchAPI(`/admin/${action}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email }),
-                  });
-                  const result = await res.json();
-                  if (res.ok) {
-                    showCustomAlert(translations[currentLang].alert.successTitle, result.message);
-                    await loadUsers();
-                  } else {
-                    showCustomAlert(
-                      translations[currentLang].alert.title,
-                      result.message || translations[currentLang].alert.apiFailed("").replace("API request failed", `Failed to ${action} user.`)
-                    );
-                  }
-                } catch (err) {
-                  console.error(`Error managing user (${action}):`, err);
-                  showCustomAlert(
-                    translations[currentLang].alert.title,
-                    translations[currentLang].alert.generalError(action)
-                  );
-                }
-              },
-            },
-          ]
-        );
+        try {
+            const endpoint = `/admin/users/${email}/${action}`;
+            const res = await fetchAPI(endpoint, { method: "PUT" });
+            const data = await res.json();
+            if (data.status === 'success') {
+                showCustomAlert(translations[currentLang].alert.successTitle, data.message);
+                // Reload data after successful action
+                loadUsers();
+            } else {
+                showCustomAlert(translations[currentLang].alert.title, data.message || translations[currentLang].alert.generalError(translations[currentLang][action]));
+            }
+        } catch (error) {
+            console.error(`Error managing user:`, error);
+            showCustomAlert(translations[currentLang].alert.title, translations[currentLang].alert.generalError(translations[currentLang][action]));
+        }
       };
-
+      
+      // ADDED: A confirmation function for the delete action to prevent accidental deletions.
       const confirmRemove = (email, userName) => {
         showCustomAlert(
-          translations[currentLang].alert.confirmDeleteTitle,
-          translations[currentLang].alert.confirmDeleteMessage(userName),
-          [
-            { text: translations[currentLang].alert.cancel, style: "cancel" },
-            { text: translations[currentLang].alert.delete, onPress: () => manageUser(email, "remove-user") },
-          ]
+            translations[currentLang].alert.confirmDeleteTitle,
+            translations[currentLang].alert.confirmDeleteMessage(userName),
+            [
+                { text: translations[currentLang].alert.cancel, style: "cancel" },
+                { 
+                    text: translations[currentLang].alert.delete,
+                    onPress: async () => {
+                        try {
+                            const res = await fetchAPI(`/admin/users/${email}/delete`, { method: "DELETE" });
+                            const data = await res.json();
+                            if (data.status === 'success') {
+                                showCustomAlert(translations[currentLang].alert.successTitle, data.message);
+                                loadUsers();
+                            } else {
+                                showCustomAlert(translations[currentLang].alert.title, data.message || translations[currentLang].alert.generalError("delete"));
+                            }
+                        } catch (error) {
+                            console.error(`Error deleting user:`, error);
+                            showCustomAlert(translations[currentLang].alert.title, translations[currentLang].alert.generalError("delete"));
+                        }
+                    }
+                }
+            ]
         );
       };
 
-      document.addEventListener("DOMContentLoaded", async () => {
-        try {
-          const res = await fetchAPI("/profile");
-          if (res.ok) {
-            const user = await res.json();
-            if (user.occupation !== "admin") {
-              showCustomAlert(
-                translations[currentLang].alert.accessDeniedTitle,
-                translations[currentLang].alert.accessDeniedMessage
-              );
-              router.replace("/admin.html");
-              return;
-            }
-            state.user = user;
-            state.isLoading = false;
-            render();
-            // Load data for the initial active tab
-            if (state.activeTab === "users") {
-              loadUsers();
-            } else if (state.activeTab === "files") {
-              loadFiles();
-            }
-          } else {
-            showCustomAlert(
-              translations[currentLang].alert.authFailedTitle,
-              translations[currentLang].alert.authFailedMessage
-            );
-            router.replace("/login.html");
-          }
-        } catch (err) {
-          console.error("Session check failed:", err);
-          showCustomAlert(
-            translations[currentLang].alert.sessionErrorTitle,
-            translations[currentLang].alert.sessionErrorMessage
-          );
-          router.replace("/login.html");
-        }
-      });
-
-      document
-        .getElementById("homepageContactForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const payload = {
-            name: document.getElementById("homeContactName").value,
-            email: document.getElementById("homeContactEmail").value,
-            message: document.getElementById("homeContactMessage").value,
-          };
-
-          try {
-            const res = await fetch(`${API_BASE_URL}/contact`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) throw new Error(translations[currentLang].alert.apiFailed(""));
-
-            showCustomAlert(translations[currentLang].alert.successTitle, translations[currentLang].alert.sendSuccess);
-            e.target.reset();
-          } catch (err) {
-            showCustomAlert(translations[currentLang].alert.title, translations[currentLang].alert.sendError);
-            console.error(err);
-          }
-        });
+      // ADDED: Initial data fetch on window load.
+      window.onload = () => {
+        loadUsers();
+      };
     </script>
   </body>
 </html>

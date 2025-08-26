@@ -141,8 +141,9 @@
         const API_BASE_URL = "https://smartstudentact.onrender.com/api";
         
         // Retrieve the JWT token and user email dynamically.
-        const JWT_TOKEN = localStorage.getItem('jwtToken'); 
-        const USER_EMAIL = localStorage.getItem('userEmail'); 
+        // NOTE: USER EMAIL is not retrieved from localStorage in the final version
+        // as it should be part of the session data on the backend.
+        // We will assume the backend provides the email in the /payment/initiate response.
 
         // Paystack public key. It is safe to hardcode this as it's a public key.
         const PAYSTACK_PUBLIC_KEY = 'pk_live_7d871b198024f60a328d95812595be2443695fcb';
@@ -150,6 +151,20 @@
 
         let finalAmount = 0;
         let finalCurrency = '';
+
+        /**
+         * Helper for authenticated requests using HttpOnly cookies.
+         */
+        const authFetch = async (url, options = {}) => {
+            return fetch(url, {
+                ...options,
+                credentials: 'include', // send HttpOnly cookie automatically
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(options.headers || {}),
+                },
+            });
+        };
 
         /**
          * Custom modal functions to replace `alert()`.
@@ -202,20 +217,20 @@
             const currentLang = languageSelector.value;
             showLoading(translations[currentLang].loadingPrice);
             try {
-                const response = await fetch(`${API_BASE_URL}/pricing`, {
-                    headers: {
-                        'Authorization': `Bearer ${JWT_TOKEN}`
-                    }
-                });
+                // Now using authFetch to send the HttpOnly session cookie
+                const response = await authFetch(`${API_BASE_URL}/pricing`);
 
                 if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        // User is not authenticated, redirect to login
+                        window.location.href = "/login.html";
+                        return;
+                    }
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Failed to fetch pricing.');
                 }
 
                 const data = await response.json();
-
-                // The backend returns a price object, not a success key.
                 finalAmount = data.localPrice;
                 finalCurrency = data.currency;
                 
@@ -239,12 +254,9 @@
             
             try {
                 // Step 1: Call the backend to get a valid payment authorization URL/data
-                const initiateResponse = await fetch(`${API_BASE_URL}/payment/initiate`, {
+                // Use authFetch to send the session cookie
+                const initiateResponse = await authFetch(`${API_BASE_URL}/payment/initiate`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${JWT_TOKEN}`
-                    },
                     body: JSON.stringify({ gateway: 'paystack' })
                 });
 
@@ -262,7 +274,7 @@
                 // Step 2: Use the data from the backend to open the Paystack popup
                 let handler = PaystackPop.setup({
                     key: PAYSTACK_PUBLIC_KEY,
-                    email: USER_EMAIL, // Use the user's actual email
+                    email: paymentData.email, // Use the email returned from the backend
                     amount: amountInPesewas,
                     currency: finalCurrency,
                     ref: paymentData.reference, // Use the reference from the backend
@@ -271,13 +283,10 @@
                         messageDiv.innerHTML = `<p class="text-blue-600 font-semibold">${translations[currentLang].verifyingPayment}</p>`;
                         
                         // Step 3: Call the backend's /payment/success route to verify the transaction
+                        // Use authFetch to send the session cookie
                         try {
-                            const successResponse = await fetch(`${API_BASE_URL}/payment/success`, {
+                            const successResponse = await authFetch(`${API_BASE_URL}/payment/success`, {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${JWT_TOKEN}`
-                                },
                                 body: JSON.stringify({
                                     gateway: 'paystack',
                                     transaction_reference: response.reference

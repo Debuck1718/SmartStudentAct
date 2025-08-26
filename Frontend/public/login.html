@@ -88,7 +88,8 @@
     }
 
     // --- UI and State Management ---
-    const API_BASE_URL = "https://smartstudentact.onrender.com";
+    // Make sure this URL is correct for your backend deployment
+    const API_BASE_URL = "https://smartstudentact.onrender.com"; 
     const emailInput = document.getElementById("emailInput");
     const passwordInput = document.getElementById("passwordInput");
     const loginButton = document.getElementById("loginButton");
@@ -164,7 +165,9 @@
             const response = await fetch(`${API_BASE_URL}/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include", // ✅ Ensures the browser sends the session cookie automatically
+                // This is CRUCIAL! It tells the browser to send the HttpOnly session cookie
+                // which the backend uses for authentication.
+                credentials: "include", 
                 body: JSON.stringify({
                     email: emailInput.value.trim().toLowerCase(),
                     password: passwordInput.value
@@ -185,14 +188,7 @@
                 throw new Error("Server did not return JSON");
             });
 
-            // ✅ Store CSRF token. The session cookie is handled by the browser.
-            if (data.csrfToken) {
-                localStorage.setItem("csrfToken", data.csrfToken);
-            }
-            // ✅ CRITICAL FIX: Store the authToken as well
-            if (data.token) {
-                localStorage.setItem("authToken", data.token);
-            }
+            // ✅ No need to store any tokens here. The browser handles the secure, HttpOnly cookie.
 
             // ✅ Redirect based on role
             switch (data.user?.role) {
@@ -224,4 +220,3 @@
 </script>
 </body>
 </html>
-

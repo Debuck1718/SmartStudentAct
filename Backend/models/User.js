@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       unique: true,
-      sparse: true, // allows some users without phone
+      sparse: true,
       trim: true,
       match: [/^\+?[0-9]{7,15}$/, "Invalid phone number"],
     },
@@ -37,12 +37,24 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 8,
-      select: false, // never returned by default
+      select: false,
+    },
+
+    // 🚩 UPDATED: Added 'global-overseer' to the role enum.
+    // The role is the single source of truth for a user's permissions.
+    role: {
+      type: String,
+      enum: ["student", "teacher", "admin", "overseer", "global-overseer"],
+      required: true,
     },
     occupation: {
       type: String,
       enum: ["student", "teacher", "admin"],
-      required: true,
+      required: function () {
+        // The occupation field is required for students and teachers
+        // It is not required for admin, overseer, or global-overseer
+        return this.role === "student" || this.role === "teacher";
+      },
     },
 
     // --- Student fields ---
@@ -100,7 +112,7 @@ const userSchema = new mongoose.Schema(
       },
     },
     teacherGrade: {
-      type: mongoose.Schema.Types.Mixed, // can be number or string
+      type: [String],
       required: function () {
         return this.occupation === "teacher";
       },
@@ -116,8 +128,7 @@ const userSchema = new mongoose.Schema(
 
     // --- Auth / verification ---
     verified: { type: Boolean, default: false },
-    is_admin: { type: Boolean, default: false },
-    role: { type: String, required: true },
+    // 🚩 REMOVED: is_admin is now redundant. Permissions are handled by the 'role' field.
 
     // --- OTP / Security ---
     otpHash: { type: String, select: false },
@@ -146,17 +157,17 @@ const userSchema = new mongoose.Schema(
     },
     payment_gateway: { type: String, trim: true },
     payment_date: Date,
-
-    // --- Overseer role ---
     managedRegions: {
       type: [String],
       default: [],
     },
 
-    // --- School's country ---
+    // 🚩 UPDATED: The 'schoolCountry' field is now required only for 'student', 'teacher', and 'admin' roles, as specified.
     schoolCountry: {
       type: String,
-      required: true,
+      required: function () {
+        return this.role === "student" || this.role === "teacher" || this.role === "admin";
+      },
       trim: true,
       maxlength: 100,
     },
@@ -170,9 +181,8 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🔒 Password hashing before save
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next(); // only hash if changed
+  if (!this.isModified("password")) return next();
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -182,12 +192,10 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-// 🛡 Password comparison method
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// 🔒 Ensure sensitive fields never leak via JSON
 userSchema.set("toJSON", {
   transform: function (doc, ret) {
     delete ret.password;
@@ -199,7 +207,6 @@ userSchema.set("toJSON", {
   },
 });
 
-// 📌 Indexing for faster queries
 userSchema.index({ email: 1 });
 userSchema.index({ phone: 1 });
 
