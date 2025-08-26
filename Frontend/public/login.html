@@ -60,149 +60,132 @@
     </div>
 
 <script>
+const API_BASE_URL = window.location.hostname === "localhost"
+    ? "http://localhost:4000"
+    : "https://smartstudentact.onrender.com";
 
-    function showBanner(message, type = 'error') {
-        const bannerEl = document.getElementById("banner");
-        bannerEl.textContent = message;
-        bannerEl.classList.remove("hidden");
-        if (type === 'error') {
-            bannerEl.classList.add("bg-red-100", "text-red-700");
-            bannerEl.classList.remove("bg-green-100", "text-green-700", "bg-gray-100", "text-gray-700");
-        } else if (type === 'success') {
-            bannerEl.classList.add("bg-green-100", "text-green-700");
-            bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-gray-100", "text-gray-700");
-        } else { // info
-            bannerEl.classList.add("bg-gray-100", "text-gray-700");
-            bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-green-100", "text-green-700");
+const emailInput = document.getElementById("emailInput");
+const passwordInput = document.getElementById("passwordInput");
+const loginButton = document.getElementById("loginButton");
+const passwordToggle = document.getElementById("passwordToggle");
+const bannerEl = document.getElementById("banner");
+const emailErrorEl = document.getElementById("emailError");
+const passwordErrorEl = document.getElementById("passwordError");
+
+let showPassword = false;
+
+function showBanner(message, type = "error") {
+    bannerEl.textContent = message;
+    bannerEl.classList.remove("hidden");
+    bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-green-100", "text-green-700", "bg-gray-100", "text-gray-700");
+
+    if (type === "error") bannerEl.classList.add("bg-red-100", "text-red-700");
+    else if (type === "success") bannerEl.classList.add("bg-green-100", "text-green-700");
+    else bannerEl.classList.add("bg-gray-100", "text-gray-700");
+}
+
+function hideBanner() {
+    bannerEl.classList.add("hidden");
+}
+
+function setError(el, msg, inputEl) {
+    if (msg) {
+        el.textContent = msg;
+        inputEl.classList.add("border-red-500");
+    } else {
+        el.textContent = "";
+        inputEl.classList.remove("border-red-500");
+    }
+}
+
+function validateEmail(email) {
+    if (!email.trim()) return "Email cannot be empty.";
+    if (!/\S+@\S+\.\S+/.test(email)) return "Please enter a valid email address.";
+    return null;
+}
+
+function validatePassword(password) {
+    if (!password.trim()) return "Password cannot be empty.";
+    if (password.length < 6) return "Password must be at least 6 characters long.";
+    return null;
+}
+
+emailInput.addEventListener("input", () => { setError(emailErrorEl, null, emailInput); hideBanner(); });
+passwordInput.addEventListener("input", () => { setError(passwordErrorEl, null, passwordInput); hideBanner(); });
+
+passwordToggle.addEventListener("click", () => {
+    showPassword = !showPassword;
+    passwordInput.type = showPassword ? "text" : "password";
+    passwordToggle.textContent = showPassword ? "Hide" : "Show";
+});
+
+function setLoading(isLoading) {
+    loginButton.disabled = isLoading;
+    loginButton.innerHTML = isLoading ? '<div class="spinner mx-auto"></div>' : 'Login';
+}
+
+loginButton.addEventListener("click", handleLogin);
+
+async function handleLogin() {
+    setError(emailErrorEl, null, emailInput);
+    setError(passwordErrorEl, null, passwordInput);
+    hideBanner();
+
+    const emailValidation = validateEmail(emailInput.value);
+    const passwordValidation = validatePassword(passwordInput.value);
+
+    setError(emailErrorEl, emailValidation, emailInput);
+    setError(passwordErrorEl, passwordValidation, passwordInput);
+    if (emailValidation || passwordValidation) return;
+
+    setLoading(true);
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/users/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: emailInput.value.trim().toLowerCase(),
+                password: passwordInput.value
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            showBanner(data?.message || "Login failed. Invalid email or password.", "error");
+            return;
         }
-    }
 
-    function hideBanner() {
-        const bannerEl = document.getElementById("banner");
-        bannerEl.classList.add("hidden");
-    }
+        localStorage.setItem("jwtToken", data.token);
 
-    const API_BASE_URL = "https://smartstudentact.onrender.com"; 
-    const emailInput = document.getElementById("emailInput");
-    const passwordInput = document.getElementById("passwordInput");
-    const loginButton = document.getElementById("loginButton");
-    const passwordToggle = document.getElementById("passwordToggle");
-    const emailErrorEl = document.getElementById("emailError");
-    const passwordErrorEl = document.getElementById("passwordError");
-
-    let showPassword = false;
-
-    function setLoading(isLoading) {
-        loginButton.disabled = isLoading;
-        loginButton.innerHTML = isLoading ? '<div class="spinner mx-auto"></div>' : 'Login';
-    }
-
-    function setError(element, message, inputElement) {
-        if (message) {
-            element.textContent = message;
-            inputElement.classList.add("border-red-500");
-        } else {
-            element.textContent = "";
-            inputElement.classList.remove("border-red-500");
+        switch (data.user.role) {
+            case "global_overseer":
+                window.location.href = "/global_overseer.html";
+                break;
+            case "overseer":
+                window.location.href = "/overseer.html";
+                break;
+            case "student":
+                window.location.href = "/students.html";
+                break;
+            case "teacher":
+                window.location.href = "/teachers.html";
+                break;
+            case "admin":
+                window.location.href = "/admin.html";
+                break;
+            default:
+                showBanner("Invalid user role.", "error");
         }
+
+    } catch (err) {
+        console.error("Login error:", err);
+        showBanner("An unexpected error occurred. Please try again later.", "error");
+    } finally {
+        setLoading(false);
     }
-
-    function validateEmail(text) {
-        if (!text.trim()) return "Email cannot be empty.";
-        if (!/\S+@\S+\.\S+/.test(text)) return "Please enter a valid email address.";
-        return null;
-    }
-
-    function validatePassword(text) {
-        if (!text.trim()) return "Password cannot be empty.";
-        if (text.length < 6) return "Password must be at least 6 characters long.";
-        return null;
-    }
-
-    emailInput.addEventListener("input", () => {
-        setError(emailErrorEl, null, emailInput);
-        hideBanner();
-    });
-
-    passwordInput.addEventListener("input", () => {
-        setError(passwordErrorEl, null, passwordInput);
-        hideBanner();
-    });
-
-    passwordToggle.addEventListener("click", () => {
-        showPassword = !showPassword;
-        passwordInput.type = showPassword ? "text" : "password";
-        passwordToggle.textContent = showPassword ? "Hide" : "Show";
-    });
-
-    loginButton.addEventListener("click", handleLogin);
-
-    async function handleLogin() {
-        setError(emailErrorEl, null, emailInput);
-        setError(passwordErrorEl, null, passwordInput);
-        hideBanner();
-
-        const emailValidationResult = validateEmail(emailInput.value);
-        const passwordValidationResult = validatePassword(passwordInput.value);
-
-        setError(emailErrorEl, emailValidationResult, emailInput);
-        setError(passwordErrorEl, passwordValidationResult, passwordInput);
-        if (emailValidationResult || passwordValidationResult) return;
-
-        setLoading(true);
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/users/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-
-                credentials: "include", 
-                body: JSON.stringify({
-                    email: emailInput.value.trim().toLowerCase(),
-                    password: passwordInput.value
-                })
-            });
-
-            if (!response.ok) {
-                if (response.status === 429) {
-                    showBanner("Too many login attempts. Your account is temporarily locked.", 'error');
-                } else {
-                    const data = await response.json().catch(() => {});
-                    showBanner(data?.error || "Login failed. Invalid email or password.", 'error');
-                }
-                return;
-            }
-            
-            const data = await response.json().catch(() => {
-                throw new Error("Server did not return JSON");
-            });
-
-            switch (data.user?.role) {
-                case "global_overseer":
-                    window.location.href = "/global_overseer.html";
-                    break;
-                case "overseer":
-                    window.location.href = "/overseer.html";
-                    break;
-                case "student":
-                    window.location.href = "/students.html";
-                    break;
-                case "teacher":
-                    window.location.href = "/teachers.html";
-                    break;
-                case "admin":
-                    window.location.href = "/admin.html";
-                    break;
-                default:
-                    showBanner("Invalid user role.", 'error');
-            }
-        } catch (error) {
-            showBanner("An unexpected error occurred. Please try again later.", 'error');
-            console.error("Login error:", error);
-        } finally {
-            setLoading(false);
-        }
-    }
+}
 </script>
 </body>
 </html>
