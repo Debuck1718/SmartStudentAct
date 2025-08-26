@@ -113,58 +113,81 @@ module.exports = (eventBus, agenda) => {
   );
 
   publicRouter.post(
-    "/users/verify-otp",
-    validate(verifyOtpSchema),
-    async (req, res) => {
-      const { code, email } = req.body;
-      const signupData = req.session?.signup;
+  "/users/verify-otp",
+  validate(verifyOtpSchema),
+  async (req, res) => {
+    const { code, email } = req.body;
+    const signupData = req.session?.signup;
 
-      if (!signupData || signupData.email !== email || signupData.code !== code)
-        return res.status(400).json({ error: "Invalid OTP or email" });
+    if (!signupData || signupData.email !== email || signupData.code !== code)
+      return res.status(400).json({ error: "Invalid OTP or email" });
 
-      if (Date.now() - signupData.timestamp > 10 * 60 * 1000) {
-        delete req.session.signup;
-        return res.status(400).json({ error: "OTP expired" });
-      }
-
-      try {
-        const hash = await bcrypt.hash(signupData.password, 10);
-        const trialEndDate = new Date();
-        trialEndDate.setDate(trialEndDate.getDate() + 30);
-
-        const newUser = await User.create({
-          ...signupData,
-          password: hash,
-          verified: true,
-          is_admin: signupData.occupation === "admin",
-          role: signupData.occupation,
-          schoolCountry: signupData.schoolCountry,
-          is_on_trial: true,
-          trial_end_date: trialEndDate,
-          subscription_status: "inactive",
-        });
-
-        delete req.session.signup;
-
-        await sendWelcomeEmail(newUser.email, newUser.firstname);
-        eventBus.emit("user_signed_up", {
-          userId: newUser._id,
-          email: newUser.email,
-          occupation: newUser.occupation,
-        });
-
-        res.status(201).json({ message: "Account created successfully." });
-      } catch (err) {
-        if (err.code === 11000) {
-          return res
-            .status(409)
-            .json({ error: "Email or phone already registered." });
-        }
-        logger.error("❌ Verify OTP error:", err);
-        res.status(500).json({ error: "Account creation failed." });
-      }
+    if (Date.now() - signupData.timestamp > 10 * 60 * 1000) {
+      delete req.session.signup;
+      return res.status(400).json({ error: "OTP expired" });
     }
-  );
+
+    try {
+      const hash = await bcrypt.hash(signupData.password, 10);
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 30);
+
+      const newUser = await User.create({
+        ...signupData,
+        password: hash,
+        verified: true,
+        is_admin: signupData.occupation === "admin",
+        role: signupData.occupation,
+        schoolCountry: signupData.schoolCountry,
+        is_on_trial: true,
+        trial_end_date: trialEndDate,
+        subscription_status: "inactive",
+      });
+
+      delete req.session.signup;
+
+      await sendWelcomeEmail(newUser.email, newUser.firstname);
+      eventBus.emit("user_signed_up", {
+        userId: newUser._id,
+        email: newUser.email,
+        occupation: newUser.occupation,
+      });
+
+      const token = jwt.sign(
+        { id: newUser._id, email: newUser.email, role: newUser.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES }
+      );
+
+      res.cookie("access_token", token, {
+        httpOnly: true,
+        secure: true, 
+        sameSite: "None",
+        maxAge: 1000 * 60 * 60 * 24,
+      });
+
+      res.status(201).json({
+        status: "success",
+        message: "Account created successfully.",
+        token,
+        user: {
+          id: newUser._id,
+          email: newUser.email,
+          role: newUser.role,
+        },
+      });
+    } catch (err) {
+      if (err.code === 11000) {
+        return res
+          .status(409)
+          .json({ error: "Email or phone already registered." });
+      }
+      logger.error("❌ Verify OTP error:", err);
+      res.status(500).json({ error: "Account creation failed." });
+    }
+  }
+);
+
 
   publicRouter.post("/users/login", async (req, res) => {
     try {

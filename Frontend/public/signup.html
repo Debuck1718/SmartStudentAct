@@ -1,1013 +1,1252 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign Up</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f4f4;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f4f4f4;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+      .container {
+        width: 100%;
+        max-width: 480px;
+      }
+      .form-section {
+        display: flex;
+        flex-direction: column;
+      }
+      .input,
+      .picker {
+        background-color: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-width: 1px;
+        border-color: #ddd;
+        font-size: 16px;
+        width: 100%;
+      }
+      .input.error,
+      .picker.error {
+        border-color: red;
+      }
+      .error-text {
+        color: red;
+        font-size: 0.875rem;
+        margin-bottom: 10px;
+        margin-left: 4px;
+      }
+      .submit-button {
+        background-color: #28a745;
+        padding: 15px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 55px;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+        border: none;
+        width: 100%;
+        font-weight: bold;
+        color: #fff;
+        font-size: 18px;
+        margin-top: 15px;
+        margin-bottom: 10px;
+      }
+      .submit-button:hover:not(:disabled) {
+        background-color: #218838;
+      }
+      .submit-button:disabled {
+        background-color: #94d3a2;
+        cursor: not-allowed;
+      }
+      .picker-container {
+        background-color: #fff;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: #ddd;
+        margin-bottom: 10px;
+        overflow: hidden;
+        width: 100%;
+      }
+      .picker {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        background-color: transparent;
+        font-size: 16px;
+      }
+      .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid #fff;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-        .container {
-            width: 100%;
-            max-width: 480px;
+        100% {
+          transform: rotate(360deg);
         }
-        .form-section {
-            display: flex;
-            flex-direction: column;
-        }
-        .input, .picker {
-            background-color: #fff;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-width: 1px;
-            border-color: #ddd;
-            font-size: 16px;
-            width: 100%;
-        }
-        .input.error, .picker.error {
-            border-color: red;
-        }
-        .error-text {
-            color: red;
-            font-size: 0.875rem;
-            margin-bottom: 10px;
-            margin-left: 4px;
-        }
-        .submit-button {
-            background-color: #28a745;
-            padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 55px;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
-            border: none;
-            width: 100%;
-            font-weight: bold;
-            color: #fff;
-            font-size: 18px;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-        .submit-button:hover:not(:disabled) {
-            background-color: #218838;
-        }
-        .submit-button:disabled {
-            background-color: #94d3a2;
-            cursor: not-allowed;
-        }
-        .picker-container {
-            background-color: #fff;
-            border-radius: 8px;
-            border-width: 1px;
-            border-color: #ddd;
-            margin-bottom: 10px;
-            overflow: hidden;
-            width: 100%;
-        }
-        .picker {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            background-color: transparent;
-            font-size: 16px;
-        }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .modal-body {
-            overflow-y: auto;
-            margin-bottom: 20px;
-        }
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0,0,0,0);
-            border: 0;
-        }
-        #messageBox { transition: opacity 0.3s; }
+      }
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .modal-content {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-body {
+        overflow-y: auto;
+        margin-bottom: 20px;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+      #messageBox {
+        transition: opacity 0.3s;
+      }
     </style>
-</head>
-<body>
-<div class="container bg-white p-6 rounded-lg shadow-lg">
-    <h1 class="text-center text-2xl font-bold mb-6 text-gray-800">📝 Create Your Account</h1>
+  </head>
+  <body>
+    <div class="container bg-white p-6 rounded-lg shadow-lg">
+      <h1 class="text-center text-2xl font-bold mb-6 text-gray-800">
+        📝 Create Your Account
+      </h1>
 
-    <div id="signupFormSection" class="form-section">
+      <div id="signupFormSection" class="form-section">
         <div class="flex flex-col md:flex-row gap-2 mb-2">
-            <label class="sr-only" for="firstNameInput">First Name</label>
-            <input id="firstNameInput" type="text" placeholder="First Name" class="input flex-1" />
-            <label class="sr-only" for="lastNameInput">Last Name</label>
-            <input id="lastNameInput" type="text" placeholder="Last Name" class="input flex-1" />
+          <label class="sr-only" for="firstNameInput">First Name</label>
+          <input
+            id="firstNameInput"
+            type="text"
+            placeholder="First Name"
+            class="input flex-1"
+          />
+          <label class="sr-only" for="lastNameInput">Last Name</label>
+          <input
+            id="lastNameInput"
+            type="text"
+            placeholder="Last Name"
+            class="input flex-1"
+          />
         </div>
         <p id="firstNameError" class="error-text hidden"></p>
         <p id="lastNameError" class="error-text hidden"></p>
 
         <div class="picker-container">
-            <label class="sr-only" for="occupationSelect">Occupation</label>
-            <select id="occupationSelect" class="picker">
-                <option value="">Select Occupation</option>
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-            </select>
+          <label class="sr-only" for="occupationSelect">Occupation</label>
+          <select id="occupationSelect" class="picker">
+            <option value="">Select Occupation</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+          </select>
         </div>
         <p id="occupationError" class="error-text hidden"></p>
-        
+
         <div id="schoolCountryField" class="picker-container hidden">
-            <label class="sr-only" for="schoolCountrySelect">School Country</label>
-            <select id="schoolCountrySelect" class="picker">
-                <option value="">Select Country</option>
-                <option value="AF">Afghanistan</option>
-                <option value="AX">Aland Islands</option>
-                <option value="AL">Albania</option>
-                <option value="DZ">Algeria</option>
-                <option value="AS">American Samoa</option>
-                <option value="AD">Andorra</option>
-                <option value="AO">Angola</option>
-                <option value="AI">Anguilla</option>
-                <option value="AQ">Antarctica</option>
-                <option value="AG">Antigua and Barbuda</option>
-                <option value="AR">Argentina</option>
-                <option value="AM">Armenia</option>
-                <option value="AW">Aruba</option>
-                <option value="AU">Australia</option>
-                <option value="AT">Austria</option>
-                <option value="AZ">Azerbaijan</option>
-                <option value="BS">Bahamas</option>
-                <option value="BH">Bahrain</option>
-                <option value="BD">Bangladesh</option>
-                <option value="BB">Barbados</option>
-                <option value="BY">Belarus</option>
-                <option value="BE">Belgium</option>
-                <option value="BZ">Belize</option>
-                <option value="BJ">Benin</option>
-                <option value="BM">Bermuda</option>
-                <option value="BT">Bhutan</option>
-                <option value="BO">Bolivia</option>
-                <option value="BA">Bosnia and Herzegovina</option>
-                <option value="BW">Botswana</option>
-                <option value="BR">Brazil</option>
-                <option value="IO">British Indian Ocean Territory</option>
-                <option value="BN">Brunei Darussalam</option>
-                <option value="BG">Bulgaria</option>
-                <option value="BF">Burkina Faso</option>
-                <option value="BI">Burundi</option>
-                <option value="KH">Cambodia</option>
-                <option value="CM">Cameroon</option>
-                <option value="CA">Canada</option>
-                <option value="CV">Cape Verde</option>
-                <option value="KY">Cayman Islands</option>
-                <option value="CF">Central African Republic</option>
-                <option value="TD">Chad</option>
-                <option value="CL">Chile</option>
-                <option value="CN">China</option>
-                <option value="CX">Christmas Island</option>
-                <option value="CC">Cocos (Keeling) Islands</option>
-                <option value="CO">Colombia</option>
-                <option value="KM">Comoros</option>
-                <option value="CG">Congo</option>
-                <option value="CD">Congo, The Democratic Republic of the</option>
-                <option value="CK">Cook Islands</option>
-                <option value="CR">Costa Rica</option>
-                <option value="CI">Cote d'Ivoire</option>
-                <option value="HR">Croatia</option>
-                <option value="CU">Cuba</option>
-                <option value="CY">Cyprus</option>
-                <option value="CZ">Czech Republic</option>
-                <option value="DK">Denmark</option>
-                <option value="DJ">Djibouti</option>
-                <option value="DM">Dominica</option>
-                <option value="DO">Dominican Republic</option>
-                <option value="EC">Ecuador</option>
-                <option value="EG">Egypt</option>
-                <option value="SV">El Salvador</option>
-                <option value="GQ">Equatorial Guinea</option>
-                <option value="ER">Eritrea</option>
-                <option value="EE">Estonia</option>
-                <option value="ET">Ethiopia</option>
-                <option value="FK">Falkland Islands (Malvinas)</option>
-                <option value="FO">Faroe Islands</option>
-                <option value="FJ">Fiji</option>
-                <option value="FI">Finland</option>
-                <option value="FR">France</option>
-                <option value="GF">French Guiana</option>
-                <option value="PF">French Polynesia</option>
-                <option value="TF">French Southern Territories</option>
-                <option value="GA">Gabon</option>
-                <option value="GM">Gambia</option>
-                <option value="GE">Georgia</option>
-                <option value="DE">Germany</option>
-                <option value="GH">Ghana</option>
-                <option value="GI">Gibraltar</option>
-                <option value="GR">Greece</option>
-                <option value="GL">Greenland</option>
-                <option value="GD">Grenada</option>
-                <option value="GP">Guadeloupe</option>
-                <option value="GU">Guam</option>
-                <option value="GT">Guatemala</option>
-                <option value="GG">Guernsey</option>
-                <option value="GN">Guinea</option>
-                <option value="GW">Guinea-Bissau</option>
-                <option value="GY">Guyana</option>
-                <option value="HT">Haiti</option>
-                <option value="HM">Heard Island and McDonald Islands</option>
-                <option value="VA">Holy See (Vatican City State)</option>
-                <option value="HN">Honduras</option>
-                <option value="HK">Hong Kong</option>
-                <option value="HU">Hungary</option>
-                <option value="IS">Iceland</option>
-                <option value="IN">India</option>
-                <option value="ID">Indonesia</option>
-                <option value="IR">Iran, Islamic Republic of</option>
-                <option value="IQ">Iraq</option>
-                <option value="IE">Ireland</option>
-                <option value="IM">Isle of Man</option>
-                <option value="IL">Israel</option>
-                <option value="IT">Italy</option>
-                <option value="JM">Jamaica</option>
-                <option value="JP">Japan</option>
-                <option value="JE">Jersey</option>
-                <option value="JO">Jordan</option>
-                <option value="KZ">Kazakhstan</option>
-                <option value="KE">Kenya</option>
-                <option value="KI">Kiribati</option>
-                <option value="KP">Korea, Democratic People's Republic of</option>
-                <option value="KR">Korea, Republic of</option>
-                <option value="KW">Kuwait</option>
-                <option value="KG">Kyrgyzstan</option>
-                <option value="LA">Lao People's Democratic Republic</option>
-                <option value="LV">Latvia</option>
-                <option value="LB">Lebanon</option>
-                <option value="LS">Lesotho</option>
-                <option value="LR">Liberia</option>
-                <option value="LY">Libyan Arab Jamahiriya</option>
-                <option value="LI">Liechtenstein</option>
-                <option value="LT">Lithuania</option>
-                <option value="LU">Luxembourg</option>
-                <option value="MO">Macao</option>
-                <option value="MK">Macedonia, The Former Yugoslav Republic of</option>
-                <option value="MG">Madagascar</option>
-                <option value="MW">Malawi</option>
-                <option value="MY">Malaysia</option>
-                <option value="MV">Maldives</option>
-                <option value="ML">Mali</option>
-                <option value="MT">Malta</option>
-                <option value="MH">Marshall Islands</option>
-                <option value="MQ">Martinique</option>
-                <option value="MR">Mauritania</option>
-                <option value="MU">Mauritius</option>
-                <option value="YT">Mayotte</option>
-                <option value="MX">Mexico</option>
-                <option value="FM">Micronesia, Federated States of</option>
-                <option value="MD">Moldova, Republic of</option>
-                <option value="MC">Monaco</option>
-                <option value="MN">Mongolia</option>
-                <option value="ME">Montenegro</option>
-                <option value="MS">Montserrat</option>
-                <option value="MA">Morocco</option>
-                <option value="MZ">Mozambique</option>
-                <option value="MM">Myanmar</option>
-                <option value="NA">Namibia</option>
-                <option value="NR">Nauru</option>
-                <option value="NP">Nepal</option>
-                <option value="NL">Netherlands</option>
-                <option value="AN">Netherlands Antilles</option>
-                <option value="NC">New Caledonia</option>
-                <option value="NZ">New Zealand</option>
-                <option value="NI">Nicaragua</option>
-                <option value="NE">Niger</option>
-                <option value="NG">Nigeria</option>
-                <option value="NU">Niue</option>
-                <option value="NF">Norfolk Island</option>
-                <option value="MP">Northern Mariana Islands</option>
-                <option value="NO">Norway</option>
-                <option value="OM">Oman</option>
-                <option value="PK">Pakistan</option>
-                <option value="PW">Palau</option>
-                <option value="PS">Palestinian Territory, Occupied</option>
-                <option value="PA">Panama</option>
-                <option value="PG">Papua New Guinea</option>
-                <option value="PY">Paraguay</option>
-                <option value="PE">Peru</option>
-                <option value="PH">Philippines</option>
-                <option value="PN">Pitcairn</option>
-                <option value="PL">Poland</option>
-                <option value="PT">Portugal</option>
-                <option value="PR">Puerto Rico</option>
-                <option value="QA">Qatar</option>
-                <option value="RE">Reunion</option>
-                <option value="RO">Romania</option>
-                <option value="RU">Russian Federation</option>
-                <option value="RW">Rwanda</option>
-                <option value="SH">Saint Helena</option>
-                <option value="KN">Saint Kitts and Nevis</option>
-                <option value="LC">Saint Lucia</option>
-                <option value="PM">Saint Pierre and Miquelon</option>
-                <option value="VC">Saint Vincent and the Grenadines</option>
-                <option value="WS">Samoa</option>
-                <option value="SM">San Marino</option>
-                <option value="ST">Sao Tome and Principe</option>
-                <option value="SA">Saudi Arabia</option>
-                <option value="SN">Senegal</option>
-                <option value="RS">Serbia</option>
-                <option value="SC">Seychelles</option>
-                <option value="SL">Sierra Leone</option>
-                <option value="SG">Singapore</option>
-                <option value="SK">Slovakia</option>
-                <option value="SI">Slovenia</option>
-                <option value="SB">Solomon Islands</option>
-                <option value="SO">Somalia</option>
-                <option value="ZA">South Africa</option>
-                <option value="GS">South Georgia and the South Sandwich Islands</option>
-                <option value="ES">Spain</option>
-                <option value="LK">Sri Lanka</option>
-                <option value="SD">Sudan</option>
-                <option value="SR">Suriname</option>
-                <option value="SJ">Svalbard and Jan Mayen</option>
-                <option value="SZ">Swaziland</option>
-                <option value="SE">Sweden</option>
-                <option value="CH">Switzerland</option>
-                <option value="SY">Syrian Arab Republic</option>
-                <option value="TW">Taiwan, Province of China</option>
-                <option value="TJ">Tajikistan</option>
-                <option value="TZ">Tanzania, United Republic of</option>
-                <option value="TH">Thailand</option>
-                <option value="TL">Timor-Leste</option>
-                <option value="TG">Togo</option>
-                <option value="TK">Tokelau</option>
-                <option value="TO">Tonga</option>
-                <option value="TT">Trinidad and Tobago</option>
-                <option value="TN">Tunisia</option>
-                <option value="TR">Turkey</option>
-                <option value="TM">Turkmenistan</option>
-                <option value="TC">Turks and Caicos Islands</option>
-                <option value="TV">Tuvalu</option>
-                <option value="UG">Uganda</option>
-                <option value="UA">Ukraine</option>
-                <option value="AE">United Arab Emirates</option>
-                <option value="GB">United Kingdom</option>
-                <option value="US">United States</option>
-                <option value="UM">United States Minor Outlying Islands</option>
-                <option value="UY">Uruguay</option>
-                <option value="UZ">Uzbekistan</option>
-                <option value="VU">Vanuatu</option>
-                <option value="VE">Venezuela</option>
-                <option value="VN">Vietnam</option>
-                <option value="VG">Virgin Islands, British</option>
-                <option value="VI">Virgin Islands, U.S.</option>
-                <option value="WF">Wallis and Futuna</option>
-                <option value="EH">Western Sahara</option>
-                <option value="YE">Yemen</option>
-                <option value="ZM">Zambia</option>
-                <option value="ZW">Zimbabwe</option>
-            </select>
+          <label class="sr-only" for="schoolCountrySelect"
+            >School Country</label
+          >
+          <select id="schoolCountrySelect" class="picker">
+            <option value="">Select Country</option>
+            <option value="AF">Afghanistan</option>
+            <option value="AX">Aland Islands</option>
+            <option value="AL">Albania</option>
+            <option value="DZ">Algeria</option>
+            <option value="AS">American Samoa</option>
+            <option value="AD">Andorra</option>
+            <option value="AO">Angola</option>
+            <option value="AI">Anguilla</option>
+            <option value="AQ">Antarctica</option>
+            <option value="AG">Antigua and Barbuda</option>
+            <option value="AR">Argentina</option>
+            <option value="AM">Armenia</option>
+            <option value="AW">Aruba</option>
+            <option value="AU">Australia</option>
+            <option value="AT">Austria</option>
+            <option value="AZ">Azerbaijan</option>
+            <option value="BS">Bahamas</option>
+            <option value="BH">Bahrain</option>
+            <option value="BD">Bangladesh</option>
+            <option value="BB">Barbados</option>
+            <option value="BY">Belarus</option>
+            <option value="BE">Belgium</option>
+            <option value="BZ">Belize</option>
+            <option value="BJ">Benin</option>
+            <option value="BM">Bermuda</option>
+            <option value="BT">Bhutan</option>
+            <option value="BO">Bolivia</option>
+            <option value="BA">Bosnia and Herzegovina</option>
+            <option value="BW">Botswana</option>
+            <option value="BR">Brazil</option>
+            <option value="IO">British Indian Ocean Territory</option>
+            <option value="BN">Brunei Darussalam</option>
+            <option value="BG">Bulgaria</option>
+            <option value="BF">Burkina Faso</option>
+            <option value="BI">Burundi</option>
+            <option value="KH">Cambodia</option>
+            <option value="CM">Cameroon</option>
+            <option value="CA">Canada</option>
+            <option value="CV">Cape Verde</option>
+            <option value="KY">Cayman Islands</option>
+            <option value="CF">Central African Republic</option>
+            <option value="TD">Chad</option>
+            <option value="CL">Chile</option>
+            <option value="CN">China</option>
+            <option value="CX">Christmas Island</option>
+            <option value="CC">Cocos (Keeling) Islands</option>
+            <option value="CO">Colombia</option>
+            <option value="KM">Comoros</option>
+            <option value="CG">Congo</option>
+            <option value="CD">Congo, The Democratic Republic of the</option>
+            <option value="CK">Cook Islands</option>
+            <option value="CR">Costa Rica</option>
+            <option value="CI">Cote d'Ivoire</option>
+            <option value="HR">Croatia</option>
+            <option value="CU">Cuba</option>
+            <option value="CY">Cyprus</option>
+            <option value="CZ">Czech Republic</option>
+            <option value="DK">Denmark</option>
+            <option value="DJ">Djibouti</option>
+            <option value="DM">Dominica</option>
+            <option value="DO">Dominican Republic</option>
+            <option value="EC">Ecuador</option>
+            <option value="EG">Egypt</option>
+            <option value="SV">El Salvador</option>
+            <option value="GQ">Equatorial Guinea</option>
+            <option value="ER">Eritrea</option>
+            <option value="EE">Estonia</option>
+            <option value="ET">Ethiopia</option>
+            <option value="FK">Falkland Islands (Malvinas)</option>
+            <option value="FO">Faroe Islands</option>
+            <option value="FJ">Fiji</option>
+            <option value="FI">Finland</option>
+            <option value="FR">France</option>
+            <option value="GF">French Guiana</option>
+            <option value="PF">French Polynesia</option>
+            <option value="TF">French Southern Territories</option>
+            <option value="GA">Gabon</option>
+            <option value="GM">Gambia</option>
+            <option value="GE">Georgia</option>
+            <option value="DE">Germany</option>
+            <option value="GH">Ghana</option>
+            <option value="GI">Gibraltar</option>
+            <option value="GR">Greece</option>
+            <option value="GL">Greenland</option>
+            <option value="GD">Grenada</option>
+            <option value="GP">Guadeloupe</option>
+            <option value="GU">Guam</option>
+            <option value="GT">Guatemala</option>
+            <option value="GG">Guernsey</option>
+            <option value="GN">Guinea</option>
+            <option value="GW">Guinea-Bissau</option>
+            <option value="GY">Guyana</option>
+            <option value="HT">Haiti</option>
+            <option value="HM">Heard Island and McDonald Islands</option>
+            <option value="VA">Holy See (Vatican City State)</option>
+            <option value="HN">Honduras</option>
+            <option value="HK">Hong Kong</option>
+            <option value="HU">Hungary</option>
+            <option value="IS">Iceland</option>
+            <option value="IN">India</option>
+            <option value="ID">Indonesia</option>
+            <option value="IR">Iran, Islamic Republic of</option>
+            <option value="IQ">Iraq</option>
+            <option value="IE">Ireland</option>
+            <option value="IM">Isle of Man</option>
+            <option value="IL">Israel</option>
+            <option value="IT">Italy</option>
+            <option value="JM">Jamaica</option>
+            <option value="JP">Japan</option>
+            <option value="JE">Jersey</option>
+            <option value="JO">Jordan</option>
+            <option value="KZ">Kazakhstan</option>
+            <option value="KE">Kenya</option>
+            <option value="KI">Kiribati</option>
+            <option value="KP">Korea, Democratic People's Republic of</option>
+            <option value="KR">Korea, Republic of</option>
+            <option value="KW">Kuwait</option>
+            <option value="KG">Kyrgyzstan</option>
+            <option value="LA">Lao People's Democratic Republic</option>
+            <option value="LV">Latvia</option>
+            <option value="LB">Lebanon</option>
+            <option value="LS">Lesotho</option>
+            <option value="LR">Liberia</option>
+            <option value="LY">Libyan Arab Jamahiriya</option>
+            <option value="LI">Liechtenstein</option>
+            <option value="LT">Lithuania</option>
+            <option value="LU">Luxembourg</option>
+            <option value="MO">Macao</option>
+            <option value="MK">
+              Macedonia, The Former Yugoslav Republic of
+            </option>
+            <option value="MG">Madagascar</option>
+            <option value="MW">Malawi</option>
+            <option value="MY">Malaysia</option>
+            <option value="MV">Maldives</option>
+            <option value="ML">Mali</option>
+            <option value="MT">Malta</option>
+            <option value="MH">Marshall Islands</option>
+            <option value="MQ">Martinique</option>
+            <option value="MR">Mauritania</option>
+            <option value="MU">Mauritius</option>
+            <option value="YT">Mayotte</option>
+            <option value="MX">Mexico</option>
+            <option value="FM">Micronesia, Federated States of</option>
+            <option value="MD">Moldova, Republic of</option>
+            <option value="MC">Monaco</option>
+            <option value="MN">Mongolia</option>
+            <option value="ME">Montenegro</option>
+            <option value="MS">Montserrat</option>
+            <option value="MA">Morocco</option>
+            <option value="MZ">Mozambique</option>
+            <option value="MM">Myanmar</option>
+            <option value="NA">Namibia</option>
+            <option value="NR">Nauru</option>
+            <option value="NP">Nepal</option>
+            <option value="NL">Netherlands</option>
+            <option value="AN">Netherlands Antilles</option>
+            <option value="NC">New Caledonia</option>
+            <option value="NZ">New Zealand</option>
+            <option value="NI">Nicaragua</option>
+            <option value="NE">Niger</option>
+            <option value="NG">Nigeria</option>
+            <option value="NU">Niue</option>
+            <option value="NF">Norfolk Island</option>
+            <option value="MP">Northern Mariana Islands</option>
+            <option value="NO">Norway</option>
+            <option value="OM">Oman</option>
+            <option value="PK">Pakistan</option>
+            <option value="PW">Palau</option>
+            <option value="PS">Palestinian Territory, Occupied</option>
+            <option value="PA">Panama</option>
+            <option value="PG">Papua New Guinea</option>
+            <option value="PY">Paraguay</option>
+            <option value="PE">Peru</option>
+            <option value="PH">Philippines</option>
+            <option value="PN">Pitcairn</option>
+            <option value="PL">Poland</option>
+            <option value="PT">Portugal</option>
+            <option value="PR">Puerto Rico</option>
+            <option value="QA">Qatar</option>
+            <option value="RE">Reunion</option>
+            <option value="RO">Romania</option>
+            <option value="RU">Russian Federation</option>
+            <option value="RW">Rwanda</option>
+            <option value="SH">Saint Helena</option>
+            <option value="KN">Saint Kitts and Nevis</option>
+            <option value="LC">Saint Lucia</option>
+            <option value="PM">Saint Pierre and Miquelon</option>
+            <option value="VC">Saint Vincent and the Grenadines</option>
+            <option value="WS">Samoa</option>
+            <option value="SM">San Marino</option>
+            <option value="ST">Sao Tome and Principe</option>
+            <option value="SA">Saudi Arabia</option>
+            <option value="SN">Senegal</option>
+            <option value="RS">Serbia</option>
+            <option value="SC">Seychelles</option>
+            <option value="SL">Sierra Leone</option>
+            <option value="SG">Singapore</option>
+            <option value="SK">Slovakia</option>
+            <option value="SI">Slovenia</option>
+            <option value="SB">Solomon Islands</option>
+            <option value="SO">Somalia</option>
+            <option value="ZA">South Africa</option>
+            <option value="GS">
+              South Georgia and the South Sandwich Islands
+            </option>
+            <option value="ES">Spain</option>
+            <option value="LK">Sri Lanka</option>
+            <option value="SD">Sudan</option>
+            <option value="SR">Suriname</option>
+            <option value="SJ">Svalbard and Jan Mayen</option>
+            <option value="SZ">Swaziland</option>
+            <option value="SE">Sweden</option>
+            <option value="CH">Switzerland</option>
+            <option value="SY">Syrian Arab Republic</option>
+            <option value="TW">Taiwan, Province of China</option>
+            <option value="TJ">Tajikistan</option>
+            <option value="TZ">Tanzania, United Republic of</option>
+            <option value="TH">Thailand</option>
+            <option value="TL">Timor-Leste</option>
+            <option value="TG">Togo</option>
+            <option value="TK">Tokelau</option>
+            <option value="TO">Tonga</option>
+            <option value="TT">Trinidad and Tobago</option>
+            <option value="TN">Tunisia</option>
+            <option value="TR">Turkey</option>
+            <option value="TM">Turkmenistan</option>
+            <option value="TC">Turks and Caicos Islands</option>
+            <option value="TV">Tuvalu</option>
+            <option value="UG">Uganda</option>
+            <option value="UA">Ukraine</option>
+            <option value="AE">United Arab Emirates</option>
+            <option value="GB">United Kingdom</option>
+            <option value="US">United States</option>
+            <option value="UM">United States Minor Outlying Islands</option>
+            <option value="UY">Uruguay</option>
+            <option value="UZ">Uzbekistan</option>
+            <option value="VU">Vanuatu</option>
+            <option value="VE">Venezuela</option>
+            <option value="VN">Vietnam</option>
+            <option value="VG">Virgin Islands, British</option>
+            <option value="VI">Virgin Islands, U.S.</option>
+            <option value="WF">Wallis and Futuna</option>
+            <option value="EH">Western Sahara</option>
+            <option value="YE">Yemen</option>
+            <option value="ZM">Zambia</option>
+            <option value="ZW">Zimbabwe</option>
+          </select>
         </div>
         <p id="schoolCountryError" class="error-text hidden"></p>
 
         <div id="studentFields" class="hidden">
-            <div class="picker-container">
-                <label class="sr-only" for="educationLevelSelect">Education Level</label>
-                <select id="educationLevelSelect" class="picker">
-                    <option value="">Select Education Level</option>
-                    <option value="junior">Junior</option>
-                    <option value="high">Senior High</option>
-                    <option value="university">University</option>
-                </select>
-            </div>
-            <p id="educationLevelError" class="error-text hidden"></p>
+          <div class="picker-container">
+            <label class="sr-only" for="educationLevelSelect"
+              >Education Level</label
+            >
+            <select id="educationLevelSelect" class="picker">
+              <option value="">Select Education Level</option>
+              <option value="junior">Junior</option>
+              <option value="high">Senior High</option>
+              <option value="university">University</option>
+            </select>
+          </div>
+          <p id="educationLevelError" class="error-text hidden"></p>
 
-            <div id="schoolGradeContainer" class="picker-container hidden">
-                <label class="sr-only" for="schoolGradeSelect">Grade</label>
-                <select id="schoolGradeSelect" class="picker">
-                    <option value="">Select Grade</option>
-                </select>
-            </div>
-            <p id="schoolGradeError" class="error-text hidden"></p>
+          <div id="schoolGradeContainer" class="picker-container hidden">
+            <label class="sr-only" for="schoolGradeSelect">Grade</label>
+            <select id="schoolGradeSelect" class="picker">
+              <option value="">Select Grade</option>
+            </select>
+          </div>
+          <p id="schoolGradeError" class="error-text hidden"></p>
 
-            <div id="universityLevelContainer" class="picker-container hidden">
-                <label class="sr-only" for="universityLevelSelect">University Level</label>
-                <select id="universityLevelSelect" class="picker">
-                    <option value="">Select University Level</option>
-                </select>
-            </div>
-            <p id="universityLevelError" class="error-text hidden"></p>
-            
-            <div id="studentProgram" class="hidden">
-                 <label class="sr-only" for="programInput">Program</label>
-                 <input id="programInput" type="text" placeholder="Program / Course of Study" class="input" />
-                 <p id="programError" class="error-text hidden"></p>
-            </div>
+          <div id="universityLevelContainer" class="picker-container hidden">
+            <label class="sr-only" for="universityLevelSelect"
+              >University Level</label
+            >
+            <select id="universityLevelSelect" class="picker">
+              <option value="">Select University Level</option>
+            </select>
+          </div>
+          <p id="universityLevelError" class="error-text hidden"></p>
 
-            <div id="studentSchoolName" class="hidden">
-                 <label class="sr-only" for="schoolNameInput">School Name</label>
-                 <input id="schoolNameInput" type="text" placeholder="School Name" class="input" />
-                 <p id="schoolNameError" class="error-text hidden"></p>
-            </div>
+          <div id="studentProgram" class="hidden">
+            <label class="sr-only" for="programInput">Program</label>
+            <input
+              id="programInput"
+              type="text"
+              placeholder="Program / Course of Study"
+              class="input"
+            />
+            <p id="programError" class="error-text hidden"></p>
+          </div>
 
-            <div id="studentUniversityName" class="hidden">
-                 <label class="sr-only" for="universityInput">University Name</label>
-                 <input id="universityInput" type="text" placeholder="University Name" class="input" />
-                 <p id="universityError" class="error-text hidden"></p>
-            </div>
+          <div id="studentSchoolName" class="hidden">
+            <label class="sr-only" for="schoolNameInput">School Name</label>
+            <input
+              id="schoolNameInput"
+              type="text"
+              placeholder="School Name"
+              class="input"
+            />
+            <p id="schoolNameError" class="error-text hidden"></p>
+          </div>
+
+          <div id="studentUniversityName" class="hidden">
+            <label class="sr-only" for="universityInput">University Name</label>
+            <input
+              id="universityInput"
+              type="text"
+              placeholder="University Name"
+              class="input"
+            />
+            <p id="universityError" class="error-text hidden"></p>
+          </div>
         </div>
 
         <div id="teacherFields" class="hidden">
-            <div id="teacherGradeLevelContainer" class="picker-container">
-                <label class="sr-only" for="teacherGradeLevelSelect">Grade / Level Taught</label>
-                <select id="teacherGradeLevelSelect" class="picker">
-                    <option value="">Select Grade / Level</option>
-                </select>
-            </div>
-            <p id="teacherGradeLevelError" class="error-text hidden"></p>
-        
-            <div id="teacherSchoolName" class="hidden">
-                <label class="sr-only" for="teacherSchoolInput">School Name</label>
-                <input id="teacherSchoolInput" type="text" placeholder="School Name" class="input" />
-                <p id="teacherSchoolError" class="error-text hidden"></p>
-            </div>
+          <div id="teacherGradeLevelContainer" class="picker-container">
+            <label class="sr-only" for="teacherGradeLevelSelect"
+              >Grade / Level Taught</label
+            >
+            <select id="teacherGradeLevelSelect" class="picker">
+              <option value="">Select Grade / Level</option>
+            </select>
+          </div>
+          <p id="teacherGradeLevelError" class="error-text hidden"></p>
 
-            <div id="teacherSubject" class="hidden">
-                <label class="sr-only" for="teacherSubjectInput">Subject Taught</label>
-                <input id="teacherSubjectInput" type="text" placeholder="Subject / Program Taught" class="input" />
-                <p id="teacherSubjectError" class="error-text hidden"></p>
-            </div>
+          <div id="teacherSchoolName" class="hidden">
+            <label class="sr-only" for="teacherSchoolInput">School Name</label>
+            <input
+              id="teacherSchoolInput"
+              type="text"
+              placeholder="School Name"
+              class="input"
+            />
+            <p id="teacherSchoolError" class="error-text hidden"></p>
+          </div>
+
+          <div id="teacherSubject" class="hidden">
+            <label class="sr-only" for="teacherSubjectInput"
+              >Subject Taught</label
+            >
+            <input
+              id="teacherSubjectInput"
+              type="text"
+              placeholder="Subject / Program Taught"
+              class="input"
+            />
+            <p id="teacherSubjectError" class="error-text hidden"></p>
+          </div>
         </div>
 
         <label class="sr-only" for="phoneInput">Phone</label>
-        <input id="phoneInput" type="tel" placeholder="Phone Number" class="input" />
+        <input
+          id="phoneInput"
+          type="tel"
+          placeholder="Phone Number"
+          class="input"
+        />
         <p id="phoneError" class="error-text hidden"></p>
 
         <input id="emailInput" type="email" placeholder="Email" class="input" />
         <p id="emailError" class="error-text hidden"></p>
 
-        <input id="passwordInput" type="password" placeholder="Password" class="input" />
+        <input
+          id="passwordInput"
+          type="password"
+          placeholder="Password"
+          class="input"
+        />
         <p id="passwordError" class="error-text hidden"></p>
 
-        <input id="confirmPasswordInput" type="password" placeholder="Confirm Password" class="input" />
+        <input
+          id="confirmPasswordInput"
+          type="password"
+          placeholder="Confirm Password"
+          class="input"
+        />
         <p id="confirmPasswordError" class="error-text hidden"></p>
 
         <button id="requestOtpButton" class="submit-button">
-            <span>Sign Up</span>
+          <span>Sign Up</span>
         </button>
 
-        <a href="#" id="termsLink" class="text-sm text-center text-gray-600 underline mt-2">
-            By signing up, you agree to the Terms & Conditions.
+        <a
+          href="#"
+          id="termsLink"
+          class="text-sm text-center text-gray-600 underline mt-2"
+        >
+          By signing up, you agree to the Terms & Conditions.
         </a>
-    </div>
+      </div>
 
-    <div id="otpSection" class="form-section hidden">
-        <label for="otpInput" class="text-sm font-semibold mb-2">Enter OTP sent to your email:</label>
+      <div id="otpSection" class="form-section hidden">
+        <label for="otpInput" class="text-sm font-semibold mb-2"
+          >Enter OTP sent to your email:</label
+        >
         <input id="otpInput" type="text" placeholder="OTP Code" class="input" />
         <p id="otpError" class="error-text hidden"></p>
 
         <button id="verifyOtpButton" class="submit-button">
-            <span>Verify OTP</span>
+          <span>Verify OTP</span>
         </button>
+      </div>
+
+      <a
+        href="login.html"
+        id="loginLink"
+        class="text-center text-blue-600 mt-5 block"
+      >
+        Already have an account? Login
+      </a>
     </div>
 
-    <a href="login.html" id="loginLink" class="text-center text-blue-600 mt-5 block">
-        Already have an account? Login
-    </a>
-</div>
-
-<div id="termsModal" class="modal-overlay">
-    <div class="modal-content">
+    <div id="termsModal" class="modal-overlay">
+      <div class="modal-content">
         <h2 class="text-xl font-bold mb-4">Terms & Conditions</h2>
         <div class="modal-body text-sm text-gray-700">
-            <p class="mb-2">By using SmartStudent, you agree to provide accurate and truthful information. Falsifying registration may result in a permanent ban.</p>
-            <p class="mb-2">Your data is protected and used solely for learning collaboration. No personal data is shared without consent.</p>
-            <p class="mb-2">The platform reserves the right to suspend accounts for violations.</p>
+          <p class="mb-2">
+            By using SmartStudent, you agree to provide accurate and truthful
+            information. Falsifying registration may result in a permanent ban.
+          </p>
+          <p class="mb-2">
+            Your data is protected and used solely for learning collaboration.
+            No personal data is shared without consent.
+          </p>
+          <p class="mb-2">
+            The platform reserves the right to suspend accounts for violations.
+          </p>
         </div>
-        <button id="closeModalButton" class="bg-gray-200 text-gray-800 p-3 rounded-lg font-bold">Close</button>
+        <button
+          id="closeModalButton"
+          class="bg-gray-200 text-gray-800 p-3 rounded-lg font-bold"
+        >
+          Close
+        </button>
+      </div>
     </div>
-</div>
 
-<div id="messageBox" class="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-xl hidden transition-opacity duration-300 z-[1001]">
-    <span id="messageText"></span>
-    <button onclick="document.getElementById('messageBox').classList.add('hidden')" class="ml-4 text-white font-bold">&times;</button>
-</div>
+    <div
+      id="messageBox"
+      class="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-xl hidden transition-opacity duration-300 z-[1001]"
+    >
+      <span id="messageText"></span>
+      <button
+        onclick="document.getElementById('messageBox').classList.add('hidden')"
+        class="ml-4 text-white font-bold"
+      >
+        &times;
+      </button>
+    </div>
 
-<script>
-    const API_SIGNUP_OTP = "https://smartstudentact.onrender.com/api/users/signup-otp";
-    const API_VERIFY_OTP = "https://smartstudentact.onrender.com/api/users/verify-otp";
+    <script>
+      const API_SIGNUP_OTP =
+        "https://smartstudentact.onrender.com/api/users/signup-otp";
+      const API_VERIFY_OTP =
+        "https://smartstudentact.onrender.com/api/users/verify-otp";
 
-    // DOM Elements
-    const signupFormSection = document.getElementById('signupFormSection');
-    const otpSection = document.getElementById('otpSection');
-    const occupationSelect = document.getElementById('occupationSelect');
-    const educationLevelSelect = document.getElementById('educationLevelSelect');
-    const studentFields = document.getElementById('studentFields');
-    const teacherFields = document.getElementById('teacherFields');
-    const schoolCountryField = document.getElementById('schoolCountryField');
-    const schoolGradeContainer = document.getElementById('schoolGradeContainer');
-    const universityLevelContainer = document.getElementById('universityLevelContainer');
-    const schoolGradeSelect = document.getElementById('schoolGradeSelect');
-    const universityLevelSelect = document.getElementById('universityLevelSelect');
-    const teacherGradeLevelSelect = document.getElementById('teacherGradeLevelSelect');
-    const requestOtpButton = document.getElementById('requestOtpButton');
-    const verifyOtpButton = document.getElementById('verifyOtpButton');
-    const loginLink = document.getElementById('loginLink');
-    const termsLink = document.getElementById('termsLink');
-    const termsModal = document.getElementById('termsModal');
-    const closeModalButton = document.getElementById('closeModalButton');
-    const messageBox = document.getElementById('messageBox');
-    const messageText = document.getElementById('messageText');
-    const studentProgram = document.getElementById('studentProgram');
-    const studentSchoolName = document.getElementById('studentSchoolName');
-    const studentUniversityName = document.getElementById('studentUniversityName');
-    const teacherSchoolName = document.getElementById('teacherSchoolName');
-    const teacherSubject = document.getElementById('teacherSubject');
+      // DOM Elements
+      const signupFormSection = document.getElementById("signupFormSection");
+      const otpSection = document.getElementById("otpSection");
+      const occupationSelect = document.getElementById("occupationSelect");
+      const educationLevelSelect = document.getElementById(
+        "educationLevelSelect"
+      );
+      const studentFields = document.getElementById("studentFields");
+      const teacherFields = document.getElementById("teacherFields");
+      const schoolCountryField = document.getElementById("schoolCountryField");
+      const schoolGradeContainer = document.getElementById(
+        "schoolGradeContainer"
+      );
+      const universityLevelContainer = document.getElementById(
+        "universityLevelContainer"
+      );
+      const schoolGradeSelect = document.getElementById("schoolGradeSelect");
+      const universityLevelSelect = document.getElementById(
+        "universityLevelSelect"
+      );
+      const teacherGradeLevelSelect = document.getElementById(
+        "teacherGradeLevelSelect"
+      );
+      const requestOtpButton = document.getElementById("requestOtpButton");
+      const verifyOtpButton = document.getElementById("verifyOtpButton");
+      const loginLink = document.getElementById("loginLink");
+      const termsLink = document.getElementById("termsLink");
+      const termsModal = document.getElementById("termsModal");
+      const closeModalButton = document.getElementById("closeModalButton");
+      const messageBox = document.getElementById("messageBox");
+      const messageText = document.getElementById("messageText");
+      const studentProgram = document.getElementById("studentProgram");
+      const studentSchoolName = document.getElementById("studentSchoolName");
+      const studentUniversityName = document.getElementById(
+        "studentUniversityName"
+      );
+      const teacherSchoolName = document.getElementById("teacherSchoolName");
+      const teacherSubject = document.getElementById("teacherSubject");
 
-    // Form data object
-    const form = {
-        firstName: '', lastName: '', occupation: '', educationLevel: '', grade: '',
-        schoolName: '', university: '', uniLevel: '', program: '', teacherSchool: '',
-        teacherGrade: '', phone: '', email: '', password: '', confirmPassword: '',
-        schoolCountry: '',
-        timezone: 'utc',
-    };
+      // Form data object
+      const form = {
+        firstName: "",
+        lastName: "",
+        occupation: "",
+        educationLevel: "",
+        grade: "",
+        schoolName: "",
+        university: "",
+        uniLevel: "",
+        program: "",
+        teacherSchool: "",
+        teacherGrade: "",
+        phone: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        schoolCountry: "",
+        timezone: "utc",
+      };
 
-    let otpCode = '';
-    let isSubmitting = false;
+      let otpCode = "";
+      let isSubmitting = false;
 
-    // --- Helper Functions ---
+      // --- Helper Functions ---
 
-    /**
-     * Shows a temporary message box for errors or success.
-     * @param {string} message - The message to display.
-     * @param {string} type - The type of message ('error' or 'success').
-     */
-    function showMessage(message, type = 'error') {
+      /**
+       * Shows a temporary message box for errors or success.
+       * @param {string} message - The message to display.
+       * @param {string} type - The type of message ('error' or 'success').
+       */
+      function showMessage(message, type = "error") {
         messageText.textContent = message;
-        messageBox.classList.remove('hidden');
-        if (type === 'error') {
-            messageBox.classList.remove('bg-green-500');
-            messageBox.classList.add('bg-red-500');
+        messageBox.classList.remove("hidden");
+        if (type === "error") {
+          messageBox.classList.remove("bg-green-500");
+          messageBox.classList.add("bg-red-500");
         } else {
-            messageBox.classList.remove('bg-red-500');
-            messageBox.classList.add('bg-green-500');
+          messageBox.classList.remove("bg-red-500");
+          messageBox.classList.add("bg-green-500");
         }
         setTimeout(() => {
-            messageBox.classList.add('hidden');
+          messageBox.classList.add("hidden");
         }, 5000);
-    }
+      }
 
-    /**
-     * Sets the loading state of a button.
-     * @param {HTMLElement} button - The button element.
-     * @param {boolean} isLoading - The new loading state.
-     * @param {string} originalText - The original text to restore.
-     */
-    function setLoadingState(button, isLoading, originalText) {
+      /**
+       * Sets the loading state of a button.
+       * @param {HTMLElement} button - The button element.
+       * @param {boolean} isLoading - The new loading state.
+       * @param {string} originalText - The original text to restore.
+       */
+      function setLoadingState(button, isLoading, originalText) {
         isSubmitting = isLoading;
         button.disabled = isLoading;
         if (isLoading) {
-            button.innerHTML = `<div class="spinner"></div>`;
+          button.innerHTML = `<div class="spinner"></div>`;
         } else {
-            button.innerHTML = `<span>${originalText}</span>`;
+          button.innerHTML = `<span>${originalText}</span>`;
         }
-    }
+      }
 
-    /**
-     * Displays or hides an error message and applies an error style to the input.
-     * @param {string} elementId - The ID of the input or select element.
-     * @param {string | null} message - The error message.
-     */
-    function setError(elementId, message) {
+      /**
+       * Displays or hides an error message and applies an error style to the input.
+       * @param {string} elementId - The ID of the input or select element.
+       * @param {string | null} message - The error message.
+       */
+      function setError(elementId, message) {
         const inputEl = document.getElementById(elementId);
         if (!inputEl) return;
-        const errorEl = document.getElementById(elementId.replace('Input', 'Error').replace('Select', 'Error').replace('Container', 'Error').replace('teacherGradeLevel', 'teacherGradeLevel'));
-        
-        if (message) {
-            errorEl.textContent = message;
-            errorEl.classList.remove('hidden');
-            inputEl.classList.add('error');
-        } else {
-            errorEl.textContent = '';
-            errorEl.classList.add('hidden');
-            inputEl.classList.remove('error');
-        }
-    }
+        const errorEl = document.getElementById(
+          elementId
+            .replace("Input", "Error")
+            .replace("Select", "Error")
+            .replace("Container", "Error")
+            .replace("teacherGradeLevel", "teacherGradeLevel")
+        );
 
-    /**
-     * Validates a single form field.
-     * @param {string} key - The key of the field in the form object.
-     * @param {string} value - The value of the field.
-     * @returns {string | undefined} The error message or undefined.
-     */
-    function validateField(key, value) {
+        if (message) {
+          errorEl.textContent = message;
+          errorEl.classList.remove("hidden");
+          inputEl.classList.add("error");
+        } else {
+          errorEl.textContent = "";
+          errorEl.classList.add("hidden");
+          inputEl.classList.remove("error");
+        }
+      }
+
+      /**
+       * Validates a single form field.
+       * @param {string} key - The key of the field in the form object.
+       * @param {string} value - The value of the field.
+       * @returns {string | undefined} The error message or undefined.
+       */
+      function validateField(key, value) {
         let error;
         switch (key) {
-            case 'firstName':
-            case 'lastName':
-                if (!value.trim()) error = `${key === 'firstName' ? 'First' : 'Last'} name is required.`;
-                break;
-            case 'email':
-                if (!value.trim()) error = 'Email is required.';
-                else if (!/\S+@\S+\.\S+/.test(value)) error = 'Invalid email format.';
-                break;
-            case 'password':
-                if (!value.trim()) error = 'Password is required.';
-                else if (value.length < 8) error = 'Password must be at least 8 characters.';
-                else if (!/[A-Z]/.test(value)) error = 'Password needs an uppercase letter.';
-                else if (!/[a-z]/.test(value)) error = 'Password needs a lowercase letter.';
-                else if (!/[0-9]/.test(value)) error = 'Password needs a number.';
-                else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) error = 'Password needs a special character.';
-                break;
-            case 'confirmPassword':
-                if (value !== form.password) error = 'Passwords do not match.';
-                break;
-            case 'phone':
-                if (value.trim() && !/^\+?[0-9]{7,15}$/.test(value)) error = 'Invalid phone number format.';
-                break;
-            case 'occupation':
-                if (!value) error = 'Occupation is required.';
-                break;
-            case 'schoolCountry':
-                if (!value) error = 'Please select a country.';
-                break;
-            case 'educationLevel':
-                if (form.occupation === 'student' && !value) error = 'Education level is required.';
-                break;
-            case 'schoolGradeSelect':
-                if (form.occupation === 'student' && (form.educationLevel === 'junior' || form.educationLevel === 'high') && !value) error = 'Grade is required.';
-                break;
-            case 'universityLevelSelect':
-                if (form.occupation === 'student' && form.educationLevel === 'university' && !value) error = 'University level is required.';
-                break;
-            case 'program':
-                if (form.occupation === 'student' && form.educationLevel === 'university' && !value.trim()) error = 'Program is required.';
-                break;
-            case 'schoolName':
-                if (form.occupation === 'student' && (form.educationLevel === 'junior' || form.educationLevel === 'high') && !value.trim()) error = 'School name is required.';
-                break;
-            case 'university':
-                if (form.occupation === 'student' && form.educationLevel === 'university' && !value.trim()) error = 'University name is required.';
-                break;
-            case 'teacherGradeLevelSelect':
-                if (form.occupation === 'teacher' && !value) error = 'Grade / Level is required.';
-                break;
-            case 'teacherSchool':
-                if (form.occupation === 'teacher' && !value.trim()) error = 'School name is required.';
-                break;
-            case 'teacherSubject':
-                if (form.occupation === 'teacher' && !value.trim()) error = 'Subject is required.';
-                break;
-            case 'otp':
-                if (!value.trim()) error = 'OTP is required.';
-                break;
-            default:
-                break;
+          case "firstName":
+          case "lastName":
+            if (!value.trim())
+              error = `${
+                key === "firstName" ? "First" : "Last"
+              } name is required.`;
+            break;
+          case "email":
+            if (!value.trim()) error = "Email is required.";
+            else if (!/\S+@\S+\.\S+/.test(value))
+              error = "Invalid email format.";
+            break;
+          case "password":
+            if (!value.trim()) error = "Password is required.";
+            else if (value.length < 8)
+              error = "Password must be at least 8 characters.";
+            else if (!/[A-Z]/.test(value))
+              error = "Password needs an uppercase letter.";
+            else if (!/[a-z]/.test(value))
+              error = "Password needs a lowercase letter.";
+            else if (!/[0-9]/.test(value)) error = "Password needs a number.";
+            else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value))
+              error = "Password needs a special character.";
+            break;
+          case "confirmPassword":
+            if (value !== form.password) error = "Passwords do not match.";
+            break;
+          case "phone":
+            if (value.trim() && !/^\+?[0-9]{7,15}$/.test(value))
+              error = "Invalid phone number format.";
+            break;
+          case "occupation":
+            if (!value) error = "Occupation is required.";
+            break;
+          case "schoolCountry":
+            if (!value) error = "Please select a country.";
+            break;
+          case "educationLevel":
+            if (form.occupation === "student" && !value)
+              error = "Education level is required.";
+            break;
+          case "schoolGradeSelect":
+            if (
+              form.occupation === "student" &&
+              (form.educationLevel === "junior" ||
+                form.educationLevel === "high") &&
+              !value
+            )
+              error = "Grade is required.";
+            break;
+          case "universityLevelSelect":
+            if (
+              form.occupation === "student" &&
+              form.educationLevel === "university" &&
+              !value
+            )
+              error = "University level is required.";
+            break;
+          case "program":
+            if (
+              form.occupation === "student" &&
+              form.educationLevel === "university" &&
+              !value.trim()
+            )
+              error = "Program is required.";
+            break;
+          case "schoolName":
+            if (
+              form.occupation === "student" &&
+              (form.educationLevel === "junior" ||
+                form.educationLevel === "high") &&
+              !value.trim()
+            )
+              error = "School name is required.";
+            break;
+          case "university":
+            if (
+              form.occupation === "student" &&
+              form.educationLevel === "university" &&
+              !value.trim()
+            )
+              error = "University name is required.";
+            break;
+          case "teacherGradeLevelSelect":
+            if (form.occupation === "teacher" && !value)
+              error = "Grade / Level is required.";
+            break;
+          case "teacherSchool":
+            if (form.occupation === "teacher" && !value.trim())
+              error = "School name is required.";
+            break;
+          case "teacherSubject":
+            if (form.occupation === "teacher" && !value.trim())
+              error = "Subject is required.";
+            break;
+          case "otp":
+            if (!value.trim()) error = "OTP is required.";
+            break;
+          default:
+            break;
         }
         return error;
-    }
+      }
 
-    /**
-     * Validates the entire form based on the current state.
-     * @returns {boolean} True if the form is valid, false otherwise.
-     */
-    function validateForm() {
+      /**
+       * Validates the entire form based on the current state.
+       * @returns {boolean} True if the form is valid, false otherwise.
+       */
+      function validateForm() {
         let isValid = true;
-        const fieldsToValidate = ['firstName', 'lastName', 'email', 'password', 'confirmPassword', 'occupation', 'schoolCountry'];
-        
-        if (form.occupation === 'student') {
-            fieldsToValidate.push('educationLevel');
-            if (form.educationLevel === 'university') {
-                fieldsToValidate.push('university', 'universityLevelSelect', 'program');
-            } else if (form.educationLevel === 'junior' || form.educationLevel === 'high') {
-                fieldsToValidate.push('schoolName', 'schoolGradeSelect');
-            }
-        } else if (form.occupation === 'teacher') {
-            fieldsToValidate.push('teacherSchool', 'teacherSubject', 'teacherGradeLevelSelect');
+        const fieldsToValidate = [
+          "firstName",
+          "lastName",
+          "email",
+          "password",
+          "confirmPassword",
+          "occupation",
+          "schoolCountry",
+        ];
+
+        if (form.occupation === "student") {
+          fieldsToValidate.push("educationLevel");
+          if (form.educationLevel === "university") {
+            fieldsToValidate.push(
+              "university",
+              "universityLevelSelect",
+              "program"
+            );
+          } else if (
+            form.educationLevel === "junior" ||
+            form.educationLevel === "high"
+          ) {
+            fieldsToValidate.push("schoolName", "schoolGradeSelect");
+          }
+        } else if (form.occupation === "teacher") {
+          fieldsToValidate.push(
+            "teacherSchool",
+            "teacherSubject",
+            "teacherGradeLevelSelect"
+          );
         }
 
         for (const key of fieldsToValidate) {
-            const elementId = key.endsWith('Select') ? key : `${key}Input`;
-            const value = form[key.replace('Input', '').replace('Select', '').replace('teacherGradeLevel', 'teacherGrade')];
-            const error = validateField(key, value);
-            if (error) {
-                setError(elementId, error);
-                isValid = false;
-            } else {
-                setError(elementId, null);
-            }
+          const elementId = key.endsWith("Select") ? key : `${key}Input`;
+          const value =
+            form[
+              key
+                .replace("Input", "")
+                .replace("Select", "")
+                .replace("teacherGradeLevel", "teacherGrade")
+            ];
+          const error = validateField(key, value);
+          if (error) {
+            setError(elementId, error);
+            isValid = false;
+          } else {
+            setError(elementId, null);
+          }
         }
         return isValid;
-    }
+      }
 
-    /**
-     * Populates a select element with options based on a starting and ending value.
-     * @param {HTMLElement} selectElement - The select element to populate.
-     * @param {string} labelPrefix - The prefix for the option label (e.g., 'Level', 'Grade').
-     * @param {number} start - The starting number.
-     * @param {number} end - The ending number.
-     * @param {number} increment - The increment step.
-     */
-    function populateSelect(selectElement, labelPrefix, start, end, increment) {
+      /**
+       * Populates a select element with options based on a starting and ending value.
+       * @param {HTMLElement} selectElement - The select element to populate.
+       * @param {string} labelPrefix - The prefix for the option label (e.g., 'Level', 'Grade').
+       * @param {number} start - The starting number.
+       * @param {number} end - The ending number.
+       * @param {number} increment - The increment step.
+       */
+      function populateSelect(
+        selectElement,
+        labelPrefix,
+        start,
+        end,
+        increment
+      ) {
         selectElement.innerHTML = `<option value="">Select ${labelPrefix}</option>`;
         for (let i = start; i <= end; i += increment) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `${labelPrefix} ${i}`;
-            selectElement.appendChild(option);
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = `${labelPrefix} ${i}`;
+          selectElement.appendChild(option);
         }
-    }
+      }
 
-    /**
-     * Populates the teacher's grade/level dropdown with both grade and university levels.
-     */
-    function populateTeacherSelect() {
+      /**
+       * Populates the teacher's grade/level dropdown with both grade and university levels.
+       */
+      function populateTeacherSelect() {
         teacherGradeLevelSelect.innerHTML = `<option value="">Select Grade / Level</option>`;
-        
+
         // Populate grades 5-12
         for (let i = 5; i <= 12; i++) {
-            const option = document.createElement('option');
-            option.value = `Grade ${i}`;
-            option.textContent = `Grade ${i}`;
-            teacherGradeLevelSelect.appendChild(option);
+          const option = document.createElement("option");
+          option.value = `Grade ${i}`;
+          option.textContent = `Grade ${i}`;
+          teacherGradeLevelSelect.appendChild(option);
         }
 
         // Populate university levels 100-400
         for (let i = 100; i <= 400; i += 100) {
-            const option = document.createElement('option');
-            option.value = `Level ${i}`;
-            option.textContent = `Level ${i}`;
-            teacherGradeLevelSelect.appendChild(option);
+          const option = document.createElement("option");
+          option.value = `Level ${i}`;
+          option.textContent = `Level ${i}`;
+          teacherGradeLevelSelect.appendChild(option);
         }
-    }
+      }
 
-    // --- Event Handlers ---
+      // --- Event Handlers ---
 
-    // Handle occupation change
-    occupationSelect.addEventListener('change', (e) => {
+      // Handle occupation change
+      occupationSelect.addEventListener("change", (e) => {
         form.occupation = e.target.value;
-        if (form.occupation === 'student') {
-            studentFields.classList.remove('hidden');
-            teacherFields.classList.add('hidden');
-            schoolCountryField.classList.remove('hidden');
-            // Reset teacher fields
-            form.teacherSchool = '';
-            form.teacherSubject = '';
-            form.teacherGrade = '';
-        } else if (form.occupation === 'teacher') {
-            teacherFields.classList.remove('hidden');
-            studentFields.classList.add('hidden');
-            schoolCountryField.classList.remove('hidden');
-            populateTeacherSelect();
-            // Reset student fields
-            form.educationLevel = '';
-            form.grade = '';
-            form.schoolName = '';
-            form.university = '';
-            form.uniLevel = '';
-            form.program = '';
+        if (form.occupation === "student") {
+          studentFields.classList.remove("hidden");
+          teacherFields.classList.add("hidden");
+          schoolCountryField.classList.remove("hidden");
+          // Reset teacher fields
+          form.teacherSchool = "";
+          form.teacherSubject = "";
+          form.teacherGrade = "";
+        } else if (form.occupation === "teacher") {
+          teacherFields.classList.remove("hidden");
+          studentFields.classList.add("hidden");
+          schoolCountryField.classList.remove("hidden");
+          populateTeacherSelect();
+          // Reset student fields
+          form.educationLevel = "";
+          form.grade = "";
+          form.schoolName = "";
+          form.university = "";
+          form.uniLevel = "";
+          form.program = "";
         } else {
-            studentFields.classList.add('hidden');
-            teacherFields.classList.add('hidden');
-            schoolCountryField.classList.add('hidden');
+          studentFields.classList.add("hidden");
+          teacherFields.classList.add("hidden");
+          schoolCountryField.classList.add("hidden");
         }
         // Clear all dynamic fields when occupation changes
-        schoolGradeContainer.classList.add('hidden');
-        universityLevelContainer.classList.add('hidden');
-        studentProgram.classList.add('hidden');
-        studentSchoolName.classList.add('hidden');
-        studentUniversityName.classList.add('hidden');
-        teacherSchoolName.classList.add('hidden');
-        teacherSubject.classList.add('hidden');
-    });
+        schoolGradeContainer.classList.add("hidden");
+        universityLevelContainer.classList.add("hidden");
+        studentProgram.classList.add("hidden");
+        studentSchoolName.classList.add("hidden");
+        studentUniversityName.classList.add("hidden");
+        teacherSchoolName.classList.add("hidden");
+        teacherSubject.classList.add("hidden");
+      });
 
-    // Handle education level change for students
-    educationLevelSelect.addEventListener('change', (e) => {
+      // Handle education level change for students
+      educationLevelSelect.addEventListener("change", (e) => {
         form.educationLevel = e.target.value;
-        schoolGradeContainer.classList.add('hidden');
-        universityLevelContainer.classList.add('hidden');
-        studentProgram.classList.add('hidden');
-        studentSchoolName.classList.add('hidden');
-        studentUniversityName.classList.add('hidden');
+        schoolGradeContainer.classList.add("hidden");
+        universityLevelContainer.classList.add("hidden");
+        studentProgram.classList.add("hidden");
+        studentSchoolName.classList.add("hidden");
+        studentUniversityName.classList.add("hidden");
 
-        if (form.educationLevel === 'junior') {
-            schoolGradeContainer.classList.remove('hidden');
-            studentSchoolName.classList.remove('hidden');
-            populateSelect(schoolGradeSelect, 'Grade', 5, 9, 1);
-        } else if (form.educationLevel === 'high') {
-            schoolGradeContainer.classList.remove('hidden');
-            studentSchoolName.classList.remove('hidden');
-            populateSelect(schoolGradeSelect, 'Grade', 10, 12, 1);
-        } else if (form.educationLevel === 'university') {
-            universityLevelContainer.classList.remove('hidden');
-            studentUniversityName.classList.remove('hidden');
-            studentProgram.classList.remove('hidden');
-            populateSelect(universityLevelSelect, 'Level', 100, 400, 100);
+        if (form.educationLevel === "junior") {
+          schoolGradeContainer.classList.remove("hidden");
+          studentSchoolName.classList.remove("hidden");
+          populateSelect(schoolGradeSelect, "Grade", 5, 9, 1);
+        } else if (form.educationLevel === "high") {
+          schoolGradeContainer.classList.remove("hidden");
+          studentSchoolName.classList.remove("hidden");
+          populateSelect(schoolGradeSelect, "Grade", 10, 12, 1);
+        } else if (form.educationLevel === "university") {
+          universityLevelContainer.classList.remove("hidden");
+          studentUniversityName.classList.remove("hidden");
+          studentProgram.classList.remove("hidden");
+          populateSelect(universityLevelSelect, "Level", 100, 400, 100);
         }
-    });
+      });
 
-    // Handle grade/level selection for students
-    schoolGradeSelect.addEventListener('change', (e) => {
+      // Handle grade/level selection for students
+      schoolGradeSelect.addEventListener("change", (e) => {
         form.grade = e.target.value;
-    });
+      });
 
-    universityLevelSelect.addEventListener('change', (e) => {
+      universityLevelSelect.addEventListener("change", (e) => {
         form.uniLevel = e.target.value;
-    });
+      });
 
-    // Handle grade/level selection for teachers
-    teacherGradeLevelSelect.addEventListener('change', (e) => {
+      // Handle grade/level selection for teachers
+      teacherGradeLevelSelect.addEventListener("change", (e) => {
         form.teacherGrade = e.target.value;
         if (form.teacherGrade) {
-            teacherSchoolName.classList.remove('hidden');
-            teacherSubject.classList.remove('hidden');
+          teacherSchoolName.classList.remove("hidden");
+          teacherSubject.classList.remove("hidden");
         } else {
-            teacherSchoolName.classList.add('hidden');
-            teacherSubject.classList.add('hidden');
+          teacherSchoolName.classList.add("hidden");
+          teacherSubject.classList.add("hidden");
         }
-    });
+      });
 
-// --- Form Submission Logic ---
+      // --- Form Submission Logic ---
 
-requestOtpButton.addEventListener('click', async () => {
-    if (isSubmitting) return;
-
-    // Build form object with only required fields for backend
-    const form = {
-        firstname: document.getElementById('firstNameInput').value.trim(),
-        lastname: document.getElementById('lastNameInput').value.trim(),
-        email: document.getElementById('emailInput').value.trim(),
-        password: document.getElementById('passwordInput').value,
-        phone: document.getElementById('phoneInput').value.trim(),
-        schoolCountry: document.getElementById('schoolCountrySelect').value, // ISO2 code
-        occupation: document.getElementById('occupationSelect').value
-    };
-
-    if (form.occupation === 'student') {
-        form.educationLevel = educationLevelSelect.value;
-
-        if (form.educationLevel === 'university') {
-            form.university = document.getElementById('universityInput').value.trim();
-            // 🔹 UI shows "Level 100" but backend expects "100"
-            const uniLevelVal = universityLevelSelect.value; 
-            form.uniLevel = uniLevelVal ? uniLevelVal.replace("Level ", "") : null;
-            form.program = document.getElementById('programInput').value.trim();
-        } else if (form.educationLevel === 'junior' || form.educationLevel === 'high') {
-            const gradeVal = schoolGradeSelect.value; 
-            // 🔹 UI shows "Grade 5" but backend expects 5
-            form.grade = gradeVal ? parseInt(gradeVal.replace("Grade ", ""), 10) : null;
-            form.schoolName = document.getElementById('schoolNameInput').value.trim();
-        }
-    } else if (form.occupation === 'teacher') {
-        const gradeVal = teacherGradeLevelSelect.value;
-
-        if (gradeVal) {
-            if (gradeVal.startsWith("Grade")) {
-                // 🔹 "Grade 12" → 12
-                form.teacherGrade = parseInt(gradeVal.replace("Grade ", ""), 10);
-            } else if (gradeVal.startsWith("Level")) {
-                // 🔹 "Level 200" → "200"
-                form.teacherGrade = gradeVal.replace("Level ", "");
-            }
-        }
-
-        form.teacherSchool = document.getElementById('teacherSchoolInput').value.trim();
-        form.teacherSubject = document.getElementById('teacherSubjectInput').value.trim();
-    }
-
-    // --- Frontend-only validation ---
-    if (!validateForm()) {
-        showMessage('Please correct the errors in the form.');
-        return;
-    }
-
-    setLoadingState(requestOtpButton, true, 'Sign Up');
-
-    try {
-        const response = await fetch(API_SIGNUP_OTP, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(form)
-        });
-
-        const data = await response.json();
-
-        if (data.status === 'success') {
-            showMessage(data.message, 'success');
-            signupFormSection.classList.add('hidden');
-            otpSection.classList.remove('hidden');
-        } else {
-            showMessage(data.message || 'An error occurred during sign up.');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showMessage('Network error. Please try again.');
-    } finally {
-        setLoadingState(requestOtpButton, false, 'Sign Up');
-    }
-});
-
-    // Event listener for the Verify OTP button
-      verifyOtpButton.addEventListener('click', async () => {
+      requestOtpButton.addEventListener("click", async () => {
         if (isSubmitting) return;
 
-        const otpInput = document.getElementById('otpInput').value;
-        if (!otpInput) {
-            setError('otpInput', 'OTP is required.');
-            return;
-        } else {
-            setError('otpInput', null);
+        // Build form object with only required fields for backend
+        const form = {
+          firstname: document.getElementById("firstNameInput").value.trim(),
+          lastname: document.getElementById("lastNameInput").value.trim(),
+          email: document.getElementById("emailInput").value.trim(),
+          password: document.getElementById("passwordInput").value,
+          phone: document.getElementById("phoneInput").value.trim(),
+          schoolCountry: document.getElementById("schoolCountrySelect").value, // ISO2 code
+          occupation: document.getElementById("occupationSelect").value,
+        };
+
+        if (form.occupation === "student") {
+          form.educationLevel = educationLevelSelect.value;
+
+          if (form.educationLevel === "university") {
+            form.university = document
+              .getElementById("universityInput")
+              .value.trim();
+            // 🔹 UI shows "Level 100" but backend expects "100"
+            const uniLevelVal = universityLevelSelect.value;
+            form.uniLevel = uniLevelVal
+              ? uniLevelVal.replace("Level ", "")
+              : null;
+            form.program = document.getElementById("programInput").value.trim();
+          } else if (
+            form.educationLevel === "junior" ||
+            form.educationLevel === "high"
+          ) {
+            const gradeVal = schoolGradeSelect.value;
+            // 🔹 UI shows "Grade 5" but backend expects 5
+            form.grade = gradeVal
+              ? parseInt(gradeVal.replace("Grade ", ""), 10)
+              : null;
+            form.schoolName = document
+              .getElementById("schoolNameInput")
+              .value.trim();
+          }
+        } else if (form.occupation === "teacher") {
+          const gradeVal = teacherGradeLevelSelect.value;
+
+          if (gradeVal) {
+            if (gradeVal.startsWith("Grade")) {
+              // 🔹 "Grade 12" → 12
+              form.teacherGrade = parseInt(gradeVal.replace("Grade ", ""), 10);
+            } else if (gradeVal.startsWith("Level")) {
+              // 🔹 "Level 200" → "200"
+              form.teacherGrade = gradeVal.replace("Level ", "");
+            }
+          }
+
+          form.teacherSchool = document
+            .getElementById("teacherSchoolInput")
+            .value.trim();
+          form.teacherSubject = document
+            .getElementById("teacherSubjectInput")
+            .value.trim();
         }
 
-        setLoadingState(verifyOtpButton, true, 'Verify OTP');
+        // --- Frontend-only validation ---
+        if (!validateForm()) {
+          showMessage("Please correct the errors in the form.");
+          return;
+        }
+
+        setLoadingState(requestOtpButton, true, "Sign Up");
 
         try {
-            const response = await fetch(API_VERIFY_OTP, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: form.email, otp: otpInput })
-            });
-            const data = await response.json();
+          const response = await fetch(API_SIGNUP_OTP, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form),
+          });
 
-            if (data.status === 'success') {
-                showMessage('Account successfully created! Redirecting...', 'success');
+          const data = await response.json();
 
-                // 🔹 Save user role locally (optional for later use)
-                const userRole = form.occupation; // already set during signup
-
-                // 🔹 Redirect based on role
-                if (userRole === 'student') {
-                    window.location.href = 'students.html';
-                } else if (userRole === 'teacher') {
-                    window.location.href = 'teachers.html';
-                } else {
-                    // fallback if role is missing
-                    window.location.href = 'index.html';
-                }
-            } else {
-                showMessage(data.message || 'OTP verification failed. Please try again.');
-            }
+          if (data.status === "success") {
+            showMessage(data.message, "success");
+            signupFormSection.classList.add("hidden");
+            otpSection.classList.remove("hidden");
+          } else {
+            showMessage(data.message || "An error occurred during sign up.");
+          }
         } catch (error) {
-            console.error('Error:', error);
-            showMessage('Network error. Please try again.');
+          console.error("Error:", error);
+          showMessage("Network error. Please try again.");
         } finally {
-            setLoadingState(verifyOtpButton, false, 'Verify OTP');
+          setLoadingState(requestOtpButton, false, "Sign Up");
         }
-    });
-    // Modal event listeners
-    termsLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        termsModal.style.display = 'flex';
-    });
-    closeModalButton.addEventListener('click', () => {
-        termsModal.style.display = 'none';
-    });
-    termsModal.addEventListener('click', (e) => {
-        if (e.target === termsModal) {
-            termsModal.style.display = 'none';
-        }
-    });
+      });
 
-</script>
-</body>
+      // Event listener for the Verify OTP button
+      verifyOtpButton.addEventListener("click", async () => {
+        if (isSubmitting) return;
+
+        const otpInput = document.getElementById("otpInput").value;
+        if (!otpInput) {
+          setError("otpInput", "OTP is required.");
+          return;
+        } else {
+          setError("otpInput", null);
+        }
+
+        setLoadingState(verifyOtpButton, true, "Verify OTP");
+
+        try {
+          const response = await fetch(API_VERIFY_OTP, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include", // ✅ important for httpOnly cookie
+            body: JSON.stringify({ email: form.email, code: otpInput }), // ✅ backend expects "code"
+          });
+          const data = await response.json();
+
+          if (data.status === "success" && data.user) {
+            showMessage(
+              "Account successfully created! Redirecting...",
+              "success"
+            );
+
+            // 🔹 Save role & token locally if needed
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("userRole", data.user.role);
+            localStorage.setItem("userId", data.user.id);
+
+            // 🔹 Redirect based on backend role
+            const userRole = data.user.role;
+
+            if (userRole === "student") {
+              window.location.href = "students.html";
+            } else if (userRole === "teacher") {
+              window.location.href = "teachers.html";
+            } else if (userRole === "global_overseer") {
+              window.location.href = "global_overseer.html";
+            } else if (userRole === "overseer") {
+              window.location.href = "overseer.html";
+            } else if (userRole === "admin") {
+              window.location.href = "admin.html";
+            } else {
+              // fallback
+              window.location.href = "index.html";
+            }
+          } else {
+            showMessage(
+              data.error || "OTP verification failed. Please try again."
+            );
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          showMessage("Network error. Please try again.");
+        } finally {
+          setLoadingState(verifyOtpButton, false, "Verify OTP");
+        }
+      });
+
+      // Modal event listeners
+      termsLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        termsModal.style.display = "flex";
+      });
+      closeModalButton.addEventListener("click", () => {
+        termsModal.style.display = "none";
+      });
+      termsModal.addEventListener("click", (e) => {
+        if (e.target === termsModal) {
+          termsModal.style.display = "none";
+        }
+      });
+    </script>
+  </body>
 </html>
