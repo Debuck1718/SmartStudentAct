@@ -121,116 +121,83 @@
     </div>
 
 <script>
-const API_BASE_URL = "https://smartstudentact.onrender.com/api"; 
-const emailInput = document.getElementById("emailInput");
-const passwordInput = document.getElementById("passwordInput");
-const loginButton = document.getElementById("loginButton");
-const passwordToggle = document.getElementById("passwordToggle");
-const emailErrorEl = document.getElementById("emailError");
-const passwordErrorEl = document.getElementById("passwordError");
-const bannerEl = document.getElementById("banner");
+const API_BASE_URL = "https://smartstudentact.onrender.com/api";
+const appContainer = document.getElementById("app-container");
 
-let showPassword = false;
-
-function showBanner(message, type = 'error') {
-    bannerEl.textContent = message;
-    bannerEl.classList.remove("hidden");
-    bannerEl.classList.remove("bg-red-100","text-red-700","bg-green-100","text-green-700","bg-gray-100","text-gray-700");
-    if(type === 'error') bannerEl.classList.add("bg-red-100","text-red-700");
-    else if(type === 'success') bannerEl.classList.add("bg-green-100","text-green-700");
-    else bannerEl.classList.add("bg-gray-100","text-gray-700");
+// Helper: show a simple loading spinner
+function showLoading() {
+  appContainer.innerHTML = '<div class="spinner mx-auto"></div>';
 }
 
-function hideBanner() {
-    bannerEl.classList.add("hidden");
+// Helper: show error
+function showError(message) {
+  appContainer.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
 }
 
-function setError(el, message, inputEl) {
-    if(message) {
-        el.textContent = message;
-        inputEl.classList.add("border-red-500");
-    } else {
-        el.textContent = "";
-        inputEl.classList.remove("border-red-500");
-    }
-}
+// Fetch dashboard data
+async function loadDashboard() {
+  const token = localStorage.getItem("jwt_token");
+  if (!token) {
+    showError("Not logged in. Please log in first.");
+    setTimeout(() => {
+      window.location.href = "/login.html";
+    }, 2000);
+    return;
+  }
 
-function validateEmail(email) {
-    if(!email.trim()) return "Email cannot be empty.";
-    if(!/\S+@\S+\.\S+/.test(email)) return "Please enter a valid email address.";
-    return null;
-}
+  showLoading();
 
-function validatePassword(pw) {
-    if(!pw.trim()) return "Password cannot be empty.";
-    if(pw.length < 6) return "Password must be at least 6 characters.";
-    return null;
-}
+  try {
+    const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard-overview`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
 
-emailInput.addEventListener("input", () => { setError(emailErrorEl, null, emailInput); hideBanner(); });
-passwordInput.addEventListener("input", () => { setError(passwordErrorEl, null, passwordInput); hideBanner(); });
-passwordToggle.addEventListener("click", () => {
-    showPassword = !showPassword;
-    passwordInput.type = showPassword ? "text" : "password";
-    passwordToggle.textContent = showPassword ? "Hide" : "Show";
-});
+    const data = await res.json();
 
-loginButton.addEventListener("click", handleLogin);
-
-async function handleLogin() {
-    setError(emailErrorEl, null, emailInput);
-    setError(passwordErrorEl, null, passwordInput);
-    hideBanner();
-
-    const emailErr = validateEmail(emailInput.value);
-    const pwErr = validatePassword(passwordInput.value);
-    if(emailErr || pwErr) {
-        setError(emailErrorEl, emailErr, emailInput);
-        setError(passwordErrorEl, pwErr, passwordInput);
-        return;
+    if (!res.ok) {
+      showError(data.message || "Failed to load dashboard.");
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem("jwt_token");
+        setTimeout(() => window.location.href = "/login.html", 2000);
+      }
+      return;
     }
 
-    loginButton.disabled = true;
-    loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
-
-    try {
-        const res = await fetch(`${API_BASE_URL}/users/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                email: emailInput.value.trim().toLowerCase(),
-                password: passwordInput.value
-            })
-        });
-
-        const data = await res.json();
-
-        if(!res.ok) {
-            showBanner(data.message || "Login failed. Invalid credentials.", 'error');
-            return;
-        }
-
-        // Save JWT in localStorage or sessionStorage
-        localStorage.setItem("jwt_token", data.token);
-
-        // Redirect based on role
-        switch(data.user?.role) {
-            case "global_overseer": window.location.href = "/global_overseer.html"; break;
-            case "overseer": window.location.href = "/overseer.html"; break;
-            case "admin": window.location.href = "/admin.html"; break;
-            case "teacher": window.location.href = "/teachers.html"; break;
-            case "student": window.location.href = "/students.html"; break;
-            default: showBanner("Unknown user role.", "error");
-        }
-
-    } catch(err) {
-        console.error("Login error:", err);
-        showBanner("An unexpected error occurred. Please try again later.", "error");
-    } finally {
-        loginButton.disabled = false;
-        loginButton.innerHTML = 'Login';
-    }
+    renderDashboard(data);
+  } catch (err) {
+    console.error(err);
+    showError("An unexpected error occurred while loading the dashboard.");
+  }
 }
+
+// Render dashboard UI
+function renderDashboard(data) {
+  let html = `<h1 class="text-2xl font-bold mb-4">Global Overseer Dashboard</h1>`;
+  html += `<p class="mb-4">Total Users: ${data.totalUsers}</p>`;
+  html += `<div class="space-y-4">`;
+
+  data.managedRegions.forEach(region => {
+    html += `
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="font-semibold">${region.name}</h2>
+        <p>Schools: ${region.totalSchools}</p>
+        <p>Admins: ${region.totalAdmins}</p>
+        <p>Teachers: ${region.totalTeachers}</p>
+        <p>Students: ${region.totalStudents}</p>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  appContainer.innerHTML = html;
+}
+
+// Load dashboard on page load
+window.addEventListener("DOMContentLoaded", loadDashboard);
 </script>
+
   </body>
 </html>
