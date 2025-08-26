@@ -1,4 +1,4 @@
-// server.js – SmartStudent Backend Startup
+// server.js – SmartStudent Backend Startup (JWT-Only Edition)
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -7,8 +7,6 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const Agenda = require("agenda");
 const EventEmitter = require("events");
-const session = require("express-session");
-const MongoStore = require("connect-mongo");
 const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
 const http = require("http");
@@ -18,21 +16,20 @@ const eventBus = new EventEmitter();
 
 // ───────────────────────────────────────────────
 // 1️⃣ Environment Validation
-// ───────────────────────────────────────────────────
+// ───────────────────────────────────────────────
 const requiredEnvVars = [
-    "PORT",
-    "MONGODB_URI",
-    "SESSION_SECRET",
-    "JWT_SECRET",
-    "CLOUDINARY_CLOUD_NAME",
-    "CLOUDINARY_API_KEY",
-    "CLOUDINARY_API_SECRET",
+  "PORT",
+  "MONGODB_URI",
+  "JWT_SECRET",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
+  "CLOUDINARY_API_SECRET",
 ];
 requiredEnvVars.forEach((key) => {
-    if (!process.env[key]) {
-        console.error(`❌ Missing required env variable: ${key}`);
-        process.exit(1);
-    }
+  if (!process.env[key]) {
+    console.error(`❌ Missing required env variable: ${key}`);
+    process.exit(1);
+  }
 });
 
 const PORT = process.env.PORT || 4000;
@@ -47,174 +44,148 @@ const app = express();
 app.set("trust proxy", 1); // trust proxy for HTTPS + cookies
 
 // ✅ Middleware Mounting
-// Order is important here: logging, security, body parsers, then routes.
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ Centralized CORS Configuration for all environments
+// ✅ Centralized CORS Configuration
 app.use(
-    cors({
-        // For development, allow localhost and Render URLs for flexibility.
-        // For production, strictly allow only your production domains.
-        origin: (origin, callback) => {
-            const allowedOrigins = [
-                "http://localhost:3000",
-                "http://localhost:4000",
-                "https://smartstudentact.com",
-                /.*\.smartstudentact\.com$/,
-                /.*\.onrender\.com$/, // For testing on Render
-            ];
-            if (!origin || allowedOrigins.some(pattern => typeof pattern === 'string' ? pattern === origin : pattern.test(origin))) {
-                return callback(null, true);
-            } else {
-                return callback(new Error("Not allowed by CORS"));
-            }
-        },
-        credentials: true,
-        allowedHeaders: ["Content-Type", "Authorization", "Set-Cookie"],
-        exposedHeaders: ["Set-Cookie"],
-    })
-);
-
-
-// ───────────────────────────────────────────────
-// 3️⃣ Session Middleware
-// ───────────────────────────────────────────────
-app.use(
-    session({
-        name: "ssid", // custom cookie name
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        store: MongoStore.create({
-            mongoUrl: MONGO_URI,
-            collectionName: "sessions",
-            ttl: 14 * 24 * 60 * 60, // 14 days
-        }),
-        cookie: {
-            httpOnly: true,
-            secure: isProd,
-            sameSite: isProd ? "strict" : "lax", // 'lax' for dev to allow requests from other origins
-            domain: isProd ? ".smartstudentact.com" : undefined,
-            maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-        },
-    })
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "http://localhost:3000",
+        "http://localhost:4000",
+        "https://smartstudentact.com",
+        /.*\.smartstudentact\.com$/,
+        /.*\.onrender\.com$/, // For Render testing
+      ];
+      if (
+        !origin ||
+        allowedOrigins.some((pattern) =>
+          typeof pattern === "string" ? pattern === origin : pattern.test(origin)
+        )
+      ) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "Set-Cookie"],
+    exposedHeaders: ["Set-Cookie"],
+  })
 );
 
 // ───────────────────────────────────────────────
-// 4️⃣ Cloudinary
+// 3️⃣ Cloudinary
 // ───────────────────────────────────────────────
 try {
-    cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-    });
-    console.log("✅ Cloudinary configured successfully!");
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  console.log("✅ Cloudinary configured successfully!");
 } catch (error) {
-    console.error("❌ Cloudinary config error", error);
-    process.exit(1);
+  console.error("❌ Cloudinary config error", error);
+  process.exit(1);
 }
 
 // ───────────────────────────────────────────────
-// 5️⃣ MongoDB
+// 4️⃣ MongoDB
 // ───────────────────────────────────────────────
 async function connectMongo() {
-    try {
-        console.log(`📡 Connecting to MongoDB...`);
-        await mongoose.connect(MONGO_URI);
-        console.log("✅ MongoDB connected successfully!");
-    } catch (err) {
-        console.error("❌ MongoDB connection error:", err);
-        throw err; // Propagate the error to the calling function
-    }
+  try {
+    console.log(`📡 Connecting to MongoDB...`);
+    await mongoose.connect(MONGO_URI);
+    console.log("✅ MongoDB connected successfully!");
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err);
+    throw err;
+  }
 }
 
 // ───────────────────────────────────────────────
-// 6️⃣ Agenda Jobs
+// 5️⃣ Agenda Jobs
 // ───────────────────────────────────────────────
 let agenda;
 async function startAgenda() {
-    try {
-        agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
+  try {
+    agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
 
-        agenda.define("test job", async () => {
-            console.log(`⏳ Running test job at ${new Date().toISOString()}`);
-        });
+    agenda.define("test job", async () => {
+      console.log(`⏳ Running test job at ${new Date().toISOString()}`);
+    });
 
-        await agenda.start();
-        await agenda.every("1 minute", "test job");
+    await agenda.start();
+    await agenda.every("1 minute", "test job");
 
-        console.log("📅 Agenda job scheduler started!");
-    } catch (err) {
-        console.error("❌ Agenda startup error:", err);
-        throw err; // Propagate the error
-    }
+    console.log("📅 Agenda job scheduler started!");
+  } catch (err) {
+    console.error("❌ Agenda startup error:", err);
+    throw err;
+  }
 }
 
 // ───────────────────────────────────────────────
-// 7️⃣ Routes
+// 6️⃣ Routes
 // ───────────────────────────────────────────────
 try {
-    // ✅ Mount public routes first
-    const publicRoutes = require("./routes/publicRoutes");
-    app.use("/", publicRoutes(eventBus, agenda));
+  const publicRoutes = require("./routes/publicRoutes");
+  app.use("/", publicRoutes(eventBus, agenda));
 
-    // ✅ Mount protected routes under /api with NO CSRF protection
-    const protectedRoutes = require("./routes/protectedRoutes");
-    app.use("/api", protectedRoutes);
+  const protectedRoutes = require("./routes/protectedRoutes");
+  app.use("/api", protectedRoutes);
 
-    console.log("✅ Routes loaded successfully!");
+  console.log("✅ Routes loaded successfully!");
 } catch (err) {
-    console.error("❌ Routes loading error:", err);
-    process.exit(1);
+  console.error("❌ Routes loading error:", err);
+  process.exit(1);
 }
 
 // ───────────────────────────────────────────────
-// 8️⃣ Root Route
+// 7️⃣ Root Route
 // ───────────────────────────────────────────────
 app.get("/", (req, res) => {
-    res.json({ message: "SmartStudentAct Backend Running 🚀" });
+  res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
 // ───────────────────────────────────────────────
-// 9️⃣ Global Error Handler
+// 8️⃣ Global Error Handler
 // ───────────────────────────────────────────────
 app.use((err, req, res, next) => {
-    // Log the full error stack in development for debugging
-    if (NODE_ENV === "development") {
-        console.error("❌ Global error handler caught:", err);
-    }
+  if (NODE_ENV === "development") {
+    console.error("❌ Global error handler caught:", err);
+  }
 
-    const statusCode = err.status || 500;
-    const message = err.message || "An unexpected server error occurred.";
+  const statusCode = err.status || 500;
+  const message = err.message || "An unexpected server error occurred.";
 
-    res.status(statusCode).json({
-        error: message,
-        details: NODE_ENV === "development" ? err.stack : undefined, // Send stack trace only in dev
-    });
+  res.status(statusCode).json({
+    error: message,
+    details: NODE_ENV === "development" ? err.stack : undefined,
+  });
 });
 
 // ───────────────────────────────────────────────
-// 🔟 Start Server
+// 9️⃣ Start Server
 // ───────────────────────────────────────────────
 const server = http.createServer(app);
 
 async function startApp() {
-    try {
-        await connectMongo();
-        await startAgenda();
+  try {
+    await connectMongo();
+    await startAgenda();
 
-        server.listen(PORT, () => {
-            console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
-        });
-    } catch (err) {
-        console.error("❌ Fatal startup error:", err);
-        process.exit(1);
-    }
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
+    });
+  } catch (err) {
+    console.error("❌ Fatal startup error:", err);
+    process.exit(1);
+  }
 }
 
 startApp();
