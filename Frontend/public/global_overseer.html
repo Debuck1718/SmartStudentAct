@@ -124,32 +124,31 @@
 const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 const appContainer = document.getElementById("app-container");
 
-// Helper: show a simple loading spinner
+// Show a loading spinner
 function showLoading() {
   appContainer.innerHTML = '<div class="spinner mx-auto"></div>';
 }
 
-// Helper: show error
+// Show an error message
 function showError(message) {
   appContainer.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
 }
 
 // Fetch dashboard data
 async function loadDashboard() {
+  showLoading();
+
   try {
- const response = await fetch(`${API_BASE_URL}/global-overseer/dashboard-overview`, {
-  method: "GET",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include" 
-});
+    const response = await fetch(`${API_BASE_URL}/global-overseer/dashboard-overview`, {
+      method: "GET",
+      credentials: "include"
+    });
 
-const data = await response.json();
-console.log(data);
+    const data = await response.json();
 
-
-    if (!res.ok) {
+    if (!response.ok) {
       showError(data.message || "Failed to load dashboard.");
-      if (res.status === 401 || res.status === 403) {
+      if (response.status === 401 || response.status === 403) {
         localStorage.removeItem("jwt_token");
         setTimeout(() => window.location.href = "/login.html", 2000);
       }
@@ -189,5 +188,5 @@ function renderDashboard(data) {
 window.addEventListener("DOMContentLoaded", loadDashboard);
 </script>
 
-  </body>
+</body>
 </html>
