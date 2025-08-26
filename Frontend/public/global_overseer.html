@@ -121,223 +121,127 @@
     </div>
 
     <script>
-      // Configuration
-      const API_BASE_URL = "https://smartstudentact.onrender.com";
-      const appContainer = document.getElementById("app-container");
-      const state = {
-        loggedIn: false,
-        userRole: null,
-        dashboardData: null,
-        files: [],
-        loading: true,
-        error: null,
-      };
+const API_BASE_URL = "https://smartstudentact.onrender.com"; 
+const emailInput = document.getElementById("emailInput");
+const passwordInput = document.getElementById("passwordInput");
+const loginButton = document.getElementById("loginButton");
+const passwordToggle = document.getElementById("passwordToggle");
+const emailErrorEl = document.getElementById("emailError");
+const passwordErrorEl = document.getElementById("passwordError");
 
-      // --- Core Rendering Logic ---
-      function render() {
-        if (state.loading) {
-          appContainer.innerHTML = `<div class="flex flex-col items-center justify-center min-h-screen text-center"><div class="spinner"></div><p class="mt-2 text-gray-600">Loading...</p></div>`;
-        } else if (state.error) {
-          appContainer.innerHTML = `<div class="text-center p-6 bg-white shadow rounded-xl max-w-sm"><h2 class="text-xl font-bold text-red-600 mb-2">Error</h2><p class="text-sm text-gray-700">${state.error}</p><button onclick="window.location.reload()" class="mt-4 bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Try Again</button></div>`;
-        } else if (state.loggedIn) {
-          renderDashboard();
-        }
-      }
+let showPassword = false;
 
-      function renderDashboard() {
-        const overview = state.dashboardData?.managedRegions || [];
-        const totalRegions = overview.length;
-        const totalSchools = overview.reduce(
-          (sum, r) => sum + (r.totalSchools || 0),
-          0
-        );
-        const totalAdmins = overview.reduce(
-          (sum, r) => sum + (r.totalAdmins || 0),
-          0
-        );
-        const totalUsers = state.dashboardData?.totalUsers || 0;
+function showBanner(message, type = "error") {
+    const bannerEl = document.getElementById("banner");
+    bannerEl.textContent = message;
+    bannerEl.classList.remove("hidden");
+    bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-green-100", "text-green-700", "bg-gray-100", "text-gray-700");
+    if (type === "error") bannerEl.classList.add("bg-red-100", "text-red-700");
+    else if (type === "success") bannerEl.classList.add("bg-green-100", "text-green-700");
+    else bannerEl.classList.add("bg-gray-100", "text-gray-700");
+}
 
-        appContainer.innerHTML = `
-            <div class="w-full max-w-5xl">
-                <header class="flex justify-between items-center mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900">🌍 Global Overseer Dashboard</h1>
-                    <div class="flex space-x-3">
-                        <button id="assign-region-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Assign Region</button>
-                        <button id="logout-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Logout</button>
-                    </div>
-                </header>
+function hideBanner() {
+    document.getElementById("banner").classList.add("hidden");
+}
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalRegions}</h2><p class="text-gray-600">Regions</p></div>
-                    <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalSchools}</h2><p class="text-gray-600">Schools</p></div>
-                    <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalAdmins}</h2><p class="text-gray-600">Admins</p></div>
-                    <div class="bg-white shadow rounded-xl p-4 text-center"><h2 class="text-xl font-bold">${totalUsers}</h2><p class="text-gray-600">Users</p></div>
-                </div>
+function setError(element, message, inputElement) {
+    if (message) {
+        element.textContent = message;
+        inputElement.classList.add("border-red-500");
+    } else {
+        element.textContent = "";
+        inputElement.classList.remove("border-red-500");
+    }
+}
 
-                <h2 class="text-lg font-bold mb-2">📌 Managed Regions</h2>
-                <div class="space-y-3">${overview
-                  .map(
-                    (r) => `
-                    <div class="bg-white p-4 rounded-xl shadow">
-                        <h3 class="font-semibold">${r.name}</h3>
-                        <p class="text-sm text-gray-600">Schools: ${
-                          r.totalSchools || 0
-                        }</p>
-                        <p class="text-sm text-gray-600">Admins: ${
-                          r.totalAdmins || 0
-                        }</p>
-                    </div>`
-                  )
-                  .join("")}</div>
+function validateEmail(email) {
+    if (!email.trim()) return "Email cannot be empty.";
+    if (!/\S+@\S+\.\S+/.test(email)) return "Please enter a valid email address.";
+    return null;
+}
 
-                <h2 class="text-lg font-bold mt-6 mb-2">📂 Uploaded Files</h2>
-                <div class="space-y-2">
-                    ${state.files
-                      .map(
-                        (f) => `
-                        <div class="bg-white p-3 rounded-xl shadow flex justify-between items-center">
-                            <span>${f.filename} (${f.type})</span>
-                            <a href="${f.url}" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700">View</a>
-                        </div>`
-                      )
-                      .join("")}
-                </div>
-            </div>
-        `;
-        document
-          .getElementById("assign-region-btn")
-          .addEventListener("click", openAssignRegionModal);
-        document
-          .getElementById("logout-btn")
-          .addEventListener("click", handleLogout);
-      }
+function validatePassword(password) {
+    if (!password.trim()) return "Password cannot be empty.";
+    if (password.length < 6) return "Password must be at least 6 characters long.";
+    return null;
+}
 
-      async function authFetch(url, options = {}) {
-        const dashboard = await fetch(
-          `${API_BASE_URL}/api/global-overseer/dashboard-overview`,
-          {
-            method: "GET",
-            credentials: "include", // sends the access_token cookie automatically
-          }
-        );
+emailInput.addEventListener("input", () => { setError(emailErrorEl, null, emailInput); hideBanner(); });
+passwordInput.addEventListener("input", () => { setError(passwordErrorEl, null, passwordInput); hideBanner(); });
 
-        if (res.status === 401 || res.status === 403) {
-          console.error("Authorization failed. Redirecting to login.");
-          window.location.href = "/login.html";
-          return null;
-        }
+passwordToggle.addEventListener("click", () => {
+    showPassword = !showPassword;
+    passwordInput.type = showPassword ? "text" : "password";
+    passwordToggle.textContent = showPassword ? "Hide" : "Show";
+});
 
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(
-            errorData.message || `API call failed with status: ${res.status}`
-          );
-        }
+function setLoading(isLoading) {
+    loginButton.disabled = isLoading;
+    loginButton.innerHTML = isLoading ? '<div class="spinner mx-auto"></div>' : 'Login';
+}
 
-        return res;
-      }
+loginButton.addEventListener("click", handleLogin);
 
-      function showAlert(title, message) {
-        const modal = document.getElementById("alert-modal");
-        document.getElementById("alert-title").textContent = title;
-        document.getElementById("alert-message").textContent = message;
-        modal.classList.remove("hidden");
-      }
-      document
-        .getElementById("alert-ok")
-        .addEventListener("click", () =>
-          document.getElementById("alert-modal").classList.add("hidden")
-        );
+async function handleLogin() {
+    setError(emailErrorEl, null, emailInput);
+    setError(passwordErrorEl, null, passwordInput);
+    hideBanner();
 
-      const assignModal = document.getElementById("assign-region-modal");
-      function openAssignRegionModal() {
-        assignModal.classList.remove("hidden");
-      }
-      function closeAssignRegionModal() {
-        assignModal.classList.add("hidden");
-      }
-      document
-        .getElementById("assign-region-close")
-        .addEventListener("click", closeAssignRegionModal);
-      document
-        .getElementById("assign-region-cancel")
-        .addEventListener("click", closeAssignRegionModal);
-      async function assignRegion() {
-        const email = document.getElementById("overseer-email").value.trim();
-        const region = document.getElementById("region-name").value.trim();
-        if (!email || !region)
-          return showAlert("Error", "Both fields are required.");
+    const emailValidation = validateEmail(emailInput.value);
+    const passwordValidation = validatePassword(passwordInput.value);
+    setError(emailErrorEl, emailValidation, emailInput);
+    setError(passwordErrorEl, passwordValidation, passwordInput);
+    if (emailValidation || passwordValidation) return;
 
-        const btn = document.getElementById("assign-region-confirm");
-        btn.disabled = true;
-        try {
-          const res = await authFetch(
-            `${API_BASE_URL}/api/global-overseer/assign-region`,
-            {
-              method: "POST",
-              body: JSON.stringify({ overseerEmail: email, region }),
-            }
-          );
-          if (!res) return;
-          const data = await res.json();
-          showAlert("Success", data.message);
-          closeAssignRegionModal();
-        } catch (err) {
-          console.error("Assign error:", err);
-          showAlert("Error", err.message);
-        } finally {
-          btn.disabled = false;
-        }
-      }
-      document
-        .getElementById("assign-region-confirm")
-        .addEventListener("click", assignRegion);
+    setLoading(true);
 
-      // --- Authentication & Data Fetching ---
-      async function handleLogout() {
-        try {
-          // Make a call to the backend to clear the HttpOnly cookie
-          await fetch(`${API_BASE_URL}/users/logout`, {
-            credentials: "include",
-          });
-        } catch (error) {
-          console.error("Logout failed:", error);
-        } finally {
-          // Redirect to the login page, regardless of the API call result
-          window.location.href = "/login.html";
-        }
-      }
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include", // ✅ important for cookie-based JWT
+            body: JSON.stringify({
+                email: emailInput.value.trim().toLowerCase(),
+                password: passwordInput.value
+            })
+        });
 
-      async function fetchAllData() {
-        state.loading = true;
-        state.error = null;
-        render(); // Show loading state
-
-        try {
-          const [dashboardRes, fileRes] = await Promise.all([
-            authFetch(`${API_BASE_URL}/api/global-overseer/dashboard-overview`),
-            authFetch(`${API_BASE_URL}/api/global-overseer/all-files`),
-          ]);
-
-          if (!dashboardRes || !fileRes) {
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            showBanner(data?.message || "Login failed. Check email or password.", "error");
             return;
-          }
-
-          state.dashboardData = await dashboardRes.json();
-          state.files = (await fileRes.json()).files || [];
-          state.loggedIn = true;
-        } catch (err) {
-          console.error("Data fetch error:", err);
-          state.error = "Failed to load dashboard data.";
-        } finally {
-          state.loading = false;
-          render();
         }
-      }
 
-      document.addEventListener("DOMContentLoaded", async () => {
-        await fetchAllData();
-      });
-    </script>
+        const data = await response.json();
+
+        // Redirect based on role
+        switch (data.user?.role) {
+            case "global_overseer":
+                window.location.href = "/global_overseer.html";
+                break;
+            case "overseer":
+                window.location.href = "/overseer.html";
+                break;
+            case "student":
+                window.location.href = "/students.html";
+                break;
+            case "teacher":
+                window.location.href = "/teachers.html";
+                break;
+            case "admin":
+                window.location.href = "/admin.html";
+                break;
+            default:
+                showBanner("Invalid user role.", "error");
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        showBanner("An unexpected error occurred. Please try again later.", "error");
+    } finally {
+        setLoading(false);
+    }
+}
+</script>
   </body>
 </html>
