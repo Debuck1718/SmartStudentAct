@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      unique: true, 
+      unique: true,
       required: true,
       lowercase: true,
       trim: true,
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      unique: true, 
+      unique: true,
       sparse: true,
       trim: true,
       match: [/^\+?[0-9]{7,15}$/, "Invalid phone number"],
@@ -53,7 +53,6 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-  
     educationLevel: {
       type: String,
       enum: ["junior", "high", "university"],
@@ -136,7 +135,6 @@ const userSchema = new mongoose.Schema(
     failedLoginAttempts: { type: Number, default: 0 },
     lockoutUntil: { type: Date, default: null },
 
-
     reset_password_token: { type: String, select: false },
     reset_password_expires: { type: Date, select: false },
 
@@ -178,6 +176,9 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+
+    trialInsightsUsed: { type: Number, default: 0 },  
+    trialInsightsLimit: { type: Number, default: 3 }, 
   },
   { timestamps: true }
 );

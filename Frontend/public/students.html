@@ -475,759 +475,623 @@
       </div>
     </div>
 
-    <!-- JS -->
-    <script>
-      // =========================================================================
-      // Students Dashboard Script - Refactored for Readability and Maintainability
-      // =========================================================================
+<script>
+const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 
-      // --- CONFIGURATION & GLOBALS ---
-      const API_BASE_URL = "https://smartstudentact.onrender.com/api";
-      let csrfToken = null;
+const DOMElements = {
+  menuBtn: document.getElementById("menu-btn"),
+  logoutBtn: document.getElementById("logout-btn"),
+  addAssignmentBtn: document.getElementById("add-assignment-btn"),
+  addBudgetBtn: document.getElementById("add-budget-btn"),
+  saveGoalBtn: document.getElementById("save-goal-btn"),
+  saveAssignmentBtn: document.getElementById("save-assignment-btn"),
+  cancelAssignmentBtn: document.getElementById("cancel-assignment-btn"),
+  saveBudgetBtn: document.getElementById("save-budget-btn"),
+  cancelBudgetBtn: document.getElementById("cancel-budget-btn"),
+  closeMenuBtn: document.getElementById("close-menu-btn"),
+  menuLogoutBtn: document.getElementById("menu-logout-btn"),
+  alertConfirmBtn: document.getElementById("alert-confirm-btn"),
+  alertCancelBtn: document.getElementById("alert-cancel-btn"),
+  generateInsightsBtn: document.getElementById("generate-insights-btn"),
+  contactLink: document.getElementById("contactLink"),
 
-      // --- DOM REFERENCES (Centralized for easy access) ---
-      const DOMElements = {
-        // Buttons
-        menuBtn: document.getElementById("menu-btn"),
-        logoutBtn: document.getElementById("logout-btn"),
-        addAssignmentBtn: document.getElementById("add-assignment-btn"),
-        addBudgetBtn: document.getElementById("add-budget-btn"),
-        saveGoalBtn: document.getElementById("save-goal-btn"),
-        saveAssignmentBtn: document.getElementById("save-assignment-btn"),
-        cancelAssignmentBtn: document.getElementById("cancel-assignment-btn"),
-        saveBudgetBtn: document.getElementById("save-budget-btn"),
-        cancelBudgetBtn: document.getElementById("cancel-budget-btn"),
-        closeMenuBtn: document.getElementById("close-menu-btn"),
-        menuLogoutBtn: document.getElementById("menu-logout-btn"),
-        alertConfirmBtn: document.getElementById("alert-confirm-btn"),
-        alertCancelBtn: document.getElementById("alert-cancel-btn"),
-        generateInsightsBtn: document.getElementById("generate-insights-btn"),
-        contactLink: document.getElementById("contactLink"),
+  goalInput: document.getElementById("goal-input"),
+  assignmentTitleInput: document.getElementById("assignment-title-input"),
+  assignmentSubjectInput: document.getElementById("assignment-subject-input"),
+  budgetTitleInput: document.getElementById("budget-title-input"),
+  budgetAmountInput: document.getElementById("budget-amount-input"),
+  subscriptionToggle: document.getElementById("subscription-toggle"),
+  contactName: document.getElementById("contactName"),
+  contactEmail: document.getElementById("contactEmail"),
+  contactMessage: document.getElementById("contactMessage"),
+  contactForm: document.getElementById("contactForm"),
 
-        // Inputs
-        goalInput: document.getElementById("goal-input"),
-        assignmentTitleInput: document.getElementById("assignment-title-input"),
-        assignmentSubjectInput: document.getElementById(
-          "assignment-subject-input"
-        ),
-        budgetTitleInput: document.getElementById("budget-title-input"),
-        budgetAmountInput: document.getElementById("budget-amount-input"),
-        subscriptionToggle: document.getElementById("subscription-toggle"),
-        contactName: document.getElementById("contactName"),
-        contactEmail: document.getElementById("contactEmail"),
-        contactMessage: document.getElementById("contactMessage"),
-        contactForm: document.getElementById("contactForm"),
 
-        // Display & Feedback
-        goalErrorEl: document.getElementById("goal-error"),
-        savedGoalText: document.getElementById("saved-goal-text"),
-        assignmentsList: document.getElementById("assignments-list"),
-        budgetList: document.getElementById("budget-list"),
-        quizzesList: document.getElementById("quizzes-list"),
-        feedbackList: document.getElementById("feedback-list"),
-        assignmentsLoading: document.getElementById("assignments-loading"),
-        budgetLoading: document.getElementById("budget-loading"),
-        quizzesLoading: document.getElementById("quizzes-loading"),
-        insightsLoading: document.getElementById("insights-loading"),
-        insightsContent: document.getElementById("insights-content"),
-        insightsPlaceholder: document.getElementById("insights-placeholder"),
-        rewardsWrap: document.getElementById("rewards-wrap"),
-        alertTitleEl: document.getElementById("alert-title"),
-        alertMessageEl: document.getElementById("alert-message"),
+  goalErrorEl: document.getElementById("goal-error"),
+  savedGoalText: document.getElementById("saved-goal-text"),
+  assignmentsList: document.getElementById("assignments-list"),
+  budgetList: document.getElementById("budget-list"),
+  quizzesList: document.getElementById("quizzes-list"),
+  feedbackList: document.getElementById("feedback-list"),
+  assignmentsLoading: document.getElementById("assignments-loading"),
+  budgetLoading: document.getElementById("budget-loading"),
+  quizzesLoading: document.getElementById("quizzes-loading"),
+  insightsLoading: document.getElementById("insights-loading"),
+  insightsContent: document.getElementById("insights-content"),
+  insightsPlaceholder: document.getElementById("insights-placeholder"),
+  rewardsWrap: document.getElementById("rewards-wrap"),
+  alertTitleEl: document.getElementById("alert-title"),
+  alertMessageEl: document.getElementById("alert-message"),
 
-        // Modals
-        assignmentModal: document.getElementById("assignment-modal"),
-        budgetModal: document.getElementById("budget-modal"),
-        menuModal: document.getElementById("menu-modal"),
-        menuContent: document.getElementById("menu-content"),
-        alertModal: document.getElementById("alert-modal"),
-        contactModal: document.getElementById("contactModal"),
+  
+  assignmentModal: document.getElementById("assignment-modal"),
+  budgetModal: document.getElementById("budget-modal"),
+  menuModal: document.getElementById("menu-modal"),
+  menuContent: document.getElementById("menu-content"),
+  alertModal: document.getElementById("alert-modal"),
+  contactModal: document.getElementById("contactModal"),
 
-        // Errors
-        assignmentTitleError: document.getElementById("assignment-title-error"),
-        assignmentSubjectError: document.getElementById(
-          "assignment-subject-error"
-        ),
-        budgetTitleError: document.getElementById("budget-title-error"),
-        budgetAmountError: document.getElementById("budget-amount-error"),
+  assignmentTitleError: document.getElementById("assignment-title-error"),
+  assignmentSubjectError: document.getElementById("assignment-subject-error"),
+  budgetTitleError: document.getElementById("budget-title-error"),
+  budgetAmountError: document.getElementById("budget-amount-error"),
 
-        // Chart
-        chartCanvas: document.getElementById("analytics-chart"),
-      };
+ 
+  chartCanvas: document.getElementById("analytics-chart"),
+};
 
-      // --- API HELPERS (Consolidated & Reusable) ---
-      const authHeaders = () => ({
-        "Content-Type": "application/json",
-        ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+const get = async (path) => {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw await res.json().catch(() => ({ message: res.statusText }));
+  return res.json();
+};
+
+const post = async (path, body) => {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw await res.json().catch(() => ({ message: res.statusText }));
+  return res.json();
+};
+
+const showModal = (el) => el.classList.add("active");
+const hideModal = (el) => el.classList.remove("active");
+
+let alertConfirmAction = null;
+const showAlert = (title, message, onConfirm = null) => {
+  DOMElements.alertTitleEl.textContent = title;
+  DOMElements.alertMessageEl.textContent = message;
+  alertConfirmAction = onConfirm;
+  DOMElements.alertConfirmBtn.classList.toggle("hidden", !onConfirm);
+  showModal(DOMElements.alertModal);
+};
+const closeAlert = () => {
+  hideModal(DOMElements.alertModal);
+  alertConfirmAction = null;
+};
+
+
+const fetchAssignments = async () => {
+  DOMElements.assignmentsLoading.classList.remove("hidden");
+  DOMElements.assignmentsList.innerHTML = "";
+  try {
+    const resp = await fetch(`${API_BASE_URL}/student/assignments/${studentId}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await resp.json();
+    const assignments = data.assignments || data || [];
+    if (assignments.length === 0) {
+      DOMElements.assignmentsList.innerHTML =
+        '<p class="italic text-gray-500 text-center">No assignments added yet.</p>';
+    } else {
+      assignments.forEach((a) => {
+        const due = a.dueDate
+          ? new Date(a.dueDate).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "—";
+        const div = document.createElement("div");
+        div.className =
+          "bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm";
+        div.innerHTML = `
+          <div>
+            <h4 class="font-semibold text-lg">${a.title || "Untitled"}</h4>
+            <p class="text-sm text-gray-600">Subject: ${a.class || a.subject || "—"}</p>
+          </div>
+          <span class="text-xs text-gray-400">Due: ${due}</span>`;
+        DOMElements.assignmentsList.appendChild(div);
       });
+    }
+  } catch (e) {
+    DOMElements.assignmentsList.innerHTML =
+      `<p class="text-red-500 text-center">Failed to load assignments.</p>`;
+    console.error(e);
+  } finally {
+    DOMElements.assignmentsLoading.classList.add("hidden");
+  }
+};
 
-      const get = async (path) => {
-        const res = await fetch(`${API_BASE_URL}${path}`, {
-          method: "GET",
-          credentials: "include", // send cookies (HttpOnly JWT will be attached)
-          headers: authHeaders(),
-        });
-        if (!res.ok) {
-          throw await res.json().catch(() => ({ message: res.statusText }));
-        }
-        return res.json();
-      };
+const fetchQuizzes = async () => {
+  DOMElements.quizzesLoading.classList.remove("hidden");
+  DOMElements.quizzesList.innerHTML = "";
+  try {
+    const resp = await fetch(`${API_BASE_URL}/student/quizzes/${studentId}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await resp.json();
+    const quizzes = data.quizzes || [];
+    if (quizzes.length === 0) {
+      DOMElements.quizzesList.innerHTML =
+        '<p class="italic text-gray-500 text-center">No quizzes assigned yet.</p>';
+    } else {
+      quizzes.forEach((q) => {
+        const div = document.createElement("div");
+        div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
+        div.innerHTML = `
+          <h4 class="font-semibold text-lg mb-2">${q.title}</h4>
+          <p class="text-sm text-gray-600 mb-2">From: ${q.teacherName || "Your teacher"}</p>
+          <button class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors" onclick="startQuiz('${q._id}')">
+            Start Quiz
+          </button>`;
+        DOMElements.quizzesList.appendChild(div);
+      });
+    }
+  } catch (e) {
+    DOMElements.quizzesList.innerHTML =
+      `<p class="text-red-500 text-center">Failed to load quizzes.</p>`;
+    console.error(e);
+  } finally {
+    DOMElements.quizzesLoading.classList.add("hidden");
+  }
+};
 
-      const post = async (path, body) => {
-        const res = await fetch(`${API_BASE_URL}${path}`, {
-          method: "POST",
-          credentials: "include", // send cookies
-          headers: authHeaders(),
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) {
-          throw await res.json().catch(() => ({ message: res.statusText }));
-        }
-        return res.json();
-      };
+const fetchBudget = async () => {
+  DOMElements.budgetLoading.classList.remove("hidden");
+  DOMElements.budgetList.innerHTML = "";
+  try {
+    const resp = await fetch(`${API_BASE_URL}/budget`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await resp.json();
+    const budgets = data.budgets || data || [];
+    if (budgets.length === 0) {
+      DOMElements.budgetList.innerHTML =
+        '<p class="italic text-gray-500 text-center">No budget entries yet.</p>';
+    } else {
+      budgets.forEach((entry) => {
+        const isIncome =
+          (entry.type || "").toLowerCase() === "income" || entry.amount > 0;
+        const color = isIncome ? "text-green-600" : "text-red-600";
+        const sign = isIncome ? "+" : "-";
+        const div = document.createElement("div");
+        div.className =
+          "bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm";
+        div.innerHTML = `
+          <div>
+            <h4 class="font-semibold text-lg">${entry.description || entry.title || "Entry"}</h4>
+            <p class="text-sm text-gray-600">${entry.type || (isIncome ? "income" : "expense")}</p>
+          </div>
+          <span class="font-bold ${color}">${sign}${Math.abs(entry.amount || 0).toFixed(2)} GHS</span>`;
+        DOMElements.budgetList.appendChild(div);
+      });
+    }
+    drawAnalytics(budgets);
+  } catch (e) {
+    DOMElements.budgetList.innerHTML =
+      `<p class="text-red-500 text-center">Failed to load budget entries.</p>`;
+    console.error(e);
+  } finally {
+    DOMElements.budgetLoading.classList.add("hidden");
+  }
+};
 
-      // --- CSRF TOKEN FETCHER ---
-      async function fetchCsrfToken() {
-        try {
-          const res = await fetch(`${API_BASE_URL}/csrf-token`, {
-            method: "GET",
-            credentials: "include", // get CSRF cookie + token
-          });
-          if (!res.ok) throw new Error("Failed to fetch CSRF token");
-          const data = await res.json();
-          csrfToken = data.csrfToken;
-        } catch (err) {
-          console.error("CSRF error:", err);
-        }
-      }
+const fetchGoal = async () => {
+  try {
+    const resp = await fetch(`${API_BASE_URL}/goals`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await resp.json();
+    const goals = data.goals || [];
+    if (goals.length > 0) {
+      const latest = goals[goals.length - 1];
+      const text = latest.description || "(no description)";
+      DOMElements.goalInput.value = text;
+      DOMElements.savedGoalText.textContent = `Saved: ${text}`;
+      DOMElements.savedGoalText.classList.remove("hidden");
+    } else {
+      DOMElements.savedGoalText.textContent = "No goal saved yet.";
+      DOMElements.savedGoalText.classList.remove("hidden");
+    }
+  } catch (e) {
+    DOMElements.savedGoalText.textContent = "Failed to load goal.";
+    DOMElements.savedGoalText.classList.remove("hidden");
+    console.error(e);
+  }
+};
 
-      // --- MODAL & ALERT FUNCTIONS ---
-      const showModal = (el) => el.classList.add("active");
-      const hideModal = (el) => el.classList.remove("active");
+const fetchRewards = async () => {
+  try {
+    const resp = await fetch(`${API_BASE_URL}/rewards/${studentId}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await resp.json();
+    const {
+      name,
+      weeklyMessage,
+      badges = [],
+      termSummary = "",
+      termRewards = [],
+      treatSuggestions = [],
+      premiumRewards = [],
+    } = data || {};
 
-      let alertConfirmAction = null;
-      const showAlert = (title, message, onConfirm = null) => {
-        DOMElements.alertTitleEl.textContent = title;
-        DOMElements.alertMessageEl.textContent = message;
-        alertConfirmAction = onConfirm;
-        DOMElements.alertConfirmBtn.classList.toggle("hidden", !onConfirm);
-        showModal(DOMElements.alertModal);
-      };
-      const closeAlert = () => {
-        hideModal(DOMElements.alertModal);
-        alertConfirmAction = null;
-      };
-
-      // --- DATA FETCHING FUNCTIONS ---
-      const fetchCsrfToken = async () => {
-        try {
-          const res = await fetch(`${API_BASE_URL}/csrf-token`, {
-            method: "GET",
-            credentials: "include",
-          });
-          if (!res.ok) throw new Error("Failed to fetch CSRF token");
-          const data = await res.json();
-          csrfToken = data.csrfToken;
-        } catch (err) {
-          console.error("CSRF error:", err);
-          showAlert(
-            "Error",
-            "Could not verify session. Please log in again.",
-            () => {
-              window.location.href = "/login.html";
-            }
-          );
-        }
-      };
-
-      const fetchAssignments = async () => {
-        DOMElements.assignmentsLoading.classList.remove("hidden");
-        DOMElements.assignmentsList.innerHTML = "";
-        try {
-          const resp = await get(`/student/assignments/${studentId}`);
-          const assignments = resp.assignments || resp || [];
-          if (assignments.length === 0) {
-            DOMElements.assignmentsList.innerHTML =
-              '<p class="italic text-gray-500 text-center">No assignments added yet.</p>';
-          } else {
-            assignments.forEach((a) => {
-              const due = a.dueDate
-                ? new Date(a.dueDate).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
-                : "—";
-              const div = document.createElement("div");
-              div.className =
-                "bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm";
-              div.innerHTML = `
-            <div>
-              <h4 class="font-semibold text-lg">${a.title || "Untitled"}</h4>
-              <p class="text-sm text-gray-600">Subject: ${
-                a.class || a.subject || "—"
-              }</p>
-            </div>
-            <span class="text-xs text-gray-400">Due: ${due}</span>`;
-              DOMElements.assignmentsList.appendChild(div);
-            });
-          }
-        } catch (e) {
-          DOMElements.assignmentsList.innerHTML = `<p class="text-red-500 text-center">Failed to load assignments.</p>`;
-          console.error(e);
-        } finally {
-          DOMElements.assignmentsLoading.classList.add("hidden");
-        }
-      };
-
-      const fetchQuizzes = async () => {
-        DOMElements.quizzesLoading.classList.remove("hidden");
-        DOMEElements.quizzesList.innerHTML = "";
-        try {
-          const resp = await get(`/student/quizzes/${studentId}`);
-          const quizzes = resp.quizzes || [];
-          if (quizzes.length === 0) {
-            DOMElements.quizzesList.innerHTML =
-              '<p class="italic text-gray-500 text-center">No quizzes assigned yet.</p>';
-          } else {
-            quizzes.forEach((q) => {
-              const div = document.createElement("div");
-              div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
-              div.innerHTML = `
-            <h4 class="font-semibold text-lg mb-2">${q.title}</h4>
-            <p class="text-sm text-gray-600 mb-2">From: ${
-              q.teacherName || "Your teacher"
-            }</p>
-            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors" onclick="startQuiz('${
-              q._id
-            }')">
-              Start Quiz
-            </button>
-          `;
-              DOMElements.quizzesList.appendChild(div);
-            });
-          }
-        } catch (e) {
-          DOMElements.quizzesList.innerHTML = `<p class="text-red-500 text-center">Failed to load quizzes.</p>`;
-          console.error(e);
-        } finally {
-          DOMElements.quizzesLoading.classList.add("hidden");
-        }
-      };
-
-      const fetchBudget = async () => {
-        DOMElements.budgetLoading.classList.remove("hidden");
-        DOMElements.budgetList.innerHTML = "";
-        try {
-          const resp = await get("/budget");
-          const budgets = resp.budgets || resp || [];
-          if (budgets.length === 0) {
-            DOMElements.budgetList.innerHTML =
-              '<p class="italic text-gray-500 text-center">No budget entries yet.</p>';
-          } else {
-            budgets.forEach((entry) => {
-              const isIncome =
-                (entry.type || "").toLowerCase() === "income" ||
-                entry.amount > 0;
-              const color = isIncome ? "text-green-600" : "text-red-600";
-              const sign = isIncome ? "+" : "-";
-              const div = document.createElement("div");
-              div.className =
-                "bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm";
-              div.innerHTML = `
-            <div>
-              <h4 class="font-semibold text-lg">${
-                entry.description || entry.title || "Entry"
-              }</h4>
-              <p class="text-sm text-gray-600">${
-                entry.type || (isIncome ? "income" : "expense")
-              }</p>
-            </div>
-            <span class="font-bold ${color}">${sign}${Math.abs(
-                entry.amount || 0
-              ).toFixed(2)} GHS</span>`;
-              DOMElements.budgetList.appendChild(div);
-            });
-          }
-          drawAnalytics(budgets);
-        } catch (e) {
-          DOMElements.budgetList.innerHTML = `<p class="text-red-500 text-center">Failed to load budget entries.</p>`;
-          console.error(e);
-        } finally {
-          DOMElements.budgetLoading.classList.add("hidden");
-        }
-      };
-
-      const fetchGoal = async () => {
-        try {
-          const resp = await get("/rewards/goals");
-          const goals = resp.goals || [];
-          if (goals.length > 0) {
-            const latest = goals[goals.length - 1];
-            const text = latest.description || "(no description)";
-            DOMElements.goalInput.value = text;
-            DOMElements.savedGoalText.textContent = `Saved: ${text}`;
-            DOMElements.savedGoalText.classList.remove("hidden");
-          } else {
-            DOMElements.savedGoalText.textContent = "No goal saved yet.";
-            DOMElements.savedGoalText.classList.remove("hidden");
-          }
-        } catch (e) {
-          DOMElements.savedGoalText.textContent = "Failed to load goal.";
-          DOMElements.savedGoalText.classList.remove("hidden");
-          console.error(e);
-        }
-      };
-
-      const fetchRewards = async () => {
-        try {
-          const resp = await get(`/rewards/${studentId}`);
-          const {
-            name,
-            weeklyMessage,
-            badges = [],
-            termSummary = "",
-            termRewards = [],
-            treatSuggestions = [],
-            premiumRewards = [],
-          } = resp || {};
-
-          DOMElements.rewardsWrap.innerHTML = `
-        <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
-          <p class="font-semibold">Hey ${name || firstname}! ${
-            weeklyMessage || ""
-          }</p>
-        </div>
-        <div>
-          <h4 class="font-semibold mb-2">🎖️ Badges</h4>
-          <div class="flex flex-wrap gap-2">${
-            badges.length
-              ? badges
-                  .map(
-                    (b) =>
-                      `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">${b}</span>`
-                  )
-                  .join("")
-              : '<span class="text-gray-500">No badges yet.</span>'
-          }</div>
-        </div>
-        <div>
-          <h4 class="font-semibold mb-1">📜 Term Summary</h4>
-          <p class="text-gray-700">${
-            termSummary || "Keep going—rewards unlock with consistency."
-          }</p>
-          ${
-            termRewards.length
-              ? `<ul class="list-disc ml-6 mt-2">${termRewards
-                  .map((r) => `<li>${r}</li>`)
-                  .join("")}</ul>`
-              : ""
-          }
-        </div>
-        <div>
-          <h4 class="font-semibold mb-2">🎉 Treat Suggestions</h4>
-          <ul class="list-disc ml-6">${(treatSuggestions || [])
-            .slice(0, 6)
-            .map((t) => `<li>${t}</li>`)
-            .join("")}</ul>
-        </div>
-        <div>
-          <h4 class="font-semibold mb-2">🏅 Premium Rewards</h4>
-          ${
-            premiumRewards.length
-              ? premiumRewards
-                  .map(
-                    (p) => `
-                <div class="border rounded-lg p-3 mb-2">
-                  <div class="font-semibold">${p.name}</div>
-                  <div class="text-sm text-gray-600 mb-1">${p.description}</div>
-                  <div class="text-sm"><span class="font-semibold">Reward:</span> ${p.reward}</div>
-                </div>`
-                  )
-                  .join("")
-              : '<p class="text-gray-500">No premium rewards yet.</p>'
-          }
-        </div>
-      `;
-        } catch (e) {
-          console.error(e);
-          DOMElements.rewardsWrap.innerHTML = `<p class="text-red-500 text-center">Failed to load rewards.</p>`;
-        }
-      };
-
-      const fetchStudentFeedback = async () => {
-        try {
-          const res = await get(`/student/feedback/${studentId}`);
-          const data = res.feedback;
-          renderFeedback(data);
-        } catch (err) {
-          showAlert("Error", err.message || "Failed to fetch feedback.");
-        }
-      };
-
-      // --- RENDERING FUNCTIONS ---
-      function renderFeedback(feedbacks) {
-        DOMElements.feedbackList.innerHTML = "";
-        if (feedbacks.length === 0) {
-          DOMElements.feedbackList.innerHTML =
-            '<p class="italic text-gray-500 text-center">No feedback received yet.</p>';
-          return;
-        }
-        feedbacks.forEach((fb) => {
-          const card = document.createElement("div");
-          card.className = "bg-white shadow rounded-lg p-4";
-          card.innerHTML = `
-        <p><strong>Assignment:</strong> ${fb.assignmentTitle}</p>
-        <p><strong>Submitted At:</strong> ${new Date(
-          fb.submittedAt
-        ).toLocaleString()}</p>
-        <p><strong>Grade:</strong> ${fb.grade ?? "Not graded yet"}</p>
-        <p><strong>Comments:</strong> ${fb.comments ?? "No comments yet"}</p>
+    DOMElements.rewardsWrap.innerHTML = `
+      <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+        <p class="font-semibold">Hey ${name || firstname}! ${weeklyMessage || ""}</p>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-2">🎖️ Badges</h4>
+        <div class="flex flex-wrap gap-2">${
+          badges.length
+            ? badges.map((b) => `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">${b}</span>`).join("")
+            : '<span class="text-gray-500">No badges yet.</span>'
+        }</div>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-1">📜 Term Summary</h4>
+        <p class="text-gray-700">${termSummary || "Keep going—rewards unlock with consistency."}</p>
         ${
-          fb.feedbackFile
-            ? `<p><a href="${fb.feedbackFile}" target="_blank" class="text-blue-500 underline">📂 Download Feedback File</a></p>`
+          termRewards.length
+            ? `<ul class="list-disc ml-6 mt-2">${termRewards.map((r) => `<li>${r}</li>`).join("")}</ul>`
             : ""
-        }`;
-          DOMElements.feedbackList.appendChild(card);
-        });
-      }
-
-      let chart;
-      function drawAnalytics(budgets) {
-        try {
-          const ctx = DOMElements.chartCanvas;
-          const totals = budgets.reduce(
-            (acc, b) => {
-              const t = (b.type || "").toLowerCase();
-              if (t === "income" || b.amount > 0)
-                acc.income += Math.abs(b.amount || 0);
-              else acc.expense += Math.abs(b.amount || 0);
-              return acc;
-            },
-            { income: 0, expense: 0 }
-          );
-          const data = {
-            labels: ["Income", "Expenses"],
-            datasets: [{ data: [totals.income, totals.expense] }],
-          };
-          if (chart) chart.destroy();
-          chart = new Chart(ctx, {
-            type: "bar",
-            data,
-            options: {
-              plugins: { legend: { display: false } },
-              responsive: true,
-              scales: { y: { beginAtZero: true } },
-            },
-          });
-        } catch (e) {
-          console.warn("Chart error", e);
         }
-      }
-
-      // --- API CALLS & HANDLERS ---
-      const handleSaveAssignment = async () => {
-        let ok = true;
-        if (!DOMElements.assignmentTitleInput.value.trim()) {
-          DOMElements.assignmentTitleError.textContent =
-            "Assignment title is required.";
-          DOMElements.assignmentTitleError.classList.remove("hidden");
-          ok = false;
-        } else DOMElements.assignmentTitleError.classList.add("hidden");
-
-        if (!DOMElements.assignmentSubjectInput.value.trim()) {
-          DOMElements.assignmentSubjectError.textContent =
-            "Subject is required.";
-          DOMElements.assignmentSubjectError.classList.remove("hidden");
-          ok = false;
-        } else DOMElements.assignmentSubjectError.classList.add("hidden");
-
-        if (!ok) return;
-
-        const payload = {
-          title: DOMElements.assignmentTitleInput.value.trim(),
-          description: "No description provided",
-          dueDate: new Date().toISOString(),
-          teacherId: studentId, // Using studentId as a placeholder for teacherId
-          schoolId: "school-001",
-          classId: DOMElements.assignmentSubjectInput.value.trim(),
-        };
-        try {
-          await post("/teacher/assignments", payload);
-          hideModal(DOMElements.assignmentModal);
-          showAlert("Success", "Assignment added successfully!");
-          fetchAssignments();
-        } catch (e) {
-          showAlert("Error", e.message || "Failed to add assignment.");
+      </div>
+      <div>
+        <h4 class="font-semibold mb-2">🎉 Treat Suggestions</h4>
+        <ul class="list-disc ml-6">${(treatSuggestions || []).slice(0, 6).map((t) => `<li>${t}</li>`).join("")}</ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-2">🏅 Premium Rewards</h4>
+        ${
+          premiumRewards.length
+            ? premiumRewards.map((p) => `
+              <div class="border rounded-lg p-3 mb-2">
+                <div class="font-semibold">${p.name}</div>
+                <div class="text-sm text-gray-600 mb-1">${p.description}</div>
+                <div class="text-sm"><span class="font-semibold">Reward:</span> ${p.reward}</div>
+              </div>`).join("")
+            : '<p class="text-gray-500">No premium rewards yet.</p>'
         }
-      };
+      </div>
+    `;
+  } catch (e) {
+    console.error(e);
+    DOMElements.rewardsWrap.innerHTML =
+      `<p class="text-red-500 text-center">Failed to load rewards.</p>`;
+  }
+};
 
-      const handleSaveBudget = async () => {
-        let ok = true;
-        if (!DOMElements.budgetTitleInput.value.trim()) {
-          DOMElements.budgetTitleError.textContent = "Title is required.";
-          DOMElements.budgetTitleError.classList.remove("hidden");
-          ok = false;
-        } else DOMElements.budgetTitleError.classList.add("hidden");
+const fetchStudentFeedback = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/student/feedback/${studentId}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    renderFeedback(data.feedback || []);
+  } catch (err) {
+    showAlert("Error", err.message || "Failed to fetch feedback.");
+  }
+};
 
-        if (
-          !DOMElements.budgetAmountInput.value.trim() ||
-          isNaN(DOMElements.budgetAmountInput.value)
-        ) {
-          DOMElements.budgetAmountError.textContent =
-            "Valid amount is required.";
-          DOMElements.budgetAmountError.classList.remove("hidden");
-          ok = false;
-        } else DOMElements.budgetAmountError.classList.add("hidden");
 
-        if (!ok) return;
+function renderFeedback(feedbacks) {
+  DOMElements.feedbackList.innerHTML = "";
+  if (feedbacks.length === 0) {
+    DOMElements.feedbackList.innerHTML =
+      '<p class="italic text-gray-500 text-center">No feedback received yet.</p>';
+    return;
+  }
+  feedbacks.forEach((fb) => {
+    const card = document.createElement("div");
+    card.className = "bg-white shadow rounded-lg p-4";
+    card.innerHTML = `
+      <p><strong>Assignment:</strong> ${fb.assignmentTitle}</p>
+      <p><strong>Submitted At:</strong> ${new Date(fb.submittedAt).toLocaleString()}</p>
+      <p><strong>Grade:</strong> ${fb.grade ?? "Not graded yet"}</p>
+      <p><strong>Comments:</strong> ${fb.comments ?? "No comments yet"}</p>
+      ${
+        fb.feedbackFile
+          ? `<p><a href="${fb.feedbackFile}" target="_blank" class="text-blue-500 underline">📂 Download Feedback File</a></p>`
+          : ""
+      }`;
+    DOMElements.feedbackList.appendChild(card);
+  });
+}
 
-        const amount = parseFloat(DOMElements.budgetAmountInput.value);
-        const payload = {
-          description: DOMElements.budgetTitleInput.value.trim(),
-          amount,
-          type: amount >= 0 ? "income" : "expense",
-        };
-        try {
-          await post("/budget", payload);
-          hideModal(DOMElements.budgetModal);
-          showAlert("Success", "Budget entry added successfully!");
-          fetchBudget();
-        } catch (e) {
-          showAlert("Error", e.message || "Failed to add budget entry.");
-        }
-      };
 
-      const handleSaveGoal = async () => {
-        const goalText = DOMElements.goalInput.value.trim();
-        if (!goalText) {
-          DOMElements.goalErrorEl.textContent = "Weekly goal cannot be empty.";
-          DOMElements.goalErrorEl.classList.remove("hidden");
-          return;
-        }
-        DOMElements.goalErrorEl.classList.add("hidden");
+const handleSaveAssignment = async () => {
+  let ok = true;
 
-        const oneWeek = new Date(
-          Date.now() + 7 * 24 * 60 * 60 * 1000
-        ).toISOString();
-        const payload = {
-          description: goalText,
-          target_date: oneWeek,
-          progress: 0,
-          type: "academic",
-          is_completed: false,
-          points: 0,
-        };
-        try {
-          await post("/rewards/goals", payload);
-          showAlert("Success", "Weekly goal saved!");
-          fetchGoal();
-        } catch (e) {
-          showAlert("Error", e.message || "Failed to save goal.");
-        }
-      };
+  if (!DOMElements.assignmentTitleInput.value.trim()) {
+    DOMElements.assignmentTitleError.textContent = "Assignment title is required.";
+    DOMElements.assignmentTitleError.classList.remove("hidden");
+    ok = false;
+  } else DOMElements.assignmentTitleError.classList.add("hidden");
 
-      let isSubscribed = false;
-      const trialUsageLimit = 3;
-      let currentUsage = 0;
+  if (!DOMElements.assignmentSubjectInput.value.trim()) {
+    DOMElements.assignmentSubjectError.textContent = "Subject is required.";
+    DOMElements.assignmentSubjectError.classList.remove("hidden");
+    ok = false;
+  } else DOMElements.assignmentSubjectError.classList.add("hidden");
 
-      const generateAiInsights = async () => {
-        DOMElements.insightsPlaceholder.classList.add("hidden");
-        DOMElements.insightsContent.classList.add("hidden");
-        DOMElements.insightsLoading.classList.remove("hidden");
-        DOMElements.generateInsightsBtn.disabled = true;
+  if (!ok) return;
 
-        if (!isSubscribed && currentUsage >= trialUsageLimit) {
-          showAlert(
-            "Trial Expired",
-            "You've reached your trial limit of 3 insights. Please subscribe to continue."
-          );
-          DOMElements.insightsLoading.classList.add("hidden");
-          DOMElements.generateInsightsBtn.disabled = false;
-          return;
-        }
+  const payload = {
+    title: DOMElements.assignmentTitleInput.value.trim(),
+    description: "No description provided",
+    dueDate: new Date().toISOString(),
+    teacherId: studentId, 
+    schoolId: "school-001",
+    classId: DOMElements.assignmentSubjectInput.value.trim(),
+  };
 
-        currentUsage++;
+  try {
+    const res = await fetch(`${API_BASE_URL}/teacher/assignments`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw await res.json();
+    hideModal(DOMElements.assignmentModal);
+    showAlert("Success", "Assignment added successfully!");
+    fetchAssignments();
+  } catch (e) {
+    showAlert("Error", e.message || "Failed to add assignment.");
+  }
+};
 
-        try {
-          const resp = await get(`/rewards/advice`);
-          const advice = resp.advice || {};
-          const study =
-            advice.studyAdvice || "Keep working hard on your goals!";
-          const spend =
-            advice.spendingAdvice ||
-            "Track your expenses to stay on top of your budget.";
-          DOMElements.insightsContent.innerHTML = `
-        <p class="mb-2"><span class="font-semibold">📚 Study:</span> ${study}</p>
-        <p><span class="font-semibold">💰 Spending:</span> ${spend}</p>`;
-          DOMElements.insightsContent.classList.remove("hidden");
-        } catch (e) {
-          console.error(e);
-          showAlert(
-            "API Error",
-            e.message || "Failed to generate insights. Please try again later."
-          );
-          DOMElements.insightsContent.textContent =
-            "Failed to load insights. Please try again.";
-          DOMElements.insightsContent.classList.remove("hidden");
-        } finally {
-          DOMElements.insightsLoading.classList.add("hidden");
-          DOMElements.generateInsightsBtn.disabled = false;
-        }
-      };
+const handleSaveBudget = async () => {
+  let ok = true;
 
-      const handleContactFormSubmit = async (e) => {
-        e.preventDefault();
-        const payload = {
-          name: DOMElements.contactName.value,
-          email: DOMElements.contactEmail.value,
-          message: DOMElements.contactMessage.value,
-        };
+  if (!DOMElements.budgetTitleInput.value.trim()) {
+    DOMElements.budgetTitleError.textContent = "Title is required.";
+    DOMElements.budgetTitleError.classList.remove("hidden");
+    ok = false;
+  } else DOMElements.budgetTitleError.classList.add("hidden");
 
-        try {
-          const res = await fetch(`${API_BASE_URL}/contact`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+  if (!DOMElements.budgetAmountInput.value.trim() || isNaN(DOMElements.budgetAmountInput.value)) {
+    DOMElements.budgetAmountError.textContent = "Valid amount is required.";
+    DOMElements.budgetAmountError.classList.remove("hidden");
+    ok = false;
+  } else DOMElements.budgetAmountError.classList.add("hidden");
 
-          if (!res.ok) throw new Error("Failed to send message");
+  if (!ok) return;
 
-          showAlert("Success", "Your message has been sent!");
-          hideModal(DOMElements.contactModal);
-          DOMElements.contactForm.reset();
-        } catch (err) {
-          showAlert("Error", "Could not send message. Try again later.");
-          console.error(err);
-        }
-      };
+  const amount = parseFloat(DOMElements.budgetAmountInput.value);
+  const payload = {
+    description: DOMElements.budgetTitleInput.value.trim(),
+    amount,
+    type: amount >= 0 ? "income" : "expense",
+  };
 
-      const doLogout = async () => {
-        try {
-          await fetch(`${API_BASE_URL}/auth/logout`, {
-            method: "POST",
-            credentials: "include", // send cookies to clear them
-            headers: authHeaders(),
-          });
-        } catch (e) {
-          console.warn("Logout error:", e);
-        } finally {
-          // Redirect to login after server clears session
+  try {
+    const res = await fetch(`${API_BASE_URL}/budget`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw await res.json();
+    hideModal(DOMElements.budgetModal);
+    showAlert("Success", "Budget entry added successfully!");
+    fetchBudget();
+  } catch (e) {
+    showAlert("Error", e.message || "Failed to add budget entry.");
+  }
+};
+
+const handleSaveGoal = async () => {
+  const goalText = DOMElements.goalInput.value.trim();
+  if (!goalText) {
+    DOMElements.goalErrorEl.textContent = "Weekly goal cannot be empty.";
+    DOMElements.goalErrorEl.classList.remove("hidden");
+    return;
+  }
+  DOMElements.goalErrorEl.classList.add("hidden");
+
+  const oneWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const payload = {
+    description: goalText,
+    target_date: oneWeek,
+    progress: 0,
+    type: "academic",
+    is_completed: false,
+    points: 0,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/goals`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw await res.json();
+    showAlert("Success", "Weekly goal saved!");
+    fetchGoal();
+  } catch (e) {
+    showAlert("Error", e.message || "Failed to save goal.");
+  }
+};
+const generateAiInsights = async () => {
+  DOMElements.insightsPlaceholder.classList.add("hidden");
+  DOMElements.insightsContent.classList.add("hidden");
+  DOMElements.insightsLoading.classList.remove("hidden");
+  DOMElements.generateInsightsBtn.disabled = true;
+
+  try {
+    const resp = await get(`/rewards/advice`); 
+    const advice = resp.advice || {};
+    const studyAdvice = advice.studyAdvice || "Keep working hard on your goals!";
+    const spendingAdvice = advice.spendingAdvice || "Track your expenses to stay on top of your budget.";
+
+    DOMElements.insightsContent.innerHTML = `
+      <p class="mb-2"><span class="font-semibold">📚 Study:</span> ${studyAdvice}</p>
+      <p><span class="font-semibold">💰 Spending:</span> ${spendingAdvice}</p>
+    `;
+    DOMElements.insightsContent.classList.remove("hidden");
+  } catch (e) {
+    console.error(e);
+
+    if (e.status === 403) {
+      showAlert("Trial Expired", e.message);
+      DOMElements.insightsContent.textContent = e.message;
+    } else {
+      showAlert("API Error", e.message || "Failed to generate insights. Please try again later.");
+      DOMElements.insightsContent.textContent = "Failed to load insights. Please try again.";
+    }
+
+    DOMElements.insightsContent.classList.remove("hidden");
+  } finally {
+    DOMElements.insightsLoading.classList.add("hidden");
+    DOMElements.generateInsightsBtn.disabled = false;
+  }
+};
+
+
+const handleContactFormSubmit = async (e) => {
+  e.preventDefault();
+  const payload = {
+    name: DOMElements.contactName.value,
+    email: DOMElements.contactEmail.value,
+    message: DOMElements.contactMessage.value,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("Failed to send message");
+    showAlert("Success", "Your message has been sent!");
+    hideModal(DOMElements.contactModal);
+    DOMElements.contactForm.reset();
+  } catch (err) {
+    showAlert("Error", "Could not send message. Try again later.");
+    console.error(err);
+  }
+};
+
+
+// --- EVENT LISTENERS ---
+const setupEventListeners = () => {
+  DOMElements.menuBtn.addEventListener("click", () => {
+    showModal(DOMElements.menuModal);
+    DOMElements.menuContent.classList.remove("-translate-x-full");
+  });
+  DOMElements.closeMenuBtn.addEventListener("click", () => {
+    DOMElements.menuContent.classList.add("-translate-x-full");
+    setTimeout(() => hideModal(DOMElements.menuModal), 300);
+  });
+  DOMElements.addAssignmentBtn.addEventListener("click", () =>
+    showModal(DOMElements.assignmentModal)
+  );
+  DOMElements.addBudgetBtn.addEventListener("click", () =>
+    showModal(DOMElements.budgetModal)
+  );
+  DOMElements.cancelAssignmentBtn.addEventListener("click", () =>
+    hideModal(DOMElements.assignmentModal)
+  );
+  DOMElements.cancelBudgetBtn.addEventListener("click", () =>
+    hideModal(DOMElements.budgetModal)
+  );
+  DOMElements.contactLink.addEventListener("click", () =>
+    showModal(DOMElements.contactModal)
+  );
+
+  document.addEventListener("click", (e) => {
+    if (e.target === DOMElements.menuModal) hideModal(DOMElements.menuModal);
+    if (e.target === DOMElements.assignmentModal) hideModal(DOMElements.assignmentModal);
+    if (e.target === DOMElements.budgetModal) hideModal(DOMElements.budgetModal);
+    if (e.target === DOMElements.alertModal) closeAlert();
+    if (e.target === DOMElements.contactModal) hideModal(DOMElements.contactModal);
+  });
+
+  DOMElements.saveAssignmentBtn.addEventListener("click", handleSaveAssignment);
+  DOMElements.saveBudgetBtn.addEventListener("click", handleSaveBudget);
+  DOMElements.saveGoalBtn.addEventListener("click", handleSaveGoal);
+  DOMElements.logoutBtn.addEventListener("click", () =>
+    showAlert("Log Out", "Are you sure you want to log out?", doLogout)
+  );
+  DOMElements.menuLogoutBtn.addEventListener("click", () =>
+    showAlert("Log Out", "Are you sure you want to log out?", doLogout)
+  );
+  DOMElements.generateInsightsBtn.addEventListener("click", generateAiInsights);
+
+  DOMElements.alertConfirmBtn.addEventListener("click", () => {
+    if (alertConfirmAction) alertConfirmAction();
+    closeAlert();
+  });
+  DOMElements.alertCancelBtn.addEventListener("click", closeAlert);
+
+  DOMElements.contactForm.addEventListener("submit", handleContactFormSubmit);
+
+  DOMElements.subscriptionToggle.addEventListener("change", (e) => {
+    isSubscribed = e.target.checked;
+  });
+};
+
+const init = async () => {
+  window.addEventListener("DOMContentLoaded", async () => {
+    try {
+      setupEventListeners();
+      await Promise.all([
+        fetchAssignments(),
+        fetchQuizzes(),
+        fetchBudget(),
+        fetchGoal(),
+        fetchRewards(),
+        fetchStudentFeedback(),
+      ]);
+    } catch (err) {
+      console.error("Initialization failed:", err);
+      showAlert(
+        "Error",
+        "Could not load dashboard. Please log in again.",
+        () => {
+          localStorage.clear();
           window.location.href = "/login.html";
         }
-      };
+      );
+    }
+  });
+};
 
-      function startQuiz(quizId) {
-        window.location.href = `/public/student_quiz.html?quizId=${quizId}`;
-      }
+init();
+</script>
 
-      // --- EVENT LISTENERS (Centralized & Clean) ---
-      const setupEventListeners = () => {
-        // Modal Listeners
-        DOMElements.menuBtn.addEventListener("click", () => {
-          showModal(DOMElements.menuModal);
-          DOMElements.menuContent.classList.remove("-translate-x-full");
-        });
-        DOMElements.closeMenuBtn.addEventListener("click", () => {
-          DOMElements.menuContent.classList.add("-translate-x-full");
-          setTimeout(() => hideModal(DOMElements.menuModal), 300);
-        });
-        DOMElements.addAssignmentBtn.addEventListener("click", () =>
-          showModal(DOMElements.assignmentModal)
-        );
-        DOMElements.addBudgetBtn.addEventListener("click", () =>
-          showModal(DOMElements.budgetModal)
-        );
-        DOMElements.cancelAssignmentBtn.addEventListener("click", () =>
-          hideModal(DOMElements.assignmentModal)
-        );
-        DOMElements.cancelBudgetBtn.addEventListener("click", () =>
-          hideModal(DOMElements.budgetModal)
-        );
-        DOMElements.contactLink.addEventListener("click", () =>
-          showModal(DOMElements.contactModal)
-        );
-
-        // Global Modal Click to Close
-        document.addEventListener("click", (e) => {
-          if (e.target === DOMElements.menuModal)
-            hideModal(DOMElements.menuModal);
-          if (e.target === DOMElements.assignmentModal)
-            hideModal(DOMElements.assignmentModal);
-          if (e.target === DOMElements.budgetModal)
-            hideModal(DOMElements.budgetModal);
-          if (e.target === DOMElements.alertModal) closeAlert();
-          if (e.target === DOMElements.contactModal)
-            hideModal(DOMElements.contactModal);
-        });
-
-        // Button Actions
-        DOMElements.saveAssignmentBtn.addEventListener(
-          "click",
-          handleSaveAssignment
-        );
-        DOMElements.saveBudgetBtn.addEventListener("click", handleSaveBudget);
-        DOMElements.saveGoalBtn.addEventListener("click", handleSaveGoal);
-        DOMElements.logoutBtn.addEventListener("click", () =>
-          showAlert("Log Out", "Are you sure you want to log out?", doLogout)
-        );
-        DOMElements.menuLogoutBtn.addEventListener("click", () =>
-          showAlert("Log Out", "Are you sure you want to log out?", doLogout)
-        );
-        DOMElements.generateInsightsBtn.addEventListener(
-          "click",
-          generateAiInsights
-        );
-
-        // Alert Actions
-        DOMElements.alertConfirmBtn.addEventListener("click", () => {
-          if (alertConfirmAction) alertConfirmAction();
-          closeAlert();
-        });
-        DOMElements.alertCancelBtn.addEventListener("click", closeAlert);
-
-        // Contact Form
-        DOMElements.contactForm.addEventListener(
-          "submit",
-          handleContactFormSubmit
-        );
-
-        // Checkbox Toggles
-        DOMElements.subscriptionToggle.addEventListener("change", (e) => {
-          isSubscribed = e.target.checked;
-        });
-      };
-
-      // --- INITIALIZATION ---
-      const init = async () => {
-        // Wait for the DOM to be fully loaded
-        window.addEventListener("DOMContentLoaded", async () => {
-          try {
-            await fetchCsrfToken();
-            setupEventListeners();
-            await Promise.all([
-              fetchAssignments(),
-              fetchQuizzes(),
-              fetchBudget(),
-              fetchGoal(),
-              fetchRewards(),
-              fetchStudentFeedback(),
-            ]);
-          } catch (err) {
-            console.error("Initialization failed:", err);
-            showAlert(
-              "Error",
-              "Could not load dashboard. Please log in again.",
-              () => {
-                localStorage.clear();
-                window.location.href = "/login.html";
-              }
-            );
-          }
-        });
-      };
-
-      init();
-    </script>
   </body>
 </html>

@@ -196,32 +196,46 @@ const generateGeminiAdvice = async (student, budgetEntries) => {
     }
 };
 
-router.get('/advice', authenticateJWT, checkSubscription, async (req, res) => {
-    try {
-        const userId = req.user.userId;
+router.get('/advice', authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.user.id; 
+    const user = await User.findById(userId);
 
-        
-        const studentData = await StudentRewards.findOne({ studentId: userId });
-        const budgetData = await BudgetEntry.find({ userId }); 
-
-        if (!studentData) {
-            return res.status(200).json({ 
-                advice: {
-                    studyAdvice: "Start setting goals to get personalized advice!",
-                    spendingAdvice: "Log your first budget entry to get financial tips!"
-                }
-            });
-        }
-
-        const advice = await generateGeminiAdvice(studentData, budgetData);
-
-        res.status(200).json({ advice });
-
-    } catch (error) {
-        logger.error('Error fetching personalized advice:', error);
-        res.status(500).json({ message: 'Failed to fetch advice.' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
     }
+
+    if (user.is_on_trial && user.trialInsightsUsed >= user.trialInsightsLimit) {
+      return res.status(403).json({
+        message: `Trial limit reached. You can only generate ${user.trialInsightsLimit} AI insights. Please subscribe to continue.`,
+      });
+    }
+
+    const studentData = await StudentRewards.findOne({ studentId: userId });
+    const budgetData = await BudgetEntry.find({ userId });
+
+    let advice;
+    if (!studentData) {
+      advice = {
+        studyAdvice: "Start setting goals to get personalized advice!",
+        spendingAdvice: "Log your first budget entry to get financial tips!",
+      };
+    } else {
+      advice = await generateGeminiAdvice(studentData, budgetData);
+    }
+
+    if (user.is_on_trial) {
+      user.trialInsightsUsed = (user.trialInsightsUsed || 0) + 1;
+      await user.save();
+    }
+
+    res.status(200).json({ advice });
+  } catch (error) {
+    logger.error('Error fetching personalized advice:', error);
+    res.status(500).json({ message: 'Failed to fetch advice.' });
+  }
 });
+
 
 router.post('/teacher/add-points', authenticateJWT, requireAdmin, async (req, res) => {
     try {
