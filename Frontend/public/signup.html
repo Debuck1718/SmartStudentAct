@@ -948,7 +948,7 @@ requestOtpButton.addEventListener('click', async () => {
 });
 
     // Event listener for the Verify OTP button
-    verifyOtpButton.addEventListener('click', async () => {
+      verifyOtpButton.addEventListener('click', async () => {
         if (isSubmitting) return;
 
         const otpInput = document.getElementById('otpInput').value;
@@ -970,9 +970,20 @@ requestOtpButton.addEventListener('click', async () => {
             const data = await response.json();
 
             if (data.status === 'success') {
-                showMessage('Account successfully created! Redirecting to dashboard...', 'success');
-                // Redirect to dashboard on success, ensuring authentication as per user's request.
-                window.location.href = '/dashboard';
+                showMessage('Account successfully created! Redirecting...', 'success');
+
+                // 🔹 Save user role locally (optional for later use)
+                const userRole = form.occupation; // already set during signup
+
+                // 🔹 Redirect based on role
+                if (userRole === 'student') {
+                    window.location.href = 'students.html';
+                } else if (userRole === 'teacher') {
+                    window.location.href = 'teachers.html';
+                } else {
+                    // fallback if role is missing
+                    window.location.href = 'index.html';
+                }
             } else {
                 showMessage(data.message || 'OTP verification failed. Please try again.');
             }
@@ -983,7 +994,6 @@ requestOtpButton.addEventListener('click', async () => {
             setLoadingState(verifyOtpButton, false, 'Verify OTP');
         }
     });
-
     // Modal event listeners
     termsLink.addEventListener('click', (e) => {
         e.preventDefault();
