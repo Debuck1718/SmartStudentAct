@@ -1,191 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: "Inter", sans-serif;
-            background-color: #f5f5f5;
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f5f5f5;
+      }
+      .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid #fff;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
+        100% {
+          transform: rotate(360deg);
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+      }
     </style>
-</head>
-<body class="flex items-center justify-center min-h-screen px-4">
-
+  </head>
+  <body class="flex items-center justify-center min-h-screen px-4">
     <div class="w-full max-w-md bg-white shadow-md rounded-2xl p-8">
-        <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">SmartStudentAct Login</h1>
+      <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">
+        SmartStudentAct Login
+      </h1>
 
-        <div id="banner" class="hidden text-center mb-4 p-3 rounded-lg text-sm transition-all duration-300"></div>
+      <div
+        id="banner"
+        class="hidden text-center mb-4 p-3 rounded-lg text-sm transition-all duration-300"
+      ></div>
 
-        <div class="mb-4">
-            <input id="emailInput" type="email" 
-                   class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                   placeholder="Email" autocomplete="email" />
-            <p id="emailError" class="text-red-500 text-sm mt-1"></p>
+      <div class="mb-4">
+        <input
+          id="emailInput"
+          type="email"
+          class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          placeholder="Email"
+          autocomplete="email"
+        />
+        <p id="emailError" class="text-red-500 text-sm mt-1"></p>
+      </div>
+
+      <div class="mb-4">
+        <div
+          class="flex items-center border border-gray-300 rounded-lg bg-white"
+        >
+          <input
+            id="passwordInput"
+            type="password"
+            class="w-full h-12 px-4 rounded-l-lg focus:outline-none"
+            placeholder="Password"
+            autocomplete="current-password"
+          />
+          <button
+            id="passwordToggle"
+            type="button"
+            class="px-4 text-blue-600 font-bold"
+          >
+            Show
+          </button>
         </div>
+        <p id="passwordError" class="text-red-500 text-sm mt-1"></p>
+      </div>
 
-        <div class="mb-4">
-            <div class="flex items-center border border-gray-300 rounded-lg bg-white">
-                <input id="passwordInput" type="password" 
-                       class="w-full h-12 px-4 rounded-l-lg focus:outline-none"
-                       placeholder="Password" autocomplete="current-password" />
-                <button id="passwordToggle" type="button" class="px-4 text-blue-600 font-bold">Show</button>
-            </div>
-            <p id="passwordError" class="text-red-500 text-sm mt-1"></p>
-        </div>
+      <button
+        id="loginButton"
+        class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition"
+      >
+        Login
+      </button>
 
-        <button id="loginButton" 
-                class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
-            Login
-        </button>
-
-        <div class="mt-6 text-center space-y-2">
-            <a href="/signup.html" class="text-blue-600 hover:underline">Don’t have an account? Sign up</a><br />
-            <a href="/forgot-password.html" class="text-blue-600 hover:underline">Forgot Password?</a>
-        </div>
+      <div class="mt-6 text-center space-y-2">
+        <a href="/signup.html" class="text-blue-600 hover:underline"
+          >Don’t have an account? Sign up</a
+        ><br />
+        <a href="/forgot-password.html" class="text-blue-600 hover:underline"
+          >Forgot Password?</a
+        >
+      </div>
     </div>
 
-<script>
-const API_BASE_URL = window.location.hostname === "localhost"
-    ? "http://localhost:4000"
-    : "https://smartstudentact.onrender.com";
+    <script>
+      const API_BASE_URL =
+        window.location.hostname === "localhost"
+          ? "http://localhost:4000"
+          : "https://smartstudentact.onrender.com";
 
-const emailInput = document.getElementById("emailInput");
-const passwordInput = document.getElementById("passwordInput");
-const loginButton = document.getElementById("loginButton");
-const passwordToggle = document.getElementById("passwordToggle");
-const bannerEl = document.getElementById("banner");
-const emailErrorEl = document.getElementById("emailError");
-const passwordErrorEl = document.getElementById("passwordError");
+      const emailInput = document.getElementById("emailInput");
+      const passwordInput = document.getElementById("passwordInput");
+      const loginButton = document.getElementById("loginButton");
+      const passwordToggle = document.getElementById("passwordToggle");
+      const bannerEl = document.getElementById("banner");
+      const emailErrorEl = document.getElementById("emailError");
+      const passwordErrorEl = document.getElementById("passwordError");
 
-let showPassword = false;
+      let showPassword = false;
 
-function showBanner(message, type = "error") {
-    bannerEl.textContent = message;
-    bannerEl.classList.remove("hidden");
-    bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-green-100", "text-green-700", "bg-gray-100", "text-gray-700");
+      function showBanner(message, type = "error") {
+        bannerEl.textContent = message;
+        bannerEl.classList.remove("hidden");
+        bannerEl.classList.remove(
+          "bg-red-100",
+          "text-red-700",
+          "bg-green-100",
+          "text-green-700",
+          "bg-gray-100",
+          "text-gray-700"
+        );
 
-    if (type === "error") bannerEl.classList.add("bg-red-100", "text-red-700");
-    else if (type === "success") bannerEl.classList.add("bg-green-100", "text-green-700");
-    else bannerEl.classList.add("bg-gray-100", "text-gray-700");
-}
+        if (type === "error")
+          bannerEl.classList.add("bg-red-100", "text-red-700");
+        else if (type === "success")
+          bannerEl.classList.add("bg-green-100", "text-green-700");
+        else bannerEl.classList.add("bg-gray-100", "text-gray-700");
+      }
 
-function hideBanner() {
-    bannerEl.classList.add("hidden");
-}
+      function hideBanner() {
+        bannerEl.classList.add("hidden");
+      }
 
-function setError(el, msg, inputEl) {
-    if (msg) {
-        el.textContent = msg;
-        inputEl.classList.add("border-red-500");
-    } else {
-        el.textContent = "";
-        inputEl.classList.remove("border-red-500");
-    }
-}
+      function setError(el, msg, inputEl) {
+        if (msg) {
+          el.textContent = msg;
+          inputEl.classList.add("border-red-500");
+        } else {
+          el.textContent = "";
+          inputEl.classList.remove("border-red-500");
+        }
+      }
 
-function validateEmail(email) {
-    if (!email.trim()) return "Email cannot be empty.";
-    if (!/\S+@\S+\.\S+/.test(email)) return "Please enter a valid email address.";
-    return null;
-}
+      function validateEmail(email) {
+        if (!email.trim()) return "Email cannot be empty.";
+        if (!/\S+@\S+\.\S+/.test(email))
+          return "Please enter a valid email address.";
+        return null;
+      }
 
-function validatePassword(password) {
-    if (!password.trim()) return "Password cannot be empty.";
-    if (password.length < 6) return "Password must be at least 6 characters long.";
-    return null;
-}
+      function validatePassword(password) {
+        if (!password.trim()) return "Password cannot be empty.";
+        if (password.length < 6)
+          return "Password must be at least 6 characters long.";
+        return null;
+      }
 
-emailInput.addEventListener("input", () => { setError(emailErrorEl, null, emailInput); hideBanner(); });
-passwordInput.addEventListener("input", () => { setError(passwordErrorEl, null, passwordInput); hideBanner(); });
+      emailInput.addEventListener("input", () => {
+        setError(emailErrorEl, null, emailInput);
+        hideBanner();
+      });
+      passwordInput.addEventListener("input", () => {
+        setError(passwordErrorEl, null, passwordInput);
+        hideBanner();
+      });
 
-passwordToggle.addEventListener("click", () => {
-    showPassword = !showPassword;
-    passwordInput.type = showPassword ? "text" : "password";
-    passwordToggle.textContent = showPassword ? "Hide" : "Show";
-});
+      passwordToggle.addEventListener("click", () => {
+        showPassword = !showPassword;
+        passwordInput.type = showPassword ? "text" : "password";
+        passwordToggle.textContent = showPassword ? "Hide" : "Show";
+      });
 
-function setLoading(isLoading) {
-    loginButton.disabled = isLoading;
-    loginButton.innerHTML = isLoading ? '<div class="spinner mx-auto"></div>' : 'Login';
-}
+      function setLoading(isLoading) {
+        loginButton.disabled = isLoading;
+        loginButton.innerHTML = isLoading
+          ? '<div class="spinner mx-auto"></div>'
+          : "Login";
+      }
 
-loginButton.addEventListener("click", handleLogin);
+      loginButton.addEventListener("click", handleLogin);
 
-async function handleLogin() {
-    setError(emailErrorEl, null, emailInput);
-    setError(passwordErrorEl, null, passwordInput);
-    hideBanner();
+      async function handleLogin() {
+        setError(emailErrorEl, null, emailInput);
+        setError(passwordErrorEl, null, passwordInput);
+        hideBanner();
 
-    const emailValidation = validateEmail(emailInput.value);
-    const passwordValidation = validatePassword(passwordInput.value);
+        const emailValidation = validateEmail(emailInput.value);
+        const passwordValidation = validatePassword(passwordInput.value);
 
-    setError(emailErrorEl, emailValidation, emailInput);
-    setError(passwordErrorEl, passwordValidation, passwordInput);
-    if (emailValidation || passwordValidation) return;
+        setError(emailErrorEl, emailValidation, emailInput);
+        setError(passwordErrorEl, passwordValidation, passwordInput);
+        if (emailValidation || passwordValidation) return;
 
-    setLoading(true);
+        setLoading(true);
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/users/login`, {
+        try {
+          const response = await fetch(`${API_BASE_URL}/users/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include", // important for cookies
             body: JSON.stringify({
-                email: emailInput.value.trim().toLowerCase(),
-                password: passwordInput.value
-            })
-        });
+              email: emailInput.value.trim().toLowerCase(),
+              password: passwordInput.value,
+            }),
+          });
 
-        const data = await res.json();
+          const data = await res.json();
 
-        if (!res.ok) {
-            showBanner(data?.message || "Login failed. Invalid email or password.", "error");
+          if (!res.ok) {
+            showBanner(
+              data?.message || "Login failed. Invalid email or password.",
+              "error"
+            );
             return;
-        }
+          }
 
-        localStorage.setItem("jwtToken", data.token);
+          localStorage.setItem("jwtToken", data.token);
 
-        switch (data.user.role) {
+          switch (data.user.role) {
             case "global_overseer":
-                window.location.href = "/global_overseer.html";
-                break;
+              window.location.href = "/global_overseer.html";
+              break;
             case "overseer":
-                window.location.href = "/overseer.html";
-                break;
+              window.location.href = "/overseer.html";
+              break;
             case "student":
-                window.location.href = "/students.html";
-                break;
+              window.location.href = "/students.html";
+              break;
             case "teacher":
-                window.location.href = "/teachers.html";
-                break;
+              window.location.href = "/teachers.html";
+              break;
             case "admin":
-                window.location.href = "/admin.html";
-                break;
+              window.location.href = "/admin.html";
+              break;
             default:
-                showBanner("Invalid user role.", "error");
+              showBanner("Invalid user role.", "error");
+          }
+        } catch (err) {
+          console.error("Login error:", err);
+          showBanner(
+            "An unexpected error occurred. Please try again later.",
+            "error"
+          );
+        } finally {
+          setLoading(false);
         }
-
-    } catch (err) {
-        console.error("Login error:", err);
-        showBanner("An unexpected error occurred. Please try again later.", "error");
-    } finally {
-        setLoading(false);
-    }
-}
-</script>
-</body>
+      }
+    </script>
+  </body>
 </html>

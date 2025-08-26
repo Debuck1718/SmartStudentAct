@@ -1,89 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Global Overseer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
     <style>
-        body { font-family: "Inter", sans-serif; }
-        .loading-spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-top-color: #fff; border-radius: 50%; width: 1.5em; height: 1.5em; animation: spin 1s linear infinite; }
-        .spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #3b82f6; animation: spin 1s ease infinite; }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .loading-spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        width: 1.5em;
+        height: 1.5em;
+        animation: spin 1s linear infinite;
+      }
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #3b82f6;
+        animation: spin 1s ease infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
-</head>
-<body class="bg-gray-100 antialiased">
+  </head>
+  <body class="bg-gray-100 antialiased">
+    <div
+      id="app-container"
+      class="min-h-screen p-4 flex items-center justify-center"
+    ></div>
 
-<div id="app-container" class="min-h-screen p-4 flex items-center justify-center"></div>
-
-<!-- Alert Modal -->
-<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
+    <!-- Alert Modal -->
+    <div
+      id="alert-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50"
+    >
+      <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
         <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
         <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
         <div class="flex justify-end space-x-2">
-            <button id="alert-ok" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">OK</button>
+          <button
+            id="alert-ok"
+            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
+          >
+            OK
+          </button>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- Assign Region Modal -->
-<div id="assign-region-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+    <!-- Assign Region Modal -->
+    <div
+      id="assign-region-modal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50"
+    >
+      <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-lg">Assign Region to Overseer</h3>
-            <button id="assign-region-close" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+          <h3 class="font-bold text-lg">Assign Region to Overseer</h3>
+          <button
+            id="assign-region-close"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fas fa-times"></i>
+          </button>
         </div>
         <div class="space-y-3">
-            <div>
-                <label class="block text-sm font-semibold mb-1">Overseer Email</label>
-                <input type="email" id="overseer-email" class="w-full p-2 border rounded-lg" placeholder="overseer@example.com" />
-            </div>
-            <div>
-                <label class="block text-sm font-semibold mb-1">Region Name</label>
-                <input type="text" id="region-name" class="w-full p-2 border rounded-lg" placeholder="Region Name" />
-            </div>
-            <div class="flex justify-end space-x-2">
-                <button id="assign-region-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300">Cancel</button>
-                <button id="assign-region-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">Assign</button>
-            </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1"
+              >Overseer Email</label
+            >
+            <input
+              type="email"
+              id="overseer-email"
+              class="w-full p-2 border rounded-lg"
+              placeholder="overseer@example.com"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Region Name</label>
+            <input
+              type="text"
+              id="region-name"
+              class="w-full p-2 border rounded-lg"
+              placeholder="Region Name"
+            />
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button
+              id="assign-region-cancel"
+              class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300"
+            >
+              Cancel
+            </button>
+            <button
+              id="assign-region-confirm"
+              class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
+            >
+              Assign
+            </button>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-    // Configuration
-    const API_BASE_URL = "https://smartstudentact.onrender.com";
-    const appContainer = document.getElementById("app-container");
-    const state = {
+    <script>
+      // Configuration
+      const API_BASE_URL = "https://smartstudentact.onrender.com";
+      const appContainer = document.getElementById("app-container");
+      const state = {
         loggedIn: false,
         userRole: null,
         dashboardData: null,
         files: [],
         loading: true,
         error: null,
-    };
+      };
 
-    // --- Core Rendering Logic ---
-    function render() {
+      // --- Core Rendering Logic ---
+      function render() {
         if (state.loading) {
-            appContainer.innerHTML = `<div class="flex flex-col items-center justify-center min-h-screen text-center"><div class="spinner"></div><p class="mt-2 text-gray-600">Loading...</p></div>`;
+          appContainer.innerHTML = `<div class="flex flex-col items-center justify-center min-h-screen text-center"><div class="spinner"></div><p class="mt-2 text-gray-600">Loading...</p></div>`;
         } else if (state.error) {
-            appContainer.innerHTML = `<div class="text-center p-6 bg-white shadow rounded-xl max-w-sm"><h2 class="text-xl font-bold text-red-600 mb-2">Error</h2><p class="text-sm text-gray-700">${state.error}</p><button onclick="window.location.reload()" class="mt-4 bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Try Again</button></div>`;
+          appContainer.innerHTML = `<div class="text-center p-6 bg-white shadow rounded-xl max-w-sm"><h2 class="text-xl font-bold text-red-600 mb-2">Error</h2><p class="text-sm text-gray-700">${state.error}</p><button onclick="window.location.reload()" class="mt-4 bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Try Again</button></div>`;
         } else if (state.loggedIn) {
-            renderDashboard();
+          renderDashboard();
         }
-    }
+      }
 
-    function renderDashboard() {
+      function renderDashboard() {
         const overview = state.dashboardData?.managedRegions || [];
         const totalRegions = overview.length;
-        const totalSchools = overview.reduce((sum, r) => sum + (r.totalSchools || 0), 0);
-        const totalAdmins = overview.reduce((sum, r) => sum + (r.totalAdmins || 0), 0);
+        const totalSchools = overview.reduce(
+          (sum, r) => sum + (r.totalSchools || 0),
+          0
+        );
+        const totalAdmins = overview.reduce(
+          (sum, r) => sum + (r.totalAdmins || 0),
+          0
+        );
         const totalUsers = state.dashboardData?.totalUsers || 0;
 
         appContainer.innerHTML = `
@@ -104,134 +175,169 @@
                 </div>
 
                 <h2 class="text-lg font-bold mb-2">📌 Managed Regions</h2>
-                <div class="space-y-3">${overview.map(r => `
+                <div class="space-y-3">${overview
+                  .map(
+                    (r) => `
                     <div class="bg-white p-4 rounded-xl shadow">
                         <h3 class="font-semibold">${r.name}</h3>
-                        <p class="text-sm text-gray-600">Schools: ${r.totalSchools || 0}</p>
-                        <p class="text-sm text-gray-600">Admins: ${r.totalAdmins || 0}</p>
-                    </div>`).join("")}</div>
+                        <p class="text-sm text-gray-600">Schools: ${
+                          r.totalSchools || 0
+                        }</p>
+                        <p class="text-sm text-gray-600">Admins: ${
+                          r.totalAdmins || 0
+                        }</p>
+                    </div>`
+                  )
+                  .join("")}</div>
 
                 <h2 class="text-lg font-bold mt-6 mb-2">📂 Uploaded Files</h2>
                 <div class="space-y-2">
-                    ${state.files.map(f => `
+                    ${state.files
+                      .map(
+                        (f) => `
                         <div class="bg-white p-3 rounded-xl shadow flex justify-between items-center">
                             <span>${f.filename} (${f.type})</span>
                             <a href="${f.url}" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700">View</a>
-                        </div>`).join("")}
+                        </div>`
+                      )
+                      .join("")}
                 </div>
             </div>
         `;
-        document.getElementById("assign-region-btn").addEventListener("click", openAssignRegionModal);
-        document.getElementById("logout-btn").addEventListener("click", handleLogout);
-    }
+        document
+          .getElementById("assign-region-btn")
+          .addEventListener("click", openAssignRegionModal);
+        document
+          .getElementById("logout-btn")
+          .addEventListener("click", handleLogout);
+      }
 
-    async function authFetch(url, options = {}) {
-        const res = await fetch(url, {
-            ...options,
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                ...(options.headers || {})
-            },
-        });
+      async function authFetch(url, options = {}) {
+        const dashboard = await fetch(
+          `${API_BASE_URL}/api/global-overseer/dashboard-overview`,
+          {
+            method: "GET",
+            credentials: "include", // sends the access_token cookie automatically
+          }
+        );
 
         if (res.status === 401 || res.status === 403) {
-            console.error("Authorization failed. Redirecting to login.");
-            window.location.href = '/login.html';
-            return null;
+          console.error("Authorization failed. Redirecting to login.");
+          window.location.href = "/login.html";
+          return null;
         }
 
         if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.message || `API call failed with status: ${res.status}`);
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(
+            errorData.message || `API call failed with status: ${res.status}`
+          );
         }
 
         return res;
-    }
+      }
 
-    function showAlert(title, message) {
+      function showAlert(title, message) {
         const modal = document.getElementById("alert-modal");
         document.getElementById("alert-title").textContent = title;
         document.getElementById("alert-message").textContent = message;
         modal.classList.remove("hidden");
-    }
-    document.getElementById("alert-ok").addEventListener("click", () => document.getElementById("alert-modal").classList.add("hidden"));
+      }
+      document
+        .getElementById("alert-ok")
+        .addEventListener("click", () =>
+          document.getElementById("alert-modal").classList.add("hidden")
+        );
 
-    const assignModal = document.getElementById("assign-region-modal");
-    function openAssignRegionModal() { assignModal.classList.remove("hidden"); }
-    function closeAssignRegionModal() { assignModal.classList.add("hidden"); }
-    document.getElementById("assign-region-close").addEventListener("click", closeAssignRegionModal);
-    document.getElementById("assign-region-cancel").addEventListener("click", closeAssignRegionModal);
-    async function assignRegion() {
+      const assignModal = document.getElementById("assign-region-modal");
+      function openAssignRegionModal() {
+        assignModal.classList.remove("hidden");
+      }
+      function closeAssignRegionModal() {
+        assignModal.classList.add("hidden");
+      }
+      document
+        .getElementById("assign-region-close")
+        .addEventListener("click", closeAssignRegionModal);
+      document
+        .getElementById("assign-region-cancel")
+        .addEventListener("click", closeAssignRegionModal);
+      async function assignRegion() {
         const email = document.getElementById("overseer-email").value.trim();
         const region = document.getElementById("region-name").value.trim();
-        if (!email || !region) return showAlert("Error", "Both fields are required.");
+        if (!email || !region)
+          return showAlert("Error", "Both fields are required.");
 
         const btn = document.getElementById("assign-region-confirm");
         btn.disabled = true;
         try {
-            const res = await authFetch(`${API_BASE_URL}/api/global-overseer/assign-region`, {
-                method: "POST",
-                body: JSON.stringify({ overseerEmail: email, region })
-            });
-            if (!res) return;
-            const data = await res.json();
-            showAlert("Success", data.message);
-            closeAssignRegionModal();
+          const res = await authFetch(
+            `${API_BASE_URL}/api/global-overseer/assign-region`,
+            {
+              method: "POST",
+              body: JSON.stringify({ overseerEmail: email, region }),
+            }
+          );
+          if (!res) return;
+          const data = await res.json();
+          showAlert("Success", data.message);
+          closeAssignRegionModal();
         } catch (err) {
-            console.error("Assign error:", err);
-            showAlert("Error", err.message);
+          console.error("Assign error:", err);
+          showAlert("Error", err.message);
         } finally {
-            btn.disabled = false;
+          btn.disabled = false;
         }
-    }
-    document.getElementById("assign-region-confirm").addEventListener("click", assignRegion);
+      }
+      document
+        .getElementById("assign-region-confirm")
+        .addEventListener("click", assignRegion);
 
-    // --- Authentication & Data Fetching ---
-    async function handleLogout() {
+      // --- Authentication & Data Fetching ---
+      async function handleLogout() {
         try {
-            // Make a call to the backend to clear the HttpOnly cookie
-            await fetch(`${API_BASE_URL}/users/logout`, { credentials: "include" });
+          // Make a call to the backend to clear the HttpOnly cookie
+          await fetch(`${API_BASE_URL}/users/logout`, {
+            credentials: "include",
+          });
         } catch (error) {
-            console.error("Logout failed:", error);
+          console.error("Logout failed:", error);
         } finally {
-            // Redirect to the login page, regardless of the API call result
-            window.location.href = '/login.html';
+          // Redirect to the login page, regardless of the API call result
+          window.location.href = "/login.html";
         }
-    }
+      }
 
-    async function fetchAllData() {
+      async function fetchAllData() {
         state.loading = true;
         state.error = null;
         render(); // Show loading state
 
         try {
-            const [dashboardRes, fileRes] = await Promise.all([
-                authFetch(`${API_BASE_URL}/api/global-overseer/dashboard-overview`),
-                authFetch(`${API_BASE_URL}/api/global-overseer/all-files`)
-            ]);
-            
-            if (!dashboardRes || !fileRes) {
-                
-                return;
-            }
+          const [dashboardRes, fileRes] = await Promise.all([
+            authFetch(`${API_BASE_URL}/api/global-overseer/dashboard-overview`),
+            authFetch(`${API_BASE_URL}/api/global-overseer/all-files`),
+          ]);
 
-            state.dashboardData = await dashboardRes.json();
-            state.files = (await fileRes.json()).files || [];
-            state.loggedIn = true;
+          if (!dashboardRes || !fileRes) {
+            return;
+          }
+
+          state.dashboardData = await dashboardRes.json();
+          state.files = (await fileRes.json()).files || [];
+          state.loggedIn = true;
         } catch (err) {
-            console.error("Data fetch error:", err);
-            state.error = "Failed to load dashboard data.";
-            
+          console.error("Data fetch error:", err);
+          state.error = "Failed to load dashboard data.";
         } finally {
-            state.loading = false;
-            render();
+          state.loading = false;
+          render();
         }
-    }
+      }
 
-    document.addEventListener("DOMContentLoaded", async () => {
+      document.addEventListener("DOMContentLoaded", async () => {
         await fetchAllData();
-    });
-</script>
-</body>
+      });
+    </script>
+  </body>
 </html>
