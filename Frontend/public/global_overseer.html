@@ -136,17 +136,6 @@ function showError(message) {
 
 // Fetch dashboard data
 async function loadDashboard() {
-  const token = localStorage.getItem("jwt_token");
-  if (!token) {
-    showError("Not logged in. Please log in first.");
-    setTimeout(() => {
-      window.location.href = "/login.html";
-    }, 2000);
-    return;
-  }
-
-  showLoading();
-
   try {
  const response = await fetch(`${API_BASE_URL}/global-overseer/dashboard-overview`, {
   method: "GET",
