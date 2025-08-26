@@ -12,8 +12,9 @@ const StudentRewards = require('../models/StudentRewards');
 const User = require('../models/User'); 
 const Reward = require('../models/Reward');
 const BudgetEntry = require('../models/BudgetEntry');
-// 🐛 FIX: Import hasRole along with authenticateJWT
-const { authenticateJWT, hasRole } = require('../middlewares/auth');
+// ✅ FIX: The auth middleware exports 'requireAdmin', not 'hasRole'. 
+// We are importing the correct function now.
+const { authenticateJWT, requireAdmin } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
 
 
@@ -267,7 +268,8 @@ router.get('/advice', authenticateJWT, checkSubscription, async (req, res) => {
 
 // Route for a teacher/admin to add points to a student (Basic)
 // 🆕 Updated path to match frontend
-router.post('/teacher/add-points', authenticateJWT, hasRole('teacher'), async (req, res) => {
+// ✅ FIX: Changed `hasRole('teacher')` to the `requireAdmin` middleware, as it's the correct function exported by auth.js
+router.post('/teacher/add-points', authenticateJWT, requireAdmin, async (req, res) => {
     try {
         const { studentEmail, points, reason } = req.body;
         if (!studentEmail || points === undefined || !reason) {
