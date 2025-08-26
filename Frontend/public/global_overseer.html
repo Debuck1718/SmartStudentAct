@@ -1,192 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Global Overseer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-    <style>
-      body {
-        font-family: "Inter", sans-serif;
-      }
-      .loading-spinner {
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        border-top-color: #fff;
-        border-radius: 50%;
-        width: 1.5em;
-        height: 1.5em;
-        animation: spin 1s linear infinite;
-      }
-      .spinner {
-        border: 4px solid rgba(0, 0, 0, 0.1);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border-left-color: #3b82f6;
-        animation: spin 1s ease infinite;
-      }
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
-  </head>
-  <body class="bg-gray-100 antialiased">
-    <div
-      id="app-container"
-      class="min-h-screen p-4 flex items-center justify-center"
-    ></div>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Global Overseer Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
+body { font-family: "Inter", sans-serif; }
+.spinner { border: 4px solid rgba(0,0,0,0.1); width:36px; height:36px; border-radius:50%; border-left-color:#3b82f6; animation:spin 1s ease infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body class="bg-gray-100 antialiased">
+<div class="min-h-screen p-6">
+  <h1 class="text-3xl font-bold mb-6">Global Overseer Dashboard</h1>
 
-    <!-- Alert Modal -->
-    <div
-      id="alert-modal"
-      class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50"
-    >
-      <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
-        <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
-        <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
-        <div class="flex justify-end space-x-2">
-          <button
-            id="alert-ok"
-            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
-          >
-            OK
-          </button>
-        </div>
+  <!-- Assign Region Button -->
+  <button id="open-assign-region" class="mb-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Assign Region</button>
+
+  <!-- Dashboard Cards -->
+  <div id="dashboard-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"></div>
+
+  <!-- All Files Section -->
+  <div class="bg-white p-6 rounded-lg shadow">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+      <h2 class="text-2xl font-semibold mb-2 md:mb-0">All Files</h2>
+      <div class="flex space-x-2">
+        <input type="text" id="file-search" placeholder="Search by filename..." class="px-3 py-1 border rounded-lg"/>
+        <select id="file-filter" class="px-3 py-1 border rounded-lg">
+          <option value="">All Types</option>
+          <option value="Assignment">Assignment</option>
+          <option value="Submission">Submission</option>
+          <option value="Feedback">Feedback</option>
+        </select>
       </div>
     </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-200">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="py-2 px-4 text-left cursor-pointer" data-sort="filename">Filename <i class="fas fa-sort"></i></th>
+            <th class="py-2 px-4 text-left cursor-pointer" data-sort="type">Type <i class="fas fa-sort"></i></th>
+            <th class="py-2 px-4 text-left cursor-pointer" data-sort="uploaded_by">Uploaded By <i class="fas fa-sort"></i></th>
+            <th class="py-2 px-4 text-left">Action</th>
+          </tr>
+        </thead>
+        <tbody id="files-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-    <!-- Assign Region Modal -->
-    <div
-      id="assign-region-modal"
-      class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50"
-    >
-      <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-lg">Assign Region to Overseer</h3>
-          <button
-            id="assign-region-close"
-            class="text-gray-500 hover:text-gray-700"
-          >
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="space-y-3">
-          <div>
-            <label class="block text-sm font-semibold mb-1"
-              >Overseer Email</label
-            >
-            <input
-              type="email"
-              id="overseer-email"
-              class="w-full p-2 border rounded-lg"
-              placeholder="overseer@example.com"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-1">Region Name</label>
-            <input
-              type="text"
-              id="region-name"
-              class="w-full p-2 border rounded-lg"
-              placeholder="Region Name"
-            />
-          </div>
-          <div class="flex justify-end space-x-2">
-            <button
-              id="assign-region-cancel"
-              class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300"
-            >
-              Cancel
-            </button>
-            <button
-              id="assign-region-confirm"
-              class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
-            >
-              Assign
-            </button>
-          </div>
-        </div>
+<!-- Assign Region Modal -->
+<div id="assign-region-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg">Assign Region to Overseer</h3>
+      <button id="assign-region-close" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-semibold mb-1">Overseer Email</label>
+        <input type="email" id="overseer-email" class="w-full p-2 border rounded-lg" placeholder="overseer@example.com"/>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1">Region Name</label>
+        <input type="text" id="region-name" class="w-full p-2 border rounded-lg" placeholder="Region Name"/>
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button id="assign-region-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition">Cancel</button>
+        <button id="assign-region-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">Assign</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
+    <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
+    <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
+    <div class="flex justify-end">
+      <button id="alert-ok" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">OK</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const API_BASE_URL = "https://smartstudentact.onrender.com/api";
-const appContainer = document.getElementById("app-container");
+let filesData = [];
 
-// Show a loading spinner
+const dashboardCards = document.getElementById("dashboard-cards");
+const filesTableBody = document.getElementById("files-table-body");
+const assignRegionModal = document.getElementById("assign-region-modal");
+const openAssignRegionBtn = document.getElementById("open-assign-region");
+const assignRegionClose = document.getElementById("assign-region-close");
+const assignRegionCancel = document.getElementById("assign-region-cancel");
+const assignRegionConfirm = document.getElementById("assign-region-confirm");
+const overseerEmailInput = document.getElementById("overseer-email");
+const regionNameInput = document.getElementById("region-name");
+const alertModal = document.getElementById("alert-modal");
+const alertTitle = document.getElementById("alert-title");
+const alertMessage = document.getElementById("alert-message");
+const alertOk = document.getElementById("alert-ok");
+const fileSearch = document.getElementById("file-search");
+const fileFilter = document.getElementById("file-filter");
+
+// Modal handlers
+openAssignRegionBtn.addEventListener("click", () => assignRegionModal.classList.remove("hidden"));
+assignRegionClose.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
+assignRegionCancel.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
+alertOk.addEventListener("click", () => alertModal.classList.add("hidden"));
+
+function showAlert(title, message) {
+  alertTitle.textContent = title;
+  alertMessage.textContent = message;
+  alertModal.classList.remove("hidden");
+}
+
 function showLoading() {
-  appContainer.innerHTML = '<div class="spinner mx-auto"></div>';
+  dashboardCards.innerHTML = '<div class="spinner mx-auto"></div>';
+  filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
 }
 
-// Show an error message
 function showError(message) {
-  appContainer.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
+  dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
 }
 
-// Fetch dashboard data
+// Load dashboard and files
 async function loadDashboard() {
   showLoading();
-
   try {
-    const response = await fetch(`${API_BASE_URL}/global-overseer/dashboard-overview`, {
-      method: "GET",
-      credentials: "include"
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
+    const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard-overview`, { method: "GET", credentials: "include" });
+    const data = await res.json();
+    if (!res.ok) {
       showError(data.message || "Failed to load dashboard.");
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem("jwt_token");
-        setTimeout(() => window.location.href = "/login.html", 2000);
-      }
+      if (res.status === 401 || res.status === 403) localStorage.removeItem("jwt_token");
       return;
     }
-
     renderDashboard(data);
+
+    const filesRes = await fetch(`${API_BASE_URL}/admin/all-files`, { method: "GET", credentials: "include" });
+    const filesDataRes = await filesRes.json();
+    if (filesRes.ok) {
+      filesData = filesDataRes.files || [];
+      renderFiles();
+    }
   } catch (err) {
     console.error(err);
     showError("An unexpected error occurred while loading the dashboard.");
   }
 }
 
-// Render dashboard UI
 function renderDashboard(data) {
-  let html = `<h1 class="text-2xl font-bold mb-4">Global Overseer Dashboard</h1>`;
-  html += `<p class="mb-4">Total Users: ${data.totalUsers}</p>`;
-  html += `<div class="space-y-4">`;
-
+  dashboardCards.innerHTML = "";
   data.managedRegions.forEach(region => {
-    html += `
-      <div class="bg-white p-4 rounded-lg shadow">
-        <h2 class="font-semibold">${region.name}</h2>
-        <p>Schools: ${region.totalSchools}</p>
-        <p>Admins: ${region.totalAdmins}</p>
-        <p>Teachers: ${region.totalTeachers}</p>
-        <p>Students: ${region.totalStudents}</p>
-      </div>
+    const card = document.createElement("div");
+    card.className = "bg-white p-6 rounded-lg shadow";
+    card.innerHTML = `
+      <h2 class="text-xl font-semibold mb-2">${region.name}</h2>
+      <p>Schools: ${region.totalSchools}</p>
+      <p>Admins: ${region.totalAdmins}</p>
+      <p>Teachers: ${region.totalTeachers}</p>
+      <p>Students: ${region.totalStudents}</p>
     `;
+    dashboardCards.appendChild(card);
   });
-
-  html += `</div>`;
-  appContainer.innerHTML = html;
 }
 
-// Load dashboard on page load
+// Files
+function renderFiles() {
+  let filteredFiles = filesData.filter(f => {
+    const searchTerm = fileSearch.value.toLowerCase();
+    const typeFilter = fileFilter.value;
+    return (!searchTerm || f.filename.toLowerCase().includes(searchTerm))
+           && (!typeFilter || f.type === typeFilter);
+  });
+
+  filesTableBody.innerHTML = "";
+  if (filteredFiles.length === 0) {
+    filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No files found.</td></tr>';
+    return;
+  }
+
+  filteredFiles.forEach(file => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="border px-4 py-2">${file.filename}</td>
+      <td class="border px-4 py-2">${file.type}</td>
+      <td class="border px-4 py-2">${file.uploaded_by || file.created_by}</td>
+      <td class="border px-4 py-2">
+        <a href="${API_BASE_URL}/admin/view-file/${file.type.toLowerCase()}/${file.filename}" target="_blank" class="text-blue-600 hover:underline">View</a>
+      </td>
+    `;
+    filesTableBody.appendChild(tr);
+  });
+}
+
+// Filter/search
+fileSearch.addEventListener("input", renderFiles);
+fileFilter.addEventListener("change", renderFiles);
+
+// Assign region
+assignRegionConfirm.addEventListener("click", async () => {
+  const email = overseerEmailInput.value.trim();
+  const region = regionNameInput.value.trim();
+  if (!email || !region) return showAlert("Error", "Email and region cannot be empty.");
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/assign-region`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ overseerEmail: email, region })
+    });
+    const data = await res.json();
+    if (!res.ok) return showAlert("Error", data.error || "Failed to assign region.");
+    showAlert("Success", data.message);
+    overseerEmailInput.value = "";
+    regionNameInput.value = "";
+    assignRegionModal.classList.add("hidden");
+    loadDashboard();
+  } catch (err) {
+    console.error(err);
+    showAlert("Error", "Failed to assign region. Try again later.");
+  }
+});
+
+// Initial load
 window.addEventListener("DOMContentLoaded", loadDashboard);
 </script>
-
 </body>
 </html>
