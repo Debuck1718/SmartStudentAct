@@ -1,4 +1,3 @@
-
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -16,14 +15,15 @@ const {
 } = require("../utils/email");
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key";
-const JWT_EXPIRES = process.env.JWT_EXPIRES || "1d"; 
+const JWT_EXPIRES = process.env.JWT_EXPIRES || "1d";
 
 module.exports = (eventBus, agenda) => {
   const publicRouter = express.Router();
 
-
   const signupOtpSchema = Joi.object({
-    phone: Joi.string().pattern(/^\d{10,15}$/).required(),
+    phone: Joi.string()
+      .pattern(/^\d{10,15}$/)
+      .required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
     firstname: Joi.string().min(2).max(50).required(),
@@ -167,53 +167,55 @@ module.exports = (eventBus, agenda) => {
   );
 
   publicRouter.post("/users/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+    try {
+      const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ status: false, message: "Email and password are required." });
+      if (!email || !password) {
+        return res
+          .status(400)
+          .json({ status: false, message: "Email and password are required." });
+      }
+
+      const user = await User.findOne({ email }).select("+password");
+      if (!user) {
+        return res
+          .status(401)
+          .json({ status: false, message: "Invalid credentials." });
+      }
+
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        return res
+          .status(401)
+          .json({ status: false, message: "Invalid credentials." });
+      }
+
+      const token = jwt.sign(
+        { id: user._id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+
+      res.cookie("access_token", token, {
+        httpOnly: true,
+        secure: true, // true in production
+        sameSite: "None", // allows cross-site requests if needed
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
+      });
+      res.json({
+        status: true,
+        message: "Login successful",
+        user: {
+          email: user.email,
+          role: user.role,
+          id: user._id,
+        },
+      });
+    } catch (err) {
+      console.error("Login error:", err);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
-
-    const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-      return res.status(401).json({ status: false, message: "Invalid credentials." });
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ status: false, message: "Invalid credentials." });
-    }
-
-    const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    res.cookie("access_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
-    return res.status(200).json({
-      status: true,
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } catch (err) {
-    console.error("Login error:", err);
-    return res.status(500).json({ status: false, message: "Server error" });
-  }
-});
+  });
 
   publicRouter.post(
     "/auth/forgot-password",
@@ -302,4 +304,3 @@ module.exports = (eventBus, agenda) => {
 
   return publicRouter;
 };
-
