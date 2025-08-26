@@ -7,54 +7,45 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: "Inter", sans-serif; background-color: #f5f5f5; }
-    .spinner {
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-top: 4px solid #fff;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-    }
+    .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="flex items-center justify-center min-h-screen px-4">
 
-<div class="w-full max-w-md bg-white shadow-md rounded-2xl p-8">
-  <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">SmartStudentAct Login</h1>
+  <div class="w-full max-w-md bg-white shadow-md rounded-2xl p-8">
+    <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">SmartStudentAct Login</h1>
 
-  <div id="banner" class="hidden text-center mb-4 p-3 rounded-lg text-sm transition-all duration-300"></div>
+    <div id="banner" class="hidden text-center mb-4 p-3 rounded-lg text-sm transition-all duration-300"></div>
 
-  <div class="mb-4">
-    <input id="emailInput" type="email"
-           class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-           placeholder="Email" autocomplete="email" />
-    <p id="emailError" class="text-red-500 text-sm mt-1"></p>
-  </div>
-
-  <div class="mb-4">
-    <div class="flex items-center border border-gray-300 rounded-lg bg-white">
-      <input id="passwordInput" type="password"
-             class="w-full h-12 px-4 rounded-l-lg focus:outline-none"
-             placeholder="Password" autocomplete="current-password" />
-      <button id="passwordToggle" type="button" class="px-4 text-blue-600 font-bold">Show</button>
+    <div class="mb-4">
+      <input id="emailInput" type="email" 
+             class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+             placeholder="Email" autocomplete="email" />
+      <p id="emailError" class="text-red-500 text-sm mt-1"></p>
     </div>
-    <p id="passwordError" class="text-red-500 text-sm mt-1"></p>
-  </div>
 
-  <button id="loginButton"
-          class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">
-    Login
-  </button>
+    <div class="mb-4">
+      <div class="flex items-center border border-gray-300 rounded-lg bg-white">
+        <input id="passwordInput" type="password" 
+               class="w-full h-12 px-4 rounded-l-lg focus:outline-none"
+               placeholder="Password" autocomplete="current-password" />
+        <button id="passwordToggle" type="button" class="px-4 text-blue-600 font-bold">Show</button>
+      </div>
+      <p id="passwordError" class="text-red-500 text-sm mt-1"></p>
+    </div>
 
-  <div class="mt-6 text-center space-y-2">
-    <a href="/signup.html" class="text-blue-600 hover:underline">Don’t have an account? Sign up</a><br />
-    <a href="/forgot-password.html" class="text-blue-600 hover:underline">Forgot Password?</a>
+    <button id="loginButton" class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">Login</button>
+
+    <div class="mt-6 text-center space-y-2">
+      <a href="/signup.html" class="text-blue-600 hover:underline">Don’t have an account? Sign up</a><br />
+      <a href="/forgot-password.html" class="text-blue-600 hover:underline">Forgot Password?</a>
+    </div>
   </div>
-</div>
 
 <script>
-const API_BASE_URL = "https://smartstudentact.onrender.com/api";
+const API_BASE_URL = "https://smartstudentact.onrender.com/api"; 
+
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
 const loginButton = document.getElementById("loginButton");
@@ -67,7 +58,7 @@ let showPassword = false;
 
 function showBanner(message, type='error') {
   bannerEl.textContent = message;
-  bannerEl.classList.remove("hidden", "bg-red-100","text-red-700","bg-green-100","text-green-700","bg-gray-100","text-gray-700");
+  bannerEl.classList.remove("hidden","bg-red-100","text-red-700","bg-green-100","text-green-700","bg-gray-100","text-gray-700");
   if(type === 'error') bannerEl.classList.add("bg-red-100","text-red-700");
   else if(type === 'success') bannerEl.classList.add("bg-green-100","text-green-700");
   else bannerEl.classList.add("bg-gray-100","text-gray-700");
@@ -76,13 +67,8 @@ function showBanner(message, type='error') {
 function hideBanner() { bannerEl.classList.add("hidden"); }
 
 function setError(el, message, inputEl) {
-  if(message) {
-    el.textContent = message;
-    inputEl.classList.add("border-red-500");
-  } else {
-    el.textContent = "";
-    inputEl.classList.remove("border-red-500");
-  }
+  if(message) { el.textContent = message; inputEl.classList.add("border-red-500"); }
+  else { el.textContent=""; inputEl.classList.remove("border-red-500"); }
 }
 
 function validateEmail(email) {
@@ -127,31 +113,26 @@ async function handleLogin() {
     const res = await fetch(`${API_BASE_URL}/users/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include", // ✅ include cookies
-      body: JSON.stringify({
-        email: emailInput.value.trim().toLowerCase(),
-        password: passwordInput.value
-      })
+      credentials: "include", // crucial for cookie-based JWT
+      body: JSON.stringify({ email: emailInput.value.trim().toLowerCase(), password: passwordInput.value })
     });
 
-    let data = {};
-    try { data = await res.json(); } catch(e){}
+    const data = await res.json();
 
     if(!res.ok) {
-      showBanner(data.message || "Login failed. Invalid credentials.", "error");
+      showBanner(data.message || "Login failed. Invalid credentials.", 'error');
       return;
     }
 
-    // Save JWT for Authorization header (if needed)
-    localStorage.setItem("jwt_token", data.token);
+    // No need to save JWT; cookie is httpOnly
 
     // Redirect based on role
     switch(data.user?.role) {
-      case "global_overseer": window.location.href = "/global_overseer.html"; break;
-      case "overseer": window.location.href = "/overseer.html"; break;
-      case "admin": window.location.href = "/admin.html"; break;
-      case "teacher": window.location.href = "/teachers.html"; break;
-      case "student": window.location.href = "/students.html"; break;
+      case "global_overseer": window.location.href="/global_overseer.html"; break;
+      case "overseer": window.location.href="/overseer.html"; break;
+      case "admin": window.location.href="/admin.html"; break;
+      case "teacher": window.location.href="/teachers.html"; break;
+      case "student": window.location.href="/students.html"; break;
       default: showBanner("Unknown user role.", "error");
     }
 
@@ -166,3 +147,4 @@ async function handleLogin() {
 </script>
 </body>
 </html>
+
