@@ -4,22 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Teacher Dashboard</title>
-    <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <style>
-      /* Import the Inter font for a clean, modern look */
+  
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
       body {
         font-family: "Inter", sans-serif;
       }
 
-      /* Custom styles for the message modal */
       #messageModal,
       #promptModal {
         display: none;
@@ -68,7 +65,6 @@
         gap: 10px;
       }
 
-      /* Custom styles for the file input button */
       .custom-file-input::-webkit-file-upload-button {
         visibility: hidden;
       }
@@ -126,7 +122,6 @@
     </style>
   </head>
   <body class="bg-slate-100 min-h-screen">
-    <!-- Loading Overlay -->
     <div
       id="loadingOverlay"
       class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]"
@@ -574,9 +569,6 @@
     </div>
 
 <script>
-  // =========================
-  // --- State Variables ---
-  // =========================
   let students = [];
   let overdueTasks = [];
   let assignedTasks = [];
@@ -584,121 +576,86 @@
   let selectedAssignmentFile = null;
   let isDropdownVisible = false;
 
-  // =========================
-  // --- DOM Elements ---
-  // =========================
-  const loadingOverlay = document.getElementById("loadingOverlay");
-  const studentsListEl = document.getElementById("studentsList");
-  const overdueTasksListEl = document.getElementById("overdueTasksList");
-  const assignedTasksListEl = document.getElementById("assignedTasksList");
-  const feedbackListEl = document.getElementById("feedbackList");
-  const studentSelectEl = document.getElementById("student-select");
-  const assignmentTitleEl = document.getElementById("assignmentTitle");
-  const assignmentDueDateEl = document.getElementById("assignmentDueDate");
-  const assignmentTextEl = document.getElementById("assignmentText");
-  const wordCountTextEl = document.getElementById("wordCountText");
-  const assignmentFileEl = document.getElementById("assignmentFile");
-  const fileNameEl = document.getElementById("fileName");
-  const clearFileButtonEl = document.getElementById("clearFileButton");
-  const sendAssignmentButtonEl = document.getElementById("sendAssignmentButton");
-  const termStartEl = document.getElementById("termStart");
-  const termEndEl = document.getElementById("termEnd");
-  const saveCalendarButtonEl = document.getElementById("saveCalendarButton");
-  const calendarMsgEl = document.getElementById("calendarMsg");
+  const DOM = {
+    loadingOverlay: document.getElementById("loadingOverlay"),
+    studentsList: document.getElementById("studentsList"),
+    overdueTasksList: document.getElementById("overdueTasksList"),
+    assignedTasksList: document.getElementById("assignedTasksList"),
+    feedbackList: document.getElementById("feedbackList"),
+    studentSelect: document.getElementById("student-select"),
+    assignmentTitle: document.getElementById("assignmentTitle"),
+    assignmentDueDate: document.getElementById("assignmentDueDate"),
+    assignmentText: document.getElementById("assignmentText"),
+    wordCountText: document.getElementById("wordCountText"),
+    assignmentFile: document.getElementById("assignmentFile"),
+    fileName: document.getElementById("fileName"),
+    clearFileButton: document.getElementById("clearFileButton"),
+    sendAssignmentButton: document.getElementById("sendAssignmentButton"),
+    termStart: document.getElementById("termStart"),
+    termEnd: document.getElementById("termEnd"),
+    saveCalendarButton: document.getElementById("saveCalendarButton"),
+    calendarMsg: document.getElementById("calendarMsg"),
 
-  // Profile dropdown
-  const profileMenuButton = document.getElementById("profile-menu-button");
-  const profileDropdownMenu = document.getElementById("profile-dropdown-menu");
-  const logoutButtonEl = document.getElementById("logoutButton");
+    profileMenuButton: document.getElementById("profile-menu-button"),
+    profileDropdownMenu: document.getElementById("profile-dropdown-menu"),
+    logoutButton: document.getElementById("logoutButton"),
 
-  // Modals
-  const messageModal = document.getElementById("messageModal");
-  const modalTitleEl = document.getElementById("modalTitle");
-  const modalMessageEl = document.getElementById("modalMessage");
-  const promptModal = document.getElementById("promptModal");
-  const promptTitleEl = document.getElementById("promptTitle");
-  const promptMessageEl = document.getElementById("promptMessage");
-  const promptInputEl = document.getElementById("promptInput");
-  const okPromptBtn = document.getElementById("okPromptBtn");
-  const cancelPromptBtn = document.getElementById("cancelPromptBtn");
+    messageModal: document.getElementById("messageModal"),
+    modalTitle: document.getElementById("modalTitle"),
+    modalMessage: document.getElementById("modalMessage"),
+    promptModal: document.getElementById("promptModal"),
+    promptTitle: document.getElementById("promptTitle"),
+    promptMessage: document.getElementById("promptMessage"),
+    promptInput: document.getElementById("promptInput"),
+    okPromptBtn: document.getElementById("okPromptBtn"),
+    cancelPromptBtn: document.getElementById("cancelPromptBtn"),
 
-  // Points section
-  const pointsStudentSelectEl = document.getElementById("points-student-select");
-  const pointsInputEl = document.getElementById("pointsInput");
-  const reasonTextEl = document.getElementById("reasonText");
-  const addPointsButtonEl = document.getElementById("addPointsButton");
+    pointsStudentSelect: document.getElementById("points-student-select"),
+    pointsInput: document.getElementById("pointsInput"),
+    reasonText: document.getElementById("reasonText"),
+    addPointsButton: document.getElementById("addPointsButton"),
+  };
 
-  // API Base
   const API_BASE = "https://smartstudentact.onrender.com/api";
 
-  // =========================
-  // --- Helper Functions ---
-  // =========================
   const sanitizeInput = (str) => {
     if (typeof str !== "string") return "";
-    const tempDiv = document.createElement("div");
-    tempDiv.textContent = str;
-    return tempDiv.innerHTML;
+    const temp = document.createElement("div");
+    temp.textContent = str;
+    return temp.innerHTML;
   };
 
   const showMessageModal = (title, message) => {
-    modalTitleEl.textContent = title;
-    modalMessageEl.textContent = message;
-    messageModal.style.display = "flex";
+    DOM.modalTitle.textContent = title;
+    DOM.modalMessage.textContent = message;
+    DOM.messageModal.style.display = "flex";
   };
 
   const closeMessageModal = () => {
-    messageModal.style.display = "none";
-  };
-
-  const showPromptModal = (title, message) => {
-    return new Promise((resolve) => {
-      promptTitleEl.textContent = title;
-      promptMessageEl.textContent = message;
-      promptInputEl.value = "";
-      promptModal.style.display = "flex";
-
-      const onOk = () => {
-        resolve(promptInputEl.value);
-        promptModal.style.display = "none";
-        okPromptBtn.removeEventListener("click", onOk);
-        cancelPromptBtn.removeEventListener("click", onCancel);
-      };
-
-      const onCancel = () => {
-        resolve(null);
-        promptModal.style.display = "none";
-        okPromptBtn.removeEventListener("click", onOk);
-        cancelPromptBtn.removeEventListener("click", onCancel);
-      };
-
-      okPromptBtn.addEventListener("click", onOk);
-      cancelPromptBtn.addEventListener("click", onCancel);
-    });
+    DOM.messageModal.style.display = "none";
   };
 
   const toast = (msg) => showMessageModal("Notice", msg);
 
   const fetchAPI = async (url, options = {}) => {
     try {
-      const response = await fetch(`${API_BASE}${url}`, {
+      const res = await fetch(`${API_BASE}${url}`, {
         credentials: "include",
         ...options,
       });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(`API Error: ${response.status} - ${errorData.message || response.statusText}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ message: "Unknown error" }));
+        throw new Error(errData.message || `API Error: ${res.status}`);
       }
-      return response;
-    } catch (error) {
-      console.error(`Fetch API Error for ${url}:`, error);
-      showMessageModal("Network Error", `Could not connect to the server. ${error.message}`);
-      throw error;
+      return res;
+    } catch (err) {
+      console.error(`Fetch API Error for ${url}:`, err);
+      showMessageModal("Network Error", `Could not connect to server. ${err.message}`);
+      throw err;
     }
   };
 
-  const getWordCount = (text) =>
-    text.trim().split(/\s+/).filter((word) => word.length > 0).length;
+  const getWordCount = (text) => text.trim().split(/\s+/).filter((w) => w.length > 0).length;
 
   const renderList = (container, items, renderItem, emptyMessage) => {
     container.innerHTML = "";
@@ -715,19 +672,22 @@
     container.appendChild(fragment);
   };
 
-  // =========================
-  // --- Core Logic ---
-  // =========================
   const init = async () => {
-    loadingOverlay.style.display = "flex";
+    DOM.loadingOverlay.style.display = "flex";
     try {
-      await Promise.all([fetchUserData(), fetchStudents(), fetchOverdueTasks(), fetchAssignedTasks(), fetchFeedback()]);
+      await Promise.all([
+        fetchUserData(),
+        fetchStudents(),
+        fetchOverdueTasks(),
+        fetchAssignedTasks(),
+        fetchFeedback(),
+      ]);
       toggleSendAssignmentButtonState();
       document.getElementById("currentYear").textContent = new Date().getFullYear();
-    } catch (error) {
-      console.error("Initialization failed:", error);
+    } catch (err) {
+      console.error("Initialization failed:", err);
     } finally {
-      loadingOverlay.style.display = "none";
+      DOM.loadingOverlay.style.display = "none";
     }
   };
 
@@ -735,205 +695,128 @@
     try {
       const res = await fetchAPI("/teacher/profile");
       const data = await res.json();
-      const profileInitialsEl = document.getElementById("profileInitials");
-      const profileNameEl = document.getElementById("profileName");
+      const initialsEl = document.getElementById("profileInitials");
+      const nameEl = document.getElementById("profileName");
       if (data.firstname && data.lastname) {
-        profileInitialsEl.textContent = `${data.firstname.charAt(0)}${data.lastname.charAt(0)}`.toUpperCase();
-        profileNameEl.textContent = `${data.firstname} ${data.lastname}`;
+        initialsEl.textContent = `${data.firstname[0]}${data.lastname[0]}`.toUpperCase();
+        nameEl.textContent = `${data.firstname} ${data.lastname}`;
       } else {
-        profileInitialsEl.textContent = "T";
-        profileNameEl.textContent = "Teacher";
+        initialsEl.textContent = "T";
+        nameEl.textContent = "Teacher";
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
     }
   };
+
+  const toggleProfileDropdown = () => {
+    isDropdownVisible = !isDropdownVisible;
+    DOM.profileDropdownMenu.classList.toggle("opacity-0", !isDropdownVisible);
+    DOM.profileDropdownMenu.classList.toggle("invisible", !isDropdownVisible);
+  };
+
+  const logout = async () => {
+    try {
+      await fetchAPI("/auth/logout", { method: "POST" });
+      window.location.href = "/login";
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
+  window.addEventListener("click", (e) => {
+    if (!DOM.profileMenuButton.contains(e.target) && !DOM.profileDropdownMenu.contains(e.target) && isDropdownVisible) {
+      toggleProfileDropdown();
+    }
+  });
 
   const fetchStudents = async () => {
     try {
       const res = await fetchAPI("/teacher/students");
       students = await res.json();
       renderStudents();
-    } catch (error) {
-      console.error("Error fetching students:", error);
-      renderList(studentsListEl, [], () => "", "Could not load student list.");
+    } catch {
+      renderList(DOM.studentsList, [], () => "", "Could not load student list.");
     }
   };
 
   const renderStudents = () => {
     renderList(
-      studentsListEl,
+      DOM.studentsList,
       students,
       (s) => `
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
-          <span class="flex-1 text-gray-800 text-base font-medium mb-2 sm:mb-0">${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (Grade ${sanitizeInput(s.grade)})</span>
-          <button onclick="handleAssignClick('${sanitizeInput(s.email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-blue-600 transition-colors">Assign</button>
+          <span class="flex-1 text-gray-800 font-medium mb-2 sm:mb-0">
+            ${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (Grade ${sanitizeInput(s.grade)})
+          </span>
+          <button onclick="handleAssignClick('${sanitizeInput(s.email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600">
+            Assign
+          </button>
         </div>
       `,
       "No students found in your class."
     );
-
-    const optionsHtml = students.map((s) => `<option value="${sanitizeInput(s.email)}">${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (${sanitizeInput(s.email)})</option>`).join("");
-    studentSelectEl.innerHTML = optionsHtml;
-    pointsStudentSelectEl.innerHTML = optionsHtml;
+    const optionsHtml = students.map(
+      (s) => `<option value="${sanitizeInput(s.email)}">${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (${sanitizeInput(s.email)})</option>`
+    ).join("");
+    DOM.studentSelect.innerHTML = optionsHtml;
+    DOM.pointsStudentSelect.innerHTML = optionsHtml;
   };
 
-  const handleAssignClick = (studentEmail) => {
-    toast(`Preparing to create an assignment for ${studentEmail}.`);
-    studentSelectEl.value = studentEmail;
+  const handleAssignClick = (email) => {
+    toast(`Preparing assignment for ${email}.`);
+    DOM.studentSelect.value = email;
   };
 
-  const fetchOverdueTasks = async () => {
-    try {
-      const res = await fetchAPI("/teacher/overdue-tasks");
-      overdueTasks = await res.json();
-      renderOverdueTasks();
-    } catch (error) {
-      console.error("Error fetching overdue tasks:", error);
-      renderList(overdueTasksListEl, [], () => "", "Could not load overdue tasks.");
-    }
-  };
-
-  const renderOverdueTasks = () => {
-    renderList(
-      overdueTasksListEl,
-      overdueTasks,
-      (o) => `
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
-          <span class="flex-1 text-gray-800 text-base font-medium mb-2 sm:mb-0">
-            <span class="font-bold">${sanitizeInput(o.student_email)}</span>: "${sanitizeInput(o.title)}" was due ${new Date(o.due_datetime).toLocaleString()}
-          </span>
-          <button onclick="sendMessage('${sanitizeInput(o.student_email)}')" class="px-3 py-1 bg-orange-500 text-white rounded-md text-sm font-semibold shadow-sm hover:bg-orange-600 transition-colors">Remind</button>
-        </div>
-      `,
-      "No overdue tasks!"
-    );
-  };
-
-  const fetchAssignedTasks = async () => {
-    try {
-      const res = await fetchAPI("/teacher/assigned-tasks");
-      assignedTasks = await res.json();
-      renderAssignedTasks();
-    } catch (error) {
-      console.error("Error fetching assigned tasks:", error);
-      renderList(assignedTasksListEl, [], () => "", "Could not load assigned tasks.");
-    }
-  };
-
-  const renderAssignedTasks = () => {
-    renderList(
-      assignedTasksListEl,
-      assignedTasks,
-      (task) => `
-        <div class="task-card p-4 bg-gray-50 rounded-lg my-4 shadow-sm">
-          <p class="mb-1 text-gray-700"><strong>Assignment:</strong> ${sanitizeInput(task.title)}</p>
-          <p class="mb-1 text-gray-700"><strong>Student:</strong> ${sanitizeInput(task.student_email)}</p>
-          <p class="mb-2 text-gray-500 text-sm">Submitted on: ${new Date(task.submitted_at).toLocaleString()}</p>
-          ${
-            task.submission_url
-              ? `<a href="${sanitizeInput(task.submission_url)}" target="_blank" class="text-blue-500 hover:underline text-sm font-semibold mb-2 block">View Submission File</a>`
-              : `<p class="text-gray-500 text-sm mb-2">No file attached.</p>`
-          }
-          <form id="feedback-form-${sanitizeInput(task._id)}" class="feedback-form mt-2 border-t pt-4">
-            <input type="hidden" name="taskId" value="${sanitizeInput(task._id)}">
-            <label class="block font-semibold mb-1 text-gray-700">Feedback Grade:</label>
-            <input type="number" name="grade" class="w-full p-2 border border-gray-300 rounded mb-2 text-gray-800" placeholder="e.g., 95" min="0" max="100" required>
-            <label class="block font-semibold mb-1 text-gray-700">Comments:</label>
-            <textarea name="comments" class="w-full p-2 border border-gray-300 rounded mb-2 text-gray-800" placeholder="Write feedback here..."></textarea>
-            <label class="block font-semibold mb-1 text-gray-700">Upload Feedback File (Optional):</label>
-            <input type="file" name="feedbackFile" class="mb-2">
-            <button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors font-semibold">Send Feedback</button>
-          </form>
-        </div>
-      `,
-      "No assigned tasks that require feedback."
-    );
-  };
-
-  const fetchFeedback = async () => {
-    try {
-      const res = await fetchAPI("/teacher/feedback");
-      feedbackList = await res.json();
-      renderFeedback();
-    } catch (error) {
-      console.error("Error fetching feedback:", error);
-      renderList(feedbackListEl, [], () => "", "Could not load feedback history.");
-    }
-  };
-
-  const renderFeedback = () => {
-    renderList(
-      feedbackListEl,
-      feedbackList,
-      (f) => `
-        <div class="p-4 my-2 bg-gray-50 rounded-lg shadow-sm">
-          <p class="mb-1 text-gray-700"><strong>Student:</strong> ${sanitizeInput(f.student_email)}</p>
-          <p class="mb-1 text-gray-700"><strong>Assignment:</strong> ${sanitizeInput(f.assignment_title)}</p>
-          <p class="mb-1 text-gray-700"><strong>Grade:</strong> <span class="font-bold text-green-600">${sanitizeInput(f.grade)}%</span></p>
-          <p class="mb-1 text-gray-700"><strong>Comments:</strong> ${sanitizeInput(f.comments)}</p>
-          ${f.feedback_url ? `<a href="${sanitizeInput(f.feedback_url)}" target="_blank" class="text-blue-500 hover:underline text-sm font-semibold mt-2 block">View Feedback File</a>` : ""}
-        </div>
-      `,
-      "No feedback has been sent yet."
-    );
-  };
-
-  // =========================
-  // --- Event Handlers ---
-  // =========================
   const toggleSendAssignmentButtonState = () => {
     const isFormValid =
-      studentSelectEl.value &&
-      assignmentTitleEl.value.trim() &&
-      assignmentDueDateEl.value &&
-      (getWordCount(assignmentTextEl.value) > 0 || selectedAssignmentFile);
-    sendAssignmentButtonEl.disabled = !isFormValid;
-    sendAssignmentButtonEl.classList.toggle("opacity-50", !isFormValid);
-    sendAssignmentButtonEl.classList.toggle("cursor-not-allowed", !isFormValid);
+      DOM.studentSelect.value &&
+      DOM.assignmentTitle.value.trim() &&
+      DOM.assignmentDueDate.value &&
+      (getWordCount(DOM.assignmentText.value) > 0 || selectedAssignmentFile);
+    DOM.sendAssignmentButton.disabled = !isFormValid;
+    DOM.sendAssignmentButton.classList.toggle("opacity-50", !isFormValid);
+    DOM.sendAssignmentButton.classList.toggle("cursor-not-allowed", !isFormValid);
   };
 
   const handleSendAssignment = async () => {
-    sendAssignmentButtonEl.disabled = true;
+    DOM.sendAssignmentButton.disabled = true;
     try {
       const formData = new FormData();
-      formData.append("studentEmail", studentSelectEl.value);
-      formData.append("title", assignmentTitleEl.value.trim());
-      formData.append("due_datetime", assignmentDueDateEl.value);
-      if (assignmentTextEl.value.trim()) formData.append("description", assignmentTextEl.value.trim());
+      formData.append("studentEmail", DOM.studentSelect.value);
+      formData.append("title", DOM.assignmentTitle.value.trim());
+      formData.append("due_datetime", DOM.assignmentDueDate.value);
+      if (DOM.assignmentText.value.trim()) formData.append("description", DOM.assignmentText.value.trim());
       if (selectedAssignmentFile) formData.append("assignmentFile", selectedAssignmentFile);
 
       const res = await fetchAPI("/teacher/assignments", { method: "POST", body: formData });
       const result = await res.json();
-      showMessageModal("Success", result.message);
+      toast(result.message);
 
-      assignmentTitleEl.value = "";
-      assignmentDueDateEl.value = "";
-      assignmentTextEl.value = "";
-      assignmentFileEl.value = "";
+      DOM.assignmentTitle.value = "";
+      DOM.assignmentDueDate.value = "";
+      DOM.assignmentText.value = "";
+      DOM.assignmentFile.value = "";
       selectedAssignmentFile = null;
-      fileNameEl.textContent = "No file selected.";
-      clearFileButtonEl.classList.add("hidden");
+      DOM.fileName.textContent = "No file selected.";
+      DOM.clearFileButton.classList.add("hidden");
       toggleSendAssignmentButtonState();
-    } catch (error) {
-      console.error("Error sending assignment:", error);
+    } catch (err) {
+      console.error("Send assignment failed:", err);
     } finally {
-      sendAssignmentButtonEl.disabled = false;
+      DOM.sendAssignmentButton.disabled = false;
     }
   };
 
   const handleSubmitFeedback = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const taskId = form.querySelector('[name="taskId"]').value;
-    const grade = form.querySelector('[name="grade"]').value;
-    const comments = form.querySelector('[name="comments"]').value;
-    const feedbackFile = form.querySelector('[name="feedbackFile"]').files[0];
+    const taskId = form.taskId.value;
+    const grade = form.grade.value;
+    const comments = form.comments.value;
+    const feedbackFile = form.feedbackFile.files[0];
 
-    if (!grade) {
-      showMessageModal("Validation Error", "Please provide a grade.");
-      return;
-    }
+    if (!grade) return showMessageModal("Validation Error", "Please provide a grade.");
 
     const submitButton = form.querySelector('button[type="submit"]');
     submitButton.disabled = true;
@@ -949,25 +832,25 @@
       const result = await res.json();
       showMessageModal("Feedback Sent", result.message);
       await Promise.all([fetchAssignedTasks(), fetchFeedback()]);
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
+    } catch (err) {
+      console.error("Submit feedback failed:", err);
     } finally {
       submitButton.disabled = false;
     }
   };
 
+  // =========================
+  // --- Points ---
+  // =========================
   const handleAddPoints = async () => {
-    const studentEmail = pointsStudentSelectEl.value;
-    const points = pointsInputEl.value;
-    const reason = reasonTextEl.value.trim();
-
+    const studentEmail = DOM.pointsStudentSelect.value;
+    const points = DOM.pointsInput.value;
+    const reason = DOM.reasonText.value.trim();
     if (!studentEmail || !points || points <= 0) {
-      showMessageModal("Validation Error", "Please select a student and enter a valid number of points.");
-      return;
+      return showMessageModal("Validation Error", "Please select a student and enter a valid number of points.");
     }
 
-    addPointsButtonEl.disabled = true;
-
+    DOM.addPointsButton.disabled = true;
     try {
       const res = await fetchAPI("/teacher/points", {
         method: "POST",
@@ -976,25 +859,21 @@
       });
       const result = await res.json();
       showMessageModal("Success", result.message);
-      pointsInputEl.value = "";
-      reasonTextEl.value = "";
-    } catch (error) {
-      console.error("Error adding points:", error);
+      DOM.pointsInput.value = "";
+      DOM.reasonText.value = "";
+    } catch (err) {
+      console.error("Add points failed:", err);
     } finally {
-      addPointsButtonEl.disabled = false;
+      DOM.addPointsButton.disabled = false;
     }
   };
 
   const handleSaveCalendar = async () => {
-    const termStart = termStartEl.value;
-    const termEnd = termEndEl.value;
+    const termStart = DOM.termStart.value;
+    const termEnd = DOM.termEnd.value;
+    if (!termStart || !termEnd) return showMessageModal("Validation Error", "Please select both term start and end dates.");
 
-    if (!termStart || !termEnd) {
-      showMessageModal("Validation Error", "Please select both term start and end dates.");
-      return;
-    }
-
-    saveCalendarButtonEl.disabled = true;
+    DOM.saveCalendarButton.disabled = true;
     try {
       const res = await fetchAPI("/teacher/calendar", {
         method: "POST",
@@ -1002,76 +881,47 @@
         body: JSON.stringify({ termStart, termEnd }),
       });
       const result = await res.json();
-      calendarMsgEl.textContent = result.message;
-      calendarMsgEl.classList.add("text-green-600");
-    } catch (error) {
-      console.error("Error saving calendar:", error);
+      DOM.calendarMsg.textContent = result.message;
+      DOM.calendarMsg.classList.add("text-green-600");
+    } catch (err) {
+      console.error("Save calendar failed:", err);
     } finally {
-      saveCalendarButtonEl.disabled = false;
+      DOM.saveCalendarButton.disabled = false;
     }
   };
 
-  const toggleProfileDropdown = () => {
-    isDropdownVisible = !isDropdownVisible;
-    profileDropdownMenu.classList.toggle("opacity-0", !isDropdownVisible);
-    profileDropdownMenu.classList.toggle("invisible", !isDropdownVisible);
-  };
-
-  const logout = async () => {
-    try {
-      await fetchAPI("/auth/logout", { method: "POST" });
-      window.location.href = "/login";
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
-
-  // =========================
-  // --- Event Listeners ---
-  // =========================
-  assignmentTextEl.addEventListener("input", () => {
-    wordCountTextEl.textContent = `Word Count: ${getWordCount(assignmentTextEl.value)}`;
+  DOM.assignmentText.addEventListener("input", () => {
+    DOM.wordCountText.textContent = `Word Count: ${getWordCount(DOM.assignmentText.value)}`;
     toggleSendAssignmentButtonState();
   });
+  DOM.assignmentTitle.addEventListener("input", toggleSendAssignmentButtonState);
+  DOM.assignmentDueDate.addEventListener("change", toggleSendAssignmentButtonState);
 
-  assignmentTitleEl.addEventListener("input", toggleSendAssignmentButtonState);
-  assignmentDueDateEl.addEventListener("change", toggleSendAssignmentButtonState);
-
-  assignmentFileEl.addEventListener("change", (e) => {
+  DOM.assignmentFile.addEventListener("change", (e) => {
     selectedAssignmentFile = e.target.files[0] || null;
-    fileNameEl.textContent = selectedAssignmentFile ? selectedAssignmentFile.name : "No file selected.";
-    clearFileButtonEl.classList.toggle("hidden", !selectedAssignmentFile);
+    DOM.fileName.textContent = selectedAssignmentFile ? selectedAssignmentFile.name : "No file selected.";
+    DOM.clearFileButton.classList.toggle("hidden", !selectedAssignmentFile);
     toggleSendAssignmentButtonState();
   });
 
-  clearFileButtonEl.addEventListener("click", () => {
-    assignmentFileEl.value = "";
+  DOM.clearFileButton.addEventListener("click", () => {
+    DOM.assignmentFile.value = "";
     selectedAssignmentFile = null;
-    fileNameEl.textContent = "No file selected.";
-    clearFileButtonEl.classList.add("hidden");
+    DOM.fileName.textContent = "No file selected.";
+    DOM.clearFileButton.classList.add("hidden");
     toggleSendAssignmentButtonState();
   });
 
-  sendAssignmentButtonEl.addEventListener("click", handleSendAssignment);
+  DOM.sendAssignmentButton.addEventListener("click", handleSendAssignment);
+  DOM.addPointsButton.addEventListener("click", handleAddPoints);
+  DOM.saveCalendarButton.addEventListener("click", handleSaveCalendar);
+  DOM.profileMenuButton.addEventListener("click", toggleProfileDropdown);
+  DOM.logoutButton.addEventListener("click", logout);
 
   document.addEventListener("submit", (e) => {
     if (e.target.classList.contains("feedback-form")) handleSubmitFeedback(e);
   });
 
-  addPointsButtonEl.addEventListener("click", handleAddPoints);
-  saveCalendarButtonEl.addEventListener("click", handleSaveCalendar);
-  profileMenuButton.addEventListener("click", toggleProfileDropdown);
-  logoutButtonEl.addEventListener("click", logout);
-
-  window.addEventListener("click", (e) => {
-    if (!profileMenuButton.contains(e.target) && !profileDropdownMenu.contains(e.target) && isDropdownVisible) {
-      toggleProfileDropdown();
-    }
-  });
-
-  // =========================
-  // --- Initialization ---
-  // =========================
   init();
 </script>
   </body>
