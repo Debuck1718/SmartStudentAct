@@ -120,66 +120,60 @@
       </div>
     </div>
 
-    <script>
-const API_BASE_URL = "https://smartstudentact.onrender.com"; 
+<script>
+const API_BASE_URL = "https://smartstudentact.onrender.com/api"; 
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
 const loginButton = document.getElementById("loginButton");
 const passwordToggle = document.getElementById("passwordToggle");
 const emailErrorEl = document.getElementById("emailError");
 const passwordErrorEl = document.getElementById("passwordError");
+const bannerEl = document.getElementById("banner");
 
 let showPassword = false;
 
-function showBanner(message, type = "error") {
-    const bannerEl = document.getElementById("banner");
+function showBanner(message, type = 'error') {
     bannerEl.textContent = message;
     bannerEl.classList.remove("hidden");
-    bannerEl.classList.remove("bg-red-100", "text-red-700", "bg-green-100", "text-green-700", "bg-gray-100", "text-gray-700");
-    if (type === "error") bannerEl.classList.add("bg-red-100", "text-red-700");
-    else if (type === "success") bannerEl.classList.add("bg-green-100", "text-green-700");
-    else bannerEl.classList.add("bg-gray-100", "text-gray-700");
+    bannerEl.classList.remove("bg-red-100","text-red-700","bg-green-100","text-green-700","bg-gray-100","text-gray-700");
+    if(type === 'error') bannerEl.classList.add("bg-red-100","text-red-700");
+    else if(type === 'success') bannerEl.classList.add("bg-green-100","text-green-700");
+    else bannerEl.classList.add("bg-gray-100","text-gray-700");
 }
 
 function hideBanner() {
-    document.getElementById("banner").classList.add("hidden");
+    bannerEl.classList.add("hidden");
 }
 
-function setError(element, message, inputElement) {
-    if (message) {
-        element.textContent = message;
-        inputElement.classList.add("border-red-500");
+function setError(el, message, inputEl) {
+    if(message) {
+        el.textContent = message;
+        inputEl.classList.add("border-red-500");
     } else {
-        element.textContent = "";
-        inputElement.classList.remove("border-red-500");
+        el.textContent = "";
+        inputEl.classList.remove("border-red-500");
     }
 }
 
 function validateEmail(email) {
-    if (!email.trim()) return "Email cannot be empty.";
-    if (!/\S+@\S+\.\S+/.test(email)) return "Please enter a valid email address.";
+    if(!email.trim()) return "Email cannot be empty.";
+    if(!/\S+@\S+\.\S+/.test(email)) return "Please enter a valid email address.";
     return null;
 }
 
-function validatePassword(password) {
-    if (!password.trim()) return "Password cannot be empty.";
-    if (password.length < 6) return "Password must be at least 6 characters long.";
+function validatePassword(pw) {
+    if(!pw.trim()) return "Password cannot be empty.";
+    if(pw.length < 6) return "Password must be at least 6 characters.";
     return null;
 }
 
 emailInput.addEventListener("input", () => { setError(emailErrorEl, null, emailInput); hideBanner(); });
 passwordInput.addEventListener("input", () => { setError(passwordErrorEl, null, passwordInput); hideBanner(); });
-
 passwordToggle.addEventListener("click", () => {
     showPassword = !showPassword;
     passwordInput.type = showPassword ? "text" : "password";
     passwordToggle.textContent = showPassword ? "Hide" : "Show";
 });
-
-function setLoading(isLoading) {
-    loginButton.disabled = isLoading;
-    loginButton.innerHTML = isLoading ? '<div class="spinner mx-auto"></div>' : 'Login';
-}
 
 loginButton.addEventListener("click", handleLogin);
 
@@ -188,58 +182,53 @@ async function handleLogin() {
     setError(passwordErrorEl, null, passwordInput);
     hideBanner();
 
-    const emailValidation = validateEmail(emailInput.value);
-    const passwordValidation = validatePassword(passwordInput.value);
-    setError(emailErrorEl, emailValidation, emailInput);
-    setError(passwordErrorEl, passwordValidation, passwordInput);
-    if (emailValidation || passwordValidation) return;
+    const emailErr = validateEmail(emailInput.value);
+    const pwErr = validatePassword(passwordInput.value);
+    if(emailErr || pwErr) {
+        setError(emailErrorEl, emailErr, emailInput);
+        setError(passwordErrorEl, pwErr, passwordInput);
+        return;
+    }
 
-    setLoading(true);
+    loginButton.disabled = true;
+    loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/users/login`, {
+        const res = await fetch(`${API_BASE_URL}/users/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            credentials: "include", // ✅ important for cookie-based JWT
             body: JSON.stringify({
                 email: emailInput.value.trim().toLowerCase(),
                 password: passwordInput.value
             })
         });
 
-        if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            showBanner(data?.message || "Login failed. Check email or password.", "error");
+        const data = await res.json();
+
+        if(!res.ok) {
+            showBanner(data.message || "Login failed. Invalid credentials.", 'error');
             return;
         }
 
-        const data = await response.json();
+        // Save JWT in localStorage or sessionStorage
+        localStorage.setItem("jwt_token", data.token);
 
         // Redirect based on role
-        switch (data.user?.role) {
-            case "global_overseer":
-                window.location.href = "/global_overseer.html";
-                break;
-            case "overseer":
-                window.location.href = "/overseer.html";
-                break;
-            case "student":
-                window.location.href = "/students.html";
-                break;
-            case "teacher":
-                window.location.href = "/teachers.html";
-                break;
-            case "admin":
-                window.location.href = "/admin.html";
-                break;
-            default:
-                showBanner("Invalid user role.", "error");
+        switch(data.user?.role) {
+            case "global_overseer": window.location.href = "/global_overseer.html"; break;
+            case "overseer": window.location.href = "/overseer.html"; break;
+            case "admin": window.location.href = "/admin.html"; break;
+            case "teacher": window.location.href = "/teachers.html"; break;
+            case "student": window.location.href = "/students.html"; break;
+            default: showBanner("Unknown user role.", "error");
         }
-    } catch (error) {
-        console.error("Login error:", error);
+
+    } catch(err) {
+        console.error("Login error:", err);
         showBanner("An unexpected error occurred. Please try again later.", "error");
     } finally {
-        setLoading(false);
+        loginButton.disabled = false;
+        loginButton.innerHTML = 'Login';
     }
 }
 </script>
