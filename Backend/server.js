@@ -120,7 +120,7 @@ async function startAgenda() {
 // ───────────────────────────────────────────────
 try {
   const publicRoutes = require("./routes/publicRoutes");
-  app.use("/", publicRoutes(eventBus, agenda));
+  app.use("/api", publicRoutes(eventBus, agenda));
 
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", protectedRoutes);
