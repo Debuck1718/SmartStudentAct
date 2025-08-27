@@ -638,600 +638,304 @@
     </div>
 
     <script>
-      const API_SIGNUP_OTP =
-        "https://smartstudentact.onrender.com/api/users/signup-otp";
-      const API_VERIFY_OTP =
-        "https://smartstudentact.onrender.com/api/users/verify-otp";
+  const API_SIGNUP_OTP = "https://smartstudentact.onrender.com/api/users/signup-otp";
+  const API_VERIFY_OTP = "https://smartstudentact.onrender.com/api/users/verify-otp";
 
-      // DOM Elements
-      const signupFormSection = document.getElementById("signupFormSection");
-      const otpSection = document.getElementById("otpSection");
-      const occupationSelect = document.getElementById("occupationSelect");
-      const educationLevelSelect = document.getElementById(
-        "educationLevelSelect"
-      );
-      const studentFields = document.getElementById("studentFields");
-      const teacherFields = document.getElementById("teacherFields");
-      const schoolCountryField = document.getElementById("schoolCountryField");
-      const schoolGradeContainer = document.getElementById(
-        "schoolGradeContainer"
-      );
-      const universityLevelContainer = document.getElementById(
-        "universityLevelContainer"
-      );
-      const schoolGradeSelect = document.getElementById("schoolGradeSelect");
-      const universityLevelSelect = document.getElementById(
-        "universityLevelSelect"
-      );
-      const teacherGradeLevelSelect = document.getElementById(
-        "teacherGradeLevelSelect"
-      );
-      const requestOtpButton = document.getElementById("requestOtpButton");
-      const verifyOtpButton = document.getElementById("verifyOtpButton");
-      const loginLink = document.getElementById("loginLink");
-      const termsLink = document.getElementById("termsLink");
-      const termsModal = document.getElementById("termsModal");
-      const closeModalButton = document.getElementById("closeModalButton");
-      const messageBox = document.getElementById("messageBox");
-      const messageText = document.getElementById("messageText");
-      const studentProgram = document.getElementById("studentProgram");
-      const studentSchoolName = document.getElementById("studentSchoolName");
-      const studentUniversityName = document.getElementById(
-        "studentUniversityName"
-      );
-      const teacherSchoolName = document.getElementById("teacherSchoolName");
-      const teacherSubject = document.getElementById("teacherSubject");
+  // DOM Elements
+  const signupFormSection = document.getElementById("signupFormSection");
+  const otpSection = document.getElementById("otpSection");
+  const occupationSelect = document.getElementById("occupationSelect");
+  const educationLevelSelect = document.getElementById("educationLevelSelect");
+  const studentFields = document.getElementById("studentFields");
+  const teacherFields = document.getElementById("teacherFields");
+  const schoolCountryField = document.getElementById("schoolCountryField");
+  const schoolGradeContainer = document.getElementById("schoolGradeContainer");
+  const universityLevelContainer = document.getElementById("universityLevelContainer");
+  const schoolGradeSelect = document.getElementById("schoolGradeSelect");
+  const universityLevelSelect = document.getElementById("universityLevelSelect");
+  const teacherGradeLevelSelect = document.getElementById("teacherGradeLevelSelect");
+  const requestOtpButton = document.getElementById("requestOtpButton");
+  const verifyOtpButton = document.getElementById("verifyOtpButton");
+  const messageBox = document.getElementById("messageBox");
+  const messageText = document.getElementById("messageText");
+  const studentProgram = document.getElementById("studentProgram");
+  const studentSchoolName = document.getElementById("studentSchoolName");
+  const studentUniversityName = document.getElementById("studentUniversityName");
+  const teacherSchoolName = document.getElementById("teacherSchoolName");
+  const teacherSubject = document.getElementById("teacherSubject");
 
-      // Form data object
-      const form = {
-        firstName: "",
-        lastName: "",
-        occupation: "",
-        educationLevel: "",
-        grade: "",
-        schoolName: "",
-        university: "",
-        uniLevel: "",
-        program: "",
-        teacherSchool: "",
-        teacherGrade: "",
-        phone: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        schoolCountry: "",
-        timezone: "utc",
-      };
+  // Global form object
+  const form = {
+    firstName: "",
+    lastName: "",
+    occupation: "",
+    educationLevel: "",
+    grade: "",
+    schoolName: "",
+    university: "",
+    uniLevel: "",
+    program: "",
+    teacherSchool: "",
+    teacherGrade: "",
+    teacherSubject: "",
+    phone: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    schoolCountry: "",
+    timezone: "utc",
+  };
 
-      let otpCode = "";
-      let isSubmitting = false;
+  let isSubmitting = false;
 
-      // --- Helper Functions ---
+  // --- Helper Functions ---
+  function showMessage(message, type = "error") {
+    messageText.textContent = message;
+    messageBox.classList.remove("hidden");
+    if (type === "error") {
+      messageBox.classList.remove("bg-green-500");
+      messageBox.classList.add("bg-red-500");
+    } else {
+      messageBox.classList.remove("bg-red-500");
+      messageBox.classList.add("bg-green-500");
+    }
+    setTimeout(() => messageBox.classList.add("hidden"), 5000);
+  }
 
-      /**
-       * Shows a temporary message box for errors or success.
-       * @param {string} message - The message to display.
-       * @param {string} type - The type of message ('error' or 'success').
-       */
-      function showMessage(message, type = "error") {
-        messageText.textContent = message;
-        messageBox.classList.remove("hidden");
-        if (type === "error") {
-          messageBox.classList.remove("bg-green-500");
-          messageBox.classList.add("bg-red-500");
-        } else {
-          messageBox.classList.remove("bg-red-500");
-          messageBox.classList.add("bg-green-500");
-        }
-        setTimeout(() => {
-          messageBox.classList.add("hidden");
-        }, 5000);
+  function setLoadingState(button, loading, originalText) {
+    isSubmitting = loading;
+    button.disabled = loading;
+    button.innerHTML = loading ? `<div class="spinner"></div>` : `<span>${originalText}</span>`;
+  }
+
+  function setError(elementId, message) {
+    const inputEl = document.getElementById(elementId);
+    if (!inputEl) return;
+    const errorEl = document.getElementById(elementId.replace("Input", "Error").replace("Select", "Error"));
+    if (message) {
+      errorEl.textContent = message;
+      errorEl.classList.remove("hidden");
+      inputEl.classList.add("error");
+    } else {
+      errorEl.textContent = "";
+      errorEl.classList.add("hidden");
+      inputEl.classList.remove("error");
+    }
+  }
+
+  function validateField(key, value) {
+    switch (key) {
+      case "firstName": case "lastName":
+        if (!value.trim()) return `${key === "firstName" ? "First" : "Last"} name is required.`;
+        break;
+      case "email":
+        if (!value.trim()) return "Email is required.";
+        else if (!/\S+@\S+\.\S+/.test(value)) return "Invalid email format.";
+        break;
+      case "password":
+        if (!value.trim()) return "Password is required.";
+        else if (value.length < 8) return "Password must be at least 8 characters.";
+        else if (!/[A-Z]/.test(value)) return "Password needs an uppercase letter.";
+        else if (!/[a-z]/.test(value)) return "Password needs a lowercase letter.";
+        else if (!/[0-9]/.test(value)) return "Password needs a number.";
+        else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) return "Password needs a special character.";
+        break;
+      case "confirmPassword":
+        if (value !== form.password) return "Passwords do not match.";
+        break;
+      case "phone":
+        if (value.trim() && !/^\+?[0-9]{7,15}$/.test(value)) return "Invalid phone number format.";
+        break;
+      case "occupation":
+        if (!value) return "Occupation is required.";
+        break;
+      case "schoolCountry":
+        if (!value) return "Please select a country.";
+        break;
+      case "educationLevel":
+        if (form.occupation === "student" && !value) return "Education level is required.";
+        break;
+      case "schoolGradeSelect":
+        if (form.occupation === "student" && (form.educationLevel === "junior" || form.educationLevel === "high") && !value) return "Grade is required.";
+        break;
+      case "universityLevelSelect":
+        if (form.occupation === "student" && form.educationLevel === "university" && !value) return "University level is required.";
+        break;
+      case "program":
+        if (form.occupation === "student" && form.educationLevel === "university" && !value.trim()) return "Program is required.";
+        break;
+      case "schoolName":
+        if (form.occupation === "student" && (form.educationLevel === "junior" || form.educationLevel === "high") && !value.trim()) return "School name is required.";
+        break;
+      case "university":
+        if (form.occupation === "student" && form.educationLevel === "university" && !value.trim()) return "University name is required.";
+        break;
+      case "teacherGradeLevelSelect":
+        if (form.occupation === "teacher" && !value) return "Grade / Level is required.";
+        break;
+      case "teacherSchool":
+        if (form.occupation === "teacher" && !value.trim()) return "School name is required.";
+        break;
+      case "teacherSubject":
+        if (form.occupation === "teacher" && !value.trim()) return "Subject is required.";
+        break;
+      case "otp":
+        if (!value.trim()) return "OTP is required.";
+        break;
+      default:
+        return undefined;
+    }
+  }
+
+  function validateForm() {
+    let isValid = true;
+    for (const key in form) {
+      const elementId = key.endsWith("Select") ? key : `${key}Input`;
+      const value = form[key];
+      const error = validateField(key, value);
+      setError(elementId, error);
+      if (error) isValid = false;
+    }
+    return isValid;
+  }
+
+  function populateSelect(selectEl, labelPrefix, start, end, step) {
+    selectEl.innerHTML = `<option value="">Select ${labelPrefix}</option>`;
+    for (let i = start; i <= end; i += step) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `${labelPrefix} ${i}`;
+      selectEl.appendChild(opt);
+    }
+  }
+
+  function populateTeacherSelect() {
+    teacherGradeLevelSelect.innerHTML = `<option value="">Select Grade / Level</option>`;
+    for (let i = 5; i <= 12; i++) {
+      const opt = document.createElement("option");
+      opt.value = `Grade ${i}`;
+      opt.textContent = `Grade ${i}`;
+      teacherGradeLevelSelect.appendChild(opt);
+    }
+    for (let i = 100; i <= 400; i += 100) {
+      const opt = document.createElement("option");
+      opt.value = `Level ${i}`;
+      opt.textContent = `Level ${i}`;
+      teacherGradeLevelSelect.appendChild(opt);
+    }
+  }
+
+  // --- Event Listeners ---
+  occupationSelect.addEventListener("change", e => {
+    form.occupation = e.target.value;
+    studentFields.classList.toggle("hidden", form.occupation !== "student");
+    teacherFields.classList.toggle("hidden", form.occupation !== "teacher");
+    schoolCountryField.classList.toggle("hidden", !form.occupation);
+    populateTeacherSelect();
+  });
+
+  educationLevelSelect.addEventListener("change", e => {
+    form.educationLevel = e.target.value;
+    schoolGradeContainer.classList.add("hidden");
+    universityLevelContainer.classList.add("hidden");
+    studentProgram.classList.add("hidden");
+    studentSchoolName.classList.add("hidden");
+    studentUniversityName.classList.add("hidden");
+
+    if (form.educationLevel === "junior" || form.educationLevel === "high") {
+      schoolGradeContainer.classList.remove("hidden");
+      studentSchoolName.classList.remove("hidden");
+      populateSelect(schoolGradeSelect, "Grade", 7, 12, 1);
+    } else if (form.educationLevel === "university") {
+      universityLevelContainer.classList.remove("hidden");
+      studentProgram.classList.remove("hidden");
+      studentUniversityName.classList.remove("hidden");
+      populateSelect(universityLevelSelect, "Level", 100, 400, 100);
+    }
+  });
+
+  requestOtpButton.addEventListener("click", async () => {
+    if (isSubmitting) return;
+
+    // Update global form object from inputs
+    form.firstName = document.getElementById("firstNameInput").value.trim();
+    form.lastName = document.getElementById("lastNameInput").value.trim();
+    form.email = document.getElementById("emailInput").value.trim();
+    form.password = document.getElementById("passwordInput").value;
+    form.confirmPassword = document.getElementById("confirmPasswordInput").value;
+    form.phone = document.getElementById("phoneInput").value.trim();
+    form.schoolCountry = document.getElementById("schoolCountrySelect").value;
+
+    if (form.occupation === "student") {
+      if (form.educationLevel === "university") {
+        form.university = document.getElementById("studentUniversityName").value.trim();
+        form.uniLevel = universityLevelSelect.value ? universityLevelSelect.value.replace("Level ", "") : "";
+        form.program = document.getElementById("studentProgram").value.trim();
+      } else {
+        form.grade = schoolGradeSelect.value ? parseInt(schoolGradeSelect.value.replace("Grade ", ""), 10) : "";
+        form.schoolName = document.getElementById("studentSchoolName").value.trim();
       }
+    } else if (form.occupation === "teacher") {
+      const gradeVal = teacherGradeLevelSelect.value;
+      form.teacherGrade = gradeVal.startsWith("Grade") ? parseInt(gradeVal.replace("Grade ", ""), 10) : gradeVal.replace("Level ", "");
+      form.teacherSchool = document.getElementById("teacherSchoolName").value.trim();
+      form.teacherSubject = document.getElementById("teacherSubject").value.trim();
+    }
 
-      /**
-       * Sets the loading state of a button.
-       * @param {HTMLElement} button - The button element.
-       * @param {boolean} isLoading - The new loading state.
-       * @param {string} originalText - The original text to restore.
-       */
-      function setLoadingState(button, isLoading, originalText) {
-        isSubmitting = isLoading;
-        button.disabled = isLoading;
-        if (isLoading) {
-          button.innerHTML = `<div class="spinner"></div>`;
-        } else {
-          button.innerHTML = `<span>${originalText}</span>`;
-        }
-      }
+    // Validate before sending OTP
+    if (!validateForm()) return;
 
-      /**
-       * Displays or hides an error message and applies an error style to the input.
-       * @param {string} elementId - The ID of the input or select element.
-       * @param {string | null} message - The error message.
-       */
-      function setError(elementId, message) {
-        const inputEl = document.getElementById(elementId);
-        if (!inputEl) return;
-        const errorEl = document.getElementById(
-          elementId
-            .replace("Input", "Error")
-            .replace("Select", "Error")
-            .replace("Container", "Error")
-            .replace("teacherGradeLevel", "teacherGradeLevel")
-        );
+    setLoadingState(requestOtpButton, true, "Request OTP");
 
-        if (message) {
-          errorEl.textContent = message;
-          errorEl.classList.remove("hidden");
-          inputEl.classList.add("error");
-        } else {
-          errorEl.textContent = "";
-          errorEl.classList.add("hidden");
-          inputEl.classList.remove("error");
-        }
-      }
-
-      /**
-       * Validates a single form field.
-       * @param {string} key - The key of the field in the form object.
-       * @param {string} value - The value of the field.
-       * @returns {string | undefined} The error message or undefined.
-       */
-      function validateField(key, value) {
-        let error;
-        switch (key) {
-          case "firstName":
-          case "lastName":
-            if (!value.trim())
-              error = `${
-                key === "firstName" ? "First" : "Last"
-              } name is required.`;
-            break;
-          case "email":
-            if (!value.trim()) error = "Email is required.";
-            else if (!/\S+@\S+\.\S+/.test(value))
-              error = "Invalid email format.";
-            break;
-          case "password":
-            if (!value.trim()) error = "Password is required.";
-            else if (value.length < 8)
-              error = "Password must be at least 8 characters.";
-            else if (!/[A-Z]/.test(value))
-              error = "Password needs an uppercase letter.";
-            else if (!/[a-z]/.test(value))
-              error = "Password needs a lowercase letter.";
-            else if (!/[0-9]/.test(value)) error = "Password needs a number.";
-            else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value))
-              error = "Password needs a special character.";
-            break;
-          case "confirmPassword":
-            if (value !== form.password) error = "Passwords do not match.";
-            break;
-          case "phone":
-            if (value.trim() && !/^\+?[0-9]{7,15}$/.test(value))
-              error = "Invalid phone number format.";
-            break;
-          case "occupation":
-            if (!value) error = "Occupation is required.";
-            break;
-          case "schoolCountry":
-            if (!value) error = "Please select a country.";
-            break;
-          case "educationLevel":
-            if (form.occupation === "student" && !value)
-              error = "Education level is required.";
-            break;
-          case "schoolGradeSelect":
-            if (
-              form.occupation === "student" &&
-              (form.educationLevel === "junior" ||
-                form.educationLevel === "high") &&
-              !value
-            )
-              error = "Grade is required.";
-            break;
-          case "universityLevelSelect":
-            if (
-              form.occupation === "student" &&
-              form.educationLevel === "university" &&
-              !value
-            )
-              error = "University level is required.";
-            break;
-          case "program":
-            if (
-              form.occupation === "student" &&
-              form.educationLevel === "university" &&
-              !value.trim()
-            )
-              error = "Program is required.";
-            break;
-          case "schoolName":
-            if (
-              form.occupation === "student" &&
-              (form.educationLevel === "junior" ||
-                form.educationLevel === "high") &&
-              !value.trim()
-            )
-              error = "School name is required.";
-            break;
-          case "university":
-            if (
-              form.occupation === "student" &&
-              form.educationLevel === "university" &&
-              !value.trim()
-            )
-              error = "University name is required.";
-            break;
-          case "teacherGradeLevelSelect":
-            if (form.occupation === "teacher" && !value)
-              error = "Grade / Level is required.";
-            break;
-          case "teacherSchool":
-            if (form.occupation === "teacher" && !value.trim())
-              error = "School name is required.";
-            break;
-          case "teacherSubject":
-            if (form.occupation === "teacher" && !value.trim())
-              error = "Subject is required.";
-            break;
-          case "otp":
-            if (!value.trim()) error = "OTP is required.";
-            break;
-          default:
-            break;
-        }
-        return error;
-      }
-
-      function validateForm() {
-        let isValid = true;
-        const fieldsToValidate = [
-          "firstName",
-          "lastName",
-          "email",
-          "password",
-          "confirmPassword",
-          "occupation",
-          "schoolCountry",
-        ];
-
-        if (form.occupation === "student") {
-          fieldsToValidate.push("educationLevel");
-          if (form.educationLevel === "university") {
-            fieldsToValidate.push(
-              "university",
-              "universityLevelSelect",
-              "program"
-            );
-          } else if (
-            form.educationLevel === "junior" ||
-            form.educationLevel === "high"
-          ) {
-            fieldsToValidate.push("schoolName", "schoolGradeSelect");
-          }
-        } else if (form.occupation === "teacher") {
-          fieldsToValidate.push(
-            "teacherSchool",
-            "teacherSubject",
-            "teacherGradeLevelSelect"
-          );
-        }
-
-        for (const key of fieldsToValidate) {
-          const elementId = key.endsWith("Select") ? key : `${key}Input`;
-          const value =
-            form[
-              key
-                .replace("Input", "")
-                .replace("Select", "")
-                .replace("teacherGradeLevel", "teacherGrade")
-            ];
-          const error = validateField(key, value);
-          if (error) {
-            setError(elementId, error);
-            isValid = false;
-          } else {
-            setError(elementId, null);
-          }
-        }
-        return isValid;
-      }
-
-      function populateSelect(
-        selectElement,
-        labelPrefix,
-        start,
-        end,
-        increment
-      ) {
-        selectElement.innerHTML = `<option value="">Select ${labelPrefix}</option>`;
-        for (let i = start; i <= end; i += increment) {
-          const option = document.createElement("option");
-          option.value = i;
-          option.textContent = `${labelPrefix} ${i}`;
-          selectElement.appendChild(option);
-        }
-      }
-
-      /**
-       * Populates the teacher's grade/level dropdown with both grade and university levels.
-       */
-      function populateTeacherSelect() {
-        teacherGradeLevelSelect.innerHTML = `<option value="">Select Grade / Level</option>`;
-
-        // Populate grades 5-12
-        for (let i = 5; i <= 12; i++) {
-          const option = document.createElement("option");
-          option.value = `Grade ${i}`;
-          option.textContent = `Grade ${i}`;
-          teacherGradeLevelSelect.appendChild(option);
-        }
-
-        // Populate university levels 100-400
-        for (let i = 100; i <= 400; i += 100) {
-          const option = document.createElement("option");
-          option.value = `Level ${i}`;
-          option.textContent = `Level ${i}`;
-          teacherGradeLevelSelect.appendChild(option);
-        }
-      }
-
-      // --- Event Handlers ---
-
-      // Handle occupation change
-      occupationSelect.addEventListener("change", (e) => {
-        form.occupation = e.target.value;
-        if (form.occupation === "student") {
-          studentFields.classList.remove("hidden");
-          teacherFields.classList.add("hidden");
-          schoolCountryField.classList.remove("hidden");
-          // Reset teacher fields
-          form.teacherSchool = "";
-          form.teacherSubject = "";
-          form.teacherGrade = "";
-        } else if (form.occupation === "teacher") {
-          teacherFields.classList.remove("hidden");
-          studentFields.classList.add("hidden");
-          schoolCountryField.classList.remove("hidden");
-          populateTeacherSelect();
-          // Reset student fields
-          form.educationLevel = "";
-          form.grade = "";
-          form.schoolName = "";
-          form.university = "";
-          form.uniLevel = "";
-          form.program = "";
-        } else {
-          studentFields.classList.add("hidden");
-          teacherFields.classList.add("hidden");
-          schoolCountryField.classList.add("hidden");
-        }
-        // Clear all dynamic fields when occupation changes
-        schoolGradeContainer.classList.add("hidden");
-        universityLevelContainer.classList.add("hidden");
-        studentProgram.classList.add("hidden");
-        studentSchoolName.classList.add("hidden");
-        studentUniversityName.classList.add("hidden");
-        teacherSchoolName.classList.add("hidden");
-        teacherSubject.classList.add("hidden");
+    try {
+      const response = await fetch(API_SIGNUP_OTP, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
       });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to send OTP.");
+      showMessage("OTP sent successfully!", "success");
+      signupFormSection.classList.add("hidden");
+      otpSection.classList.remove("hidden");
+    } catch (err) {
+      showMessage(err.message || "Error sending OTP");
+    } finally {
+      setLoadingState(requestOtpButton, false, "Request OTP");
+    }
+  });
 
-      // Handle education level change for students
-      educationLevelSelect.addEventListener("change", (e) => {
-        form.educationLevel = e.target.value;
-        schoolGradeContainer.classList.add("hidden");
-        universityLevelContainer.classList.add("hidden");
-        studentProgram.classList.add("hidden");
-        studentSchoolName.classList.add("hidden");
-        studentUniversityName.classList.add("hidden");
+  verifyOtpButton.addEventListener("click", async () => {
+    if (isSubmitting) return;
 
-        if (form.educationLevel === "junior") {
-          schoolGradeContainer.classList.remove("hidden");
-          studentSchoolName.classList.remove("hidden");
-          populateSelect(schoolGradeSelect, "Grade", 5, 9, 1);
-        } else if (form.educationLevel === "high") {
-          schoolGradeContainer.classList.remove("hidden");
-          studentSchoolName.classList.remove("hidden");
-          populateSelect(schoolGradeSelect, "Grade", 10, 12, 1);
-        } else if (form.educationLevel === "university") {
-          universityLevelContainer.classList.remove("hidden");
-          studentUniversityName.classList.remove("hidden");
-          studentProgram.classList.remove("hidden");
-          populateSelect(universityLevelSelect, "Level", 100, 400, 100);
-        }
+    const otpInput = document.getElementById("otpInput").value.trim();
+    const otpError = validateField("otp", otpInput);
+    if (otpError) {
+      setError("otpInput", otpError);
+      return;
+    } else setError("otpInput", "");
+
+    setLoadingState(verifyOtpButton, true, "Verify OTP");
+
+    try {
+      const response = await fetch(API_VERIFY_OTP, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, code: otpInput, form }),
       });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "OTP verification failed.");
 
-      // Handle grade/level selection for students
-      schoolGradeSelect.addEventListener("change", (e) => {
-        form.grade = e.target.value;
-      });
+      showMessage("Signup successful!", "success");
+      window.location.href = "/login.html";
+    } catch (err) {
+      showMessage(err.message || "Error verifying OTP");
+    } finally {
+      setLoadingState(verifyOtpButton, false, "Verify OTP");
+    }
+  });
 
-      universityLevelSelect.addEventListener("change", (e) => {
-        form.uniLevel = e.target.value;
-      });
+</script>
 
-      // Handle grade/level selection for teachers
-      teacherGradeLevelSelect.addEventListener("change", (e) => {
-        form.teacherGrade = e.target.value;
-        if (form.teacherGrade) {
-          teacherSchoolName.classList.remove("hidden");
-          teacherSubject.classList.remove("hidden");
-        } else {
-          teacherSchoolName.classList.add("hidden");
-          teacherSubject.classList.add("hidden");
-        }
-      });
-
-      // --- Form Submission Logic ---
-
-      requestOtpButton.addEventListener("click", async () => {
-        if (isSubmitting) return;
-
-        // Build form object with only required fields for backend
-        const form = {
-          firstname: document.getElementById("firstNameInput").value.trim(),
-          lastname: document.getElementById("lastNameInput").value.trim(),
-          email: document.getElementById("emailInput").value.trim(),
-          password: document.getElementById("passwordInput").value,
-          phone: document.getElementById("phoneInput").value.trim(),
-          schoolCountry: document.getElementById("schoolCountrySelect").value, // ISO2 code
-          occupation: document.getElementById("occupationSelect").value,
-        };
-
-        if (form.occupation === "student") {
-          form.educationLevel = educationLevelSelect.value;
-
-          if (form.educationLevel === "university") {
-            form.university = document
-              .getElementById("universityInput")
-              .value.trim();
-            // 🔹 UI shows "Level 100" but backend expects "100"
-            const uniLevelVal = universityLevelSelect.value;
-            form.uniLevel = uniLevelVal
-              ? uniLevelVal.replace("Level ", "")
-              : null;
-            form.program = document.getElementById("programInput").value.trim();
-          } else if (
-            form.educationLevel === "junior" ||
-            form.educationLevel === "high"
-          ) {
-            const gradeVal = schoolGradeSelect.value;
-            // 🔹 UI shows "Grade 5" but backend expects 5
-            form.grade = gradeVal
-              ? parseInt(gradeVal.replace("Grade ", ""), 10)
-              : null;
-            form.schoolName = document
-              .getElementById("schoolNameInput")
-              .value.trim();
-          }
-        } else if (form.occupation === "teacher") {
-          const gradeVal = teacherGradeLevelSelect.value;
-
-          if (gradeVal) {
-            if (gradeVal.startsWith("Grade")) {
-              // 🔹 "Grade 12" → 12
-              form.teacherGrade = parseInt(gradeVal.replace("Grade ", ""), 10);
-            } else if (gradeVal.startsWith("Level")) {
-              // 🔹 "Level 200" → "200"
-              form.teacherGrade = gradeVal.replace("Level ", "");
-            }
-          }
-
-          form.teacherSchool = document
-            .getElementById("teacherSchoolInput")
-            .value.trim();
-          form.teacherSubject = document
-            .getElementById("teacherSubjectInput")
-            .value.trim();
-        }
-
-        // --- Frontend-only validation ---
-        if (!validateForm()) {
-          showMessage("Please correct the errors in the form.");
-          return;
-        }
-
-        setLoadingState(requestOtpButton, true, "Sign Up");
-
-        try {
-          const response = await fetch(API_SIGNUP_OTP, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
-          });
-
-          const data = await response.json();
-
-          if (data.status === "success") {
-            showMessage(data.message, "success");
-            signupFormSection.classList.add("hidden");
-            otpSection.classList.remove("hidden");
-          } else {
-            showMessage(data.message || "An error occurred during sign up.");
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          showMessage("Network error. Please try again.");
-        } finally {
-          setLoadingState(requestOtpButton, false, "Sign Up");
-        }
-      });
-
-      // Event listener for the Verify OTP button
-      verifyOtpButton.addEventListener("click", async () => {
-        if (isSubmitting) return;
-
-        const otpInput = document.getElementById("otpInput").value;
-        if (!otpInput) {
-          setError("otpInput", "OTP is required.");
-          return;
-        } else {
-          setError("otpInput", null);
-        }
-
-        setLoadingState(verifyOtpButton, true, "Verify OTP");
-
-        try {
-          const response = await fetch(API_VERIFY_OTP, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include", // ✅ important for httpOnly cookie
-            body: JSON.stringify({ email: form.email, code: otpInput }), // ✅ backend expects "code"
-          });
-          const data = await response.json();
-
-          if (data.status === "success" && data.user) {
-            showMessage(
-              "Account successfully created! Redirecting...",
-              "success"
-            );
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("userRole", data.user.role);
-            localStorage.setItem("userId", data.user.id);
-
-            const userRole = data.user.role;
-
-            if (userRole === "student") {
-              window.location.href = "students.html";
-            } else if (userRole === "teacher") {
-              window.location.href = "teachers.html";
-            } else if (userRole === "global_overseer") {
-              window.location.href = "global_overseer.html";
-            } else if (userRole === "overseer") {
-              window.location.href = "overseer.html";
-            } else if (userRole === "admin") {
-              window.location.href = "admin.html";
-            } else {
-              // fallback
-              window.location.href = "index.html";
-            }
-          } else {
-            showMessage(
-              data.error || "OTP verification failed. Please try again."
-            );
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          showMessage("Network error. Please try again.");
-        } finally {
-          setLoadingState(verifyOtpButton, false, "Verify OTP");
-        }
-      });
-
-      // Modal event listeners
-      termsLink.addEventListener("click", (e) => {
-        e.preventDefault();
-        termsModal.style.display = "flex";
-      });
-      closeModalButton.addEventListener("click", () => {
-        termsModal.style.display = "none";
-      });
-      termsModal.addEventListener("click", (e) => {
-        if (e.target === termsModal) {
-          termsModal.style.display = "none";
-        }
-      });
-    </script>
   </body>
 </html>
