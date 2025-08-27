@@ -3,14 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Teacher Dashboard</title>
+    <title data-i18n="dashboardTitle">Teacher Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <style>
-  
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
       body {
@@ -130,13 +129,12 @@
         <div
           class="spinner mx-auto mb-4 border-blue-500 border-t-blue-500"
         ></div>
-        <p class="text-lg text-gray-700 font-medium">
+        <p class="text-lg text-gray-700 font-medium" data-i18n="loadingMessage">
           Loading teacher dashboard...
         </p>
       </div>
     </div>
 
-    <!-- Message Modal -->
     <div id="messageModal" class="flex">
       <div class="modal-content">
         <span class="close-button" onclick="closeMessageModal()">&times;</span>
@@ -146,6 +144,7 @@
           <button
             onclick="closeMessageModal()"
             class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors"
+            data-i18n="ok"
           >
             OK
           </button>
@@ -153,26 +152,31 @@
       </div>
     </div>
 
-    <!-- Prompt Modal -->
     <div id="promptModal" class="flex">
       <div class="modal-content">
-        <h2 id="promptTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
+        <h2
+          id="promptTitle"
+          class="text-xl font-bold mb-2 text-gray-800"
+        ></h2>
         <p id="promptMessage" class="text-gray-700 mb-4"></p>
         <textarea
           id="promptInput"
           class="w-full h-32 p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          data-i18n-placeholder="promptTextPlaceholder"
           placeholder="Type your message here..."
         ></textarea>
         <div class="prompt-buttons">
           <button
             id="cancelPromptBtn"
             class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition-colors"
+            data-i18n="cancel"
           >
             Cancel
           </button>
           <button
             id="okPromptBtn"
             class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors"
+            data-i18n="send"
           >
             Send
           </button>
@@ -181,23 +185,54 @@
     </div>
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      <!-- Top Bar with Header and Profile Dropdown -->
       <header
         class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200"
       >
-        <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0" data-i18n="dashboardTitle">
           📚 Teacher Dashboard
         </h1>
 
-        <!-- Profile Dropdown Menu with Image -->
+        <div class="relative inline-block text-left mr-4">
+          <button
+            type="button"
+            class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            id="language-menu-button"
+          >
+            <span class="font-medium text-gray-700">Language</span>
+            <svg
+              class="h-5 w-5 text-gray-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+          <div
+            id="language-dropdown-menu"
+            class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0"
+          >
+            <div class="py-1" role="none">
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="en">English</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="fr">Français</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="es">Español</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="tr">Türkçe</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ar">العربية</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ru">Русский</a>
+            </div>
+          </div>
+        </div>
+
         <div class="relative inline-block text-left">
-          <!-- Dropdown toggle button -->
           <button
             id="profile-menu-button"
             type="button"
             class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            <!-- Profile Image Placeholder -->
             <span
               class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-500"
             >
@@ -205,13 +240,11 @@
                 >TS</span
               >
             </span>
-            <!-- User Name Placeholder -->
             <span
               id="profileName"
               class="font-medium text-gray-700 hidden sm:inline"
               >Teacher</span
             >
-            <!-- Dropdown Arrow Icon -->
             <svg
               class="h-5 w-5 text-gray-400"
               xmlns="http://www.w3.org/2000/svg"
@@ -226,7 +259,6 @@
             </svg>
           </button>
 
-          <!-- Dropdown menu, initially hidden -->
           <div
             id="profile-dropdown-menu"
             class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0"
@@ -235,36 +267,36 @@
             aria-labelledby="profile-menu-button"
           >
             <div class="py-1" role="none">
-              <!-- New AI Essay Checker Link -->
               <a
                 href="/AI-Essay-Checker.html"
                 class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors px-4"
+                data-i18n="aiEssayChecker"
               >
                 🤖 AI Essay Checker
               </a>
-              <a href="/public/quiz_dashboard.html" ...> 📝 Quiz Dashboard </a>
-              <!-- Profile link -->
+              <a href="/public/quiz_dashboard.html" ... data-i18n="quizDashboard"> 📝 Quiz Dashboard </a>
               <a
                 href="/public/profile.html"
                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 role="menuitem"
+                data-i18n="yourProfile"
               >
                 Your Profile
               </a>
-              <!-- Settings link -->
               <a
                 href="/public/settings.html"
                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 role="menuitem"
+                data-i18n="settings"
               >
                 Settings
               </a>
               <hr class="my-1 border-gray-100" role="none" />
-              <!-- Logout button -->
               <button
                 id="logoutButton"
                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 role="menuitem"
+                data-i18n="signOut"
               >
                 🚪 Sign out
               </button>
@@ -273,55 +305,59 @@
         </div>
       </header>
 
-      <!-- Main Content Sections -->
-
-      <!-- Tab Navigation -->
       <nav
         class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-gray-200 rounded-xl p-3 shadow-md"
       >
         <a
           href="/public/my-students.html"
           class="flex-1 text-center py-2 px-3 m-1 bg-blue-500 text-white font-bold rounded-lg shadow-sm hover:bg-blue-600 transition-colors"
+          data-i18n="myClass"
         >
           👨‍🎓 My Class
         </a>
         <a
           href="/public/completed-assignment.html"
           class="flex-1 text-center py-2 px-3 m-1 bg-blue-500 text-white font-bold rounded-lg shadow-sm hover:bg-blue-600 transition-colors"
+          data-i18n="completedTasks"
         >
           ✅ Completed Tasks
         </a>
         <a
           href="/public/quiz_dashboard.html"
           class="flex-1 text-center py-2 px-3 m-1 bg-purple-600 text-white font-bold rounded-lg shadow-sm hover:bg-purple-700 transition-colors"
+          data-i18n="quizDashboard"
         >
           📝 Quiz Dashboard
         </a>
         <a
           href="/public/AI Essay Checker.html"
           class="flex-1 text-center py-2 px-3 m-1 bg-blue-500 text-white font-bold rounded-lg shadow-sm hover:bg-blue-600 transition-colors"
+          data-i18n="aiChecker"
         >
           🤖 AI Checker
         </a>
       </nav>
 
-      <!-- Students in Your Class Section -->
       <section id="studentsSection" class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+        <h2
+          class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2"
+          data-i18n="studentsInClass"
+        >
           🎓 Students in Your Class
         </h2>
         <div id="studentsList" class="divide-y divide-gray-200">
-          <!-- Students will be rendered here by JS -->
-        </div>
+          </div>
       </section>
 
-      <!-- Create and Send Assignment Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+        <h2
+          class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2"
+          data-i18n="createAssignment"
+        >
           ✏️ Create and Send Assignment
         </h2>
 
-        <label for="student-select" class="block text-gray-700 font-bold mb-2"
+        <label for="student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent"
           >Select Student:</label
         >
         <div
@@ -332,17 +368,17 @@
             id="student-select"
             class="w-full p-3 bg-white text-gray-800 focus:outline-none"
           >
-            <!-- Options will be populated by JS -->
-          </select>
+            </select>
         </div>
 
-        <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2"
+        <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle"
           >Assignment Title:</label
         >
         <input
           type="text"
           id="assignmentTitle"
           class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          data-i18n-placeholder="assignmentPlaceholder"
           placeholder="e.g., History Essay on World War II"
           maxlength="100"
         />
@@ -350,6 +386,7 @@
         <label
           for="assignmentDueDate"
           class="block text-gray-700 font-bold mb-2"
+          data-i18n="dueDate"
           >Due Date:</label
         >
         <input
@@ -358,16 +395,17 @@
           class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
-        <label for="assignmentText" class="block text-gray-700 font-bold mb-2"
+        <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails"
           >Assignment Details (max 1000 words or attach file):</label
         >
         <textarea
           id="assignmentText"
           class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+          data-i18n-placeholder="assignmentTextPlaceholder"
           placeholder="Type your assignment here..."
           maxlength="5000"
         ></textarea>
-        <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">
+        <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4" data-i18n="wordCount">
           Word count: 0
         </p>
 
@@ -377,16 +415,18 @@
           <label
             for="assignmentFile"
             class="custom-file-input cursor-pointer text-base"
+            data-i18n="pickDocument"
           >
             <input type="file" id="assignmentFile" class="hidden" />
           </label>
           <div id="fileStatus" class="flex items-center gap-2">
-            <span id="fileName" class="text-gray-700 text-sm italic"
+            <span id="fileName" class="text-gray-700 text-sm italic" data-i18n="noFileSelected"
               >No file selected.</span
             >
             <button
               id="clearFileButton"
               class="text-red-500 hover:text-red-700 hidden text-sm font-semibold"
+              data-i18n="clear"
             >
               Clear
             </button>
@@ -397,20 +437,24 @@
           id="sendAssignmentButton"
           class="w-full py-4 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-600 transition-colors transform hover:scale-105"
           disabled
+          data-i18n="sendAssignment"
         >
           Send Assignment
         </button>
       </section>
 
-      <!-- Add Student Points Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+        <h2
+          class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2"
+          data-i18n="addPointsTitle"
+        >
           ➕ Add Student Points
         </h2>
 
         <label
           for="points-student-select"
           class="block text-gray-700 font-bold mb-2"
+          data-i18n="selectStudent"
           >Select Student:</label
         >
         <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
@@ -418,88 +462,98 @@
             id="points-student-select"
             class="w-full p-3 bg-white text-gray-800 focus:outline-none"
           >
-            <!-- Options will be populated dynamically -->
-          </select>
+            </select>
         </div>
 
-        <label for="pointsInput" class="block text-gray-700 font-bold mb-2"
+        <label for="pointsInput" class="block text-gray-700 font-bold mb-2" data-i18n="pointsToAdd"
           >Points to Add:</label
         >
         <input
           type="number"
           id="pointsInput"
           class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          data-i18n-placeholder="pointsPlaceholder"
           placeholder="e.g., 10"
           min="1"
         />
 
-        <label for="reasonText" class="block text-gray-700 font-bold mb-2"
+        <label for="reasonText" class="block text-gray-700 font-bold mb-2" data-i18n="reasonOptional"
           >Reason (Optional):</label
         >
         <textarea
           id="reasonText"
           class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y"
+          data-i18n-placeholder="reasonPlaceholder"
           placeholder="e.g., Great participation in class discussion."
         ></textarea>
 
         <button
           id="addPointsButton"
           class="w-full py-4 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition-colors transform hover:scale-105"
+          data-i18n="addPointsButton"
         >
           Add Points
         </button>
       </section>
 
-      <!-- Overdue Tasks Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+        <h2
+          class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2"
+          data-i18n="overdueTasks"
+        >
           📌 Overdue Tasks
         </h2>
         <div id="overdueTasksList" class="divide-y divide-gray-200">
-          <!-- Overdue tasks will be rendered here by JS -->
-        </div>
+          </div>
       </section>
 
-      <!-- Assigned Tasks Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+        <h2
+          class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2"
+          data-i18n="assignedTasks"
+        >
           📝 Assigned Tasks & Feedback
         </h2>
         <div id="assignedTasksList" class="divide-y divide-gray-200">
-          <!-- Each assigned task will be rendered here by JS -->
-        </div>
+          </div>
       </section>
 
-      <!-- Student Feedback Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+        <h2
+          class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2"
+          data-i18n="studentFeedback"
+        >
           💬 Student Feedback Overview
         </h2>
         <div id="feedbackList" class="divide-y divide-gray-200">
-          <!-- Student feedback will be rendered here by JS -->
-        </div>
+          </div>
       </section>
 
-      <!-- Academic Calendar Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+        <h2
+          class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2"
+          data-i18n="academicCalendar"
+        >
           📅 Academic Calendar
         </h2>
         <input
           type="date"
           id="termStart"
           class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          data-i18n-placeholder="termStart"
           placeholder="Start of Term (YYYY-MM-DD)"
         />
         <input
           type="date"
           id="termEnd"
           class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          data-i18n-placeholder="termEnd"
           placeholder="End of Term (YYYY-MM-DD)"
         />
         <button
           id="saveCalendarButton"
           class="w-full py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition-colors transform hover:scale-105"
+          data-i18n="saveCalendar"
         >
           Save Calendar
         </button>
@@ -514,10 +568,10 @@
         class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center"
       >
         <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-          <h2 class="text-xl font-bold mb-4">📩 Contact Us</h2>
+          <h2 class="text-xl font-bold mb-4" data-i18n="contactUs">📩 Contact Us</h2>
           <form id="contactForm" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium">Your Name</label>
+              <label class="block text-sm font-medium" data-i18n="yourName">Your Name</label>
               <input
                 type="text"
                 id="contactName"
@@ -526,7 +580,7 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium">Your Email</label>
+              <label class="block text-sm font-medium" data-i18n="yourEmail">Your Email</label>
               <input
                 type="email"
                 id="contactEmail"
@@ -535,7 +589,7 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium">Message</label>
+              <label class="block text-sm font-medium" data-i18n="message">Message</label>
               <textarea
                 id="contactMessage"
                 rows="4"
@@ -548,12 +602,14 @@
                 type="button"
                 id="closeContact"
                 class="bg-gray-200 px-4 py-2 rounded"
+                data-i18n="cancel"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 class="bg-blue-600 text-white px-4 py-2 rounded"
+                data-i18n="send"
               >
                 Send
               </button>
@@ -562,11 +618,34 @@
         </div>
       </div>
 
-      <!-- Footer -->
       <footer class="text-center text-sm text-gray-500 py-6 mt-4">
-        © <span id="currentYear"></span> SmartStudentAct
+        <p data-i18n="copyright">
+          © <span id="currentYear"></span> SmartStudentAct
+        </p>
       </footer>
     </div>
+    
+    <script src="translate.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const defaultLang = 'en';
+        translatePage('teacher-dashboard', defaultLang);
+        document.getElementById('language-menu-button').addEventListener('click', () => {
+          const dropdown = document.getElementById('language-dropdown-menu');
+          dropdown.classList.toggle('hidden');
+          setTimeout(() => dropdown.classList.toggle('opacity-0'), 10);
+        });
+
+        document.querySelectorAll('#language-dropdown-menu a[data-lang]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const lang = e.target.getAttribute('data-lang');
+                translatePage('teacher-dashboard', lang);
+                document.getElementById('language-dropdown-menu').classList.add('hidden', 'opacity-0');
+            });
+        });
+      });
+    </script>
 
 <script>
   let students = [];

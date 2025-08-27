@@ -11,7 +11,6 @@
             font-family: 'Inter', sans-serif;
             background-color: #f0f4f8; 
         }
-
         .background-image-container {
             background-image: url("./images/bg.png");
             background-size: cover;
@@ -22,7 +21,6 @@
             align-items: center;
             padding: 2rem;
         }
-
         .modal {
             position: fixed;
             top: 0;
@@ -35,7 +33,6 @@
             align-items: center;
             z-index: 1000;
         }
-
         .modal-content {
             background-color: white;
             padding: 2rem;
@@ -43,7 +40,6 @@
             max-width: 80%;
             text-align: center;
         }
-
         .language-switcher button {
             transition: transform 0.2s ease-in-out;
         }
@@ -67,9 +63,14 @@
     <div class="background-image-container flex-col p-4 md:p-8">
         <div class="w-full max-w-2xl mx-auto space-y-6">
 
+            <!-- Language Switcher -->
             <div class="flex justify-center space-x-4 language-switcher">
                 <button id="en-btn" onclick="translatePage('en')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">English</button>
                 <button id="fr-btn" onclick="translatePage('fr')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Français</button>
+                <button id="es-btn" onclick="translatePage('es')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Español</button>
+                <button id="tr-btn" onclick="translatePage('tr')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Türkçe</button>
+                <button id="ar-btn" onclick="translatePage('ar')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">العربية</button>
+                <button id="ru-btn" onclick="translatePage('ru')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Русский</button>
             </div>
 
             <div class="bg-blue-500 bg-opacity-80 p-8 rounded-xl shadow-lg text-center">
@@ -105,7 +106,6 @@
     </div>
 
     <script>
-
         const translations = {
             en: {
                 "site_title": "SmartStudentAct",
@@ -140,6 +140,74 @@
                 "modal_title": "Bientôt disponible",
                 "modal_message": "La fonctionnalité n'est pas encore implémentée.",
                 "modal_ok_btn": "OK"
+            },
+            es: {
+                "site_title": "SmartStudentAct",
+                "site_subtitle": "Sigue tus metas. Administra tu presupuesto.",
+                "welcome_heading": "Bienvenido a SmartStudentAct 📚",
+                "welcome_paragraph_1": "SmartStudentAct está diseñado para ayudarte a gestionar tus tareas, seguir tus metas, controlar tu presupuesto y ganar recompensas emocionantes basadas en tus logros académicos y financieros.",
+                "welcome_paragraph_2": "Ya seas un estudiante buscando organizarse o un profesor apoyando a su clase, SmartStudentAct te conecta con las herramientas adecuadas para el éxito inteligente.",
+                "sign_in_btn": "🔐 Iniciar sesión",
+                "sign_up_btn": "📝 Registrarse",
+                "about_heading": "Acerca de SmartStudentAct",
+                "about_paragraph": "SmartStudentAct es una aplicación centrada en el estudiante diseñada para ayudarte a mantenerte al día con tus tareas, administrar sabiamente tu presupuesto y seguir objetivos personales. Ya sea que sigas fechas de entrega o ahorres para tu próximo gran proyecto, te respaldamos.",
+                "footer_text": "Creado con 💙 para los aprendices",
+                "footer_about_link": "Acerca de",
+                "footer_contact_link": "Contacto",
+                "modal_title": "Próximamente",
+                "modal_message": "La funcionalidad aún no está implementada.",
+                "modal_ok_btn": "OK"
+            },
+            tr: {
+                "site_title": "SmartStudentAct",
+                "site_subtitle": "Hedeflerinizi takip edin. Bütçenizi akıllıca yönetin.",
+                "welcome_heading": "SmartStudentAct'e Hoşgeldiniz 📚",
+                "welcome_paragraph_1": "SmartStudentAct, ödevlerinizi yönetmenize, hedeflerinizi takip etmenize, bütçenizi kontrol etmenize ve akademik ve finansal başarılarınıza dayalı heyecan verici ödüller kazanmanıza yardımcı olmak için tasarlanmıştır.",
+                "welcome_paragraph_2": "İster düzenli kalmak isteyen bir öğrenci olun, ister sınıfını destekleyen bir öğretmen olun, SmartStudentAct sizi akıllı başarı için doğru araçlarla buluşturur.",
+                "sign_in_btn": "🔐 Giriş Yap",
+                "sign_up_btn": "📝 Kayıt Ol",
+                "about_heading": "SmartStudentAct Hakkında",
+                "about_paragraph": "SmartStudentAct, öğrencilerin ödevlerini takip etmelerine, bütçelerini akıllıca yönetmelerine ve kişisel hedeflerini izlemelerine yardımcı olmak için tasarlanmış bir öğrenci odaklı uygulamadır.",
+                "footer_text": "Öğrenciler için 💙 ile yapıldı",
+                "footer_about_link": "Hakkında",
+                "footer_contact_link": "İletişim",
+                "modal_title": "Yakında",
+                "modal_message": "Bu işlev henüz uygulanmadı.",
+                "modal_ok_btn": "Tamam"
+            },
+            ar: {
+                "site_title": "SmartStudentAct",
+                "site_subtitle": "تتبع أهدافك. إدارة ميزانيتك بذكاء.",
+                "welcome_heading": "مرحبًا بك في SmartStudentAct 📚",
+                "welcome_paragraph_1": "تم تصميم SmartStudentAct لمساعدتك في إدارة واجباتك، تتبع أهدافك، التحكم في ميزانيتك، وكسب مكافآت ممتعة بناءً على إنجازاتك الأكاديمية والمالية.",
+                "welcome_paragraph_2": "سواء كنت طالبًا يسعى للبقاء منظمًا أو معلمًا يدعم صفه، فإن SmartStudentAct يربطك بالأدوات المناسبة للنجاح الذكي.",
+                "sign_in_btn": "🔐 تسجيل الدخول",
+                "sign_up_btn": "📝 التسجيل",
+                "about_heading": "عن SmartStudentAct",
+                "about_paragraph": "SmartStudentAct هو تطبيق يركز على الطلاب لمساعدتك على البقاء على اطلاع على واجباتك، إدارة ميزانيتك بحكمة، وتتبع الأهداف الشخصية.",
+                "footer_text": "تم بناؤه 💙 للمتعلمين",
+                "footer_about_link": "عن التطبيق",
+                "footer_contact_link": "اتصل بنا",
+                "modal_title": "قريبًا",
+                "modal_message": "الميزة لم تُنفذ بعد.",
+                "modal_ok_btn": "حسناً"
+            },
+            ru: {
+                "site_title": "SmartStudentAct",
+                "site_subtitle": "Следите за своими целями. Умно управляйте бюджетом.",
+                "welcome_heading": "Добро пожаловать в SmartStudentAct 📚",
+                "welcome_paragraph_1": "SmartStudentAct создан, чтобы помочь вам управлять заданиями, отслеживать цели, контролировать бюджет и получать интересные награды на основе ваших академических и финансовых достижений.",
+                "welcome_paragraph_2": "Будь вы студент, стремящийся к организации, или преподаватель, поддерживающий свой класс, SmartStudentAct соединяет вас с правильными инструментами для умного успеха.",
+                "sign_in_btn": "🔐 Войти",
+                "sign_up_btn": "📝 Регистрация",
+                "about_heading": "О SmartStudentAct",
+                "about_paragraph": "SmartStudentAct — это приложение, ориентированное на студентов, которое помогает оставаться в курсе заданий, разумно управлять бюджетом и отслеживать личные цели.",
+                "footer_text": "Создано с 💙 для учащихся",
+                "footer_about_link": "О нас",
+                "footer_contact_link": "Контакты",
+                "modal_title": "Скоро",
+                "modal_message": "Функционал еще не реализован.",
+                "modal_ok_btn": "OK"
             }
         };
 
@@ -153,44 +221,26 @@
             });
             document.documentElement.lang = lang;
             
-            document.getElementById('en-btn').classList.remove('active');
-            document.getElementById('fr-btn').classList.remove('active');
+            const buttons = document.querySelectorAll('.language-switcher button');
+            buttons.forEach(btn => btn.classList.remove('active'));
             document.getElementById(`${lang}-btn`).classList.add('active');
         }
 
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
         const alertModal = document.getElementById('alert-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalMessage = document.getElementById('modal-message');
-
         function showAlert(title, message) {
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
             alertModal.style.display = 'flex';
         }
+        function closeModal() { alertModal.style.display = 'none'; }
 
-        function closeModal() {
-            alertModal.style.display = 'none';
-        }
+        document.getElementById('signInBtn').addEventListener('click', () => { window.location.href = '/login.html'; });
+        document.getElementById('signUpBtn').addEventListener('click', () => { window.location.href = '/signup.html'; });
 
-        document.getElementById('signInBtn').addEventListener('click', () => {
-            window.location.href = '/login.html';
-        });
-
-        document.getElementById('signUpBtn').addEventListener('click', () => {
-            window.location.href = '/signup.html';
-        });
-
-        // Set up event listeners for language switcher
-        document.getElementById('en-btn').addEventListener('click', () => translatePage('en'));
-        document.getElementById('fr-btn').addEventListener('click', () => translatePage('fr'));
-
-        // Initial translation on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            translatePage('en'); // Default to English
-        });
+        // Initial translation
+        document.addEventListener('DOMContentLoaded', () => { translatePage('en'); });
     </script>
 </body>
 </html>
-

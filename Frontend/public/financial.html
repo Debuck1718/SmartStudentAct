@@ -1,378 +1,426 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title data-i18n="pageTitle">Financial Tips</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f5f5;
-        }
-        .container {
-            padding: 20px;
-            background-color: #f5f5f5;
-            min-height: 100vh;
-        }
-        .loading-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .back-link {
-            color: #007bff;
-            margin-bottom: 15px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-            text-align: center;
-        }
-        /* New styling for the tips grid */
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f5f5f5;
+      }
+      .container {
+        padding: 20px;
+        background-color: #f5f5f5;
+        min-height: 100vh;
+      }
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .back-link {
+        color: #007bff;
+        margin-bottom: 15px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+        text-align: center;
+      }
+      .tips-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+      }
+      @media (min-width: 640px) {
         .tips-grid {
-            display: grid;
-            gap: 12px;
-            /* Responsive grid for different screen sizes */
-            grid-template-columns: repeat(1, minmax(0, 1fr));
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
-
-        /* Responsive behavior for larger screens */
-        @media (min-width: 640px) { /* sm breakpoint */
-            .tips-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
+      }
+      @media (min-width: 1024px) {
+        .tips-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
-
-        @media (min-width: 1024px) { /* lg breakpoint */
-            .tips-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-        
-        .tip-card {
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            font-size: 16px;
-            color: #fff; /* White text for contrast */
-            cursor: pointer;
-            transition-property: transform;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 200ms;
-        }
-        .tip-card:hover {
-            transform: scale(1.03); /* Hover effect to scale up slightly */
-        }
-        .section {
-            margin-top: 25px;
-            background-color: #fff;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .subtitle {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        .quote {
-            font-style: italic;
-            font-size: 17px;
-            margin-bottom: 10px;
-            color: #444;
-            line-height: 24px;
-        }
-        .author {
-            font-size: 15px;
-            color: #666;
-            text-align: right;
-            margin-bottom: 5px;
-        }
-        .reminder {
-            background-color: #e0f7fa;
-            border-left: 5px solid #00bcd4;
-            padding: 15px;
-            margin-top: 25px;
-            border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-        .reminder-text {
-            font-size: 16px;
-            color: #333;
-            line-height: 22px;
-        }
+      }
+      .tip-card {
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        font-size: 16px;
+        color: #fff;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .tip-card:hover {
+        transform: scale(1.03);
+      }
+      .section {
+        margin-top: 25px;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .subtitle {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #333;
+      }
+      .quote {
+        font-style: italic;
+        font-size: 17px;
+        margin-bottom: 10px;
+        color: #444;
+        line-height: 24px;
+      }
+      .author {
+        font-size: 15px;
+        color: #666;
+        text-align: right;
+        margin-bottom: 5px;
+      }
+      .reminder {
+        background-color: #e0f7fa;
+        border-left: 5px solid #00bcd4;
+        padding: 15px;
+        margin-top: 25px;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+      .reminder-text {
+        font-size: 16px;
+        color: #333;
+        line-height: 22px;
+      }
     </style>
-</head>
-<body class="bg-gray-100">
-
-    <!-- Language Selector -->
+  </head>
+  <body class="bg-gray-100">
     <div class="absolute top-4 right-4 z-20">
-        <select id="language-selector" class="bg-white border border-gray-300 rounded-lg p-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-        </select>
+      <select
+        id="language-selector"
+        class="bg-white border border-gray-300 rounded-lg p-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="en">English (GHS)</option>
+        <option value="fr">Français (EUR)</option>
+        <option value="es">Español (USD)</option>
+        <option value="tr">Türkçe (TRY)</option>
+        <option value="ar">العربية (USD)</option>
+        <option value="ru">Русский (USD)</option>
+      </select>
     </div>
 
-    <div id="app-root" class="container">
-        <!-- Content will be rendered here by JavaScript -->
-    </div>
+    <div id="app-root" class="container"></div>
 
     <script>
-        // --- TRANSLATION DATA ---
-        const translations = {
-            en: {
-                pageTitle: "Financial Tips",
-                backLink: "← Back to Dashboard",
-                mainTitle: "💡 Financial Tips",
-                weeklyQuote: "📌 Weekly Quote",
-                loadingMessage: "Loading financial tips...",
-                reminder_no_goal: "🧾 You haven’t set a new savings goal this week. Don’t forget to plan ahead!",
-                reminder_goal_set: (amount) => `✅ Great job! You’ve set a saving goal of GHS ${amount}. Keep it up!`,
-                reminder_high_expense: (amount) => `⚠️ You spent GHS ${amount}. Balance your budget with a saving goal.`,
-                reminder_error: "Error loading financial reminders.",
-                tips: [
-                    "Track Your Spending: Know where every cedi goes. Use budgeting apps or spreadsheets.",
-                    "Create a Weekly Budget: Plan your allowance. Set aside for food, transport, and savings.",
-                    "Follow the 50/30/20 Rule: 50% on needs, 30% on wants, 20% savings.",
-                    "Start Saving Early: Even GHS 2 daily adds up. Set goals and reward progress.",
-                    "Avoid Unnecessary Debt: Borrow only when necessary. Know the terms.",
-                    "Make Informed Decisions: Ask before buying: 'Do I need this? Is this the best deal?'",
-                    "Compare Prices: Avoid overspending by checking vendors.",
-                    "Build an Emergency Fund: Save weekly for unexpected costs.",
-                    "Practice Delayed Gratification: Wait on non-essentials to avoid regret.",
-                    "Review Weekly: Evaluate your spending, saving, and plan for next week."
-                ],
-                quotes: [
-                    { text: "Do not save what is left after spending, but spend what is left after saving.", author: "Warren Buffett" },
-                    { text: "A budget is telling your money where to go instead of wondering where it went.", author: "Dave Ramsey" },
-                    { text: "Wealth consists not in having great possessions, but in having few wants.", author: "Epictetus" },
-                    { text: "Beware of little expenses; a small leak will sink a great ship.", author: "Benjamin Franklin" },
-                    { text: "Financial freedom is available to those who learn about it and work for it.", author: "Robert Kiyosaki" },
-                    { text: "It’s not your salary that makes you rich, it’s your spending habits.", author: "Charles A. Jaffe" },
-                    { text: "Money looks better in the bank than on your feet.", author: "Sophia Amoruso" },
-                    { text: "Save money and money will save you.", author: "Evans Buckman" },
-                    { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
-                    { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
-                    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
-                    { text: "You miss 100% of the shots you don’t take.", author: "Wayne Gretzky" },
-                    { text: "Start where you are. Use what you have. Do what you can.", author: "Arthur Ashe" }
-                ]
+      // --- TRANSLATIONS ---
+      const translations = {
+        en: {
+          pageTitle: "Financial Tips",
+          backLink: "← Back to Dashboard",
+          mainTitle: "💡 Financial Tips",
+          weeklyQuote: "📌 Weekly Quote",
+          loadingMessage: "Loading financial tips...",
+          reminder_no_goal:
+            "🧾 You haven’t set a new savings goal this week. Don’t forget to plan ahead!",
+          reminder_goal_set: (amount) =>
+            `✅ Great job! You’ve set a saving goal of GHS ${amount}. Keep it up!`,
+          reminder_high_expense: (amount) =>
+            `⚠️ You spent GHS ${amount}. Balance your budget with a saving goal.`,
+          reminder_error: "Error loading financial reminders.",
+          tips: [
+            "Track Your Spending: Know where every cedi goes. Use budgeting apps or spreadsheets.",
+            "Create a Weekly Budget: Plan your allowance. Set aside for food, transport, and savings.",
+            "Follow the 50/30/20 Rule: 50% on needs, 30% on wants, 20% savings.",
+            "Start Saving Early: Even GHS 2 daily adds up. Set goals and reward progress.",
+            "Avoid Unnecessary Debt: Borrow only when necessary. Know the terms.",
+            "Make Informed Decisions: Ask before buying: 'Do I need this? Is this the best deal?'",
+            "Compare Prices: Avoid overspending by checking vendors.",
+            "Build an Emergency Fund: Save weekly for unexpected costs.",
+            "Practice Delayed Gratification: Wait on non-essentials to avoid regret.",
+            "Review Weekly: Evaluate your spending, saving, and plan for next week.",
+          ],
+          quotes: [
+            {
+              text: "Do not save what is left after spending, but spend what is left after saving.",
+              author: "Warren Buffett",
             },
-            fr: {
-                pageTitle: "Conseils financiers",
-                backLink: "← Retour au tableau de bord",
-                mainTitle: "💡 Conseils financiers",
-                weeklyQuote: "📌 Citation de la semaine",
-                loadingMessage: "Chargement des conseils financiers...",
-                reminder_no_goal: "🧾 Vous n'avez pas fixé de nouvel objectif d'épargne cette semaine. N'oubliez pas de planifier à l'avance !",
-                reminder_goal_set: (amount) => `✅ Bon travail ! Vous avez fixé un objectif d'épargne de GHS ${amount}. Continuez comme ça !`,
-                reminder_high_expense: (amount) => `⚠️ Vous avez dépensé GHS ${amount}. Équilibrez votre budget avec un objectif d'épargne.`,
-                reminder_error: "Erreur lors du chargement des rappels financiers.",
-                tips: [
-                    "Suivez vos dépenses : sachez où va chaque cedi. Utilisez des applications ou des feuilles de calcul budgétaires.",
-                    "Créez un budget hebdomadaire : planifiez votre argent de poche. Mettez de côté pour la nourriture, le transport et l'épargne.",
-                    "Suivez la règle 50/30/20 : 50% pour les besoins, 30% pour les désirs, 20% pour l'épargne.",
-                    "Commencez à épargner tôt : même 2 GHS par jour s'accumulent. Fixez des objectifs et récompensez vos progrès.",
-                    "Évitez les dettes inutiles : empruntez uniquement en cas de nécessité. Connaissez les termes.",
-                    "Prenez des décisions éclairées : demandez-vous avant d'acheter : 'Ai-je besoin de cela ? Est-ce la meilleure affaire ?'",
-                    "Comparez les prix : évitez de trop dépenser en vérifiant les vendeurs.",
-                    "Constituez un fonds d'urgence : épargnez chaque semaine pour les coûts imprévus.",
-                    "Pratiquez la gratification différée : attendez pour les non-essentiels afin d'éviter les regrets.",
-                    "Passez en revue chaque semaine : évaluez vos dépenses, votre épargne et planifiez la semaine prochaine."
-                ],
-                quotes: [
-                    { text: "Ne gardez pas ce qui reste après avoir dépensé, mais dépensez ce qui reste après avoir épargné.", author: "Warren Buffett" },
-                    { text: "Un budget, c'est dire à votre argent où aller au lieu de vous demander où il est passé.", author: "Dave Ramsey" },
-                    { text: "La richesse ne consiste pas à avoir de grandes possessions, mais à avoir peu de désirs.", author: "Épictète" },
-                    { text: "Méfiez-vous des petites dépenses ; une petite fuite peut faire sombrer un grand navire.", author: "Benjamin Franklin" },
-                    { text: "La liberté financière est accessible à ceux qui l'apprennent et y travaillent.", author: "Robert Kiyosaki" },
-                    { text: "Ce n'est pas votre salaire qui vous rend riche, ce sont vos habitudes de dépenses.", author: "Charles A. Jaffe" },
-                    { text: "L'argent est plus beau à la banque que sur vos pieds.", author: "Sophia Amoruso" },
-                    { text: "Épargnez de l'argent et l'argent vous épargnera.", author: "Evans Buckman" },
-                    { text: "Le succès n'est pas final, l'échec n'est pas fatal : c'est le courage de continuer qui compte.", author: "Winston Churchill" },
-                    { text: "Croyez que vous le pouvez et vous êtes à mi-chemin.", author: "Theodore Roosevelt" },
-                    { text: "La seule façon de faire du bon travail est d'aimer ce que vous faites.", author: "Steve Jobs" },
-                    { text: "Vous ratez 100 % des tirs que vous ne tentez pas.", author: "Wayne Gretzky" },
-                    { text: "Commencez là où vous êtes. Utilisez ce que vous avez. Faites ce que vous pouvez.", author: "Arthur Ashe" }
-                ]
-            }
-        };
+            {
+              text: "A budget is telling your money where to go instead of wondering where it went.",
+              author: "Dave Ramsey",
+            },
+            {
+              text: "Wealth consists not in having great possessions, but in having few wants.",
+              author: "Epictetus",
+            },
+          ],
+        },
+        fr: {
+          pageTitle: "Conseils financiers",
+          backLink: "← Retour au tableau de bord",
+          mainTitle: "💡 Conseils financiers",
+          weeklyQuote: "📌 Citation de la semaine",
+          loadingMessage: "Chargement des conseils financiers...",
+          reminder_no_goal:
+            "🧾 Vous n'avez pas fixé de nouvel objectif d'épargne cette semaine.",
+          reminder_goal_set: (amount) =>
+            `✅ Bon travail ! Vous avez fixé un objectif d'épargne de €${(
+              amount * 0.083
+            ).toFixed(2)}. Continuez comme ça !`,
+          reminder_high_expense: (amount) =>
+            `⚠️ Vous avez dépensé €${(amount * 0.083).toFixed(
+              2
+            )}. Équilibrez votre budget avec un objectif d'épargne.`,
+          reminder_error: "Erreur lors du chargement des rappels financiers.",
+          tips: [
+            "Suivez vos dépenses : sachez où va chaque cedi. Utilisez des applications ou des feuilles de calcul.",
+            "Créez un budget hebdomadaire : planifiez votre argent de poche.",
+            "Suivez la règle 50/30/20 : 50% pour les besoins, 30% pour les désirs, 20% pour l'épargne.",
+          ],
+          quotes: [
+            {
+              text: "Ne gardez pas ce qui reste après avoir dépensé, mais dépensez ce qui reste après avoir épargné.",
+              author: "Warren Buffett",
+            },
+            {
+              text: "Un budget, c'est dire à votre argent où aller.",
+              author: "Dave Ramsey",
+            },
+          ],
+        },
+        es: {
+          pageTitle: "Consejos financieros",
+          backLink: "← Volver al tablero",
+          mainTitle: "💡 Consejos financieros",
+          weeklyQuote: "📌 Cita semanal",
+          loadingMessage: "Cargando consejos financieros...",
+          reminder_no_goal:
+            "🧾 No has establecido un objetivo de ahorro esta semana.",
+          reminder_goal_set: (amount) =>
+            `✅ ¡Buen trabajo! Has establecido un objetivo de ahorro de $${(
+              amount * 0.082
+            ).toFixed(2)}. ¡Sigue así!`,
+          reminder_high_expense: (amount) =>
+            `⚠️ Gastaste $${(amount * 0.082).toFixed(
+              2
+            )}. Equilibra tu presupuesto con un objetivo de ahorro.`,
+          reminder_error: "Error al cargar recordatorios financieros.",
+          tips: [
+            "Sigue tus gastos: conoce cada cedi gastado.",
+            "Crea un presupuesto semanal.",
+            "Sigue la regla 50/30/20: 50% necesidades, 30% deseos, 20% ahorro.",
+          ],
+          quotes: [
+            {
+              text: "No ahorres lo que queda después de gastar, sino gasta lo que queda después de ahorrar.",
+              author: "Warren Buffett",
+            },
+          ],
+        },
+        tr: {
+          pageTitle: "Finansal İpuçları",
+          backLink: "← Göstergeler Tablosuna Dön",
+          mainTitle: "💡 Finansal İpuçları",
+          weeklyQuote: "📌 Haftalık Alıntı",
+          loadingMessage: "Finansal ipuçları yükleniyor...",
+          reminder_no_goal:
+            "🧾 Bu hafta yeni bir tasarruf hedefi belirlemediniz.",
+          reminder_goal_set: (amount) =>
+            `✅ Harika! Tasarruf hedefiniz ₺${(amount * 0.77).toFixed(
+              2
+            )} olarak belirlendi. Devam edin!`,
+          reminder_high_expense: (amount) =>
+            `⚠️ Harcadığınız miktar ₺${(amount * 0.77).toFixed(
+              2
+            )}. Bütçenizi dengeleyin.`,
+          reminder_error: "Finansal hatırlatmalar yüklenemedi.",
+          tips: [
+            "Harcamalarınızı takip edin.",
+            "Haftalık bütçe oluşturun.",
+            "50/30/20 kuralını uygulayın.",
+          ],
+          quotes: [
+            {
+              text: "Harcamadan sonra kalanını biriktirme, biriktirdikten sonra kalanını harca.",
+              author: "Warren Buffett",
+            },
+          ],
+        },
+        ar: {
+          pageTitle: "نصائح مالية",
+          backLink: "← العودة للوحة التحكم",
+          mainTitle: "💡 نصائح مالية",
+          weeklyQuote: "📌 اقتباس الأسبوع",
+          loadingMessage: "جارٍ تحميل النصائح المالية...",
+          reminder_no_goal: "🧾 لم تحدد هدف ادخار جديد هذا الأسبوع.",
+          reminder_goal_set: (amount) =>
+            `✅ عمل رائع! لقد حددت هدف ادخار بقيمة $${(amount * 0.082).toFixed(
+              2
+            )}. استمر!`,
+          reminder_high_expense: (amount) =>
+            `⚠️ أنفقت $${(amount * 0.082).toFixed(
+              2
+            )}. وزّع ميزانيتك مع هدف ادخار.`,
+          reminder_error: "خطأ في تحميل التذكيرات المالية.",
+          tips: [
+            "تتبع مصروفاتك.",
+            "أنشئ ميزانية أسبوعية.",
+            "اتبع قاعدة 50/30/20.",
+          ],
+          quotes: [
+            {
+              text: "لا تدخر ما تبقى بعد الإنفاق، بل أنفق ما تبقى بعد الادخار.",
+              author: "Warren Buffett",
+            },
+          ],
+        },
+        ru: {
+          pageTitle: "Финансовые советы",
+          backLink: "← Назад к панели",
+          mainTitle: "💡 Финансовые советы",
+          weeklyQuote: "📌 Цитата недели",
+          loadingMessage: "Загрузка финансовых советов...",
+          reminder_no_goal:
+            "🧾 Вы не установили новую цель сбережений на этой неделе.",
+          reminder_goal_set: (amount) =>
+            `✅ Отлично! Вы установили цель сбережений $${(
+              amount * 0.082
+            ).toFixed(2)}. Продолжайте в том же духе!`,
+          reminder_high_expense: (amount) =>
+            `⚠️ Вы потратили $${(amount * 0.082).toFixed(
+              2
+            )}. Сбалансируйте бюджет с целью сбережений.`,
+          reminder_error: "Ошибка загрузки финансовых напоминаний.",
+          tips: [
+            "Отслеживайте свои расходы.",
+            "Создайте еженедельный бюджет.",
+            "Следуйте правилу 50/30/20.",
+          ],
+          quotes: [
+            {
+              text: "Не копите то, что осталось после расходов, а тратьте то, что осталось после сбережений.",
+              author: "Warren Buffett",
+            },
+          ],
+        },
+      };
 
-        // Mocking React Native/Expo dependencies for the browser environment
-        const router = {
-            push: (path) => {
-                // In a real app, this would change the URL. Here, we can just navigate.
-                console.log(`Navigating to ${path}`);
-                window.location.href = path; // Simple navigation for this example
-            }
-        };
+      const tipColors = [
+        "#60A5FA",
+        "#F87171",
+        "#FACC15",
+        "#4ADE80",
+        "#A78BFA",
+        "#FB923C",
+        "#E879F9",
+        "#38BDF8",
+      ];
+      const state = {
+        quote: null,
+        reminderMessage: "",
+        isLoading: true,
+        currentLang: "en",
+      };
 
-        // Mocking AsyncStorage with localStorage
-        const AsyncStorage = {
-            getItem: (key) => Promise.resolve(localStorage.getItem(key)),
-            setItem: (key, value) => Promise.resolve(localStorage.setItem(key, value)),
-        };
-        
-        // A palette of attractive pastel colors for the tip cards
-        const tipColors = [
-            "#60A5FA", // Blue-400
-            "#F87171", // Red-400
-            "#FACC15", // Yellow-400
-            "#4ADE80", // Green-400
-            "#A78BFA", // Violet-400
-            "#FB923C", // Orange-400
-            "#E879F9", // Magenta-400
-            "#38BDF8"  // Sky-400
-        ];
+      function translatePage(lang) {
+        state.currentLang = lang;
+        document.documentElement.lang = lang;
+        const t = translations[lang];
+        document.title = t.pageTitle;
+        render();
+      }
 
-        // Helper function to get ISO week number, ported from the original code
-        function getWeekNumber() {
-            const date = new Date();
-            date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
-            const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-            return weekNo;
+      function render() {
+        const root = document.getElementById("app-root");
+        const t = translations[state.currentLang];
+        if (state.isLoading) {
+          root.innerHTML = `<div class="loading-container"><svg class="animate-spin h-12 w-12 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="mt-4 text-base text-gray-600">${t.loadingMessage}</p></div>`;
+          return;
         }
+        root.innerHTML = `
+        <a href="/dashboard.html" class="back-link">${t.backLink}</a>
+        <h1 class="title">${t.mainTitle}</h1>
+        <div class="tips-grid">
+            ${t.tips
+              .map(
+                (tip, i) =>
+                  `<div class="tip-card" style="background-color:${
+                    tipColors[i % tipColors.length]
+                  }">${tip}</div>`
+              )
+              .join("")}
+        </div>
+        <div class="section">
+            <h2 class="subtitle">${t.weeklyQuote}</h2>
+            <p class="quote">“${state.quote.text}”</p>
+            <p class="author">– ${state.quote.author}</p>
+        </div>
+        <div class="reminder"><p class="reminder-text">${
+          state.reminderMessage
+        }</p></div>
+    `;
+      }
 
-        // State-like object to manage UI data
-        const state = {
-            quote: null,
-            reminderMessage: '',
-            isLoading: true,
-            currentLang: 'en'
-        };
+      function getWeekNumber() {
+        const date = new Date();
+        date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+        return Math.ceil(
+          ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7
+        );
+      }
 
-        /**
-         * Translates all elements with a data-i18n attribute and dynamically
-         * updates page content based on the selected language.
-         */
-        function translatePage(lang) {
-            state.currentLang = lang;
-            document.documentElement.lang = lang; // Set the HTML lang attribute
-            const currentTranslations = translations[lang];
+      async function fetchFinancialData() {
+        state.isLoading = true;
+        render();
+        const t = translations[state.currentLang];
+        try {
+          const quotes = t.quotes;
+          const weekIndex = getWeekNumber() % quotes.length;
+          state.quote = quotes[weekIndex];
 
-            // Translate static elements
-            document.querySelectorAll('[data-i18n]').forEach(element => {
-                const key = element.getAttribute('data-i18n');
-                if (currentTranslations[key]) {
-                    element.textContent = currentTranslations[key];
-                }
-            });
-            render();
+          const lastBudgetStr =
+            localStorage.getItem("lastExpenseAmount") || "0";
+          const lastType = localStorage.getItem("lastExpenseType") || "none";
+          const lastBudget = parseFloat(lastBudgetStr);
+
+          if (lastType === "goal")
+            state.reminderMessage = t.reminder_goal_set(lastBudget);
+          else if (lastType === "expense" && lastBudget > 100)
+            state.reminderMessage = t.reminder_high_expense(lastBudget);
+          else state.reminderMessage = t.reminder_no_goal;
+        } catch (e) {
+          console.error(e);
+          state.reminderMessage = t.reminder_error;
+        } finally {
+          state.isLoading = false;
+          render();
         }
+      }
 
-        // Renders the UI based on the current state
-        function render() {
-            const root = document.getElementById('app-root');
-            root.innerHTML = ''; // Clear existing content
-            const currentTranslations = translations[state.currentLang];
-
-            if (state.isLoading) {
-                root.innerHTML = `
-                    <div class="loading-container">
-                        <svg class="animate-spin h-12 w-12 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <p class="mt-4 text-base text-gray-600">${currentTranslations.loadingMessage}</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Main UI content
-            root.innerHTML = `
-                <div class="financial-screen-content">
-                    <a href="/dashboard.html" class="back-link" data-i18n="backLink">← Back to Dashboard</a>
-
-                    <h1 class="title" data-i18n="mainTitle">💡 Financial Tips</h1>
-                    
-                    <!-- Updated section for tips with grid layout -->
-                    <div class="tips-grid">
-                        ${currentTranslations.tips.map((tip, index) => {
-                            const color = tipColors[index % tipColors.length];
-                            return `<div class="tip-card" style="background-color: ${color};">
-                                ${tip}
-                            </div>`;
-                        }).join('')}
-                    </div>
-
-                    <div class="section">
-                        <h2 class="subtitle" data-i18n="weeklyQuote">📌 Weekly Quote</h2>
-                        <p class="quote">“${state.quote.text}”</p>
-                        <p class="author">– ${state.quote.author}</p>
-                    </div>
-
-                    <div class="reminder">
-                        <p class="reminder-text">${state.reminderMessage}</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Main function to fetch data and update UI
-        async function fetchFinancialData() {
-            state.isLoading = true;
-            render();
-            const currentTranslations = translations[state.currentLang];
-
-            try {
-                // Set weekly quote based on week number
-                const quotes = currentTranslations.quotes;
-                const weekIndex = getWeekNumber() % quotes.length;
-                state.quote = quotes[weekIndex];
-
-                // Fetch data from localStorage (mocking AsyncStorage)
-                const lastBudgetStr = await AsyncStorage.getItem('lastExpenseAmount');
-                const lastType = await AsyncStorage.getItem('lastExpenseType');
-
-                const lastBudget = parseFloat(lastBudgetStr || '0');
-                const lastBudgetType = lastType || 'none';
-
-                let message;
-                if (lastBudgetType === 'goal') {
-                    message = currentTranslations.reminder_goal_set(lastBudget);
-                } else if (lastBudgetType === 'expense' && lastBudget > 100) {
-                    message = currentTranslations.reminder_high_expense(lastBudget);
-                } else {
-                    message = currentTranslations.reminder_no_goal;
-                }
-                state.reminderMessage = message;
-            } catch (error) {
-                console.error('Failed to load financial data from localStorage', error);
-                state.reminderMessage = currentTranslations.reminder_error;
-            } finally {
-                state.isLoading = false;
-                render();
-            }
-        }
-
-        // Initial language setting and data fetch
-        document.addEventListener('DOMContentLoaded', () => {
-            const languageSelector = document.getElementById('language-selector');
-            const userLang = navigator.language.split('-')[0];
-            if (translations[userLang]) {
-                languageSelector.value = userLang;
-            }
-            languageSelector.addEventListener('change', (event) => {
-                translatePage(event.target.value);
-            });
-            translatePage(languageSelector.value);
-            fetchFinancialData();
-        });
+      document.addEventListener("DOMContentLoaded", () => {
+        const langSelector = document.getElementById("language-selector");
+        const userLang = navigator.language.split("-")[0];
+        if (translations[userLang]) langSelector.value = userLang;
+        langSelector.addEventListener("change", (e) =>
+          translatePage(e.target.value)
+        );
+        translatePage(langSelector.value);
+        fetchFinancialData();
+      });
     </script>
-</body>
+  </body>
 </html>

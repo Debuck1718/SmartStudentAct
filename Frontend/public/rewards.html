@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Achievements</title>
+    <title data-i18n="pageTitle">Your Achievements</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -58,9 +58,31 @@
         .badge { background-color: #e0f2fe; color: #0c4a6e; border: 1px solid #bfdbfe; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Language selector */
+        #language-selector {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #ccc;
+            background: #fff;
+            z-index: 50;
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <!-- Language Selector -->
+    <select id="language-selector">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="tr">Türkçe</option>
+        <option value="ar">العربية</option>
+        <option value="ru">Русский</option>
+    </select>
 
     <!-- Message Modal -->
     <div id="messageModal" class="flex">
@@ -69,22 +91,22 @@
             <h2 id="modalTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
             <p id="modalMessage" class="text-gray-700"></p>
             <div class="flex justify-end mt-4">
-                <button onclick="closeMessageModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors">OK</button>
+                <button onclick="closeMessageModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors" data-i18n="addButton">OK</button>
             </div>
         </div>
     </div>
 
     <div class="max-w-4xl mx-auto space-y-8">
-        <a href="#" onclick="history.back()" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors font-medium">
+        <a href="#" onclick="history.back()" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors font-medium" data-i18n="backToDashboard">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to Dashboard
         </a>
 
-        <h1 class="text-4xl font-extrabold text-gray-900 text-center">🏆 Your Achievements</h1>
+        <h1 class="text-4xl font-extrabold text-gray-900 text-center" data-i18n="pageTitle">🏆 Your Achievements</h1>
 
         <div id="loading" class="flex justify-center items-center h-48">
             <div class="spinner"></div>
-            <p class="ml-4 text-gray-600 font-semibold">Loading rewards...</p>
+            <p class="ml-4 text-gray-600 font-semibold" data-i18n="loadingRewards">Loading rewards...</p>
         </div>
 
         <div id="content" class="hidden space-y-8">
@@ -93,185 +115,282 @@
             </section>
 
             <section class="bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">🎖️ Achievement Badges</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2" data-i18n="achievementBadges">🎖️ Achievement Badges</h2>
                 <div id="badgeContainer" class="flex flex-wrap gap-2"></div>
-                <p id="noBadgesMessage" class="text-center italic text-gray-500 mt-4 hidden">No badges earned yet. Keep up the great work!</p>
+                <p id="noBadgesMessage" class="text-center italic text-gray-500 mt-4 hidden" data-i18n="noBadges">No badges earned yet. Keep up the great work!</p>
             </section>
 
             <section class="bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">📚 Term Performance</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2" data-i18n="termPerformance">📚 Term Performance</h2>
                 <p id="termSummary" class="text-gray-700 leading-relaxed mb-4"></p>
                 <ul id="termRewardsList" class="list-none space-y-2"></ul>
             </section>
 
             <section class="bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">🎁 Treat Suggestions</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2" data-i18n="treatSuggestions">🎁 Treat Suggestions</h2>
                 <ul id="treatSuggestionsList" class="list-none space-y-2 mb-4"></ul>
                 <form id="addTreatForm">
-                    <label for="newTreatInput" class="block text-gray-700 font-semibold mb-2">Add Your Own Treat Suggestion:</label>
+                    <label for="newTreatInput" class="block text-gray-700 font-semibold mb-2" data-i18n="addTreatLabel">Add Your Own Treat Suggestion:</label>
                     <div class="flex flex-col sm:flex-row gap-4 items-end">
-                        <input type="text" id="newTreatInput" class="flex-grow rounded-lg" placeholder="e.g., 'Go to the zoo' or 'Read a new book'" required>
-                        <button type="submit" id="addTreatBtn" class="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700">Add Suggestion</button>
+                        <input type="text" id="newTreatInput" class="flex-grow rounded-lg" placeholder="e.g., 'Go to the zoo' or 'Read a new book'" data-i18n-placeholder="addTreatPlaceholder" required>
+                        <button type="submit" id="addTreatBtn" class="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700" data-i18n="addButton">Add Suggestion</button>
                     </div>
                 </form>
             </section>
         </div>
     </div>
 
-    <script>
-    // --- DOM Elements ---
-    const loadingEl = document.getElementById('loading');
-    const contentEl = document.getElementById('content');
-    const weeklyMessageEl = document.getElementById('weeklyMessage');
-    const badgeContainerEl = document.getElementById('badgeContainer');
-    const noBadgesMessageEl = document.getElementById('noBadgesMessage');
-    const termSummaryEl = document.getElementById('termSummary');
-    const termRewardsListEl = document.getElementById('termRewardsList');
-    const treatSuggestionsListEl = document.getElementById('treatSuggestionsList');
-    const addTreatFormEl = document.getElementById('addTreatForm');
-    const newTreatInputEl = document.getElementById('newTreatInput');
-    
-    // Modal elements
-    const messageModal = document.getElementById('messageModal');
-    const modalTitleEl = document.getElementById('modalTitle');
-    const modalMessageEl = document.getElementById('modalMessage');
-
-    // Treat suggestions array
-    let treatSuggestions = [];
-
-    // --- Helper Functions ---
-    function sanitize(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+<script>
+// --- TRANSLATIONS ---
+const translations = {
+    en: {
+        pageTitle: "Your Achievements",
+        backToDashboard: "Back to Dashboard",
+        achievementBadges: "🎖️ Achievement Badges",
+        noBadges: "No badges earned yet. Keep up the great work!",
+        termPerformance: "📚 Term Performance",
+        noTermRewards: "No term rewards unlocked yet. Keep working towards your goals!",
+        treatSuggestions: "🎁 Treat Suggestions",
+        addTreatLabel: "Add Your Own Treat Suggestion:",
+        addTreatPlaceholder: "e.g., 'Go to the zoo' or 'Read a new book'",
+        addButton: "Add Suggestion",
+        modalSuccessTitle: "Success!",
+        modalSuccessMessage: "Your new treat suggestion has been added.",
+        modalErrorTitle: "Oops!",
+        modalErrorMessage: "Please enter a valid treat suggestion.",
+        loadingRewards: "Loading rewards...",
+        errorFetching: "Failed to load user rewards. Please try again later."
+    },
+    fr: {
+        pageTitle: "Vos Réalisations",
+        backToDashboard: "Retour au tableau de bord",
+        achievementBadges: "🎖️ Badges d'accomplissement",
+        noBadges: "Aucun badge obtenu pour le moment. Continuez votre excellent travail !",
+        termPerformance: "📚 Performance du trimestre",
+        noTermRewards: "Aucune récompense de trimestre débloquée pour le moment. Continuez à travailler pour atteindre vos objectifs !",
+        treatSuggestions: "🎁 Suggestions de récompenses",
+        addTreatLabel: "Ajoutez votre propre suggestion de récompense :",
+        addTreatPlaceholder: "ex. : 'Aller au zoo' ou 'Lire un nouveau livre'",
+        addButton: "Ajouter la suggestion",
+        modalSuccessTitle: "Succès !",
+        modalSuccessMessage: "Votre nouvelle suggestion de récompense a été ajoutée.",
+        modalErrorTitle: "Oups !",
+        modalErrorMessage: "Veuillez saisir une suggestion de récompense valide.",
+        loadingRewards: "Chargement des récompenses...",
+        errorFetching: "Échec du chargement des récompenses de l'utilisateur. Veuillez réessayer plus tard."
+    },
+    es: {
+        pageTitle: "Tus Logros",
+        backToDashboard: "Volver al tablero",
+        achievementBadges: "🎖️ Insignias de Logro",
+        noBadges: "No has ganado insignias aún. ¡Sigue así!",
+        termPerformance: "📚 Rendimiento del período",
+        noTermRewards: "No se han desbloqueado recompensas de período aún. ¡Sigue trabajando por tus metas!",
+        treatSuggestions: "🎁 Sugerencias de Recompensas",
+        addTreatLabel: "Agrega tu propia sugerencia de recompensa:",
+        addTreatPlaceholder: "ej.: 'Ir al zoológico' o 'Leer un libro nuevo'",
+        addButton: "Agregar Sugerencia",
+        modalSuccessTitle: "¡Éxito!",
+        modalSuccessMessage: "Tu nueva sugerencia de recompensa ha sido agregada.",
+        modalErrorTitle: "¡Ups!",
+        modalErrorMessage: "Por favor ingresa una sugerencia válida.",
+        loadingRewards: "Cargando recompensas...",
+        errorFetching: "Error al cargar las recompensas. Intenta nuevamente más tarde."
+    },
+    tr: {
+        pageTitle: "Başarılarınız",
+        backToDashboard: "Gösterge Tablosuna Geri Dön",
+        achievementBadges: "🎖️ Başarı Rozetleri",
+        noBadges: "Henüz rozet kazanmadınız. Harika çalışmaya devam edin!",
+        termPerformance: "📚 Dönem Performansı",
+        noTermRewards: "Henüz dönem ödülleri açılmadı. Hedeflerinize ulaşmaya devam edin!",
+        treatSuggestions: "🎁 Ödül Önerileri",
+        addTreatLabel: "Kendi ödül önerinizi ekleyin:",
+        addTreatPlaceholder: "örn.: 'Hayvanat bahçesine git' veya 'Yeni bir kitap oku'",
+        addButton: "Öneri Ekle",
+        modalSuccessTitle: "Başarılı!",
+        modalSuccessMessage: "Yeni ödül öneriniz eklendi.",
+        modalErrorTitle: "Hata!",
+        modalErrorMessage: "Lütfen geçerli bir öneri girin.",
+        loadingRewards: "Ödüller yükleniyor...",
+        errorFetching: "Kullanıcı ödülleri yüklenemedi. Lütfen daha sonra tekrar deneyin."
+    },
+    ar: {
+        pageTitle: "إنجازاتك",
+        backToDashboard: "العودة إلى لوحة التحكم",
+        achievementBadges: "🎖️ شارات الإنجاز",
+        noBadges: "لم تكسب أي شارات بعد. استمر في العمل الجيد!",
+        termPerformance: "📚 أداء الفصل الدراسي",
+        noTermRewards: "لم يتم فتح أي مكافآت بعد. استمر في تحقيق أهدافك!",
+        treatSuggestions: "🎁 اقتراحات المكافآت",
+        addTreatLabel: "أضف اقتراح مكافأتك الخاص:",
+        addTreatPlaceholder: "مثال: 'اذهب إلى حديقة الحيوان' أو 'اقرأ كتاباً جديداً'",
+        addButton: "إضافة اقتراح",
+        modalSuccessTitle: "نجاح!",
+        modalSuccessMessage: "تمت إضافة اقتراح المكافأة الجديد الخاص بك.",
+        modalErrorTitle: "خطأ!",
+        modalErrorMessage: "يرجى إدخال اقتراح صالح.",
+        loadingRewards: "جاري تحميل المكافآت...",
+        errorFetching: "فشل في تحميل المكافآت. يرجى المحاولة مرة أخرى لاحقاً."
+    },
+    ru: {
+        pageTitle: "Ваши Достижения",
+        backToDashboard: "Вернуться на панель",
+        achievementBadges: "🎖️ Значки достижений",
+        noBadges: "Еще нет полученных значков. Продолжайте в том же духе!",
+        termPerformance: "📚 Результаты периода",
+        noTermRewards: "Еще нет открытых наград. Продолжайте работать над своими целями!",
+        treatSuggestions: "🎁 Предложения наград",
+        addTreatLabel: "Добавьте свое предложение награды:",
+        addTreatPlaceholder: "например: 'Сходить в зоопарк' или 'Прочитать новую книгу'",
+        addButton: "Добавить предложение",
+        modalSuccessTitle: "Успех!",
+        modalSuccessMessage: "Ваше новое предложение награды было добавлено.",
+        modalErrorTitle: "Упс!",
+        modalErrorMessage: "Пожалуйста, введите корректное предложение.",
+        loadingRewards: "Загрузка наград...",
+        errorFetching: "Не удалось загрузить награды пользователя. Пожалуйста, попробуйте позже."
     }
+};
 
-    function showMessageModal(title, message) {
-        modalTitleEl.textContent = title;
-        modalMessageEl.textContent = message;
-        messageModal.style.display = 'flex';
+// --- DOM Elements ---
+const languageSelector = document.getElementById('language-selector');
+const loadingEl = document.getElementById('loading');
+const contentEl = document.getElementById('content');
+const weeklyMessageEl = document.getElementById('weeklyMessage');
+const badgeContainerEl = document.getElementById('badgeContainer');
+const noBadgesMessageEl = document.getElementById('noBadgesMessage');
+const termSummaryEl = document.getElementById('termSummary');
+const termRewardsListEl = document.getElementById('termRewardsList');
+const treatSuggestionsListEl = document.getElementById('treatSuggestionsList');
+const addTreatFormEl = document.getElementById('addTreatForm');
+const newTreatInputEl = document.getElementById('newTreatInput');
+
+// Modal
+const messageModal = document.getElementById('messageModal');
+const modalTitleEl = document.getElementById('modalTitle');
+const modalMessageEl = document.getElementById('modalMessage');
+
+let treatSuggestions = [];
+
+// --- Translation ---
+function translatePage(lang) {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if(translations[lang][key]) el.textContent = translations[lang][key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if(translations[lang][key]) el.placeholder = translations[lang][key];
+    });
+    document.title = translations[lang].pageTitle;
+}
+
+// --- Helpers ---
+function sanitize(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function showMessageModal(title, message) {
+    modalTitleEl.textContent = title;
+    modalMessageEl.textContent = message;
+    messageModal.style.display = 'flex';
+}
+
+function closeMessageModal() {
+    messageModal.style.display = 'none';
+}
+
+// --- Render Functions ---
+function renderWeeklyMessage(data) { weeklyMessageEl.textContent = sanitize(data.weeklyMessage); }
+
+function renderBadges(data) {
+    const badges = data.badges || [];
+    if(badges.length>0){
+        badgeContainerEl.innerHTML = badges.map(b=>`<div class="badge rounded-full px-4 py-1 text-sm font-semibold shadow-sm">${sanitize(b)}</div>`).join('');
+        noBadgesMessageEl.classList.add('hidden');
+    }else{
+        badgeContainerEl.innerHTML='';
+        noBadgesMessageEl.classList.remove('hidden');
     }
+}
 
-    function closeMessageModal() {
-        messageModal.style.display = 'none';
+function renderTermRewards(data) {
+    termSummaryEl.textContent = sanitize(data.termSummary);
+    const termRewards = data.termRewards || [];
+    if(termRewards.length>0){
+        termRewardsListEl.innerHTML = termRewards.map(item=>`<li class="flex items-center text-gray-700"><span class="mr-2">${sanitize(item.split(' ')[0])}</span><span>${sanitize(item.substring(item.indexOf(' ')+1))}</span></li>`).join('');
+    }else{
+        termRewardsListEl.innerHTML = `<li class="text-center italic text-gray-500">${translations[languageSelector.value].noTermRewards}</li>`;
     }
+}
 
-    // --- Render Functions ---
-    function renderWeeklyMessage(data) {
-        weeklyMessageEl.textContent = sanitize(data.weeklyMessage);
+function renderTreatSuggestions() {
+    if(treatSuggestions.length>0){
+        treatSuggestionsListEl.innerHTML = treatSuggestions.map(t=>`<li class="flex items-center text-gray-700"><span class="mr-2">${sanitize(t.split(' ')[0])}</span><span>${sanitize(t.substring(t.indexOf(' ')+1))}</span></li>`).join('');
+    }else{
+        treatSuggestionsListEl.innerHTML = `<li class="text-center italic text-gray-500">${translations[languageSelector.value].modalErrorMessage}</li>`;
     }
+}
 
-    function renderBadges(data) {
-        const badges = data.badges || [];
-        if (badges.length > 0) {
-            badgeContainerEl.innerHTML = badges.map(badge => `
-                <div class="badge rounded-full px-4 py-1 text-sm font-semibold shadow-sm">
-                    ${sanitize(badge)}
-                </div>
-            `).join('');
-            noBadgesMessageEl.classList.add('hidden');
-        } else {
-            badgeContainerEl.innerHTML = '';
-            noBadgesMessageEl.classList.remove('hidden');
-        }
+// --- Event Handlers ---
+function handleAddTreat(event) {
+    event.preventDefault();
+    const newTreat = newTreatInputEl.value.trim();
+    if(newTreat){
+        treatSuggestions.push(newTreat);
+        renderTreatSuggestions();
+        newTreatInputEl.value = '';
+        showMessageModal(translations[languageSelector.value].modalSuccessTitle, translations[languageSelector.value].modalSuccessMessage);
+    }else{
+        showMessageModal(translations[languageSelector.value].modalErrorTitle, translations[languageSelector.value].modalErrorMessage);
     }
+}
 
-    function renderTermRewards(data) {
-        termSummaryEl.textContent = sanitize(data.termSummary);
-        const termRewards = data.termRewards || [];
-        if (termRewards.length > 0) {
-            termRewardsListEl.innerHTML = termRewards.map(item => `
-                <li class="flex items-center text-gray-700">
-                    <span class="mr-2">${sanitize(item.split(' ')[0])}</span>
-                    <span>${sanitize(item.substring(item.indexOf(' ') + 1))}</span>
-                </li>
-            `).join('');
-        } else {
-            termRewardsListEl.innerHTML = `
-                <li class="text-center italic text-gray-500">
-                    No term rewards unlocked yet. Keep working towards your goals!
-                </li>
-            `;
-        }
+// --- Fetch Rewards ---
+async function fetchRewards(){
+    const studentId = window.localStorage.getItem('studentId');
+    const response = await fetch(`/api/rewards/${studentId}`, {method:'GET', headers:{'Content-Type':'application/json'}});
+    if(!response.ok){
+        const errorData = await response.json();
+        throw new Error(errorData.message || translations[languageSelector.value].errorFetching);
     }
+    return response.json();
+}
 
-    function renderTreatSuggestions() {
-        if (treatSuggestions.length > 0) {
-            treatSuggestionsListEl.innerHTML = treatSuggestions.map(treat => `
-                <li class="flex items-center text-gray-700">
-                    <span class="mr-2">${sanitize(treat.split(' ')[0])}</span>
-                    <span>${sanitize(treat.substring(treat.indexOf(' ') + 1))}</span>
-                </li>
-            `).join('');
-        } else {
-            treatSuggestionsListEl.innerHTML = `
-                <li class="text-center italic text-gray-500">
-                    No treat suggestions yet. Add one!
-                </li>
-            `;
-        }
-    }
-
-    // --- Event Handlers ---
-    function handleAddTreat(event) {
-        event.preventDefault();
-        const newTreat = newTreatInputEl.value.trim();
-        if (newTreat) {
-            treatSuggestions.push(newTreat);
-            renderTreatSuggestions();
-            newTreatInputEl.value = '';
-            showMessageModal('Success!', 'Your new treat suggestion has been added.');
-        } else {
-            showMessageModal('Oops!', 'Please enter a valid treat suggestion.');
-        }
-    }
-
-    // --- Fetch Rewards from Backend ---
-    async function fetchRewards() {
-        const studentId = window.localStorage.getItem('studentId'); // Replace with actual source
-        const response = await fetch(`/api/rewards/${studentId}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to fetch rewards.');
-        }
-        return response.json();
-    }
-
-    // --- Initialization ---
-    async function initDashboard() {
-        loadingEl.classList.remove('hidden');
+// --- Initialization ---
+async function initDashboard(){
+    loadingEl.classList.remove('hidden');
+    contentEl.classList.add('hidden');
+    try{
+        const data = await fetchRewards();
+        treatSuggestions = data.treatSuggestions || [];
+        renderWeeklyMessage(data);
+        renderBadges(data);
+        renderTermRewards(data);
+        renderTreatSuggestions();
+        loadingEl.classList.add('hidden');
+        contentEl.classList.remove('hidden');
+    }catch(error){
+        loadingEl.classList.add('hidden');
         contentEl.classList.add('hidden');
-
-        try {
-            const data = await fetchRewards();
-            treatSuggestions = data.treatSuggestions || [];
-
-            renderWeeklyMessage(data);
-            renderBadges(data);
-            renderTermRewards(data);
-            renderTreatSuggestions();
-
-            loadingEl.classList.add('hidden');
-            contentEl.classList.remove('hidden');
-        } catch (error) {
-            loadingEl.classList.add('hidden');
-            contentEl.classList.add('hidden');
-            showMessageModal('Error', 'Failed to load user rewards. Please try again later.');
-            console.error('Rewards fetch error:', error);
-        }
+        showMessageModal(translations[languageSelector.value].errorFetching, '');
+        console.error('Rewards fetch error:', error);
     }
+}
 
-    // Event listener
-    addTreatFormEl.addEventListener('submit', handleAddTreat);
-    document.addEventListener('DOMContentLoaded', initDashboard);
+// --- Event Listeners ---
+addTreatFormEl.addEventListener('submit', handleAddTreat);
+languageSelector.addEventListener('change', e=>translatePage(e.target.value));
+document.addEventListener('DOMContentLoaded', ()=>{
+    const userLang = navigator.language.split('-')[0];
+    languageSelector.value = translations[userLang]?userLang:'en';
+    translatePage(languageSelector.value);
+    initDashboard();
+});
 </script>
 
 </body>
 </html>
-
-
-

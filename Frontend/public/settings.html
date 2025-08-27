@@ -1,413 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Account Settings</title>
-<!-- Tailwind CSS CDN -->
-<script src="https://cdn.tailwindcss.com"></script>
-<!-- Inter Font -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<style>
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    padding: 2rem;
-}
-
-.container {
-    width: 100%;
-    max-width: 700px;
-    padding: 2rem;
-    background-color: #f4f4f4;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.back-button {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    margin-bottom: 20px;
-    background-color: #e0e0e0;
-    border-radius: 0.5rem;
-    color: #333;
-    font-weight: 500;
-    text-decoration: none;
-    transition: background-color 0.2s;
-}
-.back-button:hover { background-color: #d0d0d0; }
-
-.section {
-    background-color: #fff;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.section-title {
-    font-size: 1.25rem;
-    font-weight: bold;
-    margin-bottom: 15px;
-    color: #34495e;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
-
-.label { font-size: 1rem; font-weight: 600; margin-bottom: 8px; margin-top:10px; color:#555; display:block; }
-.input { width:100%; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #ddd; font-size:16px; box-sizing:border-box; background-color:#fff; }
-.input-error { border-color:#e74c3c; }
-.error-text { color:#e74c3c; font-size:0.75rem; margin-bottom:10px; margin-left:5px; }
-.picker-container { border:1px solid #ddd; border-radius:8px; margin-bottom:15px; overflow:hidden; background-color:#fff; }
-.picker { height:50px; width:100%; padding:12px; background-color:#fff; border-radius:8px; }
-
-.button { padding:12px 24px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer; transition: background-color 0.2s, opacity 0.2s; border:none; width:100%; margin-top:10px; }
-.button:disabled { opacity:0.6; cursor:not-allowed; }
-
-.save-button { background-color:#28a745; color:#fff; }
-.save-button:hover:not(:disabled) { background-color:#218838; }
-
-.change-password-button { background-color:#007bff; color:#fff; }
-.change-password-button:hover:not(:disabled) { background-color:#0069d9; }
-
-.cancel-button { background-color:#6c757d; color:#fff; }
-.cancel-button:hover:not(:disabled) { background-color:#5a6268; }
-
-.password-button-row { display:flex; gap:10px; margin-top:10px; }
-.password-button-row .button { flex:1; }
-
-.footer { text-align:center; margin-top:20px; font-size:0.875rem; color:#888; }
-
-.loading-container { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; width:100vw; position:fixed; top:0; left:0; background-color:rgba(244,244,244,0.8); z-index:10; }
-.spinner { border:4px solid rgba(0,0,0,0.1); width:36px; height:36px; border-radius:50%; border-left-color:#007bff; animation:spin 1s ease infinite; }
-@keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
-.hidden { display:none; }
-
-.modal { position:fixed; z-index:1; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; }
-.modal-content { background-color:#fefefe; padding:20px; border:1px solid #888; border-radius:10px; max-width:400px; text-align:center; }
-.close-button { color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer; }
-.close-button:hover, .close-button:focus { color:black; text-decoration:none; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="settingsTitle">⚙️ Settings</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    rel="stylesheet"
+  />
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Top Navbar -->
+  <nav class="bg-white shadow-md p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold text-gray-800" data-i18n="settingsTitle">⚙️ Settings</h1>
+    
+    <!-- Language Dropdown -->
+    <select
+      id="language-select"
+      class="border border-gray-300 rounded-md p-2 text-sm"
+    >
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="es">Español</option>
+      <option value="tr">Türkçe</option>
+      <option value="ar">العربية</option>
+      <option value="ru">Русский</option>
+    </select>
+  </nav>
 
-<!-- Loading Overlay -->
-<div id="loading-overlay" class="loading-container hidden">
-    <div class="spinner"></div>
-    <p class="mt-4 text-lg text-gray-700">Loading settings...</p>
-</div>
-
-<!-- Modal -->
-<div id="custom-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-message">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeModal()">&times;</span>
-        <h2 id="modal-title" class="font-bold text-xl mb-2"></h2>
-        <p id="modal-message"></p>
-    </div>
-</div>
-
-<div class="container">
-    <a href="#" id="back-button" class="back-button">← Back</a>
-    <h1 class="text-3xl font-bold text-center mb-6">⚙️ Account Settings</h1>
-
-    <!-- Profile Section -->
-    <div class="section">
-        <h2 class="section-title">Profile Information</h2>
-        <form id="profile-form">
-            <label class="label" for="firstName">First Name:</label>
-            <input type="text" id="firstName" name="firstName" class="input" placeholder="First Name">
-            <span id="firstName-error" class="error-text hidden"></span>
-
-            <label class="label" for="lastName">Last Name:</label>
-            <input type="text" id="lastName" name="lastName" class="input" placeholder="Last Name">
-            <span id="lastName-error" class="error-text hidden"></span>
-
-            <label class="label" for="email">Email:</label>
-            <input type="email" id="email" name="email" class="input" placeholder="Email" readonly>
-
-            <label class="label" for="phone">Phone Number:</label>
-            <input type="tel" id="phone" name="phone" class="input" placeholder="Phone Number">
-            <span id="phone-error" class="error-text hidden"></span>
-
-            <label class="label" for="occupation">Occupation:</label>
-            <input type="text" id="occupation" name="occupation" class="input" placeholder="Occupation" readonly>
-
-            <!-- Student Fields -->
-            <div id="student-fields" class="hidden">
-                <label class="label" for="educationLevel">Education Level:</label>
-                <div class="picker-container">
-                    <select id="educationLevel" name="educationLevel" class="picker">
-                        <option value="">Select Education Level</option>
-                        <option value="junior">Junior High</option>
-                        <option value="high">Senior High</option>
-                        <option value="university">University</option>
-                    </select>
-                </div>
-                <span id="educationLevel-error" class="error-text hidden"></span>
-
-                <div id="school-level-fields" class="hidden">
-                    <label class="label" for="grade">Grade:</label>
-                    <input type="text" id="grade" name="grade" class="input" placeholder="Grade">
-                    <span id="grade-error" class="error-text hidden"></span>
-
-                    <label class="label" for="schoolName">School Name:</label>
-                    <input type="text" id="schoolName" name="schoolName" class="input" placeholder="School Name">
-                    <span id="schoolName-error" class="error-text hidden"></span>
-                </div>
-
-                <div id="university-level-fields" class="hidden">
-                    <label class="label" for="university">University:</label>
-                    <input type="text" id="university" name="university" class="input" placeholder="University">
-                    <span id="university-error" class="error-text hidden"></span>
-
-                    <label class="label" for="uniLevel">University Level:</label>
-                    <input type="text" id="uniLevel" name="uniLevel" class="input" placeholder="Year / Level">
-                    <span id="uniLevel-error" class="error-text hidden"></span>
-
-                    <label class="label" for="program">Program:</label>
-                    <input type="text" id="program" name="program" class="input" placeholder="Program">
-                    <span id="program-error" class="error-text hidden"></span>
-                </div>
-            </div>
-
-            <!-- Teacher Fields -->
-            <div id="teacher-fields" class="hidden">
-                <label class="label" for="teacherSchool">School:</label>
-                <input type="text" id="teacherSchool" name="teacherSchool" class="input" placeholder="School">
-                <span id="teacherSchool-error" class="error-text hidden"></span>
-
-                <label class="label" for="teacherGrade">Grade Taught:</label>
-                <input type="text" id="teacherGrade" name="teacherGrade" class="input" placeholder="Grade Taught">
-                <span id="teacherGrade-error" class="error-text hidden"></span>
-            </div>
-
-            <button type="submit" id="save-profile-button" class="button save-button">Save Profile Changes</button>
+  <!-- Main Content -->
+  <main class="flex-grow container mx-auto p-6">
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Profile Section -->
+      <div class="bg-white rounded-xl shadow p-6">
+        <h2 class="text-lg font-semibold mb-4" data-i18n="profileInfo">👤 Profile Information</h2>
+        <form id="profile-form" class="space-y-4">
+          <div>
+            <label for="name" class="block font-medium" data-i18n="name">Name</label>
+            <input id="name" type="text" class="w-full border rounded p-2" required />
+          </div>
+          <div>
+            <label for="email" class="block font-medium" data-i18n="email">Email</label>
+            <input id="email" type="email" class="w-full border rounded p-2 bg-gray-100" disabled />
+          </div>
+          <div>
+            <label for="occupation" class="block font-medium" data-i18n="occupation">Occupation</label>
+            <input id="occupation" type="text" class="w-full border rounded p-2 bg-gray-100" disabled />
+          </div>
+          <div id="class-group-field" class="hidden">
+            <label for="classGroup" class="block font-medium" data-i18n="classGroup">Class Group</label>
+            <input id="classGroup" type="text" class="w-full border rounded p-2" />
+          </div>
+          <div id="subject-field" class="hidden">
+            <label for="subject" class="block font-medium" data-i18n="subject">Subject</label>
+            <input id="subject" type="text" class="w-full border rounded p-2" />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded p-2"
+            data-i18n="saveProfile">💾 Save Profile</button>
         </form>
-    </div>
+      </div>
 
-    <!-- Password Section -->
-    <div class="section">
-        <h2 class="section-title">Change Password</h2>
-        <div id="password-change-toggle">
-            <button id="change-password-button" class="button change-password-button">Change Password</button>
-        </div>
-        <form id="password-form" class="hidden">
-            <label class="label" for="currentPassword">Current Password:</label>
-            <input type="password" id="currentPassword" name="currentPassword" class="input" placeholder="Current Password">
-            <span id="currentPassword-error" class="error-text hidden"></span>
-
-            <label class="label" for="newPassword">New Password:</label>
-            <input type="password" id="newPassword" name="newPassword" class="input" placeholder="New Password">
-            <span id="newPassword-error" class="error-text hidden"></span>
-
-            <label class="label" for="confirmNewPassword">Confirm New Password:</label>
-            <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="input" placeholder="Confirm New Password">
-            <span id="confirmNewPassword-error" class="error-text hidden"></span>
-
-            <div class="password-button-row">
-                <button type="submit" id="submit-password-button" class="button save-button">Submit New Password</button>
-                <button type="button" id="cancel-password-button" class="button cancel-button">Cancel</button>
-            </div>
+      <!-- Password Section -->
+      <div class="bg-white rounded-xl shadow p-6">
+        <h2 class="text-lg font-semibold mb-4" data-i18n="changePassword">🔒 Change Password</h2>
+        <form id="password-form" class="space-y-4">
+          <div>
+            <label for="currentPassword" class="block font-medium" data-i18n="currentPassword">Current Password</label>
+            <input id="currentPassword" type="password" class="w-full border rounded p-2" required />
+          </div>
+          <div>
+            <label for="newPassword" class="block font-medium" data-i18n="newPassword">New Password</label>
+            <input id="newPassword" type="password" class="w-full border rounded p-2" required />
+          </div>
+          <div>
+            <label for="confirmPassword" class="block font-medium" data-i18n="confirmPassword">Confirm Password</label>
+            <input id="confirmPassword" type="password" class="w-full border rounded p-2" required />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-green-600 hover:bg-green-700 text-white rounded p-2"
+            data-i18n="updatePassword">🔑 Update Password</button>
         </form>
+      </div>
     </div>
 
-    <p class="footer">© 2025 SmartStudentAct</p>
-</div>
+    <!-- Back Button -->
+    <div class="mt-6 text-center">
+      <button
+        onclick="goBackToDashboard()"
+        class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded"
+        data-i18n="back">⬅️ Back</button>
+    </div>
+  </main>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Elements ---
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const profileForm = document.getElementById('profile-form');
-    const saveProfileButton = document.getElementById('save-profile-button');
-    const studentFields = document.getElementById('student-fields');
-    const teacherFields = document.getElementById('teacher-fields');
-    const schoolLevelFields = document.getElementById('school-level-fields');
-    const universityLevelFields = document.getElementById('university-level-fields');
-    const educationLevelSelect = document.getElementById('educationLevel');
-    const backButton = document.getElementById('back-button');
-    const modal = document.getElementById('custom-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalMessage = document.getElementById('modal-message');
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 hidden flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-80">
+      <h2 id="modal-title" class="text-lg font-bold mb-2"></h2>
+      <p id="modal-message" class="mb-4"></p>
+      <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">OK</button>
+    </div>
+  </div>
 
-    const changePasswordButton = document.getElementById('change-password-button');
-    const passwordForm = document.getElementById('password-form');
-    const cancelPasswordButton = document.getElementById('cancel-password-button');
-    const submitPasswordButton = document.getElementById('submit-password-button');
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-75 hidden flex items-center justify-center z-50">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
+  </div>
 
-    const currentPasswordInput = document.getElementById('currentPassword');
-    const newPasswordInput = document.getElementById('newPassword');
-    const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+  <script src="translate.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const langSelect = document.getElementById("language-select");
 
-    let userData = {};
+      // Load default language
+      const defaultLang = "en";
+      translatePage("settings", defaultLang);
 
-    // --- Modal Functions ---
-    function showModal(title, message) {
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-        modal.style.display = 'flex';
-    }
-    function closeModal() { modal.style.display = 'none'; }
-    window.closeModal = closeModal;
-    window.onclick = (event) => { if(event.target===modal) closeModal(); };
-    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
+      // Handle language change
+      langSelect.addEventListener("change", (e) => {
+        const selectedLang = e.target.value;
+        translatePage("settings", selectedLang);
+      });
 
-    // --- UI Helpers ---
-    function setUIState(isLoading=false, isSaving=false){
-        loadingOverlay.classList.toggle('hidden', !isLoading);
-        saveProfileButton.disabled = isSaving;
-        saveProfileButton.textContent = isSaving?'Saving...':'Save Profile Changes';
-    }
-
-    function displayErrors(errors){
-        document.querySelectorAll('.error-text').forEach(el=>el.classList.add('hidden'));
-        document.querySelectorAll('.input-error').forEach(el=>el.classList.remove('input-error'));
-        Object.keys(errors).forEach(key=>{
-            const errorEl=document.getElementById(`${key}-error`);
-            const inputEl=document.getElementById(key);
-            if(errorEl){ errorEl.textContent=errors[key]; errorEl.classList.remove('hidden'); }
-            if(inputEl) inputEl.classList.add('input-error');
-        });
-    }
-
-    function setPasswordUIState(isSaving=false){
-        submitPasswordButton.disabled = isSaving;
-        submitPasswordButton.textContent = isSaving?'Saving...':'Submit New Password';
-    }
-
-    function updateFormWithData(data){
-        userData=data;
-        document.getElementById('firstName').value = data.firstName || '';
-        document.getElementById('lastName').value = data.lastName || '';
-        document.getElementById('email').value = data.email || '';
-        document.getElementById('phone').value = data.phone || '';
-        document.getElementById('occupation').value = data.occupation || '';
-
-        const isStudent = data.occupation==='student';
-        const isTeacher = data.occupation==='teacher';
-        studentFields.classList.toggle('hidden', !isStudent);
-        teacherFields.classList.toggle('hidden', !isTeacher);
-
-        if(isStudent){
-            educationLevelSelect.value = data.educationLevel || '';
-            const isSchoolStudent = ['junior','high'].includes(data.educationLevel);
-            const isUniversityStudent = data.educationLevel==='university';
-            schoolLevelFields.classList.toggle('hidden', !isSchoolStudent);
-            universityLevelFields.classList.toggle('hidden', !isUniversityStudent);
-
-            if(isSchoolStudent){
-                document.getElementById('grade').value=data.grade||'';
-                document.getElementById('schoolName').value=data.schoolName||'';
-            } else if(isUniversityStudent){
-                document.getElementById('university').value=data.university||'';
-                document.getElementById('uniLevel').value=data.uniLevel||'';
-                document.getElementById('program').value=data.program||'';
-            }
-        } else if(isTeacher){
-            document.getElementById('teacherSchool').value=data.teacherSchool||'';
-            document.getElementById('teacherGrade').value=data.teacherGrade||'';
-        }
-    }
-
-    // --- Fetch Profile ---
-    async function fetchUserProfile(){
-        setUIState(true);
-        try{
-            const res = await fetch('/api/profile',{credentials:'include'});
-            const data = await res.json();
-            if(res.ok) updateFormWithData(data);
-            else showModal('Error',data.message||'Failed to load profile.');
-        } catch(err){
-            console.error(err);
-            showModal('Error','Unexpected error while loading profile.');
-        } finally{ setUIState(false); }
-    }
-
-    // --- Save Profile ---
-    profileForm.addEventListener('submit', async e=>{
-        e.preventDefault();
-        setUIState(false,true);
-        const updateData = {
-            firstName: document.getElementById('firstName').value,
-            lastName: document.getElementById('lastName').value,
-            phone: document.getElementById('phone').value
-        };
-        if(userData.occupation==='student'){
-            updateData.educationLevel=educationLevelSelect.value;
-            if(['junior','high'].includes(updateData.educationLevel)){
-                updateData.grade=document.getElementById('grade').value;
-                updateData.schoolName=document.getElementById('schoolName').value;
-            } else if(updateData.educationLevel==='university'){
-                updateData.university=document.getElementById('university').value;
-                updateData.uniLevel=document.getElementById('uniLevel').value;
-                updateData.program=document.getElementById('program').value;
-            }
-        } else if(userData.occupation==='teacher'){
-            updateData.teacherSchool=document.getElementById('teacherSchool').value;
-            updateData.teacherGrade=document.getElementById('teacherGrade').value;
-        }
-
-        try{
-            const res = await fetch('/api/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(updateData)});
-            const data = await res.json();
-            if(res.ok) showModal('Success','Profile updated successfully.');
-            else displayErrors(data.errors||{general:data.message||'Failed to update profile.'});
-        } catch(err){ console.error(err); showModal('Error','Unexpected error while saving profile.'); }
-        finally{ setUIState(false,false); }
+      // Fetch profile data after translations
+      fetchUserProfile();
     });
-
-    // --- Education Level Change ---
-    educationLevelSelect.addEventListener('change',()=>{
-        const val=educationLevelSelect.value;
-        schoolLevelFields.classList.toggle('hidden', !['junior','high'].includes(val));
-        universityLevelFields.classList.toggle('hidden', val!=='university');
-    });
-
-    // --- Password Form Toggle ---
-    changePasswordButton.addEventListener('click', ()=>{ passwordForm.classList.remove('hidden'); changePasswordButton.classList.add('hidden'); });
-    cancelPasswordButton.addEventListener('click', ()=>{ passwordForm.classList.add('hidden'); changePasswordButton.classList.remove('hidden'); });
-
-    passwordForm.addEventListener('submit', async e=>{
-        e.preventDefault();
-        displayErrors({});
-        if(newPasswordInput.value!==confirmNewPasswordInput.value){
-            displayErrors({confirmNewPassword:'Passwords do not match.'});
-            return;
-        }
-        setPasswordUIState(true);
-        try{
-            const res = await fetch('/api/settings/password',{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({
-                currentPassword: currentPasswordInput.value,
-                newPassword: newPasswordInput.value
-            })});
-            const data = await res.json();
-            if(res.ok){
-                showModal('Success','Password updated successfully.');
-                passwordForm.reset();
-                passwordForm.classList.add('hidden');
-                changePasswordButton.classList.remove('hidden');
-            } else displayErrors(data.errors||{general:data.message||'Failed to update password.'});
-        } catch(err){ console.error(err); showModal('Error','Unexpected error while updating password.'); }
-        finally{ setPasswordUIState(false); }
-    });
-
-    // --- Back Button ---
-    backButton.addEventListener('click', e=>{
-        e.preventDefault();
-        if(userData.occupation==='student') window.location.href='/students.html';
-        else if(userData.occupation==='teacher') window.location.href='/teachers.html';
-        else window.location.href='/admin.html';
-    });
-
-    fetchUserProfile();
-});
-</script>
+  </script>
+  <script src="settings.js"></script>
 </body>
 </html>

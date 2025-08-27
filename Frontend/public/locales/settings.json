@@ -1,0 +1,354 @@
+{
+  "pageTitle": {
+    "en": "Account Settings",
+    "fr": "Paramètres du compte",
+    "es": "Configuración de la cuenta",
+    "tr": "Hesap Ayarları",
+    "ar": "إعدادات الحساب",
+    "ru": "Настройки аккаунта"
+  },
+  "loadingText": {
+    "en": "Loading settings...",
+    "fr": "Chargement des paramètres...",
+    "es": "Cargando configuración...",
+    "tr": "Ayarlar yükleniyor...",
+    "ar": "جارٍ تحميل الإعدادات...",
+    "ru": "Загрузка настроек..."
+  },
+  "backButton": {
+    "en": "← Back",
+    "fr": "← Retour",
+    "es": "← Atrás",
+    "tr": "← Geri",
+    "ar": "← رجوع",
+    "ru": "← Назад"
+  },
+  "mainTitle": {
+    "en": "⚙️ Account Settings",
+    "fr": "⚙️ Paramètres du compte",
+    "es": "⚙️ Configuración de la cuenta",
+    "tr": "⚙️ Hesap Ayarları",
+    "ar": "⚙️ إعدادات الحساب",
+    "ru": "⚙️ Настройки аккаунта"
+  },
+  "profileSectionTitle": {
+    "en": "Profile Information",
+    "fr": "Informations du profil",
+    "es": "Información del perfil",
+    "tr": "Profil Bilgileri",
+    "ar": "معلومات الملف الشخصي",
+    "ru": "Информация профиля"
+  },
+  "firstNameLabel": {
+    "en": "First Name:",
+    "fr": "Prénom :",
+    "es": "Nombre:",
+    "tr": "Ad:",
+    "ar": "الاسم الأول:",
+    "ru": "Имя:"
+  },
+  "lastNameLabel": {
+    "en": "Last Name:",
+    "fr": "Nom :",
+    "es": "Apellido:",
+    "tr": "Soyad:",
+    "ar": "اسم العائلة:",
+    "ru": "Фамилия:"
+  },
+  "emailLabel": {
+    "en": "Email:",
+    "fr": "Email :",
+    "es": "Correo electrónico:",
+    "tr": "E-posta:",
+    "ar": "البريد الإلكتروني:",
+    "ru": "Эл. почта:"
+  },
+  "phoneLabel": {
+    "en": "Phone Number:",
+    "fr": "Numéro de téléphone :",
+    "es": "Número de teléfono:",
+    "tr": "Telefon Numarası:",
+    "ar": "رقم الهاتف:",
+    "ru": "Номер телефона:"
+  },
+  "occupationLabel": {
+    "en": "Occupation:",
+    "fr": "Profession :",
+    "es": "Ocupación:",
+    "tr": "Meslek:",
+    "ar": "المهنة:",
+    "ru": "Профессия:"
+  },
+  "educationLevelLabel": {
+    "en": "Education Level:",
+    "fr": "Niveau d'éducation :",
+    "es": "Nivel educativo:",
+    "tr": "Eğitim Seviyesi:",
+    "ar": "المستوى التعليمي:",
+    "ru": "Уровень образования:"
+  },
+  "selectEducationLevel": {
+    "en": "Select Education Level",
+    "fr": "Sélectionner le niveau d'éducation",
+    "es": "Seleccione nivel educativo",
+    "tr": "Eğitim Seviyesi Seçin",
+    "ar": "اختر المستوى التعليمي",
+    "ru": "Выберите уровень образования"
+  },
+  "juniorHigh": {
+    "en": "Junior High",
+    "fr": "Collège",
+    "es": "Secundaria",
+    "tr": "Ortaokul",
+    "ar": "المرحلة المتوسطة",
+    "ru": "Младшая школа"
+  },
+  "seniorHigh": {
+    "en": "Senior High",
+    "fr": "Lycée",
+    "es": "Bachillerato",
+    "tr": "Lise",
+    "ar": "المرحلة الثانوية",
+    "ru": "Старшая школа"
+  },
+  "university": {
+    "en": "University",
+    "fr": "Université",
+    "es": "Universidad",
+    "tr": "Üniversite",
+    "ar": "الجامعة",
+    "ru": "Университет"
+  },
+  "gradeLabel": {
+    "en": "Grade:",
+    "fr": "Classe :",
+    "es": "Grado:",
+    "tr": "Sınıf:",
+    "ar": "الصف:",
+    "ru": "Класс:"
+  },
+  "schoolNameLabel": {
+    "en": "School Name:",
+    "fr": "Nom de l'école :",
+    "es": "Nombre de la escuela:",
+    "tr": "Okul Adı:",
+    "ar": "اسم المدرسة:",
+    "ru": "Название школы:"
+  },
+  "universityLabel": {
+    "en": "University:",
+    "fr": "Université :",
+    "es": "Universidad:",
+    "tr": "Üniversite:",
+    "ar": "الجامعة:",
+    "ru": "Университет:"
+  },
+  "uniLevelLabel": {
+    "en": "University Level:",
+    "fr": "Niveau universitaire :",
+    "es": "Nivel universitario:",
+    "tr": "Üniversite Seviyesi:",
+    "ar": "المستوى الجامعي:",
+    "ru": "Уровень университета:"
+  },
+  "yearLevelPlaceholder": {
+    "en": "Year / Level",
+    "fr": "Année / Niveau",
+    "es": "Año / Nivel",
+    "tr": "Yıl / Seviye",
+    "ar": "السنة / المستوى",
+    "ru": "Год / Уровень"
+  },
+  "programLabel": {
+    "en": "Program:",
+    "fr": "Programme :",
+    "es": "Programa:",
+    "tr": "Program:",
+    "ar": "البرنامج:",
+    "ru": "Программа:"
+  },
+  "teacherSchoolLabel": {
+    "en": "School:",
+    "fr": "École :",
+    "es": "Escuela:",
+    "tr": "Okul:",
+    "ar": "المدرسة:",
+    "ru": "Школа:"
+  },
+  "teacherGradeLabel": {
+    "en": "Grade Taught:",
+    "fr": "Classe enseignée :",
+    "es": "Grado enseñado:",
+    "tr": "Verilen Sınıf:",
+    "ar": "الصف الذي يُدرّس:",
+    "ru": "Преподаваемый класс:"
+  },
+  "saveProfileButton": {
+    "en": "Save Profile Changes",
+    "fr": "Enregistrer les modifications du profil",
+    "es": "Guardar cambios del perfil",
+    "tr": "Profil Değişikliklerini Kaydet",
+    "ar": "حفظ تغييرات الملف الشخصي",
+    "ru": "Сохранить изменения профиля"
+  },
+  "changePasswordSectionTitle": {
+    "en": "Change Password",
+    "fr": "Changer le mot de passe",
+    "es": "Cambiar contraseña",
+    "tr": "Şifreyi Değiştir",
+    "ar": "تغيير كلمة المرور",
+    "ru": "Изменить пароль"
+  },
+  "changePasswordButton": {
+    "en": "Change Password",
+    "fr": "Changer le mot de passe",
+    "es": "Cambiar contraseña",
+    "tr": "Şifreyi Değiştir",
+    "ar": "تغيير كلمة المرور",
+    "ru": "Изменить пароль"
+  },
+  "currentPasswordLabel": {
+    "en": "Current Password:",
+    "fr": "Mot de passe actuel :",
+    "es": "Contraseña actual:",
+    "tr": "Mevcut Şifre:",
+    "ar": "كلمة المرور الحالية:",
+    "ru": "Текущий пароль:"
+  },
+  "newPasswordLabel": {
+    "en": "New Password:",
+    "fr": "Nouveau mot de passe :",
+    "es": "Nueva contraseña:",
+    "tr": "Yeni Şifre:",
+    "ar": "كلمة المرور الجديدة:",
+    "ru": "Новый пароль:"
+  },
+  "confirmNewPasswordLabel": {
+    "en": "Confirm New Password:",
+    "fr": "Confirmer le nouveau mot de passe :",
+    "es": "Confirmar nueva contraseña:",
+    "tr": "Yeni Şifreyi Onayla:",
+    "ar": "تأكيد كلمة المرور الجديدة:",
+    "ru": "Подтвердите новый пароль:"
+  },
+  "submitPasswordButton": {
+    "en": "Submit New Password",
+    "fr": "Soumettre le nouveau mot de passe",
+    "es": "Enviar nueva contraseña",
+    "tr": "Yeni Şifreyi Gönder",
+    "ar": "إرسال كلمة المرور الجديدة",
+    "ru": "Подтвердить новый пароль"
+  },
+  "cancelButton": {
+    "en": "Cancel",
+    "fr": "Annuler",
+    "es": "Cancelar",
+    "tr": "İptal",
+    "ar": "إلغاء",
+    "ru": "Отмена"
+  },
+  "copyright": {
+    "en": "© 2025 SmartStudentAct",
+    "fr": "© 2025 SmartStudentAct",
+    "es": "© 2025 SmartStudentAct",
+    "tr": "© 2025 SmartStudentAct",
+    "ar": "© 2025 SmartStudentAct",
+    "ru": "© 2025 SmartStudentAct"
+  },
+  "saving": {
+    "en": "Saving...",
+    "fr": "Enregistrement...",
+    "es": "Guardando...",
+    "tr": "Kaydediliyor...",
+    "ar": "جارٍ الحفظ...",
+    "ru": "Сохранение..."
+  },
+  "errorTitle": {
+    "en": "Error",
+    "fr": "Erreur",
+    "es": "Error",
+    "tr": "Hata",
+    "ar": "خطأ",
+    "ru": "Ошибка"
+  },
+  "loadProfileFailed": {
+    "en": "Failed to load profile.",
+    "fr": "Échec du chargement du profil.",
+    "es": "No se pudo cargar el perfil.",
+    "tr": "Profil yüklenemedi.",
+    "ar": "فشل في تحميل الملف الشخصي.",
+    "ru": "Не удалось загрузить профиль."
+  },
+  "unexpectedLoadError": {
+    "en": "Unexpected error while loading profile.",
+    "fr": "Erreur inattendue lors du chargement du profil.",
+    "es": "Error inesperado al cargar el perfil.",
+    "tr": "Profil yüklenirken beklenmeyen hata.",
+    "ar": "خطأ غير متوقع أثناء تحميل الملف الشخصي.",
+    "ru": "Неожиданная ошибка при загрузке профиля."
+  },
+  "successTitle": {
+    "en": "Success",
+    "fr": "Succès",
+    "es": "Éxito",
+    "tr": "Başarılı",
+    "ar": "نجاح",
+    "ru": "Успех"
+  },
+  "profileUpdatedSuccess": {
+    "en": "Profile updated successfully.",
+    "fr": "Profil mis à jour avec succès.",
+    "es": "Perfil actualizado con éxito.",
+    "tr": "Profil başarıyla güncellendi.",
+    "ar": "تم تحديث الملف الشخصي بنجاح.",
+    "ru": "Профиль успешно обновлен."
+  },
+  "updateProfileFailed": {
+    "en": "Failed to update profile.",
+    "fr": "Échec de la mise à jour du profil.",
+    "es": "No se pudo actualizar el perfil.",
+    "tr": "Profil güncellenemedi.",
+    "ar": "فشل في تحديث الملف الشخصي.",
+    "ru": "Не удалось обновить профиль."
+  },
+  "unexpectedSaveError": {
+    "en": "Unexpected error while saving profile.",
+    "fr": "Erreur inattendue lors de l'enregistrement du profil.",
+    "es": "Error inesperado al guardar el perfil.",
+    "tr": "Profil kaydedilirken beklenmeyen hata.",
+    "ar": "خطأ غير متوقع أثناء حفظ الملف الشخصي.",
+    "ru": "Неожиданная ошибка при сохранении профиля."
+  },
+  "passwordsMismatch": {
+    "en": "Passwords do not match.",
+    "fr": "Les mots de passe ne correspondent pas.",
+    "es": "Las contraseñas no coinciden.",
+    "tr": "Şifreler eşleşmiyor.",
+    "ar": "كلمات المرور غير متطابقة.",
+    "ru": "Пароли не совпадают."
+  },
+  "passwordUpdatedSuccess": {
+    "en": "Password updated successfully.",
+    "fr": "Mot de passe mis à jour avec succès.",
+    "es": "Contraseña actualizada con éxito.",
+    "tr": "Şifre başarıyla güncellendi.",
+    "ar": "تم تحديث كلمة المرور بنجاح.",
+    "ru": "Пароль успешно обновлен."
+  },
+  "updatePasswordFailed": {
+    "en": "Failed to update password.",
+    "fr": "Échec de la mise à jour du mot de passe.",
+    "es": "No se pudo actualizar la contraseña.",
+    "tr": "Şifre güncellenemedi.",
+    "ar": "فشل في تحديث كلمة المرور.",
+    "ru": "Не удалось обновить пароль."
+  },
+  "unexpectedUpdatePasswordError": {
+    "en": "Unexpected error while updating password.",
+    "fr": "Erreur inattendue lors de la mise à jour du mot de passe.",
+    "es": "Error inesperado al actualizar la contraseña.",
+    "tr": "Şifre güncellenirken beklenmeyen hata.",
+    "ar": "خطأ غير متوقع أثناء تحديث كلمة المرور.",
+    "ru": "Неожиданная ошибка при обновлении пароля."
+  }
+}

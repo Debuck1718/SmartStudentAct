@@ -3,36 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Completed Assigned Tasks</title>
-    <!-- Use the Inter font from Google Fonts -->
+    <title data-i18n="page_title">Completed Assigned Tasks</title>
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Include Tailwind CSS via CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        body { font-family: 'Inter', sans-serif; }
+        .language-switcher button {
+            margin-right: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
         }
+        .language-switcher button.active { text-decoration: underline; transform: scale(1.1); }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
 
-    <!-- Main container matching the React Native component's structure -->
+    <!-- Language Switcher -->
+    <div class="language-switcher mb-6">
+        <button id="en-btn" onclick="setLanguage('en')" class="bg-blue-500">English</button>
+        <button id="fr-btn" onclick="setLanguage('fr')" class="bg-blue-500">Français</button>
+        <button id="es-btn" onclick="setLanguage('es')" class="bg-blue-500">Español</button>
+        <button id="tr-btn" onclick="setLanguage('tr')" class="bg-blue-500">Türkçe</button>
+        <button id="ar-btn" onclick="setLanguage('ar')" class="bg-blue-500">العربية</button>
+        <button id="ru-btn" onclick="setLanguage('ru')" class="bg-blue-500">Русский</button>
+    </div>
+
+    <!-- Main container -->
     <div class="container bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full">
-
-        <!-- Header section -->
-        <h1 class="text-3xl font-bold text-gray-800 text-center mb-6">Completed Assigned Tasks</h1>
-
-        <!-- Container for the tasks, which will be populated by JavaScript -->
-        <div id="tasks-list" class="space-y-4">
-            <!-- Task items will be dynamically added here -->
-        </div>
-
+        <h1 class="text-3xl font-bold text-gray-800 text-center mb-6" data-i18n="page_title">Completed Assigned Tasks</h1>
+        <div id="tasks-list" class="space-y-4"></div>
     </div>
 
     <script>
-        // Define the data, just as it was in the React Native file
+        const translations = {
+            en: { page_title: "Completed Assigned Tasks", student: "Student", status: "Status", date: "Date", statuses: { Completed: "Completed", Graded: "Graded" } },
+            fr: { page_title: "Tâches Assignées Complétées", student: "Étudiant", status: "Statut", date: "Date", statuses: { Completed: "Terminé", Graded: "Noté" } },
+            es: { page_title: "Tareas Asignadas Completadas", student: "Estudiante", status: "Estado", date: "Fecha", statuses: { Completed: "Completado", Graded: "Calificado" } },
+            tr: { page_title: "Tamamlanan Atanan Görevler", student: "Öğrenci", status: "Durum", date: "Tarih", statuses: { Completed: "Tamamlandı", Graded: "Değerlendirildi" } },
+            ar: { page_title: "المهام المعينة المكتملة", student: "الطالب", status: "الحالة", date: "التاريخ", statuses: { Completed: "مكتمل", Graded: "تم التقييم" } },
+            ru: { page_title: "Завершенные Назначенные Задания", student: "Студент", status: "Статус", date: "Дата", statuses: { Completed: "Завершено", Graded: "Оценено" } }
+        };
+
+        let currentLang = 'en';
+
         const assignedTasks = [
             { id: 'a1', student: 'Alice Johnson', task: 'Algebra Worksheet', status: 'Completed', date: '2025-07-25' },
             { id: 'a2', student: 'Bob Williams', task: 'History Report', status: 'Completed', date: '2025-07-22' },
@@ -40,62 +59,64 @@
             { id: 'a4', student: 'Diana Prince', task: 'Geometry Test', status: 'Completed', date: '2025-07-19' },
         ];
 
-        // Get the container element where tasks will be rendered
         const tasksListContainer = document.getElementById('tasks-list');
 
-        /**
-         * Renders a single task item based on the provided task object.
-         * @param {Object} item The task data object.
-         * @returns {HTMLElement} The created HTML element for the task.
-         */
         function createTaskItem(item) {
-            // Create a main div for the task item
+            const labels = translations[currentLang];
             const taskItemDiv = document.createElement('div');
             taskItemDiv.className = 'bg-green-100 p-4 rounded-lg mb-2 border-l-4 border-green-500 shadow-sm';
 
-            // Create and append the task title
             const taskTitle = document.createElement('p');
             taskTitle.className = 'text-lg font-semibold text-gray-700';
             taskTitle.textContent = item.task;
             taskItemDiv.appendChild(taskTitle);
 
-            // Create and append student details
             const studentDetails = document.createElement('p');
             studentDetails.className = 'text-sm text-gray-600 mt-1';
-            studentDetails.textContent = `Student: ${item.student}`;
+            studentDetails.textContent = `${labels.student}: ${item.student}`;
             taskItemDiv.appendChild(studentDetails);
 
-            // Create and append status details
             const statusDetails = document.createElement('p');
             statusDetails.className = 'text-sm text-gray-600 mt-1';
-            statusDetails.textContent = `Status: ${item.status}`;
+            statusDetails.textContent = `${labels.status}: ${labels.statuses[item.status] || item.status}`;
             taskItemDiv.appendChild(statusDetails);
 
-            // Create and append date details
             const dateDetails = document.createElement('p');
             dateDetails.className = 'text-sm text-gray-600 mt-1';
-            dateDetails.textContent = `Date: ${item.date}`;
+            dateDetails.textContent = `${labels.date}: ${item.date}`;
             taskItemDiv.appendChild(dateDetails);
 
             return taskItemDiv;
         }
 
-        /**
-         * Renders all tasks in the assignedTasks array into the DOM.
-         */
         function renderTasks() {
-            // Clear any existing content before rendering
             tasksListContainer.innerHTML = '';
-
-            // Loop through the data and create an HTML element for each task
             assignedTasks.forEach(task => {
-                const taskElement = createTaskItem(task);
-                tasksListContainer.appendChild(taskElement);
+                tasksListContainer.appendChild(createTaskItem(task));
             });
         }
 
-        // Call the render function when the page loads
-        document.addEventListener('DOMContentLoaded', renderTasks);
+        function setLanguage(lang) {
+            currentLang = lang;
+            // Update page title
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) el.textContent = translations[lang][key];
+            });
+
+            // Highlight active button
+            document.querySelectorAll('.language-switcher button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`${lang}-btn`).classList.add('active');
+
+            renderTasks();
+
+            // Adjust RTL for Arabic
+            document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage('en');
+        });
     </script>
 
 </body>

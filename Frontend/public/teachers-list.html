@@ -3,127 +3,136 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teachers List</title>
-  <!-- Tailwind CSS CDN -->
+  <title data-i18n="teachersTitle">Teachers List</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; }
-    /* Skeleton Loader */
-    .skeleton { 
-      background-color: #e0e0e0; 
-      border-radius: 8px; 
-      min-height: 60px; 
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
+    .skeleton { background-color: #e0e0e0; border-radius: 8px; min-height: 60px; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
 
-  <main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
-    <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8">Teachers in Your School</h1>
+<main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
 
-    <!-- Loading Skeleton -->
-    <div id="loading-skeleton" class="space-y-4">
-      <div class="skeleton w-full h-20"></div>
-      <div class="skeleton w-full h-20"></div>
-      <div class="skeleton w-full h-20"></div>
-    </div>
+  <!-- Language Dropdown -->
+  <div class="mb-4 text-right">
+    <select id="language-select" class="border border-gray-300 rounded-md p-2 text-sm">
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="es">Español</option>
+      <option value="tr">Türkçe</option>
+      <option value="ar">العربية</option>
+      <option value="ru">Русский</option>
+    </select>
+  </div>
 
-    <!-- Error and Empty Messages -->
-    <div id="error-message" class="text-center text-red-500 font-medium py-4 hidden" role="alert"></div>
-    <div id="no-teachers-message" class="text-center text-gray-500 font-medium py-4 hidden">No teachers found in your school.</div>
+  <h1 id="teachersTitle" class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8" data-i18n="teachersTitle">Teachers in Your School</h1>
 
-    <!-- Teachers List -->
-    <div id="teachers-list" class="space-y-4"></div>
-  </main>
+  <!-- Loading Skeleton -->
+  <div id="loading-skeleton" class="space-y-4">
+    <div class="skeleton w-full h-20"></div>
+    <div class="skeleton w-full h-20"></div>
+    <div class="skeleton w-full h-20"></div>
+  </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const teachersList = document.getElementById('teachers-list');
-      const loadingSkeleton = document.getElementById('loading-skeleton');
-      const errorMessage = document.getElementById('error-message');
-      const noTeachersMessage = document.getElementById('no-teachers-message');
+  <!-- Error and Empty Messages -->
+  <div id="error-message" class="text-center text-red-500 font-medium py-4 hidden" role="alert"></div>
+  <div id="no-teachers-message" class="text-center text-gray-500 font-medium py-4 hidden" data-i18n="noTeachers">No teachers found in your school.</div>
 
-      // Helper: render single teacher card
-      const renderTeacherItem = (teacher) => {
-        const card = document.createElement('div');
-        card.classList.add(
-          'bg-white', 'p-4', 'rounded-lg', 'border', 'border-gray-200', 
-          'shadow-sm', 'hover:shadow-md', 'transition-shadow'
-        );
-        card.setAttribute('aria-label', `Teacher ${teacher.firstName} ${teacher.lastName}, Subject: ${teacher.teacherSubject}`);
-        
-        const nameEl = document.createElement('p');
-        nameEl.textContent = `${teacher.firstName} ${teacher.lastName}`;
-        nameEl.classList.add('text-lg', 'font-semibold', 'text-gray-800');
+  <!-- Teachers List -->
+  <div id="teachers-list" class="space-y-4"></div>
+</main>
 
-        const subjectEl = document.createElement('p');
-        subjectEl.textContent = `Subject: ${teacher.teacherSubject || 'Not Specified'}`;
-        subjectEl.classList.add('text-sm', 'text-gray-600', 'mt-1');
+<script src="translate.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const teachersList = document.getElementById('teachers-list');
+  const loadingSkeleton = document.getElementById('loading-skeleton');
+  const errorMessage = document.getElementById('error-message');
+  const noTeachersMessage = document.getElementById('no-teachers-message');
+  const langSelect = document.getElementById('language-select');
 
-        const emailEl = document.createElement('a');
-        emailEl.href = `mailto:${teacher.email}`;
-        emailEl.textContent = teacher.email;
-        emailEl.classList.add('text-sm', 'text-blue-600', 'hover:underline', 'mt-1', 'block');
-        emailEl.setAttribute('aria-label', `Email ${teacher.firstName} ${teacher.lastName}`);
+  let currentLang = 'en';
 
-        card.appendChild(nameEl);
-        card.appendChild(subjectEl);
-        card.appendChild(emailEl);
-        teachersList.appendChild(card);
-      };
+  function translateUI() {
+    translatePage('teachers-list', currentLang);
+  }
 
-      // Fetch teachers for student
-      const fetchTeachers = async () => {
-        // Reset UI
-        teachersList.innerHTML = '';
-        errorMessage.classList.add('hidden');
-        noTeachersMessage.classList.add('hidden');
-        loadingSkeleton.classList.remove('hidden');
+  langSelect.addEventListener('change', e => {
+    currentLang = e.target.value;
+    translateUI();
+  });
 
-        try {
-          const response = await fetch('/api/student/teachers/my-school', {
-            method: 'GET',
-            credentials: 'include', // httpOnly cookie authentication
-            headers: { 'Content-Type': 'application/json' } 
-          });
+  const renderTeacherItem = (teacher) => {
+    const card = document.createElement('div');
+    card.classList.add('bg-white', 'p-4', 'rounded-lg', 'border', 'border-gray-200', 'shadow-sm', 'hover:shadow-md', 'transition-shadow');
+    card.setAttribute('aria-label', `${translations.teacherLabel[currentLang]} ${teacher.firstName} ${teacher.lastName}, ${translations.subjectLabel[currentLang]}: ${teacher.teacherSubject}`);
 
-          if (!response.ok) {
-            if (response.status === 401) throw new Error('Unauthorized: Please log in.');
-            if (response.status === 403) throw new Error('Forbidden: You do not have permission.');
-            throw new Error(`HTTP error: ${response.status}`);
-          }
+    const nameEl = document.createElement('p');
+    nameEl.textContent = `${teacher.firstName} ${teacher.lastName}`;
+    nameEl.classList.add('text-lg', 'font-semibold', 'text-gray-800');
 
-          const data = await response.json();
+    const subjectEl = document.createElement('p');
+    subjectEl.textContent = `${translations.subjectLabel[currentLang]}: ${teacher.teacherSubject || translations.notSpecified[currentLang]}`;
+    subjectEl.classList.add('text-sm', 'text-gray-600', 'mt-1');
 
-          if (data.teachers && Array.isArray(data.teachers)) {
-            if (data.teachers.length === 0) {
-              noTeachersMessage.classList.remove('hidden');
-            } else {
-              data.teachers.forEach(renderTeacherItem);
-            }
-          } else {
-            throw new Error('Invalid data format received from API.');
-          }
-        } catch (err) {
-          console.error('Failed to fetch teachers:', err);
-          errorMessage.textContent = `Failed to load teachers: ${err.message}`;
-          errorMessage.classList.remove('hidden');
-        } finally {
-          loadingSkeleton.classList.add('hidden');
+    const emailEl = document.createElement('a');
+    emailEl.href = `mailto:${teacher.email}`;
+    emailEl.textContent = teacher.email;
+    emailEl.classList.add('text-sm', 'text-blue-600', 'hover:underline', 'mt-1', 'block');
+
+    card.appendChild(nameEl);
+    card.appendChild(subjectEl);
+    card.appendChild(emailEl);
+    teachersList.appendChild(card);
+  };
+
+  const fetchTeachers = async () => {
+    teachersList.innerHTML = '';
+    errorMessage.classList.add('hidden');
+    noTeachersMessage.classList.add('hidden');
+    loadingSkeleton.classList.remove('hidden');
+
+    try {
+      const res = await fetch('/api/student/teachers/my-school', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) throw new Error(translations.unauthorized[currentLang]);
+        if (res.status === 403) throw new Error(translations.forbidden[currentLang]);
+        throw new Error(`${translations.httpError[currentLang]}: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      if (data.teachers && Array.isArray(data.teachers)) {
+        if (data.teachers.length === 0) {
+          noTeachersMessage.classList.remove('hidden');
+        } else {
+          data.teachers.forEach(renderTeacherItem);
         }
-      };
+      } else {
+        throw new Error(translations.invalidData[currentLang]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch teachers:', err);
+      errorMessage.textContent = `${translations.failedLoad[currentLang]}: ${err.message}`;
+      errorMessage.classList.remove('hidden');
+    } finally {
+      loadingSkeleton.classList.add('hidden');
+    }
+  };
 
-      fetchTeachers();
-    });
-  </script>
+  translateUI();
+  fetchTeachers();
+});
+</script>
 </body>
 </html>

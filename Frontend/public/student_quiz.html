@@ -3,37 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Quiz</title>
+  <title data-i18n="quizTitle">Student Quiz</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://kit.fontawesome.com/a2e0e9c6e2.js" crossorigin="anonymous"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8">
 
-  <!-- Container -->
-  <div class="w-full max-w-3xl bg-white shadow-lg rounded-xl p-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-center text-blue-600 mb-6">📘 Quiz</h1>
+  <!-- Header with language selector -->
+  <div class="w-full max-w-3xl flex justify-between items-center mb-6 px-4">
+    <h1 class="text-2xl sm:text-3xl font-bold text-blue-600" data-i18n="quizTitle">📘 Quiz</h1>
+    <select id="language-select" class="border rounded-lg px-2 py-1">
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="es">Español</option>
+      <option value="tr">Türkçe</option>
+      <option value="ar">العربية</option>
+      <option value="ru">Русский</option>
+    </select>
+  </div>
 
-    <!-- Quiz Title -->
+  <div class="w-full max-w-3xl bg-white shadow-lg rounded-xl p-6">
     <h2 id="quiz-title" class="text-xl font-semibold mb-2 text-gray-800"></h2>
     <p id="quiz-desc" class="text-gray-600 mb-6"></p>
 
-    <!-- Questions -->
+    <!-- Quiz form -->
     <form id="quiz-form" class="space-y-6">
       <div id="questions-container" class="space-y-6"></div>
 
       <button type="submit" 
-        class="w-full bg-blue-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-600 transition-colors">
+        class="w-full bg-blue-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-600 transition-colors" 
+        data-i18n="submitQuiz">
         Submit Quiz
       </button>
     </form>
 
-    <!-- Results -->
+    <!-- Quiz results -->
     <div id="quiz-result" class="mt-6 hidden text-center">
-      <h3 class="text-2xl font-bold text-green-600 mb-2">✅ Quiz Submitted</h3>
+      <h3 class="text-2xl font-bold text-green-600 mb-2" data-i18n="quizSubmitted">✅ Quiz Submitted</h3>
       <p id="score-text" class="text-lg text-gray-800 mb-4"></p>
       <div id="answer-breakdown" class="space-y-4 text-left"></div>
     </div>
   </div>
+  
+  <!-- Translation system -->
+  <script src="translate.js"></script>
 
   <script>
     const API_BASE = 'https://smartstudentact.onrender.com/api';
@@ -64,11 +77,11 @@
         const res = await fetch(`${API_BASE}/student/quizzes/${quizId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (!res.ok) throw new Error('Failed to load quiz');
+        if (!res.ok) throw new Error(getTranslation('loadingError'));
         const data = await res.json();
         renderQuiz(data.quiz);
       } catch (err) {
-        questionsContainer.innerHTML = `<p class="text-red-500">Error loading quiz.</p>`;
+        questionsContainer.innerHTML = `<p class="text-red-500">${err.message}</p>`;
         console.error(err);
       }
     };
@@ -77,6 +90,7 @@
       quizTitle.textContent = quiz.title;
       quizDesc.textContent = quiz.description || '';
 
+      questionsContainer.innerHTML = ""; // clear existing
       quiz.questions.forEach((q, idx) => {
         const div = document.createElement('div');
         div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
@@ -92,32 +106,34 @@
               </label>
             `).join('')}
           </div>
-          <p class="hidden text-red-500 text-sm mt-2 warning">⚠️ Please answer this question</p>
+          <p class="hidden text-red-500 text-sm mt-2 warning" data-i18n="answerThisQuestionWarning">⚠️ Please answer this question</p>
         `;
         questionsContainer.appendChild(div);
       });
+      translateElements(questionsContainer);
     };
 
     // Show results
     const showResults = (quiz, submission) => {
       quizForm.classList.add('hidden');
       quizResult.classList.remove('hidden');
-      scoreText.textContent = `You scored ${submission.score} / ${quiz.questions.length}`;
+      scoreText.textContent = `${getTranslation('youScored')} ${submission.score} / ${quiz.questions.length}`;
 
       breakdownContainer.innerHTML = '';
       quiz.questions.forEach((q, idx) => {
-        const studentAnswer = submission.answers[idx] || 'No answer';
+        const studentAnswer = submission.answers[idx] || getTranslation('noAnswer');
         const correct = q.correct === studentAnswer;
 
         const div = document.createElement('div');
         div.className = `p-3 rounded-lg ${correct ? 'bg-green-100' : 'bg-red-100'}`;
         div.innerHTML = `
           <p class="font-semibold">${idx+1}. ${q.question}</p>
-          <p>Your answer: <span class="${correct ? 'text-green-600' : 'text-red-600'}">${studentAnswer}</span></p>
-          <p>Correct answer: <span class="font-bold text-green-700">${q.correct}</span></p>
+          <p><span data-i18n="yourAnswer">Your answer</span>: <span class="${correct ? 'text-green-600' : 'text-red-600'}">${studentAnswer}</span></p>
+          <p><span data-i18n="correctAnswer">Correct answer</span>: <span class="font-bold text-green-700">${q.correct}</span></p>
         `;
         breakdownContainer.appendChild(div);
       });
+      translateElements(breakdownContainer);
     };
 
     // Submit quiz answers
@@ -148,7 +164,7 @@
       }
 
       if (!allAnswered) {
-        alert("⚠️ Please answer all questions before submitting!");
+        alert(getTranslation('answerAllQuestionsWarning'));
         return;
       }
 
@@ -167,12 +183,32 @@
 
         showResults(result.quiz, result.submission);
       } catch (err) {
-        alert('Error submitting quiz');
+        alert(getTranslation('submittingError'));
         console.error(err);
       }
     });
 
-    fetchQuiz();
+    function getTranslation(key) {
+      if (typeof translations !== 'undefined' && translations[key] && translations[key][currentLang]) {
+        return translations[key][currentLang];
+      }
+      return key; 
+    }
+
+    // Language selector
+    document.getElementById("language-select").addEventListener("change", (e) => {
+      const lang = e.target.value;
+      translatePage('student-quiz', lang);
+
+      // Handle RTL for Arabic
+      document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";
+    });
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      translatePage('student-quiz', 'en'); 
+      fetchQuiz();
+    });
   </script>
 </body>
 </html>

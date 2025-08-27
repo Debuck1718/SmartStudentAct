@@ -3,101 +3,136 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz Dashboard - SmartStudentAct</title>
+  <title data-i18n="pageTitle">Quiz Dashboard - SmartStudentAct</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-  <!-- Navbar -->
   <nav class="bg-blue-600 text-white p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">SmartStudentAct | Quiz Dashboard</h1>
-    <a href="teachers.html" class="bg-white text-blue-600 px-4 py-2 rounded shadow hover:bg-gray-200">
-      Back to Teacher Dashboard
-    </a>
+    <h1 class="text-xl font-bold" data-i18n="pageTitle">SmartStudentAct | Quiz Dashboard</h1>
+    <div class="flex items-center gap-4">
+      <a href="teachers.html" class="bg-white text-blue-600 px-4 py-2 rounded shadow hover:bg-gray-200" data-i18n="backToTeacherDashboard">
+        Back to Teacher Dashboard
+      </a>
+      <!-- Language dropdown -->
+      <select id="languageSelector" class="rounded p-1 text-black">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="tr">Türkçe</option>
+        <option value="ar">العربية</option>
+        <option value="ru">Русский</option>
+      </select>
+    </div>
   </nav>
 
-  <!-- Main Content -->
   <div class="flex-1 container mx-auto p-6">
-    
-    <!-- Create Quiz -->
     <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-      <h2 class="text-2xl font-bold mb-4">Create New Quiz</h2>
+      <h2 class="text-2xl font-bold mb-4" data-i18n="createNewQuiz">Create New Quiz</h2>
       <form id="quizForm" class="space-y-4">
-        <input type="text" id="quizTitle" placeholder="Quiz Title" class="w-full border p-2 rounded" required>
-        <textarea id="quizDescription" placeholder="Quiz Description" class="w-full border p-2 rounded"></textarea>
+        <input type="text" id="quizTitle" data-i18n-placeholder="quizTitlePlaceholder" placeholder="Quiz Title" class="w-full border p-2 rounded" required>
+        <textarea id="quizDescription" data-i18n-placeholder="quizDescriptionPlaceholder" placeholder="Quiz Description" class="w-full border p-2 rounded"></textarea>
         <input type="date" id="quizDueDate" class="w-full border p-2 rounded" required>
 
-        <!-- Dynamic Questions -->
         <div id="questionsContainer" class="space-y-6"></div>
 
-        <button type="button" id="addQuestionBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">
+        <button type="button" id="addQuestionBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700" data-i18n="addQuestion">
           ➕ Add Question
         </button>
 
-        <!-- Assignment Options -->
         <div class="mt-6">
-          <h3 class="text-lg font-semibold mb-2">Assign To:</h3>
-          <input type="text" id="assignEmails" placeholder="Student Emails (comma separated)" class="w-full border p-2 rounded mb-2">
-          <input type="text" id="assignGrade" placeholder="Grade (optional)" class="w-full border p-2 rounded mb-2">
-          <input type="text" id="assignSchool" placeholder="School Name (optional)" class="w-full border p-2 rounded">
+          <h3 class="text-lg font-semibold mb-2" data-i18n="assignTo">Assign To:</h3>
+          <input type="text" id="assignEmails" data-i18n-placeholder="studentEmailsPlaceholder" placeholder="Student Emails (comma separated)" class="w-full border p-2 rounded mb-2">
+          <input type="text" id="assignGrade" data-i18n-placeholder="gradePlaceholder" placeholder="Grade (optional)" class="w-full border p-2 rounded mb-2">
+          <input type="text" id="assignSchool" data-i18n-placeholder="schoolNamePlaceholder" placeholder="School Name (optional)" class="w-full border p-2 rounded">
         </div>
 
-        <!-- Submit -->
-        <button type="submit" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700">
+        <button type="submit" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700" data-i18n="saveAndAssign">
           📤 Save & Assign Quiz
         </button>
       </form>
     </div>
 
-    <!-- List of Existing Quizzes -->
     <div class="bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-2xl font-bold mb-4">My Quizzes</h2>
-      <ul id="quizList" class="space-y-3">
-        <!-- Fetched quizzes will appear here -->
-      </ul>
+      <h2 class="text-2xl font-bold mb-4" data-i18n="myQuizzes">My Quizzes</h2>
+      <ul id="quizList" class="space-y-3"></ul>
     </div>
   </div>
 
   <script>
     const API_BASE_URL = "https://smartstudentact.onrender.com/api";
-    const csrfToken = localStorage.getItem("csrfToken");
-
     const questionsContainer = document.getElementById('questionsContainer');
     const addQuestionBtn = document.getElementById('addQuestionBtn');
     const quizList = document.getElementById('quizList');
     let questionCount = 0;
 
-    // Add new question block
-    addQuestionBtn.addEventListener('click', () => {
+    let translations = {};
+    let currentLang = 'en';
+
+    // Load translations JSON
+    async function loadTranslations() {
+      const res = await fetch('quiz_dashboard.json');
+      translations = await res.json();
+      translatePage();
+    }
+
+    // Translate all elements with data-i18n or data-i18n-placeholder
+    function translatePage() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[key] && translations[key][currentLang]) {
+          el.textContent = translations[key][currentLang];
+        }
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[key] && translations[key][currentLang]) {
+          el.placeholder = translations[key][currentLang];
+        }
+      });
+    }
+
+    // Helper for dynamic alerts
+    function getTranslation(key) {
+      return translations[key]?.[currentLang] || key;
+    }
+
+    // Language selector change
+    document.getElementById('languageSelector').addEventListener('change', e => {
+      currentLang = e.target.value;
+      translatePage();
+    });
+
+    function createQuestionBlock() {
       questionCount++;
       const qDiv = document.createElement('div');
       qDiv.className = "border p-4 rounded bg-gray-50";
       qDiv.innerHTML = `
-        <label class="block font-semibold">Question ${questionCount}</label>
-        <input type="text" name="questionText" placeholder="Enter question" class="w-full border p-2 rounded mb-2" required>
-        
+        <label class="block font-semibold" data-i18n="questionLabel"></label> ${questionCount}
+        <input type="text" name="questionText" data-i18n-placeholder="questionPlaceholder" placeholder="Enter question" class="w-full border p-2 rounded mb-2" required>
         <div class="space-y-2">
-          <input type="text" name="option1" placeholder="Option A" class="w-full border p-2 rounded" required>
-          <input type="text" name="option2" placeholder="Option B" class="w-full border p-2 rounded" required>
-          <input type="text" name="option3" placeholder="Option C" class="w-full border p-2 rounded">
-          <input type="text" name="option4" placeholder="Option D" class="w-full border p-2 rounded">
+          <input type="text" name="option1" data-i18n-placeholder="optionA" placeholder="Option A" class="w-full border p-2 rounded" required>
+          <input type="text" name="option2" data-i18n-placeholder="optionB" placeholder="Option B" class="w-full border p-2 rounded" required>
+          <input type="text" name="option3" data-i18n-placeholder="optionC" placeholder="Option C" class="w-full border p-2 rounded">
+          <input type="text" name="option4" data-i18n-placeholder="optionD" placeholder="Option D" class="w-full border p-2 rounded">
         </div>
-
-        <label class="block mt-2">Correct Answer:</label>
+        <label class="block mt-2" data-i18n="correctAnswer">Correct Answer:</label>
         <select name="correctAnswer" class="w-full border p-2 rounded">
-          <option value="A">Option A</option>
-          <option value="B">Option B</option>
-          <option value="C">Option C</option>
-          <option value="D">Option D</option>
+          <option value="A" data-i18n="optionA">Option A</option>
+          <option value="B" data-i18n="optionB">Option B</option>
+          <option value="C" data-i18n="optionC">Option C</option>
+          <option value="D" data-i18n="optionD">Option D</option>
         </select>
       `;
+      translatePage(); // Apply translations
       questionsContainer.appendChild(qDiv);
-    });
+    }
 
-    // Handle quiz form submit
-    document.getElementById('quizForm').addEventListener('submit', async (e) => {
+    addQuestionBtn.addEventListener('click', createQuestionBlock);
+
+    // Handle form submission
+    document.getElementById('quizForm').addEventListener('submit', async e => {
       e.preventDefault();
-
       const quizData = {
         title: document.getElementById('quizTitle').value,
         description: document.getElementById('quizDescription').value,
@@ -108,7 +143,6 @@
         assigned_to_schools: document.getElementById('assignSchool').value ? [document.getElementById('assignSchool').value] : []
       };
 
-      // Gather questions
       document.querySelectorAll('#questionsContainer > div').forEach(qDiv => {
         const qText = qDiv.querySelector('input[name="questionText"]').value;
         const options = [
@@ -118,47 +152,34 @@
           qDiv.querySelector('input[name="option4"]').value,
         ].filter(o => o);
         const correct = qDiv.querySelector('select[name="correctAnswer"]').value;
-
         quizData.questions.push({ question: qText, options, correct });
       });
 
       try {
         const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'CSRF-Token': csrfToken 
-          },
+          headers: { 'Content-Type': 'application/json' },
           credentials: "include",
           body: JSON.stringify(quizData)
         });
-
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to save quiz");
-
-        alert("✅ Quiz created successfully!");
-        fetchQuizzes(); // refresh list
+        alert(getTranslation('quizSuccessAlert'));
+        fetchQuizzes();
       } catch (err) {
-        alert("❌ Error: " + err.message);
+        alert(getTranslation('quizSaveErrorAlert') + ": " + err.message);
       }
     });
 
-    // Fetch quizzes for teacher
     async function fetchQuizzes() {
-      quizList.innerHTML = "<li>Loading...</li>";
+      quizList.innerHTML = `<li>${getTranslation('loading')}</li>`;
       try {
-        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
-          method: "GET",
-          headers: { 'CSRF-Token': csrfToken },
-          credentials: "include"
-        });
+        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, { method: "GET", credentials: "include" });
         const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || "Failed to load quizzes");
-
+        if (!res.ok) throw new Error(data.error || getTranslation('quizLoadErrorAlert'));
         quizList.innerHTML = "";
-        if (data.length === 0) {
-          quizList.innerHTML = "<li>No quizzes yet.</li>";
+        if (!data.length) {
+          quizList.innerHTML = `<li>${getTranslation('noQuizzesYet')}</li>`;
         } else {
           data.forEach(quiz => {
             const li = document.createElement("li");
@@ -169,7 +190,7 @@
                 <p class="text-gray-600">${quiz.description || ""}</p>
                 <p class="text-sm text-gray-500">Due: ${quiz.due_date}</p>
               </div>
-              <span class="text-sm text-green-600">${quiz.questions?.length || 0} Questions</span>
+              <span class="text-sm text-green-600">${quiz.questions?.length || 0} ${getTranslation('questionsCount')}</span>
             `;
             quizList.appendChild(li);
           });
@@ -179,10 +200,10 @@
       }
     }
 
-    // Initial fetch
-    fetchQuizzes();
+    document.addEventListener('DOMContentLoaded', () => {
+      loadTranslations();
+      fetchQuizzes();
+    });
   </script>
 </body>
 </html>
-
-

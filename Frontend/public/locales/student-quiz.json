@@ -1,0 +1,90 @@
+{
+  "quizTitle": {
+    "en": "📘 Quiz",
+    "fr": "📘 Quiz",
+    "es": "📘 Cuestionario",
+    "tr": "📘 Quiz",
+    "ar": "📘 الاختبار",
+    "ru": "📘 Викторина"
+  },
+  "submitQuiz": {
+    "en": "Submit Quiz",
+    "fr": "Soumettre le quiz",
+    "es": "Enviar cuestionario",
+    "tr": "Quiz'i Gönder",
+    "ar": "إرسال الاختبار",
+    "ru": "Отправить викторину"
+  },
+  "quizSubmitted": {
+    "en": "✅ Quiz Submitted",
+    "fr": "✅ Quiz soumis",
+    "es": "✅ Cuestionario enviado",
+    "tr": "✅ Quiz gönderildi",
+    "ar": "✅ تم إرسال الاختبار",
+    "ru": "✅ Викторина отправлена"
+  },
+  "youScored": {
+    "en": "You scored",
+    "fr": "Vous avez obtenu",
+    "es": "Has obtenido",
+    "tr": "Puanınız",
+    "ar": "لقد حصلت على",
+    "ru": "Вы набрали"
+  },
+  "noAnswer": {
+    "en": "No answer",
+    "fr": "Pas de réponse",
+    "es": "Sin respuesta",
+    "tr": "Cevap yok",
+    "ar": "لا إجابة",
+    "ru": "Без ответа"
+  },
+  "yourAnswer": {
+    "en": "Your answer:",
+    "fr": "Votre réponse :",
+    "es": "Tu respuesta:",
+    "tr": "Cevabınız:",
+    "ar": "إجابتك:",
+    "ru": "Ваш ответ:"
+  },
+  "correctAnswer": {
+    "en": "Correct answer:",
+    "fr": "Réponse correcte :",
+    "es": "Respuesta correcta:",
+    "tr": "Doğru cevap:",
+    "ar": "الإجابة الصحيحة:",
+    "ru": "Правильный ответ:"
+  },
+  "answerThisQuestionWarning": {
+    "en": "⚠️ Please answer this question",
+    "fr": "⚠️ Veuillez répondre à cette question",
+    "es": "⚠️ Por favor responde a esta pregunta",
+    "tr": "⚠️ Lütfen bu soruyu cevaplayın",
+    "ar": "⚠️ الرجاء الإجابة على هذا السؤال",
+    "ru": "⚠️ Пожалуйста, ответьте на этот вопрос"
+  },
+  "answerAllQuestionsWarning": {
+    "en": "⚠️ Please answer all questions before submitting!",
+    "fr": "⚠️ Veuillez répondre à toutes les questions avant de soumettre !",
+    "es": "⚠️ Por favor responde todas las preguntas antes de enviar!",
+    "tr": "⚠️ Lütfen göndermeden önce tüm soruları cevaplayın!",
+    "ar": "⚠️ الرجاء الإجابة على جميع الأسئلة قبل الإرسال!",
+    "ru": "⚠️ Пожалуйста, ответьте на все вопросы перед отправкой!"
+  },
+  "loadingError": {
+    "en": "Error loading quiz.",
+    "fr": "Erreur lors du chargement du quiz.",
+    "es": "Error al cargar el cuestionario.",
+    "tr": "Quiz yüklenirken hata oluştu.",
+    "ar": "حدث خطأ أثناء تحميل الاختبار.",
+    "ru": "Ошибка при загрузке викторины."
+  },
+  "submittingError": {
+    "en": "Error submitting quiz",
+    "fr": "Erreur lors de la soumission du quiz",
+    "es": "Error al enviar el cuestionario",
+    "tr": "Quiz gönderilirken hata oluştu",
+    "ar": "خطأ أثناء إرسال الاختبار",
+    "ru": "Ошибка при отправке викторины"
+  }
+}

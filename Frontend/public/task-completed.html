@@ -1,83 +1,179 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Completed Tasks</title>
-    <!-- Tailwind CSS for styling -->
+    <title data-i18n="completedTasksTitle">Completed Tasks</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Optional: Add custom fonts or base styles here */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
 
-    <main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
-        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8">Your Completed Tasks</h1>
-        
-        <!-- This container will be populated by JavaScript -->
-        <div id="completed-tasks-list" class="space-y-4">
-            <!-- Task items will be dynamically inserted here -->
-        </div>
+    <!-- Language Selector -->
+    <nav class="w-full max-w-2xl p-4 flex justify-end">
+        <select id="language-select" class="border border-gray-300 rounded-md p-2 text-sm">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="tr">Türkçe</option>
+            <option value="ar">العربية</option>
+            <option value="ru">Русский</option>
+        </select>
+    </nav>
 
+    <main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
+        <h1 id="page-title" class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8" data-i18n="completedTasksTitle">Your Completed Tasks</h1>
+        <div id="completed-tasks-list" class="space-y-4"></div>
     </main>
 
-    <!-- Main JavaScript Logic -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        // Translation and task data
+        const tasksData = {
+            "en": [
+                { "titleKey": "mathHomework", "date": "2025-07-20" },
+                { "titleKey": "scienceProject", "date": "2025-07-18" },
+                { "titleKey": "englishEssay", "date": "2025-07-15" },
+                { "titleKey": "historyQuiz", "date": "2025-07-10" },
+                { "titleKey": "artClass", "date": "2025-07-08" }
+            ],
+            "fr": [
+                { "titleKey": "mathHomework", "date": "2025-07-20" },
+                { "titleKey": "scienceProject", "date": "2025-07-18" },
+                { "titleKey": "englishEssay", "date": "2025-07-15" },
+                { "titleKey": "historyQuiz", "date": "2025-07-10" },
+                { "titleKey": "artClass", "date": "2025-07-08" }
+            ],
+            "es": [
+                { "titleKey": "mathHomework", "date": "2025-07-20" },
+                { "titleKey": "scienceProject", "date": "2025-07-18" },
+                { "titleKey": "englishEssay", "date": "2025-07-15" },
+                { "titleKey": "historyQuiz", "date": "2025-07-10" },
+                { "titleKey": "artClass", "date": "2025-07-08" }
+            ],
+            "tr": [
+                { "titleKey": "mathHomework", "date": "2025-07-20" },
+                { "titleKey": "scienceProject", "date": "2025-07-18" },
+                { "titleKey": "englishEssay", "date": "2025-07-15" },
+                { "titleKey": "historyQuiz", "date": "2025-07-10" },
+                { "titleKey": "artClass", "date": "2025-07-08" }
+            ],
+            "ar": [
+                { "titleKey": "mathHomework", "date": "2025-07-20" },
+                { "titleKey": "scienceProject", "date": "2025-07-18" },
+                { "titleKey": "englishEssay", "date": "2025-07-15" },
+                { "titleKey": "historyQuiz", "date": "2025-07-10" },
+                { "titleKey": "artClass", "date": "2025-07-08" }
+            ],
+            "ru": [
+                { "titleKey": "mathHomework", "date": "2025-07-20" },
+                { "titleKey": "scienceProject", "date": "2025-07-18" },
+                { "titleKey": "englishEssay", "date": "2025-07-15" },
+                { "titleKey": "historyQuiz", "date": "2025-07-10" },
+                { "titleKey": "artClass", "date": "2025-07-08" }
+            ]
+        };
 
-            // Hardcoded data mirroring the React Native code.
-            // In a real application, this would be fetched from an API.
-            const completedTasksData = [
-                { id: '1', title: 'Math Homework - Chapter 3', date: '2025-07-20' },
-                { id: '2', title: 'Science Project - Photosynthesis', date: '2025-07-18' },
-                { id: '3', title: 'English Essay - "My Summer"', date: '2025-07-15' },
-                { id: '4', title: 'History Quiz - WW2', date: '2025-07-10' },
-                { id: '5', title: 'Art Class - Still Life Drawing', date: '2025-07-08' },
-            ];
+        const translations = {
+            "en": {
+                "completedTasksTitle": "Your Completed Tasks",
+                "mathHomework": "Math Homework - Chapter 3",
+                "scienceProject": "Science Project - Photosynthesis",
+                "englishEssay": "English Essay - \"My Summer\"",
+                "historyQuiz": "History Quiz - WW2",
+                "artClass": "Art Class - Still Life Drawing",
+                "completedLabel": "Completed"
+            },
+            "fr": {
+                "completedTasksTitle": "Vos tâches terminées",
+                "mathHomework": "Devoir de mathématiques - Chapitre 3",
+                "scienceProject": "Projet de science - Photosynthèse",
+                "englishEssay": "Rédaction en anglais - \"Mon été\"",
+                "historyQuiz": "Quiz d'histoire - Seconde Guerre mondiale",
+                "artClass": "Cours d'art - Nature morte",
+                "completedLabel": "Terminé"
+            },
+            "es": {
+                "completedTasksTitle": "Tus tareas completadas",
+                "mathHomework": "Tarea de matemáticas - Capítulo 3",
+                "scienceProject": "Proyecto de ciencias - Fotosíntesis",
+                "englishEssay": "Ensayo de inglés - \"Mi verano\"",
+                "historyQuiz": "Prueba de historia - Segunda Guerra Mundial",
+                "artClass": "Clase de arte - Naturaleza muerta",
+                "completedLabel": "Completado"
+            },
+            "tr": {
+                "completedTasksTitle": "Tamamlanan Görevleriniz",
+                "mathHomework": "Matematik Ödevi - Bölüm 3",
+                "scienceProject": "Fen Projesi - Fotosentez",
+                "englishEssay": "İngilizce Deneme - \"Yazım\"",
+                "historyQuiz": "Tarih Sınavı - 2. Dünya Savaşı",
+                "artClass": "Sanat Dersi - Natürmort Çizimi",
+                "completedLabel": "Tamamlandı"
+            },
+            "ar": {
+                "completedTasksTitle": "مهامك المكتملة",
+                "mathHomework": "واجب الرياضيات - الفصل 3",
+                "scienceProject": "مشروع العلوم - التمثيل الضوئي",
+                "englishEssay": "مقال اللغة الإنجليزية - \"صيفي\"",
+                "historyQuiz": "اختبار التاريخ - الحرب العالمية الثانية",
+                "artClass": "درس الفن - الرسم الطبيعي",
+                "completedLabel": "مكتمل"
+            },
+            "ru": {
+                "completedTasksTitle": "Ваши выполненные задания",
+                "mathHomework": "Домашнее задание по математике - Глава 3",
+                "scienceProject": "Проект по науке - Фотосинтез",
+                "englishEssay": "Эссе по английскому - \"Моё лето\"",
+                "historyQuiz": "Историческая викторина - Вторая мировая война",
+                "artClass": "Урок рисования - Натюрморт",
+                "completedLabel": "Выполнено"
+            }
+        };
 
-            const taskListContainer = document.getElementById('completed-tasks-list');
+        const pageTitle = document.getElementById('page-title');
+        const taskListContainer = document.getElementById('completed-tasks-list');
+        const langSelect = document.getElementById('language-select');
 
-            /**
-             * Renders a single task item and appends it to the list.
-             * @param {object} item The task item object with title and date.
-             */
-            const renderTaskItem = (item) => {
+        function renderTasks(lang) {
+            taskListContainer.innerHTML = '';
+            const langTasks = tasksData[lang] || tasksData['en'];
+            langTasks.forEach(task => {
                 const taskItemEl = document.createElement('div');
-                taskItemEl.classList.add(
-                    'bg-blue-50', 
-                    'p-4', 
-                    'rounded-lg', 
-                    'mb-3', 
-                    'border-l-4', 
-                    'border-blue-600', 
-                    'shadow-sm',
-                    'hover:shadow-md',
-                    'transition-shadow'
-                );
+                taskItemEl.className = 'bg-blue-50 p-4 rounded-lg mb-3 border-l-4 border-blue-600 shadow-sm hover:shadow-md transition-shadow';
 
                 const titleEl = document.createElement('p');
-                titleEl.classList.add('text-lg', 'font-semibold', 'text-gray-700');
-                titleEl.textContent = item.title;
+                titleEl.className = 'text-lg font-semibold text-gray-700';
+                titleEl.textContent = translations[lang][task.titleKey] || task.titleKey;
 
                 const dateEl = document.createElement('p');
-                dateEl.classList.add('text-sm', 'text-gray-500', 'mt-1');
-                dateEl.textContent = `Completed: ${item.date}`;
+                dateEl.className = 'text-sm text-gray-500 mt-1';
+                dateEl.textContent = `${translations[lang]['completedLabel']}: ${task.date}`;
 
                 taskItemEl.appendChild(titleEl);
                 taskItemEl.appendChild(dateEl);
-
                 taskListContainer.appendChild(taskItemEl);
-            };
+            });
 
-            // Loop through the data and render each task
-            completedTasksData.forEach(renderTaskItem);
+            // Update page title
+            pageTitle.textContent = translations[lang]['completedTasksTitle'] || translations['en']['completedTasksTitle'];
+        }
+
+        // Initial render
+        let currentLang = 'en';
+        renderTasks(currentLang);
+
+        // Language change
+        langSelect.addEventListener('change', e => {
+            currentLang = e.target.value;
+            renderTasks(currentLang);
         });
     </script>
 
 </body>
 </html>
+

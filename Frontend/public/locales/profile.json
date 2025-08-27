@@ -1,0 +1,362 @@
+{
+  "pageTitle": {
+    "en": "My Profile",
+    "fr": "Mon profil",
+    "es": "Mi perfil",
+    "tr": "Profilim",
+    "ar": "ملفي الشخصي",
+    "ru": "Мой профиль"
+  },
+  "loadingText": {
+    "en": "Loading profile...",
+    "fr": "Chargement du profil...",
+    "es": "Cargando perfil...",
+    "tr": "Profil yükleniyor...",
+    "ar": "جاري تحميل الملف الشخصي...",
+    "ru": "Загрузка профиля..."
+  },
+  "backButton": {
+    "en": "← Back",
+    "fr": "← Retour",
+    "es": "← Atrás",
+    "tr": "← Geri",
+    "ar": "← رجوع",
+    "ru": "← Назад"
+  },
+  "mainTitle": {
+    "en": "👤 My Profile",
+    "fr": "👤 Mon profil",
+    "es": "👤 Mi perfil",
+    "tr": "👤 Profilim",
+    "ar": "👤 ملفي الشخصي",
+    "ru": "👤 Мой профиль"
+  },
+  "changePicture": {
+    "en": "Change Picture",
+    "fr": "Changer la photo",
+    "es": "Cambiar foto",
+    "tr": "Resmi değiştir",
+    "ar": "تغيير الصورة",
+    "ru": "Изменить фото"
+  },
+  "personalInfoSection": {
+    "en": "Personal Information",
+    "fr": "Informations personnelles",
+    "es": "Información personal",
+    "tr": "Kişisel Bilgiler",
+    "ar": "المعلومات الشخصية",
+    "ru": "Личная информация"
+  },
+  "firstNameLabel": {
+    "en": "First Name:",
+    "fr": "Prénom :",
+    "es": "Nombre:",
+    "tr": "Ad:",
+    "ar": "الاسم الأول:",
+    "ru": "Имя:"
+  },
+  "lastNameLabel": {
+    "en": "Last Name:",
+    "fr": "Nom :",
+    "es": "Apellido:",
+    "tr": "Soyad:",
+    "ar": "اسم العائلة:",
+    "ru": "Фамилия:"
+  },
+  "emailLabel": {
+    "en": "Email:",
+    "fr": "E-mail :",
+    "es": "Correo electrónico:",
+    "tr": "E-posta:",
+    "ar": "البريد الإلكتروني:",
+    "ru": "Эл. почта:"
+  },
+  "phoneLabel": {
+    "en": "Phone:",
+    "fr": "Téléphone :",
+    "es": "Teléfono:",
+    "tr": "Telefon:",
+    "ar": "الهاتف:",
+    "ru": "Телефон:"
+  },
+  "occupationLabel": {
+    "en": "Occupation:",
+    "fr": "Profession :",
+    "es": "Ocupación:",
+    "tr": "Meslek:",
+    "ar": "المهنة:",
+    "ru": "Профессия:"
+  },
+  "academicDetailsSection": {
+    "en": "Academic Details",
+    "fr": "Détails académiques",
+    "es": "Detalles académicos",
+    "tr": "Akademik Bilgiler",
+    "ar": "التفاصيل الأكاديمية",
+    "ru": "Академические данные"
+  },
+  "educationLevelLabel": {
+    "en": "Education Level:",
+    "fr": "Niveau d'éducation :",
+    "es": "Nivel educativo:",
+    "tr": "Eğitim Seviyesi:",
+    "ar": "المستوى التعليمي:",
+    "ru": "Уровень образования:"
+  },
+  "selectEducationLevel": {
+    "en": "Select Education Level",
+    "fr": "Sélectionnez le niveau d'éducation",
+    "es": "Seleccione nivel educativo",
+    "tr": "Eğitim Seviyesi Seç",
+    "ar": "اختر المستوى التعليمي",
+    "ru": "Выберите уровень образования"
+  },
+  "juniorHigh": {
+    "en": "Junior High",
+    "fr": "Collège",
+    "es": "Secundaria básica",
+    "tr": "Ortaokul",
+    "ar": "المرحلة المتوسطة",
+    "ru": "Младшая школа"
+  },
+  "seniorHigh": {
+    "en": "Senior High",
+    "fr": "Lycée",
+    "es": "Bachillerato",
+    "tr": "Lise",
+    "ar": "المرحلة الثانوية",
+    "ru": "Старшая школа"
+  },
+  "university": {
+    "en": "University",
+    "fr": "Université",
+    "es": "Universidad",
+    "tr": "Üniversite",
+    "ar": "الجامعة",
+    "ru": "Университет"
+  },
+  "gradeLabel": {
+    "en": "Grade:",
+    "fr": "Classe :",
+    "es": "Grado:",
+    "tr": "Sınıf:",
+    "ar": "الصف:",
+    "ru": "Класс:"
+  },
+  "schoolNameLabel": {
+    "en": "School Name:",
+    "fr": "Nom de l'école :",
+    "es": "Nombre de la escuela:",
+    "tr": "Okul Adı:",
+    "ar": "اسم المدرسة:",
+    "ru": "Название школы:"
+  },
+  "universityLabel": {
+    "en": "University:",
+    "fr": "Université :",
+    "es": "Universidad:",
+    "tr": "Üniversite:",
+    "ar": "الجامعة:",
+    "ru": "Университет:"
+  },
+  "levelLabel": {
+    "en": "Level:",
+    "fr": "Niveau :",
+    "es": "Nivel:",
+    "tr": "Seviye:",
+    "ar": "المستوى:",
+    "ru": "Уровень:"
+  },
+  "programLabel": {
+    "en": "Program:",
+    "fr": "Programme :",
+    "es": "Programa:",
+    "tr": "Program:",
+    "ar": "البرنامج:",
+    "ru": "Программа:"
+  },
+  "professionalDetailsSection": {
+    "en": "Professional Details",
+    "fr": "Détails professionnels",
+    "es": "Detalles profesionales",
+    "tr": "Mesleki Bilgiler",
+    "ar": "التفاصيل المهنية",
+    "ru": "Профессиональные данные"
+  },
+  "teacherSchoolLabel": {
+    "en": "School:",
+    "fr": "École :",
+    "es": "Escuela:",
+    "tr": "Okul:",
+    "ar": "المدرسة:",
+    "ru": "Школа:"
+  },
+  "gradeTaughtLabel": {
+    "en": "Grade Taught:",
+    "fr": "Classe enseignée :",
+    "es": "Grado enseñado:",
+    "tr": "Öğretilen Sınıf:",
+    "ar": "الصف المُدرّس:",
+    "ru": "Преподаваемый класс:"
+  },
+  "adminSchoolDetailsSection": {
+    "en": "Admin School Details",
+    "fr": "Détails de l'école (admin)",
+    "es": "Detalles de la escuela (admin)",
+    "tr": "Okul Yönetim Bilgileri",
+    "ar": "تفاصيل المدرسة (المسؤول)",
+    "ru": "Данные школы (админ)"
+  },
+  "assignedSchoolLabel": {
+    "en": "Assigned School:",
+    "fr": "École assignée :",
+    "es": "Escuela asignada:",
+    "tr": "Atanan Okul:",
+    "ar": "المدرسة المخصصة:",
+    "ru": "Назначенная школа:"
+  },
+  "saveChangesButton": {
+    "en": "Save Profile Changes",
+    "fr": "Enregistrer les modifications",
+    "es": "Guardar cambios",
+    "tr": "Değişiklikleri Kaydet",
+    "ar": "حفظ التغييرات",
+    "ru": "Сохранить изменения"
+  },
+  "copyright": {
+    "en": "© 2025 SmartStudentAct",
+    "fr": "© 2025 SmartStudentAct",
+    "es": "© 2025 SmartStudentAct",
+    "tr": "© 2025 SmartStudentAct",
+    "ar": "© 2025 SmartStudentAct",
+    "ru": "© 2025 SmartStudentAct"
+  },
+  "noFileSelected": {
+    "en": "No file selected.",
+    "fr": "Aucun fichier sélectionné.",
+    "es": "Ningún archivo seleccionado.",
+    "tr": "Dosya seçilmedi.",
+    "ar": "لم يتم اختيار ملف.",
+    "ru": "Файл не выбран."
+  },
+  "uploadingPhoto": {
+    "en": "Uploading photo...",
+    "fr": "Téléchargement de la photo...",
+    "es": "Subiendo foto...",
+    "tr": "Fotoğraf yükleniyor...",
+    "ar": "جاري رفع الصورة...",
+    "ru": "Загрузка фото..."
+  },
+  "photoUploadedSuccess": {
+    "en": "Photo uploaded successfully!",
+    "fr": "Photo téléchargée avec succès !",
+    "es": "¡Foto subida con éxito!",
+    "tr": "Fotoğraf başarıyla yüklendi!",
+    "ar": "تم رفع الصورة بنجاح!",
+    "ru": "Фото успешно загружено!"
+  },
+  "uploadFailed": {
+    "en": "Upload failed.",
+    "fr": "Échec du téléchargement.",
+    "es": "Error en la subida.",
+    "tr": "Yükleme başarısız.",
+    "ar": "فشل الرفع.",
+    "ru": "Ошибка загрузки."
+  },
+  "fixErrors": {
+    "en": "Please fix the errors.",
+    "fr": "Veuillez corriger les erreurs.",
+    "es": "Por favor corrige los errores.",
+    "tr": "Lütfen hataları düzeltin.",
+    "ar": "يرجى تصحيح الأخطاء.",
+    "ru": "Пожалуйста, исправьте ошибки."
+  },
+  "saving": {
+    "en": "Saving...",
+    "fr": "Enregistrement...",
+    "es": "Guardando...",
+    "tr": "Kaydediliyor...",
+    "ar": "جاري الحفظ...",
+    "ru": "Сохранение..."
+  },
+  "profileUpdatedSuccess": {
+    "en": "Profile updated successfully!",
+    "fr": "Profil mis à jour avec succès !",
+    "es": "¡Perfil actualizado con éxito!",
+    "tr": "Profil başarıyla güncellendi!",
+    "ar": "تم تحديث الملف الشخصي بنجاح!",
+    "ru": "Профиль успешно обновлен!"
+  },
+  "updateFailed": {
+    "en": "Failed to update profile.",
+    "fr": "Échec de la mise à jour du profil.",
+    "es": "Error al actualizar el perfil.",
+    "tr": "Profil güncellenemedi.",
+    "ar": "فشل تحديث الملف الشخصي.",
+    "ru": "Не удалось обновить профиль."
+  },
+  "couldNotSave": {
+    "en": "Could not save profile.",
+    "fr": "Impossible d'enregistrer le profil.",
+    "es": "No se pudo guardar el perfil.",
+    "tr": "Profil kaydedilemedi.",
+    "ar": "تعذر حفظ الملف الشخصي.",
+    "ru": "Не удалось сохранить профиль."
+  },
+  "loadFailed": {
+    "en": "Failed to load profile.",
+    "fr": "Échec du chargement du profil.",
+    "es": "Error al cargar el perfil.",
+    "tr": "Profil yüklenemedi.",
+    "ar": "فشل تحميل الملف الشخصي.",
+    "ru": "Не удалось загрузить профиль."
+  },
+  "couldNotFetch": {
+    "en": "Could not fetch profile.",
+    "fr": "Impossible de récupérer le profil.",
+    "es": "No se pudo obtener el perfil.",
+    "tr": "Profil alınamadı.",
+    "ar": "تعذر جلب الملف الشخصي.",
+    "ru": "Не удалось получить профиль."
+  },
+  "required": {
+    "en": " is required.",
+    "fr": " est requis.",
+    "es": " es obligatorio.",
+    "tr": " gerekli.",
+    "ar": " مطلوب.",
+    "ru": " обязательно."
+  },
+  "phoneRequired": {
+    "en": "Phone number is required.",
+    "fr": "Le numéro de téléphone est requis.",
+    "es": "El número de teléfono es obligatorio.",
+    "tr": "Telefon numarası gerekli.",
+    "ar": "رقم الهاتف مطلوب.",
+    "ru": "Требуется номер телефона."
+  },
+  "invalidPhone": {
+    "en": "Invalid phone number format.",
+    "fr": "Format de numéro invalide.",
+    "es": "Formato de número inválido.",
+    "tr": "Geçersiz telefon numarası biçimi.",
+    "ar": "صيغة رقم الهاتف غير صالحة.",
+    "ru": "Неверный формат номера телефона."
+  },
+  "educationLevelRequired": {
+    "en": "Education Level is required.",
+    "fr": "Le niveau d'éducation est requis.",
+    "es": "El nivel educativo es obligatorio.",
+    "tr": "Eğitim seviyesi gerekli.",
+    "ar": "المستوى التعليمي مطلوب.",
+    "ru": "Требуется уровень образования."
+  },
+  "schoolNameRequired": {
+    "en": "School name is required.",
+    "fr": "Le nom de l'école est requis.",
+    "es": "El nombre de la escuela es obligatorio.",
+    "tr": "Okul adı gerekli.",
+    "ar": "اسم المدرسة مطلوب.",
+    "ru": "Требуется название школы."
+  }
+}

@@ -884,10 +884,6 @@
         return error;
       }
 
-      /**
-       * Validates the entire form based on the current state.
-       * @returns {boolean} True if the form is valid, false otherwise.
-       */
       function validateForm() {
         let isValid = true;
         const fieldsToValidate = [
@@ -942,14 +938,6 @@
         return isValid;
       }
 
-      /**
-       * Populates a select element with options based on a starting and ending value.
-       * @param {HTMLElement} selectElement - The select element to populate.
-       * @param {string} labelPrefix - The prefix for the option label (e.g., 'Level', 'Grade').
-       * @param {number} start - The starting number.
-       * @param {number} end - The ending number.
-       * @param {number} increment - The increment step.
-       */
       function populateSelect(
         selectElement,
         labelPrefix,
@@ -1198,13 +1186,10 @@
               "Account successfully created! Redirecting...",
               "success"
             );
-
-            // 🔹 Save role & token locally if needed
             localStorage.setItem("token", data.token);
             localStorage.setItem("userRole", data.user.role);
             localStorage.setItem("userId", data.user.id);
 
-            // 🔹 Redirect based on backend role
             const userRole = data.user.role;
 
             if (userRole === "student") {
