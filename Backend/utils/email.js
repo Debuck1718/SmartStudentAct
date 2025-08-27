@@ -21,7 +21,7 @@ const smtpTransporter = nodemailer.createTransport({
   tls: { rejectUnauthorized: false },
 });
 
-// ─── Template IDs Mapping ───
+// ─── Template IDs Mapping (Brevo) ───
 const TEMPLATE_IDS = {
   WELCOME: 2,
   OTP: 3,
@@ -32,6 +32,8 @@ const TEMPLATE_IDS = {
   GRADED_ASSIGNMENT: 8,
   REWARD_NOTIFICATION: 9,
   GOAL_BUDGET_UPDATE: 10,
+  PAYMENT_RECEIPT: 11,
+  SUBSCRIPTION_RENEWAL: 12,
 };
 
 /**
@@ -77,9 +79,6 @@ async function trySMTP(toEmail, templateId, params) {
 
 /**
  * Send email with retries + fallback
- * @param {string} toEmail - Recipient email
- * @param {number} templateId - Brevo template ID
- * @param {object} params - Template variables {KEY: VALUE}
  */
 async function sendTemplateEmail(toEmail, templateId, params = {}) {
   if (!toEmail || !templateId) {
@@ -101,11 +100,10 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
         apiError.response?.body || apiError.message
       );
 
-      // Fallback only after final attempt
       if (attempt === maxAttempts) {
         try {
           await trySMTP(toEmail, templateId, params);
-          return true; // ✅ success via SMTP
+          return true;
         } catch (smtpError) {
           console.error(
             `❌ SMTP fallback failed for ${toEmail}:`,
@@ -115,7 +113,6 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
         }
       }
 
-      // exponential backoff before retry
       const delay = Math.pow(2, attempt) * 1000; // 2s → 4s → 8s
       console.log(`⏳ Retrying in ${delay / 1000}s...`);
       await wait(delay);
@@ -126,21 +123,130 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
 }
 
 /* ─── Convenience Wrappers ─── */
+
+// Auth & Onboarding
 const sendOTPEmail = (email, otpCode) =>
   sendTemplateEmail(email, TEMPLATE_IDS.OTP, { OTP_CODE: otpCode });
 
-const sendWelcomeEmail = (email, username) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.WELCOME, { USERNAME: username });
+const sendWelcomeEmail = (email, firstname) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.WELCOME, { FIRSTNAME: firstname });
 
 const sendResetEmail = (email, resetLink) =>
   sendTemplateEmail(email, TEMPLATE_IDS.RESET, { RESET_LINK: resetLink });
 
+// Academic
+const sendQuizNotificationEmail = (email, firstname, quizTitle, dueDate, link) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.QUIZ_NOTIFICATION, {
+    FIRSTNAME: firstname,
+    QUIZ_TITLE: quizTitle,
+    DUE_DATE: dueDate,
+    LINK: link,
+  });
+
+const sendAssignmentNotificationEmail = (
+  email,
+  firstname,
+  assignmentTitle,
+  dueDate,
+  link
+) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.ASSIGNMENT_NOTIFICATION, {
+    FIRSTNAME: firstname,
+    ASSIGNMENT_TITLE: assignmentTitle,
+    DUE_DATE: dueDate,
+    LINK: link,
+  });
+
+const sendFeedbackNotificationEmail = (
+  email,
+  firstname,
+  feedbackMessage,
+  link
+) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.FEEDBACK_RECEIVED, {
+    FIRSTNAME: firstname,
+    FEEDBACK_MESSAGE: feedbackMessage,
+    LINK: link,
+  });
+
+const sendAssignmentGradedEmail = (
+  email,
+  firstname,
+  assignmentTitle,
+  grade,
+  link
+) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.GRADED_ASSIGNMENT, {
+    FIRSTNAME: firstname,
+    ASSIGNMENT_TITLE: assignmentTitle,
+    GRADE: grade,
+    LINK: link,
+  });
+
+// Rewards & Finance
+const sendRewardEarnedEmail = (email, firstname, rewardType, link) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.REWARD_NOTIFICATION, {
+    FIRSTNAME: firstname,
+    REWARD_TYPE: rewardType,
+    LINK: link,
+  });
+
+const sendGoalBudgetUpdateEmail = (email, firstname, message, link) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.GOAL_BUDGET_UPDATE, {
+    FIRSTNAME: firstname,
+    MESSAGE: message,
+    LINK: link,
+  });
+
+// Finance – new templates
+const sendPaymentReceiptEmail = (
+  email,
+  firstname,
+  planName,
+  amount,
+  date,
+  transactionId,
+  link
+) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.PAYMENT_RECEIPT, {
+    FIRSTNAME: firstname,
+    PLAN_NAME: planName,
+    AMOUNT: amount,
+    DATE: date,
+    TRANSACTION_ID: transactionId,
+    LINK: link,
+  });
+
+const sendSubscriptionRenewalEmail = (
+  email,
+  firstname,
+  planName,
+  amount,
+  nextBillingDate,
+  link
+) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.SUBSCRIPTION_RENEWAL, {
+    FIRSTNAME: firstname,
+    PLAN_NAME: planName,
+    AMOUNT: amount,
+    NEXT_BILLING_DATE: nextBillingDate,
+    LINK: link,
+  });
+
+/* ─── Exports ─── */
 module.exports = {
   sendTemplateEmail,
   sendOTPEmail,
   sendWelcomeEmail,
   sendResetEmail,
+  sendQuizNotificationEmail,
+  sendAssignmentNotificationEmail,
+  sendFeedbackNotificationEmail,
+  sendAssignmentGradedEmail,
+  sendRewardEarnedEmail,
+  sendGoalBudgetUpdateEmail,
+  sendPaymentReceiptEmail,
+  sendSubscriptionRenewalEmail,
   TEMPLATE_IDS,
 };
-
 
