@@ -20,31 +20,31 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || "1d";
 module.exports = (eventBus, agenda) => {
   const publicRouter = express.Router();
 
+  // Schema for OTP request (no password yet)
   const signupOtpSchema = Joi.object({
-    phone: Joi.string()
-      .pattern(/^\d{10,15}$/)
-      .required(),
+    phone: Joi.string().pattern(/^\d{10,15}$/).required(),
     email: Joi.string().email().required(),
-    password: Joi.string().min(8).required(),
     firstname: Joi.string().min(2).max(50).required(),
     lastname: Joi.string().min(2).max(50).required(),
     occupation: Joi.string()
       .valid("student", "teacher", "admin", "global_overseer", "overseer")
       .required(),
     schoolCountry: Joi.string().length(2).required(),
-    grade: Joi.number().integer().min(5).max(12).allow(null),
-    teacherGrade: Joi.alternatives()
-      .try(
-        Joi.number().integer().min(5).max(12),
-        Joi.string().valid("100", "200", "300", "400")
-      )
-      .allow(null),
+    grade: Joi.alternatives().try(
+      Joi.number().integer().min(5).max(12),
+      Joi.string().valid("100","200","300","400","500","600")
+    ).allow(null),
+    teacherGrade: Joi.alternatives().try(
+      Joi.number().integer().min(5).max(12),
+      Joi.string().valid("100","200","300","400","500","600")
+    ).allow(null),
   }).unknown(true);
 
+  // Schema for OTP verification (password added here)
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
     email: Joi.string().email().required(),
-    newPassword: Joi.string().min(8).optional(),
+    password: Joi.string().min(8).required(),
   });
 
   const loginSchema = Joi.object({
@@ -77,22 +77,22 @@ module.exports = (eventBus, agenda) => {
     }
     next();
   };
+
   // Signup OTP route
   publicRouter.post(
     "/users/signup-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }), // max 5 requests per 5 min
+    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
     validate(signupOtpSchema),
     async (req, res) => {
-      const { email, ...restOfSignupData } = req.body;
+      const { email, ...rest } = req.body;
       const code =
         process.env.NODE_ENV === "production"
           ? Math.floor(100000 + Math.random() * 900000).toString()
           : "123456";
 
-      // Initialize session safely
       if (!req.session) req.session = {};
       req.session.signup = {
-        ...restOfSignupData,
+        ...rest,
         email,
         code,
         attempts: 0,
@@ -115,19 +115,16 @@ module.exports = (eventBus, agenda) => {
   // Verify OTP route
   publicRouter.post(
     "/users/verify-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }), // max 5 attempts per 5 min
-    validate(signupOtpSchema.keys({
-        code: Joi.string().length(6).pattern(/^\d+$/).required()
-    })),
+    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+    validate(verifyOtpSchema),
     async (req, res) => {
-      const { code, ...submittedData } = req.body;
+      const { code, email, password } = req.body;
       const signupData = req.session?.signup;
 
-      if (!signupData || signupData.email !== submittedData.email) {
+      if (!signupData || signupData.email !== email) {
         return res.status(400).json({ error: "Invalid email or OTP session expired" });
       }
 
-      // Limit OTP attempts
       signupData.attempts = (signupData.attempts || 0) + 1;
       if (signupData.attempts > 5) {
         delete req.session.signup;
@@ -142,16 +139,9 @@ module.exports = (eventBus, agenda) => {
         delete req.session.signup;
         return res.status(400).json({ error: "OTP expired" });
       }
-      
-      // Ensure submitted data matches session data
-      if (
-        Object.keys(submittedData).some(key => submittedData[key] !== signupData[key])
-      ) {
-        return res.status(400).json({ error: "Mismatched data. Please try again." });
-      }
 
       try {
-        const hash = await bcrypt.hash(signupData.password, 10);
+        const hash = await bcrypt.hash(password, 10);
         const trialEndDate = new Date();
         trialEndDate.setDate(trialEndDate.getDate() + 30);
 
