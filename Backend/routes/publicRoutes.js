@@ -87,40 +87,89 @@ module.exports = (eventBus, agenda) => {
     next();
   };
 
-  publicRouter.post(
-    "/users/signup-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 3 }),
-    validate(signupOtpSchema),
-    async (req, res) => {
-      const { phone, email } = req.body;
-      const code =
-        process.env.NODE_ENV === "production"
-          ? Math.floor(100000 + Math.random() * 900000).toString()
-          : "123456";
-
-      req.session.signup = { ...req.body, code, timestamp: Date.now() };
-      logger.debug("[OTP] Generated for %s: %s", phone, code);
-
-      try {
-        await sendOTPEmail(email, code);
-        eventBus.emit("otp_sent", { email, phone, otp: code });
-        res.json({ step: "verify", message: "OTP sent to your email" });
-      } catch (err) {
-        logger.error("❌ OTP send error:", err);
-        res.status(500).json({ error: "Failed to send OTP" });
-      }
-    }
-  );
-
-  publicRouter.post(
-  "/users/verify-otp",
-  validate(verifyOtpSchema),
+// Signup OTP route
+publicRouter.post(
+  "/users/signup-otp",
+  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }), // max 5 requests per 5 min
+  validate(Joi.object({
+    email: Joi.string().email().required(),
+    phone: Joi.string().pattern(/^\d{10,15}$/).required()
+  })),
   async (req, res) => {
-    const { code, email } = req.body;
+    const { email, phone } = req.body;
+    const code =
+      process.env.NODE_ENV === "production"
+        ? Math.floor(100000 + Math.random() * 900000).toString()
+        : "123456";
+
+    // Initialize session safely
+    if (!req.session) req.session = {};
+    req.session.signup = {
+      email,
+      phone,
+      code,
+      attempts: 0,
+      timestamp: Date.now(),
+    };
+
+    logger.debug("[OTP] Generated for %s: %s", phone, code);
+
+    try {
+      await sendOTPEmail(email, code);
+      eventBus.emit("otp_sent", { email, phone, otp: code });
+      res.json({ step: "verify", message: "OTP sent to your email" });
+    } catch (err) {
+      logger.error("❌ OTP send error:", err);
+      res.status(500).json({ error: "Failed to send OTP" });
+    }
+  }
+);
+
+// Verify OTP route
+publicRouter.post(
+  "/users/verify-otp",
+  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }), // max 5 attempts per 5 min
+  validate(Joi.object({
+    email: Joi.string().email().required(),
+    code: Joi.string().length(6).pattern(/^\d+$/).required(),
+    password: Joi.string().min(8).required(),
+    firstname: Joi.string().min(2).max(50).required(),
+    lastname: Joi.string().min(2).max(50).required(),
+    occupation: Joi.string()
+      .valid("student", "teacher", "admin", "global_overseer", "overseer")
+      .required(),
+    schoolCountry: Joi.string().length(2).required(),
+    educationLevel: Joi.string().allow("", null),
+    grade: Joi.number().integer().min(5).max(12).allow(null),
+    schoolName: Joi.string().allow("", null),
+    teacherSchool: Joi.string().allow("", null),
+    teacherGrade: Joi.alternatives().try(
+      Joi.number().integer().min(5).max(12),
+      Joi.string().valid("100","200","300","400","500","600")
+    ).allow(null),
+    teacherSubject: Joi.string().allow("", null),
+    university: Joi.string().allow("", null),
+    uniLevel: Joi.string().valid("100","200","300","400","500","600").allow("", null),
+    program: Joi.string().allow("", null),
+  })),
+  async (req, res) => {
+    const { email, code, ...signupFields } = req.body;
     const signupData = req.session?.signup;
 
-    if (!signupData || signupData.email !== email || signupData.code !== code)
-      return res.status(400).json({ error: "Invalid OTP or email" });
+    if (!signupData || signupData.email !== email) {
+      return res.status(400).json({ error: "Invalid email or OTP session expired" });
+    }
+
+    // Limit OTP attempts
+    signupData.attempts = (signupData.attempts || 0) + 1;
+    if (signupData.attempts > 5) {
+      delete req.session.signup;
+      return res.status(429).json({ error: "Too many attempts, please request a new OTP" });
+    }
+
+    if (signupData.code !== code) {
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
 
     if (Date.now() - signupData.timestamp > 10 * 60 * 1000) {
       delete req.session.signup;
@@ -128,17 +177,19 @@ module.exports = (eventBus, agenda) => {
     }
 
     try {
-      const hash = await bcrypt.hash(signupData.password, 10);
+      const hash = await bcrypt.hash(signupFields.password, 10);
       const trialEndDate = new Date();
       trialEndDate.setDate(trialEndDate.getDate() + 30);
 
       const newUser = await User.create({
-        ...signupData,
+        ...signupFields,
+        email,
+        phone: signupData.phone,
         password: hash,
         verified: true,
-        is_admin: signupData.occupation === "admin",
-        role: signupData.occupation,
-        schoolCountry: signupData.schoolCountry,
+        is_admin: signupFields.occupation === "admin",
+        role: signupFields.occupation,
+        schoolCountry: signupFields.schoolCountry,
         is_on_trial: true,
         trial_end_date: trialEndDate,
         subscription_status: "inactive",
@@ -161,7 +212,7 @@ module.exports = (eventBus, agenda) => {
 
       res.cookie("access_token", token, {
         httpOnly: true,
-        secure: true, 
+        secure: true,
         sameSite: "None",
         maxAge: 1000 * 60 * 60 * 24,
       });
@@ -170,23 +221,18 @@ module.exports = (eventBus, agenda) => {
         status: "success",
         message: "Account created successfully.",
         token,
-        user: {
-          id: newUser._id,
-          email: newUser.email,
-          role: newUser.role,
-        },
+        user: { id: newUser._id, email: newUser.email, role: newUser.role },
       });
     } catch (err) {
       if (err.code === 11000) {
-        return res
-          .status(409)
-          .json({ error: "Email or phone already registered." });
+        return res.status(409).json({ error: "Email or phone already registered." });
       }
       logger.error("❌ Verify OTP error:", err);
       res.status(500).json({ error: "Account creation failed." });
     }
   }
 );
+
 
 
   publicRouter.post("/users/login", async (req, res) => {
