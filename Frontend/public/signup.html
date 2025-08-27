@@ -167,7 +167,7 @@
         </div>
         <p id="firstNameError" class="error-text hidden"></p>
         <p id="lastNameError" class="error-text hidden"></p>
-        
+
         <label class="sr-only" for="emailInput">Email</label>
         <input
           id="emailInput"
@@ -450,6 +450,26 @@
         </div>
         <p id="schoolCountryError" class="error-text hidden"></p>
 
+        <div id="gradeField" class="picker-container hidden">
+          <label class="sr-only" for="gradeSelect">Grade</label>
+          <select id="gradeSelect" class="picker">
+            <option value="">Select Grade</option>
+            <option value="1">Grade 1</option>
+            <option value="2">Grade 2</option>
+            <option value="3">Grade 3</option>
+            <option value="4">Grade 4</option>
+            <option value="5">Grade 5</option>
+            <option value="6">Grade 6</option>
+            <option value="7">Grade 7</option>
+            <option value="8">Grade 8</option>
+            <option value="9">Grade 9</option>
+            <option value="10">Grade 10</option>
+            <option value="11">Grade 11</option>
+            <option value="12">Grade 12</option>
+          </select>
+        </div>
+        <p id="gradeError" class="error-text hidden"></p>
+
         <button
           id="requestOtpButton"
           class="submit-button"
@@ -499,6 +519,7 @@
       const phoneInput = document.getElementById("phoneInput");
       const occupationSelect = document.getElementById("occupationSelect");
       const schoolCountrySelect = document.getElementById("schoolCountrySelect");
+      const gradeSelect = document.getElementById("gradeSelect");
       const requestOtpButton = document.getElementById("requestOtpButton");
       const verifyOtpButton = document.getElementById("verifyOtpButton");
 
@@ -509,6 +530,7 @@
         phoneInput,
         occupationSelect,
         schoolCountrySelect,
+        gradeSelect,
       ];
       const errorMessages = {
         firstName: "Please enter your first name.",
@@ -517,6 +539,7 @@
         phone: "Please enter a valid phone number.",
         occupation: "Please select an occupation.",
         schoolCountry: "Please select your country of study.",
+        grade: "Please select your grade.",
       };
 
       let isSubmitting = false;
@@ -575,6 +598,8 @@
             return value === "" ? errorMessages[field] : "";
           case "schoolCountry":
             return value === "" ? errorMessages[field] : "";
+          case "grade":
+            return value === "" ? errorMessages[field] : "";
           case "otp":
             return value.length < 6 ? "Please enter a 6-digit OTP." : "";
           default:
@@ -594,10 +619,13 @@
             occupationSelect.value === "student"
               ? schoolCountrySelect.value
               : null,
+          grade: ["student", "teacher"].includes(occupationSelect.value)
+            ? gradeSelect.value
+            : null,
         };
 
         for (const key in form) {
-          if (form.hasOwnProperty(key)) {
+          if (form.hasOwnProperty(key) && form[key] !== null) {
             const error = validateField(key, form[key]);
             if (error) {
               validationErrors[key] = error;
@@ -619,12 +647,23 @@
 
       occupationSelect.addEventListener("change", () => {
         const schoolCountryField = document.getElementById("schoolCountryField");
-        if (occupationSelect.value === "student") {
+        const gradeField = document.getElementById("gradeField");
+        const selectedOccupation = occupationSelect.value;
+
+        if (selectedOccupation === "student") {
           schoolCountryField.classList.remove("hidden");
-        } else {
+          gradeField.classList.remove("hidden");
+        } else if (selectedOccupation === "teacher") {
           schoolCountryField.classList.add("hidden");
           setError("schoolCountrySelect", "");
+          gradeField.classList.remove("hidden");
+        } else {
+          schoolCountryField.classList.add("hidden");
+          gradeField.classList.add("hidden");
+          setError("schoolCountrySelect", "");
+          setError("gradeSelect", "");
         }
+        checkFormValidity();
       });
 
       requestOtpButton.addEventListener("click", async () => {
@@ -634,7 +673,7 @@
 
         if (Object.keys(errors).length > 0) {
           for (const field in errors) {
-            const inputId = field.replace("schoolCountry", "schoolCountrySelect");
+            const inputId = field.replace("schoolCountry", "schoolCountrySelect").replace("grade", "gradeSelect");
             setError(inputId, errors[field]);
           }
           showMessage("Please fill out all required fields correctly.");
