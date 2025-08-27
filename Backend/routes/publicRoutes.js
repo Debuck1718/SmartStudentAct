@@ -78,39 +78,72 @@ module.exports = (eventBus, agenda) => {
     next();
   };
 
-  // Signup OTP route
-  publicRouter.post(
-    "/users/signup-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-    validate(signupOtpSchema),
-    async (req, res) => {
-      const { email, ...rest } = req.body;
-      const code =
-        process.env.NODE_ENV === "production"
-          ? Math.floor(100000 + Math.random() * 900000).toString()
-          : "123456";
+// ─── Signup OTP Route ───
+publicRouter.post(
+  "/users/signup-otp",
+  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+  validate(signupOtpSchema),
+  async (req, res) => {
+    const { email, ...rest } = req.body;
 
-      if (!req.session) req.session = {};
-      req.session.signup = {
-        ...rest,
-        email,
-        code,
-        attempts: 0,
-        timestamp: Date.now(),
-      };
+    // Generate OTP (fixed 123456 in dev, random in prod)
+    const code =
+      process.env.NODE_ENV === "production"
+        ? Math.floor(100000 + Math.random() * 900000).toString()
+        : "123456";
 
-      logger.debug("[OTP] Generated for %s: %s", email, code);
+    if (!req.session) req.session = {};
+    req.session.signup = {
+      ...rest,
+      email,
+      code,
+      attempts: 0,
+      timestamp: Date.now(),
+    };
 
-      try {
-        await sendOTPEmail(email, code);
-        eventBus.emit("otp_sent", { email, otp: code });
-        res.json({ step: "verify", message: "OTP sent to your email" });
-      } catch (err) {
-        logger.error("❌ OTP send error:", err);
-        res.status(500).json({ error: "Failed to send OTP" });
+    logger.debug("[OTP] Generated for %s: %s", email, code);
+
+    // ─── Send OTP with retry and fallback ───
+    try {
+      const success = await (async () => {
+        const retries = 3;
+        for (let attempt = 1; attempt <= retries; attempt++) {
+          try {
+            await sendOTPEmail(email, code);
+            logger.info("✅ OTP email sent to %s (attempt %d)", email, attempt);
+            return true;
+          } catch (err) {
+            logger.warn(
+              "⚠️ OTP send attempt %d failed for %s: %s",
+              attempt,
+              email,
+              err.message || err
+            );
+            if (attempt < retries) {
+              const delay = Math.pow(2, attempt) * 1000; // 2s, 4s
+              logger.debug("⏳ Retrying in %ds...", delay / 1000);
+              await new Promise((r) => setTimeout(r, delay));
+            }
+          }
+        }
+        return false;
+      })();
+
+      if (!success) {
+        logger.error("❌ All OTP send attempts failed for %s", email);
+        return res.status(500).json({ error: "Failed to send OTP" });
       }
+
+      // Success
+      eventBus.emit("otp_sent", { email, otp: code });
+      res.json({ step: "verify", message: "OTP sent to your email" });
+    } catch (err) {
+      logger.error("❌ Unexpected OTP route error:", err);
+      res.status(500).json({ error: "Failed to send OTP" });
     }
-  );
+  }
+);
+
 
   // Verify OTP route
   publicRouter.post(
