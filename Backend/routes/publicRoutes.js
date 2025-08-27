@@ -86,7 +86,6 @@ module.exports = (eventBus, agenda) => {
     }
     next();
   };
-
 // Signup OTP route
 publicRouter.post(
   "/users/signup-otp",
