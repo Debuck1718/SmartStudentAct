@@ -9,7 +9,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; 
+            background-color: #f0f4f8;
         }
         .background-image-container {
             background-image: url("./images/bg.png");
@@ -27,7 +27,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0,0,0,0.5);
             display: none;
             justify-content: center;
             align-items: center;
@@ -40,18 +40,27 @@
             max-width: 80%;
             text-align: center;
         }
-        .language-switcher button {
-            transition: transform 0.2s ease-in-out;
+        select.language-dropdown {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: #3b82f6;
+            color: white;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
         }
-        .language-switcher button.active {
-            transform: scale(1.1);
-            font-weight: bold;
-            text-decoration: underline;
+        select.language-dropdown:hover {
+            background-color: #2563eb;
+            transform: scale(1.05);
         }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
 
+    <!-- Alert Modal -->
     <div id="alert-modal" class="modal">
         <div class="modal-content shadow-lg">
             <h3 id="modal-title" data-i18n="modal_title" class="text-xl font-bold mb-4"></h3>
@@ -63,14 +72,16 @@
     <div class="background-image-container flex-col p-4 md:p-8">
         <div class="w-full max-w-2xl mx-auto space-y-6">
 
-            <!-- Language Switcher -->
-            <div class="flex justify-center space-x-4 language-switcher">
-                <button id="en-btn" onclick="translatePage('en')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">English</button>
-                <button id="fr-btn" onclick="translatePage('fr')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Français</button>
-                <button id="es-btn" onclick="translatePage('es')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Español</button>
-                <button id="tr-btn" onclick="translatePage('tr')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Türkçe</button>
-                <button id="ar-btn" onclick="translatePage('ar')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">العربية</button>
-                <button id="ru-btn" onclick="translatePage('ru')" class="text-white py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors">Русский</button>
+            <!-- Language Dropdown -->
+            <div class="flex justify-center mb-6">
+                <select id="languageSelector" class="language-dropdown">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="es">Español</option>
+                    <option value="tr">Türkçe</option>
+                    <option value="ar">العربية</option>
+                    <option value="ru">Русский</option>
+                </select>
             </div>
 
             <div class="bg-blue-500 bg-opacity-80 p-8 rounded-xl shadow-lg text-center">
@@ -104,6 +115,7 @@
             </footer>
         </div>
     </div>
+
 
     <script>
         const translations = {
@@ -213,18 +225,19 @@
 
         function translatePage(lang) {
             const elements = document.querySelectorAll('[data-i18n]');
-            elements.forEach(element => {
-                const key = element.getAttribute('data-i18n');
-                if (translations[lang] && translations[lang][key]) {
-                    element.innerHTML = translations[lang][key];
+            elements.forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(translations[lang] && translations[lang][key]){
+                    el.innerHTML = translations[lang][key];
                 }
             });
             document.documentElement.lang = lang;
-            
-            const buttons = document.querySelectorAll('.language-switcher button');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`${lang}-btn`).classList.add('active');
         }
+
+        const languageSelector = document.getElementById('languageSelector');
+        languageSelector.addEventListener('change', (e) => {
+            translatePage(e.target.value);
+        });
 
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
@@ -240,7 +253,9 @@
         document.getElementById('signUpBtn').addEventListener('click', () => { window.location.href = '/signup.html'; });
 
         // Initial translation
-        document.addEventListener('DOMContentLoaded', () => { translatePage('en'); });
+        document.addEventListener('DOMContentLoaded', () => {
+            translatePage(languageSelector.value || 'en');
+        });
     </script>
 </body>
 </html>
