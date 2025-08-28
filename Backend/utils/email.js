@@ -195,13 +195,13 @@ const sendPaymentReceiptEmail = (
   transactionId,
   link
 ) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.paymentReceipt, {
-    firstname,
-    plan_name: planName,
-    amount,
-    date,
-    transaction_id: transactionId,
-    link,
+  sendTemplateEmail(email, TEMPLATE_IDS.PAYMENT_RECEIPT, {
+    FIRSTNAME: firstname,
+    PLAN_NAME: planName,
+    AMOUNT: amount,
+    DATE: date,
+    TRANSACTION_ID: transactionId,
+    LINK: link,
   });
 
 const sendSubscriptionRenewalEmail = (
@@ -212,12 +212,12 @@ const sendSubscriptionRenewalEmail = (
   nextBillingDate,
   link
 ) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.subscriptionRenewal, {
-    firstname,
-    plan_name: planName,
-    amount,
-    next_billing_date: nextBillingDate,
-    link,
+  sendTemplateEmail(email, TEMPLATE_IDS.SUBSCRIPTION_RENEWAL, {
+    FIRSTNAME: firstname,
+    PLAN_NAME: planName,
+    AMOUNT: amount,
+    NEXT_BILLING_DATE: nextBillingDate,
+    LINK: link,
   });
 
 /* ─── Exports ─── */
