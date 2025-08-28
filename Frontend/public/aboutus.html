@@ -1,30 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About – SmartStudentAct</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <style>
-    /* Add a subtle hover effect to the feature cards */
-    .feature-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    }
-    /* Style for language switcher buttons */
-    .language-switcher button {
-        transition: transform 0.2s ease-in-out;
-    }
-    .language-switcher button.active {
-        transform: scale(1.1);
-        font-weight: bold;
-        text-decoration: underline;
-    }
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About – SmartStudentAct</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Add a subtle hover effect to the feature cards */
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        /* Style for a more modern select dropdown */
+        .language-select {
+            padding: 8px;
+            border-radius: 8px;
+            border-width: 1px;
+            border-color: #ddd;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .language-select:focus {
+            border-color: #3b82f6;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
     <script>
@@ -408,149 +414,184 @@
                 }
             });
             document.documentElement.lang = lang;
-            
-            // Update active state of language buttons
-            document.querySelectorAll('.language-switcher button').forEach(button => {
-                button.classList.remove('active');
-            });
-            document.getElementById(`${lang}-btn`).classList.add('active');
         }
 
-        // Initial translation on page load
+        // Event listener for the new language dropdown
         document.addEventListener('DOMContentLoaded', () => {
-            translatePage('en'); // Default to English
+            const langSelect = document.getElementById('lang-select');
+            langSelect.addEventListener('change', (event) => {
+                const selectedLang = event.target.value;
+                translatePage(selectedLang);
+            });
+            // Set initial language on page load
+            translatePage(langSelect.value);
         });
     </script>
+    <div class="relative min-h-screen">
+        <!-- Navigation Bar -->
+        <header class="bg-white shadow-sm sticky top-0 z-50">
+            <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
+                <a href="#" class="text-xl font-bold text-gray-900" data-i18n="nav_title">SmartStudentAct</a>
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-600 hover:text-gray-900 transition duration-300" data-i18n="nav_home">Home</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900 transition duration-300 font-bold text-gray-900">About</a>
+                    <div class="language-switcher flex items-center space-x-2">
+                        <!-- Language dropdown -->
+                        <select id="lang-select" class="language-select">
+                            <option value="en">English</option>
+                            <option value="fr">Français</option>
+                            <option value="es">Español</option>
+                            <option value="tr">Türkçe</option>
+                            <option value="ar">العربية</option>
+                            <option value="ru">Русский</option>
+                        </select>
+                    </div>
+                </div>
+            </nav>
+        </header>
 
-    <nav class="bg-white shadow p-4 flex justify-between items-center">
-        <h1 data-i18n="nav_title" class="text-2xl font-bold text-blue-600"></h1>
-        <div class="language-switcher flex space-x-2">
-            <button id="en-btn" onclick="translatePage('en')" class="text-blue-500 hover:underline">EN</button>
-            <span>|</span>
-            <button id="fr-btn" onclick="translatePage('fr')" class="text-blue-500 hover:underline">FR</button>
-            <span>|</span>
-            <button id="es-btn" onclick="translatePage('es')" class="text-blue-500 hover:underline">ES</button>
-            <span>|</span>
-            <button id="tr-btn" onclick="translatePage('tr')" class="text-blue-500 hover:underline">TR</button>
-            <span>|</span>
-            <button id="ar-btn" onclick="translatePage('ar')" class="text-blue-500 hover:underline">AR</button>
-            <span>|</span>
-            <button id="ru-btn" onclick="translatePage('ru')" class="text-blue-500 hover:underline">RU</button>
-        </div>
-        <a href="index.html" data-i18n="nav_home" class="text-blue-500 hover:underline"></a>
-    </nav>
+        <main>
+            <!-- Hero Section -->
+            <section class="py-16 md:py-24 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center">
+                <div class="container mx-auto px-6">
+                    <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4" data-i18n="hero_heading">About SmartStudentAct</h1>
+                    <p class="text-lg md:text-xl max-w-2xl mx-auto" data-i18n="hero_text">A smart, collaborative platform designed to connect teachers and students through assignments, quizzes, financial planning, and rewarding achievements.</p>
+                </div>
+            </section>
 
-    <section class="text-center py-16 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-        <h2 data-i18n="hero_heading" class="text-4xl font-bold mb-4"></h2>
-        <p data-i18n="hero_text" class="text-lg max-w-2xl mx-auto"></p>
-    </section>
+            <!-- Vision Section -->
+            <section class="py-16 md:py-24">
+                <div class="container mx-auto px-6 max-w-4xl">
+                    <h2 class="text-3xl md:text-4xl font-bold text-center mb-6" data-i18n="vision_heading">Our Vision</h2>
+                    <p class="text-gray-600 text-lg md:text-xl text-center" data-i18n="vision_text">SmartStudentAct aims to modernize education by combining academic excellence with personal growth. Students are empowered to stay consistent with their learning, manage their budgets wisely, set achievable goals, and get data-driven insights to stay on track — all while earning rewards for their efforts.</p>
+                </div>
+            </section>
 
-    <section class="py-12 px-6 max-w-5xl mx-auto">
-        <h3 data-i18n="vision_heading" class="text-2xl font-semibold mb-6 text-center"></h3>
-        <p data-i18n="vision_text" class="text-lg text-gray-700 text-center max-w-3xl mx-auto"></p>
-    </section>
+            <!-- Features Section -->
+            <section class="py-16 md:py-24 bg-gray-100">
+                <div class="container mx-auto px-6">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- For Teachers -->
+                        <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
+                            <h3 class="text-2xl font-bold mb-4" data-i18n="teachers_heading">For Teachers</h3>
+                            <ul class="text-gray-600 space-y-2 list-disc list-inside">
+                                <li data-i18n="teachers_list_1">Create and assign tasks & quizzes</li>
+                                <li data-i18n="teachers_list_2">Target students by class, grade, or school</li>
+                                <li data-i18n="teachers_list_3">Automatically receive student scores</li>
+                                <li data-i18n="teachers_list_4">Track progress over time</li>
+                            </ul>
+                        </div>
+                        <!-- For Students -->
+                        <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
+                            <h3 class="text-2xl font-bold mb-4" data-i18n="students_heading">For Students</h3>
+                            <ul class="text-gray-600 space-y-2 list-disc list-inside">
+                                <li data-i18n="students_list_1">Access quizzes and assignments on dashboard</li>
+                                <li data-i18n="students_list_2">Answer questions with instant feedback</li>
+                                <li data-i18n="students_list_3">See score breakdown of correct/wrong answers</li>
+                                <li data-i18n="students_list_4">Stay on top of deadlines</li>
+                                <li data-i18n="students_list_5">Track budgets and manage personal finance</li>
+                                <li data-i18n="students_list_6">Set and complete weekly/monthly goals</li>
+                            </ul>
+                        </div>
+                        <!-- Rewards & Growth -->
+                        <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
+                            <h3 class="text-2xl font-bold mb-4" data-i18n="rewards_growth_heading">Rewards & Growth</h3>
+                            <ul class="text-gray-600 space-y-2 list-disc list-inside">
+                                <li data-i18n="rewards_growth_list_1">Earn points for completing assignments & goals</li>
+                                <li data-i18n="rewards_growth_list_2">Get rewarded for consistency & achievements</li>
+                                <li data-i18n="rewards_growth_list_3">Unlock titles like “Goal Crusher” or “Assignment Ace”</li>
+                                <li data-i18n="rewards_growth_list_4">Motivation through performance-based rewards</li>
+                            </ul>
+                        </div>
+                        <!-- AI Essay Checker -->
+                        <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
+                            <h3 class="text-2xl font-bold mb-4" data-i18n="ai_heading">AI Essay Checker</h3>
+                            <ul class="text-gray-600 space-y-2 list-disc list-inside">
+                                <li data-i18n="ai_list_1">Get instant feedback on grammar, syntax, and style</li>
+                                <li data-i18n="ai_list_2">Improve your writing with AI-powered suggestions</li>
+                                <li data-i18n="ai_list_3">Check for originality and citation errors</li>
+                                <li data-i18n="ai_list_4">Enhance clarity and flow of your essays</li>
+                            </ul>
+                        </div>
+                        <!-- Real-Time Notifications -->
+                        <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
+                            <h3 class="text-2xl font-bold mb-4" data-i18n="notifications_heading">Real-Time Notifications & Alerts</h3>
+                            <ul class="text-gray-600 space-y-2 list-disc list-inside">
+                                <li data-i18n="notifications_list_1">Never miss a beat! Get instant pings for new assignments and quizzes.</li>
+                                <li data-i18n="notifications_list_2">Stay ahead of the curve with timely reminders for approaching deadlines.</li>
+                                <li data-i18n="notifications_list_3">Teachers can effortlessly send announcements to classes or individual students.</li>
+                                <li data-i18n="notifications_list_4">Receive alerts when your AI essay feedback is ready or when a new badge is unlocked.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-    <section class="py-12 bg-gray-100">
-        <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-8">
-            <div class="bg-white p-6 rounded-2xl shadow feature-card">
-                <h4 data-i18n="teachers_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
-                <ul class="list-disc list-inside text-gray-700">
-                    <li data-i18n="teachers_list_1"></li>
-                    <li data-i18n="teachers_list_2"></li>
-                    <li data-i18n="teachers_list_3"></li>
-                    <li data-i18n="teachers_list_4"></li>
-                </ul>
-            </div>
+            <!-- Rewards & Badges Showcase -->
+            <section class="py-16 md:py-24">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-3xl md:text-4xl font-bold text-center mb-10" data-i18n="rewards_showcase_heading">Rewards & Badges</h2>
+                    <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 text-center">
+                        <div class="flex flex-col items-center">
+                            <i class="fa-solid fa-medal text-4xl text-yellow-500 mb-2"></i>
+                            <h4 class="font-semibold" data-i18n="goal_crusher_title">Goal Crusher</h4>
+                            <p class="text-sm text-gray-500" data-i18n="goal_crusher_text">Achieved set goals consistently</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <i class="fa-solid fa-sack-dollar text-4xl text-green-500 mb-2"></i>
+                            <h4 class="font-semibold" data-i18n="budget_boss_title">Budget Boss</h4>
+                            <p class="text-sm text-gray-500" data-i18n="budget_boss_text">Maintained weekly/monthly budgets</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <i class="fa-solid fa-pencil-alt text-4xl text-blue-500 mb-2"></i>
+                            <h4 class="font-semibold" data-i18n="assignment_ace_title">Assignment Ace</h4>
+                            <p class="text-sm text-gray-500" data-i18n="assignment_ace_text">Completed assignments on time</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <i class="fa-solid fa-trophy text-4xl text-orange-500 mb-2"></i>
+                            <h4 class="font-semibold" data-i18n="top_scholar_title">Top Scholar</h4>
+                            <p class="text-sm text-gray-500" data-i18n="top_scholar_text">Scored high in quizzes & exams</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <i class="fa-solid fa-user-check text-4xl text-indigo-500 mb-2"></i>
+                            <h4 class="font-semibold" data-i18n="consistency_champ_title">Consistency Champ</h4>
+                            <p class="text-sm text-gray-500" data-i18n="consistency_champ_text">Kept steady performance over months</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <i class="fa-solid fa-star text-4xl text-gray-400 mb-2"></i>
+                            <h4 class="font-semibold" data-i18n="custom_title">Custom</h4>
+                            <p class="text-sm text-gray-500" data-i18n="custom_text">Special rewards by teachers/admins</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-            <div class="bg-white p-6 rounded-2xl shadow feature-card">
-                <h4 data-i18n="students_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
-                <ul class="list-disc list-inside text-gray-700">
-                    <li data-i18n="students_list_1"></li>
-                    <li data-i18n="students_list_2"></li>
-                    <li data-i18n="students_list_3"></li>
-                    <li data-i18n="students_list_4"></li>
-                    <li data-i18n="students_list_5"></li>
-                    <li data-i18n="students_list_6"></li>
-                </ul>
+            <!-- Comprehensive Approach Section -->
+            <section class="py-16 md:py-24 bg-gray-100 text-center">
+                <div class="container mx-auto px-6 max-w-4xl">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-6" data-i18n="approach_heading">Our Comprehensive Approach</h2>
+                    <p class="text-lg md:text-xl text-gray-600">
+                        <span data-i18n="approach_text_1">SmartStudentAct doesn’t stop at academics. By blending</span>
+                        <span class="font-bold text-blue-600" data-i18n="approach_text_2">quizzes and assignments</span>
+                        <span data-i18n="approach_text_3">with</span>
+                        <span class="font-bold text-green-600" data-i18n="approach_text_4">budget tracking</span>,
+                        <span class="font-bold text-indigo-600" data-i18n="approach_text_5">goal-setting</span>,
+                        <span class="font-bold text-purple-600" data-i18n="approach_text_6">AI essay checking</span>,
+                        <span class="font-bold text-red-600" data-i18n="approach_text_7">data-driven insights</span>,
+                        <span class="font-bold text-orange-600" data-i18n="approach_text_8">real-time notifications</span>,
+                        <span data-i18n="approach_text_9">and</span>
+                        <span class="font-bold text-yellow-600" data-i18n="approach_text_10">rewards</span>,
+                        <span data-i18n="approach_text_11">we support both the academic and personal growth of every learner. Teachers guide, students engage, and progress is rewarded.</span>
+                    </p>
+                </div>
+            </section>
+        </main>
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-6">
+            <div class="container mx-auto px-6 text-center">
+                <p data-i18n="footer_text">© 2025 SmartStudentAct. All rights reserved.</p>
             </div>
-
-            <div class="bg-white p-6 rounded-2xl shadow feature-card">
-                <h4 data-i18n="rewards_growth_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
-                <ul class="list-disc list-inside text-gray-700">
-                    <li data-i18n="rewards_growth_list_1"></li>
-                    <li data-i18n="rewards_growth_list_2"></li>
-                    <li data-i18n="rewards_growth_list_3"></li>
-                    <li data-i18n="rewards_growth_list_4"></li>
-                </ul>
-            </div>
-            
-            <div class="bg-white p-6 rounded-2xl shadow feature-card">
-                <h4 data-i18n="ai_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
-                <ul class="list-disc list-inside text-gray-700">
-                    <li data-i18n="ai_list_1"></li>
-                    <li data-i18n="ai_list_2"></li>
-                    <li data-i18n="ai_list_3"></li>
-                    <li data-i18n="ai_list_4"></li>
-                </ul>
-            </div>
-
-            <div class="bg-white p-6 rounded-2xl shadow feature-card md:col-span-2 md:col-start-2">
-                <h4 data-i18n="notifications_heading" class="text-xl font-bold mb-3 text-blue-600"></h4>
-                <ul class="list-disc list-inside text-gray-700">
-                    <li data-i18n="notifications_list_1"></li>
-                    <li data-i18n="notifications_list_2"></li>
-                    <li data-i18n="notifications_list_3"></li>
-                    <li data-i18n="notifications_list_4"></li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-16 px-6 max-w-6xl mx-auto text-center">
-        <h3 data-i18n="rewards_showcase_heading" class="text-2xl font-semibold mb-10"></h3>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-                <i class="fas fa-bullseye text-3xl text-red-500 mb-3"></i>
-                <h4 data-i18n="goal_crusher_title" class="font-bold"></h4>
-                <p data-i18n="goal_crusher_text" class="text-sm text-gray-600"></p>
-            </div>
-            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-                <i class="fas fa-piggy-bank text-3xl text-green-500 mb-3"></i>
-                <h4 data-i18n="budget_boss_title" class="font-bold"></h4>
-                <p data-i18n="budget_boss_text" class="text-sm text-gray-600"></p>
-            </div>
-            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-                <i class="fas fa-book-open text-3xl text-blue-500 mb-3"></i>
-                <h4 data-i18n="assignment_ace_title" class="font-bold"></h4>
-                <p data-i18n="assignment_ace_text" class="text-sm text-gray-600"></p>
-            </div>
-            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-                <i class="fas fa-graduation-cap text-3xl text-purple-500 mb-3"></i>
-                <h4 data-i18n="top_scholar_title" class="font-bold"></h4>
-                <p data-i18n="top_scholar_text" class="text-sm text-gray-600"></p>
-            </div>
-            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-                <i class="fas fa-calendar-check text-3xl text-indigo-500 mb-3"></i>
-                <h4 data-i18n="consistency_champ_title" class="font-bold"></h4>
-                <p data-i18n="consistency_champ_text" class="text-sm text-gray-600"></p>
-            </div>
-            <div class="bg-white shadow p-6 rounded-2xl hover:scale-105 transition">
-                <i class="fas fa-star text-3xl text-yellow-500 mb-3"></i>
-                <h4 data-i18n="custom_title" class="font-bold"></h4>
-                <p data-i18n="custom_text" class="text-sm text-gray-600"></p>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-12 px-6 max-w-5xl mx-auto">
-        <h3 data-i18n="approach_heading" class="text-2xl font-semibold mb-6 text-center"></h3>
-        <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto">
-            <span data-i18n="approach_text_1"></span> <strong><span data-i18n="approach_text_2"></span></strong> <span data-i18n="approach_text_3"></span> <strong><span data-i18n="approach_text_4"></span></strong>, <strong><span data-i18n="approach_text_5"></span></strong>, <strong><span data-i18n="approach_text_6"></span></strong>, <strong><span data-i18n="approach_text_7"></span></strong>, <strong><span data-i18n="approach_text_8"></span></strong> <span data-i18n="approach_text_9"></span> <strong><span data-i18n="approach_text_10"></span></strong>, <span data-i18n="approach_text_11"></span>
-        </p>
-    </section>
-
-    <footer class="bg-gray-800 text-gray-300 text-center py-6">
-        <p data-i18n="footer_text"></p>
-    </footer>
+        </footer>
+    </div>
 </body>
 </html>
