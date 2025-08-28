@@ -10,7 +10,7 @@ const EventEmitter = require("events");
 const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
 const http = require("http");
-
+const fetch = require("node-fetch"); 
 
 const eventBus = new EventEmitter();
 
@@ -34,16 +34,14 @@ const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
-
 const app = express();
-app.set("trust proxy", 1); 
+app.set("trust proxy", 1);
 
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
 
 app.use(
   cors({
@@ -53,7 +51,7 @@ app.use(
         "http://localhost:4000",
         "https://smartstudentact.com",
         /.*\.smartstudentact\.com$/,
-        /.*\.onrender\.com$/, 
+        /.*\.onrender\.com$/,
       ];
       if (
         !origin ||
@@ -83,7 +81,6 @@ try {
   console.error("❌ Cloudinary config error", error);
   process.exit(1);
 }
-
 
 async function connectMongo() {
   try {
@@ -125,13 +122,11 @@ try {
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", protectedRoutes);
 
-
   console.log("✅ Routes loaded successfully!");
 } catch (err) {
   console.error("❌ Routes loading error:", err);
   process.exit(1);
 }
-
 
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
@@ -151,7 +146,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-
 const server = http.createServer(app);
 
 async function startApp() {
@@ -161,6 +155,18 @@ async function startApp() {
 
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
+
+      // ─── Self-Ping Keep Alive ───
+      if (isProd && process.env.RENDER_EXTERNAL_URL) {
+        setInterval(async () => {
+          try {
+            await fetch(process.env.RENDER_EXTERNAL_URL);
+            console.log("🔄 Self-ping successful:", new Date().toISOString());
+          } catch (err) {
+            console.error("⚠️ Self-ping failed:", err.message);
+          }
+        }, 5 * 60 * 1000); 
+      }
     });
   } catch (err) {
     console.error("❌ Fatal startup error:", err);
