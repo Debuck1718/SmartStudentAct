@@ -39,7 +39,6 @@ const userSchema = new mongoose.Schema(
       minlength: 8,
       select: false,
     },
-
     role: {
       type: String,
       enum: ["student", "teacher", "admin", "overseer", "global_overseer"],
@@ -49,10 +48,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["student", "teacher", "admin"],
       required: function () {
-        return this.role === "student" || this.role === "teacher";
+        return this.role === "student" || this.role === "teacher" || this.role === "admin";
       },
     },
-
     educationLevel: {
       type: String,
       enum: ["junior", "high", "university"],
@@ -70,12 +68,17 @@ const userSchema = new mongoose.Schema(
         );
       },
     },
+    // The schoolName field is now a single field for student, teacher, and admin.
     schoolName: {
       type: String,
       trim: true,
       maxlength: 100,
       required: function () {
-        return this.occupation === "student";
+        return (
+          this.occupation === "student" ||
+          this.occupation === "teacher" ||
+          this.occupation === "admin"
+        );
       },
     },
     university: {
@@ -104,15 +107,6 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100,
     },
-
-    teacherSchool: {
-      type: String,
-      trim: true,
-      maxlength: 100,
-      required: function () {
-        return this.occupation === "teacher";
-      },
-    },
     teacherGrade: {
       type: [String],
       required: function () {
@@ -127,17 +121,13 @@ const userSchema = new mongoose.Schema(
         return this.occupation === "teacher";
       },
     },
-
     verified: { type: Boolean, default: false },
-
     otpHash: { type: String, select: false },
     otpExpiry: { type: Date, select: false },
     failedLoginAttempts: { type: Number, default: 0 },
     lockoutUntil: { type: Date, default: null },
-
     reset_password_token: { type: String, select: false },
     reset_password_expires: { type: Date, select: false },
-
     is_on_trial: { type: Boolean, default: true },
     trial_end_date: {
       type: Date,
@@ -158,7 +148,6 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-
     schoolCountry: {
       type: String,
       required: function () {
@@ -171,14 +160,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100,
     },
-
     earnedBadges: {
       type: [String],
       default: [],
     },
-
-    trialInsightsUsed: { type: Number, default: 0 },  
-    trialInsightsLimit: { type: Number, default: 3 }, 
+    trialInsightsUsed: { type: Number, default: 0 },
+    trialInsightsLimit: { type: Number, default: 3 },
   },
   { timestamps: true }
 );

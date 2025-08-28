@@ -1,4 +1,3 @@
-// smartstudent-backend/middlewares/auth.js
 const jwt = require("jsonwebtoken");
 const logger = require("../utils/logger");
 

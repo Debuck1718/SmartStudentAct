@@ -8,7 +8,6 @@ const goalSchema = new mongoose.Schema({
     current_value: { type: Number, default: 0 }
 }, { timestamps: true });
 
-// Optional: index for faster queries on user goals
 goalSchema.index({ user_id: 1 });
 
 module.exports = mongoose.model('Goal', goalSchema);

@@ -1,11 +1,4 @@
-// utils/emailTemplates.js
 
-/**
- * The base HTML template for all emails to ensure consistent styling.
- * @param {string} title The title for the email's header.
- * @param {string} body The main content of the email in HTML format.
- * @returns {string} The complete HTML string for the email.
- */
 function baseTemplate(title, body) {
   return `
     <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
@@ -22,13 +15,6 @@ function baseTemplate(title, body) {
   `;
 }
 
-/**
- * Template for notifying a user they have been created by an admin.
- * @param {string} name User's first name.
- * @param {string} email User's email address.
- * @param {string} role User's assigned role (e.g., 'teacher', 'admin').
- * @returns {string} The formatted email HTML.
- */
 function adminCreated(name, email, role) {
   return baseTemplate(
     `Welcome, ${role}!`,
@@ -40,12 +26,6 @@ function adminCreated(name, email, role) {
   );
 }
 
-/**
- * Template for a password reset request.
- * @param {string} name User's first name.
- * @param {string} resetLink The URL for the password reset page.
- * @returns {string} The formatted email HTML.
- */
 function passwordReset(name, resetLink) {
   return baseTemplate(
     `Password Reset Request`,
@@ -59,12 +39,6 @@ function passwordReset(name, resetLink) {
   );
 }
 
-/**
- * A generic notification template for simple messages.
- * @param {string} subject The subject line of the email.
- * @param {string} message The message body.
- * @returns {string} The formatted email HTML.
- */
 function genericNotification(subject, message) {
   return baseTemplate(
     subject,
@@ -72,16 +46,6 @@ function genericNotification(subject, message) {
   );
 }
 
-// 📢 Updated Templates with new suggestions
-
-/**
- * Template for confirming an assignment submission to a student.
- * @param {string} studentName The name of the student.
- * @param {string} assignmentTitle The title of the submitted assignment.
- * @param {string} submissionDate The date of submission.
- * @param {string} viewUrl The URL to view the submission.
- * @returns {string} The formatted email HTML.
- */
 function submissionConfirmation(studentName, assignmentTitle, submissionDate, viewUrl) {
   return baseTemplate(
     `Submission Confirmed!`,
@@ -94,13 +58,6 @@ function submissionConfirmation(studentName, assignmentTitle, submissionDate, vi
   );
 }
 
-/**
- * Template for notifying a student that they have received feedback.
- * @param {string} studentName The name of the student.
- * @param {string} assignmentTitle The title of the assignment.
- * @param {string} viewUrl The URL to view the feedback.
- * @returns {string} The formatted email HTML.
- */
 function feedbackReceived(studentName, assignmentTitle, viewUrl) {
   return baseTemplate(
     `You Have New Feedback!`,
@@ -113,14 +70,6 @@ function feedbackReceived(studentName, assignmentTitle, viewUrl) {
   );
 }
 
-/**
- * Template for notifying a student of a new grade and feedback.
- * @param {string} studentName The name of the student.
- * @param {string} assignmentTitle The title of the assignment.
- * @param {string} grade The grade received.
- * @param {string} viewUrl The URL to view the graded assignment.
- * @returns {string} The formatted email HTML.
- */
 function gradedFeedback(studentName, assignmentTitle, grade, viewUrl) {
   return baseTemplate(
     `Assignment Graded: ${assignmentTitle}`,

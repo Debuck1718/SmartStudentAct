@@ -1,10 +1,9 @@
-// models/quiz.js
 const mongoose = require('mongoose');
 
 const questionSchema = new mongoose.Schema({
   question: { type: String, required: true },
-  options: [{ type: String, required: true }], // multiple choice options
-  correct: { type: String, required: true }    // e.g. "A", "B", "C", "D"
+  options: [{ type: String, required: true }], 
+  correct: { type: String, required: true }    
 });
 
 const quizSchema = new mongoose.Schema({
@@ -14,15 +13,15 @@ const quizSchema = new mongoose.Schema({
   due_date: { type: Date, required: true },
   questions: [questionSchema],
 
-  // assignment targeting
-  assigned_to_users: [String],   // student emails
+
+  assigned_to_users: [String],   
   assigned_to_grades: [Number],
   assigned_to_schools: [String],
 
-  // tracking
+
   submissions: [{
     student_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    answers: [String], // student's selected answers in order
+    answers: [String], 
     score: Number,
     submitted_at: { type: Date, default: Date.now }
   }]

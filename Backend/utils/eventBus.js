@@ -2,11 +2,11 @@ const EventEmitter = require('events');
 const webpush = require('web-push');
 const smsApi = require('./sms');
 const logger = require('./logger');
-const mailer = require('./email'); // Brevo email util
+const mailer = require('./email'); 
 
 const eventBus = new EventEmitter();
 
-// Map template IDs for clarity
+
 const emailTemplates = {
   otp: 3,
   welcome: 2,
@@ -19,7 +19,7 @@ const emailTemplates = {
   goalBudgetUpdate: 10,
 };
 
-/* ──────────── SMS Helper ──────────── */
+
 async function sendSMS(phone, message) {
   if (!phone) return;
   const recipient = phone.startsWith('+') ? phone : `+${phone}`;
@@ -35,7 +35,6 @@ async function sendSMS(phone, message) {
   }
 }
 
-/* ──────────── Push Notification Helper ──────────── */
 async function sendPushToUser(PushSub, payload) {
   try {
     if (PushSub?.subscription) {
@@ -46,16 +45,14 @@ async function sendPushToUser(PushSub, payload) {
   }
 }
 
-/* ──────────── User Notification Helper ──────────── */
+
 async function notifyUser(user, title, message, url, emailTemplateId, templateVariables = {}) {
   try {
-    // Push
+
     await sendPushToUser(user.PushSub, { title, body: message, url });
 
-    // SMS
     await sendSMS(user.phone, `${title}: ${message}`);
 
-    // Email via Brevo
     if (user.email && emailTemplateId) {
       await mailer.sendTemplateEmail(user.email, emailTemplateId, templateVariables);
       logger.info(`[Brevo Email] Sent "${title}" to ${user.email}`);
@@ -65,14 +62,13 @@ async function notifyUser(user, title, message, url, emailTemplateId, templateVa
   }
 }
 
-/* ──────────── EventBus Configuration ──────────── */
+
 function configureEventBus(agenda, mongoose) {
   const User = mongoose.models.User;
   const Assignment = mongoose.models.Assignment;
   const PushSub = mongoose.models.PushSub;
   const Quiz = mongoose.models.Quiz;
 
-  /* ──────────── Assignment Created ──────────── */
   eventBus.on('assignment_created', async ({ assignmentId, title, creatorId }) => {
     try {
       const assignment = await Assignment.findById(assignmentId);
@@ -87,10 +83,8 @@ function configureEventBus(agenda, mongoose) {
       }).select('_id phone email firstname');
 
       for (const student of students) {
-        // Send SMS immediately
         await sendSMS(student.phone, `New Assignment: "${title}" is due on ${assignment.due_date.toDateString()}`);
 
-        // Send Email
         await mailer.sendTemplateEmail(student.email, emailTemplates.assignmentNotification, {
           firstname: student.firstname,
           assignmentTitle: title,
@@ -98,7 +92,6 @@ function configureEventBus(agenda, mongoose) {
         });
       }
 
-      // Schedule reminders: 24, 6, 2 hours before
       const reminderHours = [24, 6, 2];
       reminderHours.forEach(async (hoursBefore) => {
         const remindTime = new Date(assignment.due_date);
@@ -115,7 +108,6 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
-  /* ──────────── Assignment Reminder ──────────── */
   agenda.define('assignment_reminder', async (job) => {
     const { assignmentId, hoursBefore } = job.attrs.data;
     const assignment = await Assignment.findById(assignmentId);
@@ -141,7 +133,7 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
-  /* ──────────── Quiz Created ──────────── */
+  
   eventBus.on('quiz_created', async ({ quizId, title }) => {
     try {
       const quiz = await Quiz.findById(quizId);
@@ -163,7 +155,7 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
-  /* ──────────── Feedback Given ──────────── */
+
   eventBus.on('feedback_given', async ({ assignmentId, studentId, feedback }) => {
     try {
       const assignment = await Assignment.findById(assignmentId);
@@ -179,7 +171,7 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
-  /* ──────────── Assignment Graded ──────────── */
+
   eventBus.on('assignment_graded', async ({ assignmentId, studentId, grade }) => {
     try {
       const assignment = await Assignment.findById(assignmentId);
@@ -195,7 +187,7 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
-  /* ──────────── Reward Notification ──────────── */
+
   eventBus.on('reward_granted', async ({ userId, type }) => {
     try {
       const user = await User.findById(userId);

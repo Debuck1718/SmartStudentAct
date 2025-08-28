@@ -1,5 +1,3 @@
-// smartstudent-backend/routes/advancedGoals.js
-
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi'); 
@@ -414,12 +412,7 @@ router.delete('/goals/:goalId', authenticateJWT, async (req, res) => {
         res.status(500).json({ message: 'Failed to delete goal.' });
     }
 });
-/**
- * @route GET /api/rewards/:studentId
- * @desc Get a student's combined rewards (basic + premium)
- * @access Private
- * ⚠️ Must be placed LAST so it doesn’t override other routes like /advice or /goals
- */
+
 router.get('/:studentId', authenticateJWT, checkSubscription, async (req, res) => {
     try {
         const studentId = req.params.studentId;

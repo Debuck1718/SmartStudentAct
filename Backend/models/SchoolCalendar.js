@@ -1,5 +1,3 @@
-// --- New Model: SchoolCalendar.js ---
-// You will need to create this file in your models directory
 const mongoose = require('mongoose');
 
 const SchoolCalendarSchema = new mongoose.Schema({
@@ -20,7 +18,6 @@ const SchoolCalendarSchema = new mongoose.Schema({
     academicYear: {
         type: String,
         required: true,
-        // Example: "2023-2024"
     },
     terms: [{
         termName: {

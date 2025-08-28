@@ -1,5 +1,3 @@
-// smartstudent-backend/routes/essay.js
-
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
@@ -15,7 +13,7 @@ const essaySchema = Joi.object({
 });
 
 router.post('/check', authenticateJWT, checkSubscription, async (req, res) => {
-    // Validate the incoming request body
+
     const { error, value } = essaySchema.validate(req.body);
     if (error) {
         return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });

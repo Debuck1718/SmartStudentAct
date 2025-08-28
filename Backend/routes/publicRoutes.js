@@ -20,7 +20,6 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || "1d";
 module.exports = (eventBus, agenda) => {
   const publicRouter = express.Router();
 
-  // Schema for OTP request (no password yet)
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\d{10,15}$/).required(),
     email: Joi.string().email().required(),
@@ -30,6 +29,7 @@ module.exports = (eventBus, agenda) => {
       .valid("student", "teacher", "admin", "global_overseer", "overseer")
       .required(),
     schoolCountry: Joi.string().length(2).required(),
+    schoolName: Joi.string().max(100).required(),
     grade: Joi.alternatives().try(
       Joi.number().integer().min(5).max(12),
       Joi.string().valid("100","200","300","400","500","600")
@@ -40,7 +40,6 @@ module.exports = (eventBus, agenda) => {
     ).allow(null),
   }).unknown(true);
 
-  // Schema for OTP verification (password added here)
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
     email: Joi.string().email().required(),
@@ -77,16 +76,14 @@ module.exports = (eventBus, agenda) => {
     }
     next();
   };
-// ─── Signup OTP Route ───
+
 publicRouter.post(
   "/users/signup-otp",
   rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
   validate(signupOtpSchema),
   async (req, res) => {
-    // Destructure firstname from req.body
     const { email, firstname, ...rest } = req.body;
 
-    // Generate OTP (fixed 123456 in dev, random in prod)
     const code =
       process.env.NODE_ENV === "production"
         ? Math.floor(100000 + Math.random() * 900000).toString()
@@ -96,7 +93,7 @@ publicRouter.post(
     req.session.signup = {
       ...rest,
       email,
-      firstname, // Save firstname to the session
+      firstname, 
       code,
       attempts: 0,
       timestamp: Date.now(),
@@ -104,15 +101,13 @@ publicRouter.post(
 
     logger.debug("[OTP] Generated for %s: %s", email, code);
 
-    // ─── Send OTP with retry and fallback ───
     try {
       const success = await (async () => {
         const retries = 3;
         for (let attempt = 1; attempt <= retries; attempt++) {
           try {
-            // Corrected: pass firstname as the third argument
-            await sendOTPEmail(email, code, firstname); 
-            logger.info("✅ OTP email sent to %s (attempt %d)", email, attempt);
+            await sendOTPEmail(email, firstname, code); 
+            logger.info("OTP email sent to %s (attempt %d)", email, attempt);
             return true;
           } catch (err) {
             logger.warn(
@@ -122,7 +117,7 @@ publicRouter.post(
               err.message || err
             );
             if (attempt < retries) {
-              const delay = Math.pow(2, attempt) * 1000; // 2s, 4s
+              const delay = Math.pow(2, attempt) * 1000; 
               logger.debug("⏳ Retrying in %ds...", delay / 1000);
               await new Promise((r) => setTimeout(r, delay));
             }
@@ -136,7 +131,6 @@ publicRouter.post(
         return res.status(500).json({ error: "Failed to send OTP" });
       }
 
-      // Success
       eventBus.emit("otp_sent", { email, otp: code });
       res.json({ step: "verify", message: "OTP sent to your email" });
     } catch (err) {
@@ -146,7 +140,6 @@ publicRouter.post(
   }
 );
 
-  // Verify OTP route
   publicRouter.post(
     "/users/verify-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -183,7 +176,6 @@ publicRouter.post(
           ...signupData,
           password: hash,
           verified: true,
-          is_admin: signupData.occupation === "admin",
           role: signupData.occupation,
           is_on_trial: true,
           trial_end_date: trialEndDate,
@@ -207,11 +199,10 @@ publicRouter.post(
 
         res.cookie("access_token", token, {
           httpOnly: true,
-          secure: true,
-          sameSite: "None",
-          maxAge: 1000 * 60 * 60 * 24,
+          secure: true, 
+          sameSite: "None", 
+          maxAge: 1000 * 60 * 60 * 24, 
         });
-
         res.status(201).json({
           status: "success",
           message: "Account created successfully.",
@@ -260,9 +251,9 @@ publicRouter.post(
 
       res.cookie("access_token", token, {
         httpOnly: true,
-        secure: true, // true in production
-        sameSite: "None", // allows cross-site requests if needed
-        maxAge: 1000 * 60 * 60 * 24, // 1 day
+        secure: true, 
+        sameSite: "None", 
+        maxAge: 1000 * 60 * 60 * 24, 
       });
       res.json({
         status: true,

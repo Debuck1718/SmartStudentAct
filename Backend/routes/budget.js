@@ -1,5 +1,3 @@
-// smartstudent-backend/routes/budget.js
-
 const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger');
@@ -112,11 +110,6 @@ router.get('/dashboard', authenticateJWT, checkSubscription, async (req, res) =>
 });
 
 
-/**
- * @route GET /api/budget/entries
- * @desc Fetches all budget entries for the authenticated user.
- * @access Private
- */
 router.get('/entries', authenticateJWT, async (req, res) => {
     try {
         const entries = await BudgetEntry.find({ userId: req.user.userId }).sort({ date: -1 });
@@ -128,11 +121,6 @@ router.get('/entries', authenticateJWT, async (req, res) => {
 });
 
 
-/**
- * @route GET /api/budget/entries/:entryId
- * @desc Fetches a single budget entry by ID.
- * @access Private
- */
 router.get('/entries/:entryId', authenticateJWT, async (req, res) => {
     const { error } = budgetEntryIdSchema.validate(req.params);
     if (error) {
@@ -156,11 +144,6 @@ router.get('/entries/:entryId', authenticateJWT, async (req, res) => {
 });
 
 
-/**
- * @route PUT /api/budget/entries/:entryId
- * @desc Updates a specific budget entry.
- * @access Private
- */
 router.put('/entries/:entryId', authenticateJWT, async (req, res) => {
     const { error: idError } = budgetEntryIdSchema.validate(req.params);
     if (idError) {
@@ -190,11 +173,6 @@ router.put('/entries/:entryId', authenticateJWT, async (req, res) => {
 });
 
 
-/**
- * @route DELETE /api/budget/entries/:entryId
- * @desc Deletes a specific budget entry.
- * @access Private
- */
 router.delete('/entries/:entryId', authenticateJWT, async (req, res) => {
     const { error } = budgetEntryIdSchema.validate(req.params);
     if (error) {
@@ -211,7 +189,6 @@ router.delete('/entries/:entryId', authenticateJWT, async (req, res) => {
             return res.status(404).json({ message: 'Budget entry not found.' });
         }
         
-        // Notify the user about the deletion
         eventBus.emit('budget_notification', {
             userId: req.user.userId,
             message: `A ${deletedEntry.type} entry has been deleted.`

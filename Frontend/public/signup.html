@@ -186,7 +186,6 @@
         />
         <p id="phoneError" class="error-text hidden"></p>
 
-        <!-- New password and confirm password fields -->
         <label class="sr-only" for="passwordInput">Password</label>
         <input
           id="passwordInput"
@@ -216,6 +215,18 @@
           </select>
         </div>
         <p id="occupationError" class="error-text hidden"></p>
+
+        <!-- New School Name Field -->
+        <div id="schoolNameField" class="input-container hidden">
+          <label class="sr-only" for="schoolNameInput">School Name</label>
+          <input
+            id="schoolNameInput"
+            type="text"
+            placeholder="School Name"
+            class="input"
+          />
+        </div>
+        <p id="schoolNameError" class="error-text hidden"></p>
 
         <div id="schoolCountryField" class="picker-container hidden">
           <label class="sr-only" for="schoolCountrySelect"
@@ -471,7 +482,6 @@
         </div>
         <p id="schoolCountryError" class="error-text hidden"></p>
 
-        <!-- Dynamic Grade/Level Select Field -->
         <div id="gradeField" class="picker-container hidden">
           <label class="sr-only" for="gradeSelect">Grade</label>
           <select id="gradeSelect" class="picker">
@@ -572,6 +582,7 @@
       const passwordInput = document.getElementById("passwordInput");
       const confirmPasswordInput = document.getElementById("confirmPasswordInput");
       const occupationSelect = document.getElementById("occupationSelect");
+      const schoolNameInput = document.getElementById("schoolNameInput"); // New Input
       const schoolCountrySelect = document.getElementById("schoolCountrySelect");
       const gradeSelect = document.getElementById("gradeSelect");
       const teacherGradeSelect = document.getElementById("teacherGradeSelect");
@@ -586,6 +597,7 @@
         passwordInput,
         confirmPasswordInput,
         occupationSelect,
+        schoolNameInput, 
         schoolCountrySelect,
       ];
       const errorMessages = {
@@ -596,12 +608,13 @@
         password: "Password must be at least 8 characters.",
         confirmPassword: "Passwords do not match.",
         occupation: "Please select an occupation.",
+        schoolName: "Please enter your school name.", 
         schoolCountry: "Please select your country of study.",
         grade: "Please select your grade.",
       };
 
       let isSubmitting = false;
-      let signupData = {}; // Global variable to store form data
+      let signupData = {}; 
 
       function setError(elementId, message) {
         const inputElement = document.getElementById(elementId);
@@ -659,8 +672,9 @@
             return value !== form.password ? errorMessages[field] : "";
           case "occupation":
             return value === "" ? errorMessages[field] : "";
+          case "schoolName": 
           case "schoolCountry":
-            if (["student", "teacher", "admin", "global_overseer", "overseer"].includes(form.occupation)) {
+            if (["student", "teacher", "admin"].includes(form.occupation)) {
               return value === "" ? errorMessages[field] : "";
             }
             return "";
@@ -692,6 +706,7 @@
           confirmPassword: confirmPasswordInput.value,
           occupation: occupationSelect.value,
           schoolCountry: schoolCountrySelect.value,
+          schoolName: schoolNameInput.value, 
           grade: null,
           teacherGrade: null,
         };
@@ -702,7 +717,7 @@
             form.teacherGrade = teacherGradeSelect.value;
         }
         
-        const fieldsToValidate = ['firstname', 'lastname', 'email', 'phone', 'password', 'confirmPassword', 'occupation', 'schoolCountry'];
+        const fieldsToValidate = ['firstname', 'lastname', 'email', 'phone', 'password', 'confirmPassword', 'occupation', 'schoolName', 'schoolCountry'];
         
         if (form.occupation === 'student') {
             fieldsToValidate.push('grade');
@@ -732,18 +747,19 @@
       teacherGradeSelect.addEventListener("change", checkFormValidity);
 
       occupationSelect.addEventListener("change", () => {
+        const schoolNameField = document.getElementById("schoolNameField"); 
         const schoolCountryField = document.getElementById("schoolCountryField");
         const gradeField = document.getElementById("gradeField");
         const teacherGradeField = document.getElementById("teacherGradeField");
         const selectedOccupation = occupationSelect.value;
-        
-        // Hide all conditional fields first
+
+        schoolNameField.classList.add("hidden"); 
         schoolCountryField.classList.add("hidden");
         gradeField.classList.add("hidden");
         teacherGradeField.classList.add("hidden");
 
-        // Show fields based on occupation
-        if (["student", "teacher", "admin", "global_overseer", "overseer"].includes(selectedOccupation)) {
+        if (["student", "teacher", "admin"].includes(selectedOccupation)) {
+            schoolNameField.classList.remove("hidden"); 
             schoolCountryField.classList.remove("hidden");
         }
         
@@ -762,17 +778,15 @@
 
         if (Object.keys(errors).length > 0) {
           for (const field in errors) {
-            const inputId = field.replace("schoolCountry", "schoolCountrySelect").replace("grade", "gradeSelect").replace("teacherGrade", "teacherGradeSelect").replace("confirmPassword", "confirmPasswordInput").replace("password", "passwordInput").replace("phone", "phoneInput");
+            const inputId = field.replace("schoolName", "schoolNameInput").replace("schoolCountry", "schoolCountrySelect").replace("grade", "gradeSelect").replace("teacherGrade", "teacherGradeSelect").replace("confirmPassword", "confirmPasswordInput").replace("password", "passwordInput").replace("phone", "phoneInput");
             setError(inputId, errors[field]);
           }
           showMessage("Please fill out all required fields correctly.");
           return;
         }
 
-        // Store the form data for the OTP verification step
         signupData = data;
         
-        // Remove password and confirmPassword before sending to request-otp endpoint
         const { password, confirmPassword, ...otpRequestData } = signupData;
         
         setLoadingState(requestOtpButton, true, "Request OTP");
@@ -815,32 +829,43 @@
 
         setLoadingState(verifyOtpButton, true, "Verify OTP");
 
-        // Combine stored signup data with OTP for final verification request
         const verificationData = {
           ...signupData,
           code: otpInput,
         };
 
         try {
-          const response = await fetch(API_VERIFY_OTP, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(verificationData),
-          });
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.message || "OTP verification failed.");
-          }
-
-          showMessage("Signup successful!", "success");
-          window.location.href = "/login.html";
-        } catch (err) {
-          showMessage(err.message || "Error verifying OTP");
-        } finally {
-          setLoadingState(verifyOtpButton, false, "Verify OTP");
-        }
+      const response = await fetch(API_VERIFY_OTP, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(verificationData),
       });
-      checkFormValidity();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "OTP verification failed.");
+      }
+
+      showMessage("Signup successful!", "success");
+
+      const userRole = data.role; 
+      if (userRole === "student") {
+        window.location.href = "/students.html";
+      } else if (userRole === "teacher") {
+        window.location.href = "/teachers.html";
+      } else if (userRole === "admin") {
+        window.location.href = "/admin.html";
+      } else {
+        console.error("Unknown user role:", userRole);
+        window.location.href = "/login.html";
+      }
+
+    } catch (err) {
+      showMessage(err.message || "Error verifying OTP");
+    } finally {
+      setLoadingState(verifyOtpButton, false, "Verify OTP");
+    }
+  });
+  checkFormValidity();
     </script>
   </body>
 </html>

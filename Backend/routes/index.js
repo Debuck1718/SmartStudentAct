@@ -1,4 +1,3 @@
-/* routes/index.js - Central router loader */
 const publicRoutes = require('./publicRoutes');
 const protectedRoutes = require('./protectedRoutes');
 

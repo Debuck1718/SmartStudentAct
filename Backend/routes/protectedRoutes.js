@@ -1,5 +1,3 @@
-
-/* routes/protectedRoutes.js – Authenticated API routes */
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -11,12 +9,11 @@ const webpush = require('web-push');
 const jwt = require('jsonwebtoken');
 const eventBus = require('../utils/eventBus');
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-// 🚩 UPDATED: We now only import authenticateJWT and will define hasRole locally
 const { authenticateJWT } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
 
 
-// --- Import Models ---
+
 const User = require('../models/User');
 const Goal = require('../models/Goal');
 const Budget = require('../models/Budget');
@@ -27,17 +24,17 @@ const School = require('../models/School');
 const Quiz = require('../models/Quiz');
 const SchoolCalendar = require('../models/SchoolCalendar');
 
-// --- Import Sub-routers ---
+
 const advancedGoalsRouter = require('./advancedGoals');
 const essayRouter = require('./essay');
 const budgetRouter = require('./budget');
 const schoolRouter = require('./schoolRoutes');
 const uploadRouter = require('./uploadRoutes');
 
-// --- Import Controllers ---
+
 const paymentController = require('../controllers/paymentController');
 
-// --- Helpers ---
+
 const smsApi = {};
 async function sendSMS(phone, message) {
     if (!phone) return;
@@ -70,11 +67,8 @@ async function notifyUser(userId, title, message, url) {
 }
 const agenda = { schedule: () => {} };
 
-// ──────────────────── Protected Router ────────────────────
 const protectedRouter = express.Router();
 
-// 🚩 NEW: Custom middleware to check user roles based on the JWT payload
-// This function replaces the imported `hasRole` from your previous `auth.js`
 const hasRole = (allowedRoles) => (req, res, next) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {
         return res.status(403).json({
@@ -86,10 +80,9 @@ const hasRole = (allowedRoles) => (req, res, next) => {
 };
 
 
-// ✅ Apply authentication + subscription
 protectedRouter.use(authenticateJWT, checkSubscription);
 
-// --- Multer Storage Setup (moved here as all upload routes are protected) ---
+
 const localDiskStorage = multer.diskStorage({
     destination: (req, _file, cb) => {
         let dest;
@@ -107,7 +100,7 @@ const localDiskStorage = multer.diskStorage({
 });
 
 const cloudinaryStorage = new CloudinaryStorage({
-    cloudinary: require('cloudinary').v2, // This needs to be available
+    cloudinary: require('cloudinary').v2, 
     params: {
         folder: "smartstudent-uploads",
         allowed_formats: ["jpg", "png", "jpeg", "webp", "gif"],
@@ -156,11 +149,10 @@ Object.values(dirs).forEach(async d => {
 });
 
 
-// --- Joi Schemas for Protected Routes ---
 const timezoneSchema = Joi.object({
     timezone: Joi.string().required()
 });
-// 🚩 UPDATED: Promote schema now uses the new role enum
+
 const promoteUserSchema = Joi.object({
     email: Joi.string().email().required(),
     role: Joi.string().valid('student', 'teacher', 'admin', 'overseer', 'global-overseer').required(),
@@ -168,11 +160,7 @@ const promoteUserSchema = Joi.object({
 const removeUserSchema = Joi.object({
     email: Joi.string().email().required()
 });
-// 🚩 DEPRECATED: This route is redundant with the new promote route. It will be refactored or removed.
-const setAdminSchema = Joi.object({
-    email: Joi.string().email().required(),
-    promote: Joi.boolean().required()
-});
+
 const teacherAssignmentSchema = Joi.object({
     title: Joi.string().required(),
     description: Joi.string().allow('', null),
@@ -210,7 +198,7 @@ const academicCalendarSchema = Joi.object({
         endDate: Joi.date().iso().required()
     })).min(1).required()
 });
-// 🚩 UPDATED: settings schema is now more precise, using 'role'
+
 const settingsSchema = Joi.object({
     firstname: Joi.string().min(2).max(50).optional(),
     lastname: Joi.string().min(2).max(50).optional(),
@@ -242,7 +230,6 @@ const validate = (schema) => (req, res, next) => {
     next();
 };
 
-// ──────────────────── Protected Router ────────────────────
 
 protectedRouter.post('/logout', authenticateJWT, (req, res) => {
     eventBus.emit('user_logged_out', { userId: req.userId });
@@ -260,12 +247,7 @@ protectedRouter.post('/timezone', authenticateJWT, validate(timezoneSchema), asy
     }
 });
 
-/* ──────────── Settings and Profile Routes ──────────── */
-/**
- * @route PATCH /api/settings
- * @desc Update general user settings
- * @access Private (Authenticated User)
- */
+
 protectedRouter.patch('/settings', authenticateJWT, validate(settingsSchema), async (req, res) => {
     const userId = req.userId;
     const updateData = req.body;
@@ -276,7 +258,6 @@ protectedRouter.patch('/settings', authenticateJWT, validate(settingsSchema), as
             return res.status(404).json({ message: 'User not found.' });
         }
 
-        // If a new email is provided, check if it's already in use by another user
         if (updateData.email && updateData.email !== user.email) {
             const existingUser = await User.findOne({ email: updateData.email });
             if (existingUser) {
@@ -284,7 +265,6 @@ protectedRouter.patch('/settings', authenticateJWT, validate(settingsSchema), as
             }
         }
 
-        // Update user document
         const result = await User.updateOne({ _id: userId }, updateData);
         if (result.modifiedCount > 0) {
             res.status(200).json({ message: 'Settings updated successfully.', updatedFields: updateData });
@@ -297,13 +277,7 @@ protectedRouter.patch('/settings', authenticateJWT, validate(settingsSchema), as
     }
 });
 
-/**
- * @route GET /api/profile
- * @desc Get user profile data
- * @access Private (Authenticated User)
- * This route is crucial for the front-end to load the existing user data
- * and populate the form fields when the page loads.
- */
+
 protectedRouter.get('/profile', authenticateJWT, async (req, res) => {
     const userId = req.userId;
     try {
@@ -319,13 +293,6 @@ protectedRouter.get('/profile', authenticateJWT, async (req, res) => {
 });
 
 
-/**
- * @route PATCH /api/profile
- * @desc Update general user profile information (excluding the photo)
- * @access Private (Authenticated User)
- * This route is now a single, comprehensive endpoint for all profile data updates.
- * It does NOT handle file uploads.
- */
 protectedRouter.patch('/profile', authenticateJWT, validate(settingsSchema), async (req, res) => {
     const userId = req.userId;
     const updateData = req.body;
@@ -335,12 +302,10 @@ protectedRouter.patch('/profile', authenticateJWT, validate(settingsSchema), asy
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
-        
-        // The front-end sends a single object with all fields; let's update all of them
+
         const result = await User.updateOne({ _id: userId }, { $set: updateData });
         
         if (result.modifiedCount > 0) {
-            // Fetch the updated user document to send back to the client
             const updatedUser = await User.findById(userId).select('-password');
             res.status(200).json({ 
                 message: 'Profile updated successfully.', 
@@ -351,7 +316,7 @@ protectedRouter.patch('/profile', authenticateJWT, validate(settingsSchema), asy
             res.status(200).json({ message: 'No changes were made.' });
         }
     } catch (error) {
-        // Handle MongoDB duplicate key error (e.g., if a unique field like 'phone' is duplicated)
+
         if (error.code === 11000) {
             return res.status(409).json({ message: 'A user with this data already exists.' });
         }
@@ -360,25 +325,16 @@ protectedRouter.patch('/profile', authenticateJWT, validate(settingsSchema), asy
     }
 });
 
-
-/**
- * @route POST /api/profile/upload-photo
- * @desc Update user profile picture via a dedicated endpoint.
- * @access Private (Authenticated User)
- */
 protectedRouter.post('/profile/upload-photo', authenticateJWT, profileUpload.single('profilePhoto'), async (req, res) => {
     const userId = req.userId;
-    
-    // Check if a file was uploaded by multer
+
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded.' });
     }
 
     try {
-        // Get the URL from the uploaded file's path (e.g., from Cloudinary)
         const photoUrl = req.file.path;
 
-        // Update the user's profile_picture_url in the database
         const result = await User.updateOne(
             { _id: userId }, 
             { $set: { profile_picture_url: photoUrl } }
@@ -398,8 +354,6 @@ protectedRouter.post('/profile/upload-photo', authenticateJWT, profileUpload.sin
     }
 });
 
-/* ──────────── Admin Routes ──────────── */
-// 🚩 UPDATED: Refactored logic to use the new hasRole middleware and 'role' field.
 protectedRouter.post('/admin/promote', authenticateJWT, hasRole(['admin', 'overseer', 'global-overseer']), validate(promoteUserSchema), async (req, res) => {
     const { email, role } = req.body;
     const actor = req.user;
@@ -413,7 +367,6 @@ protectedRouter.post('/admin/promote', authenticateJWT, hasRole(['admin', 'overs
             return res.status(403).json({ error: 'Cannot modify your own account.' });
         }
 
-        // Prevent lower-tier admins from promoting higher-tier admins
         if (req.userRole === 'admin' && ['overseer', 'global-overseer'].includes(targetUser.role)) {
             return res.status(403).json({ error: 'You do not have permission to modify this user.' });
         }
@@ -444,7 +397,6 @@ protectedRouter.post('/admin/remove-user', authenticateJWT, hasRole(['admin', 'o
         if (actor.role === 'overseer' && (targetUser.role === 'overseer' || targetUser.role === 'global-overseer')) {
             return res.status(403).json({ error: 'You do not have permission to remove this user.' });
         }
-        // Admins can only remove students or teachers from their own school
         if (actor.role === 'admin') {
             const actorSchool = actor.schoolName || actor.teacherSchool;
             const targetSchool = targetUser.schoolName || targetUser.teacherSchool;
@@ -657,7 +609,6 @@ protectedRouter.get('/admin/view-file/:type/:filename', authenticateJWT, hasRole
         const { type, filename } = req.params;
         let filePath;
 
-        // Map the type to the correct local directory
         switch (type.toLowerCase()) {
             case 'assignment':
                 filePath = path.join(__dirname, 'uploads', 'assignments', filename);
@@ -712,7 +663,7 @@ protectedRouter.get('/admin/my-school-files', authenticateJWT, hasRole(['admin']
         res.status(500).json({ message: 'Server error' });
     }
 });
-/* ──────────── Teacher Routes - Refactored ──────────── */
+
 protectedRouter.get('/teacher/profile', authenticateJWT, hasRole('teacher'), async (req, res) => {
     try {
         const teacher = await User.findById(req.user.id).select('-password');
@@ -1409,20 +1360,17 @@ protectedRouter.get('/student/quizzes/:assignmentId/result', authenticateJWT, ha
 
 const checkUserCountryAndRole = async (req, res, next) => {
     try {
-        // Find the user to get their country
         const user = await User.findById(req.user.id).select('country');
 
         if (!user || !user.country) {
             return res.status(400).json({ error: 'User country not found.' });
         }
 
-        // Block specific roles from accessing payment/pricing features
         const restrictedRoles = ['overseer', 'global_overseer'];
         if (restrictedRoles.includes(req.user.occupation)) {
             return res.status(403).json({ error: 'Forbidden: This role does not require this functionality.' });
         }
 
-        // Attach the user and country to the request for the next middleware/handler
         req.fullUser = user;
         next();
     } catch (err) {

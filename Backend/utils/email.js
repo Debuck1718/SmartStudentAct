@@ -1,15 +1,15 @@
-// utils/email.js
+
 const Brevo = require("@getbrevo/brevo");
 const nodemailer = require("nodemailer");
 
-// ─── Brevo API Client ───
+
 const apiInstance = new Brevo.TransactionalEmailsApi();
 apiInstance.setApiKey(
   Brevo.TransactionalEmailsApiApiKeys.apiKey,
   process.env.BREVO_API_KEY
 );
 
-// ─── SMTP Transporter (Brevo Relay Fallback) ───
+
 const smtpTransporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
   port: process.env.MAIL_PORT,
@@ -21,7 +21,6 @@ const smtpTransporter = nodemailer.createTransport({
   tls: { rejectUnauthorized: false },
 });
 
-// ─── Template IDs Mapping (Brevo) ───
 const TEMPLATE_IDS = {
   welcome: 2,
   otp: 3,
@@ -36,28 +35,21 @@ const TEMPLATE_IDS = {
   subscriptionRenewal: 12,
 };
 
-/**
- * Delay helper (exponential backoff)
- */
+
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Primary send via Brevo API
- */
 async function tryBrevoAPI(toEmail, templateId, params) {
   await apiInstance.sendTransacEmail({
     templateId,
     to: [{ email: toEmail }],
     params,
   });
-  console.log(`✅ Email sent via Brevo API to ${toEmail} (template ${templateId})`);
+  console.log(`Email sent via Brevo API to ${toEmail} (template ${templateId})`);
 }
 
-/**
- * Fallback send via Brevo SMTP relay
- */
+
 async function trySMTP(toEmail, templateId, params) {
   const subject = "SmartStudentAct Notification";
   const html = `
@@ -72,12 +64,10 @@ async function trySMTP(toEmail, templateId, params) {
     subject,
     html,
   });
-  console.log(`✅ Email sent via SMTP fallback to ${toEmail}`);
+  console.log(`Email sent via SMTP fallback to ${toEmail}`);
 }
 
-/**
- * Send email with retries + fallback
- */
+
 async function sendTemplateEmail(toEmail, templateId, params = {}) {
   if (!toEmail || !templateId) {
     console.warn("[Email] Skipped – missing email or templateId");
@@ -91,7 +81,7 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
     try {
       attempt++;
       await tryBrevoAPI(toEmail, templateId, params);
-      return true; // ✅ success
+      return true; 
     } catch (apiError) {
       console.error(
         `⚠️ Brevo API failed (attempt ${attempt}) for ${toEmail}:`,
@@ -111,7 +101,7 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
         }
       }
 
-      const delay = Math.pow(2, attempt) * 1000; // 2s → 4s → 8s
+      const delay = Math.pow(2, attempt) * 1000; 
       console.log(`⏳ Retrying in ${delay / 1000}s...`);
       await wait(delay);
     }
@@ -120,9 +110,7 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
   return false;
 }
 
-// ─── Convenience Wrappers (params fixed to match Brevo placeholders) ───
 
-// Auth & Onboarding
 const sendOTPEmail = (email, firstname, otp) =>
   sendTemplateEmail(email, TEMPLATE_IDS.otp, { firstname, otp });
 
@@ -132,7 +120,6 @@ const sendWelcomeEmail = (email, firstname) =>
 const sendResetEmail = (email, resetLink) =>
   sendTemplateEmail(email, TEMPLATE_IDS.reset, { reset_link: resetLink });
 
-// Academic
 const sendQuizNotificationEmail = (email, firstname, quizTitle, dueDate, link) =>
   sendTemplateEmail(email, TEMPLATE_IDS.quizNotification, {
     firstname,
@@ -181,7 +168,7 @@ const sendAssignmentGradedEmail = (
     link,
   });
 
-// Rewards & Finance
+
 const sendRewardEarnedEmail = (email, firstname, rewardType, link) =>
   sendTemplateEmail(email, TEMPLATE_IDS.rewardNotification, {
     firstname,
@@ -196,7 +183,6 @@ const sendGoalBudgetUpdateEmail = (email, firstname, message, link) =>
     link,
   });
 
-// Finance
 const sendPaymentReceiptEmail = (
   email,
   firstname,
@@ -232,7 +218,6 @@ const sendSubscriptionRenewalEmail = (
   });
 
 
-/* ─── Exports ─── */
 module.exports = {
   sendTemplateEmail,
   sendOTPEmail,

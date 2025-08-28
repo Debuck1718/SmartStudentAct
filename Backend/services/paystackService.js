@@ -1,16 +1,6 @@
-// paystackService.js
-// This module securely initiates a payment transaction with Paystack.
-// It is designed to be used on a backend server, not directly by a mobile app.
-
 const axios = require('axios');
 const config = require('../config/paymentConfig');
 
-/**
- * @param {string} email 
- * @param {number} amount 
- * @param {string} currency 
- * @returns {Promise<object|null>} 
- */
 async function initPaystackPayment(email, amount, currency) {
 
   const amountInKobo = Math.round(amount * 100);
