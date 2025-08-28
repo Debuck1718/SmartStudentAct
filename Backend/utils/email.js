@@ -23,17 +23,17 @@ const smtpTransporter = nodemailer.createTransport({
 
 // ─── Template IDs Mapping (Brevo) ───
 const TEMPLATE_IDS = {
-  WELCOME: 2,
-  OTP: 3,
-  RESET: 4,
-  QUIZ_NOTIFICATION: 5,
-  ASSIGNMENT_NOTIFICATION: 6,
-  FEEDBACK_RECEIVED: 7,
-  GRADED_ASSIGNMENT: 8,
-  REWARD_NOTIFICATION: 9,
-  GOAL_BUDGET_UPDATE: 10,
-  PAYMENT_RECEIPT: 11,
-  SUBSCRIPTION_RENEWAL: 12,
+  welcome: 2,
+  otp: 3,
+  reset: 4,
+  quizNotification: 5,
+  assignmentNotification: 6,
+  feedbackReceived: 7,
+  gradedAssignment: 8,
+  rewardNotification: 9,
+  goalBudgetUpdate: 10,
+  paymentReceipt: 11,
+  subscriptionRenewal: 12,
 };
 
 /**
@@ -52,9 +52,7 @@ async function tryBrevoAPI(toEmail, templateId, params) {
     to: [{ email: toEmail }],
     params,
   });
-  console.log(
-    `✅ Email sent via Brevo API to ${toEmail} (template ${templateId})`
-  );
+  console.log(`✅ Email sent via Brevo API to ${toEmail} (template ${templateId})`);
 }
 
 /**
@@ -122,25 +120,25 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
   return false;
 }
 
-/* ─── Convenience Wrappers ─── */
+/* ─── Convenience Wrappers (params now lowercase) ─── */
 
 // Auth & Onboarding
-const sendOTPEmail = (email, otpCode) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.OTP, { OTP_CODE: otpCode });
+const sendOTPEmail = (email, otp) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.otp, { otp });
 
 const sendWelcomeEmail = (email, firstname) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.WELCOME, { FIRSTNAME: firstname });
+  sendTemplateEmail(email, TEMPLATE_IDS.welcome, { firstname });
 
 const sendResetEmail = (email, resetLink) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.RESET, { RESET_LINK: resetLink });
+  sendTemplateEmail(email, TEMPLATE_IDS.reset, { reset_link: resetLink });
 
 // Academic
 const sendQuizNotificationEmail = (email, firstname, quizTitle, dueDate, link) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.QUIZ_NOTIFICATION, {
-    FIRSTNAME: firstname,
-    QUIZ_TITLE: quizTitle,
-    DUE_DATE: dueDate,
-    LINK: link,
+  sendTemplateEmail(email, TEMPLATE_IDS.quizNotification, {
+    firstname,
+    quiz_title: quizTitle,
+    due_date: dueDate,
+    link,
   });
 
 const sendAssignmentNotificationEmail = (
@@ -150,55 +148,44 @@ const sendAssignmentNotificationEmail = (
   dueDate,
   link
 ) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.ASSIGNMENT_NOTIFICATION, {
-    FIRSTNAME: firstname,
-    ASSIGNMENT_TITLE: assignmentTitle,
-    DUE_DATE: dueDate,
-    LINK: link,
+  sendTemplateEmail(email, TEMPLATE_IDS.assignmentNotification, {
+    firstname,
+    assignment_title: assignmentTitle,
+    due_date: dueDate,
+    link,
   });
 
-const sendFeedbackNotificationEmail = (
-  email,
-  firstname,
-  feedbackMessage,
-  link
-) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.FEEDBACK_RECEIVED, {
-    FIRSTNAME: firstname,
-    FEEDBACK_MESSAGE: feedbackMessage,
-    LINK: link,
+const sendFeedbackNotificationEmail = (email, firstname, feedbackMessage, link) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.feedbackReceived, {
+    firstname,
+    feedback_message: feedbackMessage,
+    link,
   });
 
-const sendAssignmentGradedEmail = (
-  email,
-  firstname,
-  assignmentTitle,
-  grade,
-  link
-) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.GRADED_ASSIGNMENT, {
-    FIRSTNAME: firstname,
-    ASSIGNMENT_TITLE: assignmentTitle,
-    GRADE: grade,
-    LINK: link,
+const sendAssignmentGradedEmail = (email, firstname, assignmentTitle, grade, link) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.gradedAssignment, {
+    firstname,
+    assignment_title: assignmentTitle,
+    grade,
+    link,
   });
 
 // Rewards & Finance
 const sendRewardEarnedEmail = (email, firstname, rewardType, link) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.REWARD_NOTIFICATION, {
-    FIRSTNAME: firstname,
-    REWARD_TYPE: rewardType,
-    LINK: link,
+  sendTemplateEmail(email, TEMPLATE_IDS.rewardNotification, {
+    firstname,
+    reward_type: rewardType,
+    link,
   });
 
 const sendGoalBudgetUpdateEmail = (email, firstname, message, link) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.GOAL_BUDGET_UPDATE, {
-    FIRSTNAME: firstname,
-    MESSAGE: message,
-    LINK: link,
+  sendTemplateEmail(email, TEMPLATE_IDS.goalBudgetUpdate, {
+    firstname,
+    message,
+    link,
   });
 
-// Finance – new templates
+// Finance
 const sendPaymentReceiptEmail = (
   email,
   firstname,
@@ -208,13 +195,13 @@ const sendPaymentReceiptEmail = (
   transactionId,
   link
 ) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.PAYMENT_RECEIPT, {
-    FIRSTNAME: firstname,
-    PLAN_NAME: planName,
-    AMOUNT: amount,
-    DATE: date,
-    TRANSACTION_ID: transactionId,
-    LINK: link,
+  sendTemplateEmail(email, TEMPLATE_IDS.paymentReceipt, {
+    firstname,
+    plan_name: planName,
+    amount,
+    date,
+    transaction_id: transactionId,
+    link,
   });
 
 const sendSubscriptionRenewalEmail = (
@@ -225,12 +212,12 @@ const sendSubscriptionRenewalEmail = (
   nextBillingDate,
   link
 ) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.SUBSCRIPTION_RENEWAL, {
-    FIRSTNAME: firstname,
-    PLAN_NAME: planName,
-    AMOUNT: amount,
-    NEXT_BILLING_DATE: nextBillingDate,
-    LINK: link,
+  sendTemplateEmail(email, TEMPLATE_IDS.subscriptionRenewal, {
+    firstname,
+    plan_name: planName,
+    amount,
+    next_billing_date: nextBillingDate,
+    link,
   });
 
 /* ─── Exports ─── */
@@ -249,4 +236,5 @@ module.exports = {
   sendSubscriptionRenewalEmail,
   TEMPLATE_IDS,
 };
+
 
