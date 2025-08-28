@@ -120,11 +120,11 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
   return false;
 }
 
-/* ─── Convenience Wrappers (params now lowercase) ─── */
+// ─── Convenience Wrappers (params fixed to match Brevo placeholders) ───
 
 // Auth & Onboarding
-const sendOTPEmail = (email, otp) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.otp, { otp });
+const sendOTPEmail = (email, firstname, otp) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.otp, { firstname, otp });
 
 const sendWelcomeEmail = (email, firstname) =>
   sendTemplateEmail(email, TEMPLATE_IDS.welcome, { firstname });
@@ -155,14 +155,25 @@ const sendAssignmentNotificationEmail = (
     link,
   });
 
-const sendFeedbackNotificationEmail = (email, firstname, feedbackMessage, link) =>
+const sendFeedbackNotificationEmail = (
+  email,
+  firstname,
+  feedbackMessage,
+  link
+) =>
   sendTemplateEmail(email, TEMPLATE_IDS.feedbackReceived, {
     firstname,
     feedback_message: feedbackMessage,
     link,
   });
 
-const sendAssignmentGradedEmail = (email, firstname, assignmentTitle, grade, link) =>
+const sendAssignmentGradedEmail = (
+  email,
+  firstname,
+  assignmentTitle,
+  grade,
+  link
+) =>
   sendTemplateEmail(email, TEMPLATE_IDS.gradedAssignment, {
     firstname,
     assignment_title: assignmentTitle,
@@ -195,13 +206,13 @@ const sendPaymentReceiptEmail = (
   transactionId,
   link
 ) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.PAYMENT_RECEIPT, {
-    FIRSTNAME: firstname,
-    PLAN_NAME: planName,
-    AMOUNT: amount,
-    DATE: date,
-    TRANSACTION_ID: transactionId,
-    LINK: link,
+  sendTemplateEmail(email, TEMPLATE_IDS.paymentReceipt, {
+    firstname,
+    plan_name: planName,
+    amount,
+    date,
+    transaction_id: transactionId,
+    link,
   });
 
 const sendSubscriptionRenewalEmail = (
@@ -212,13 +223,14 @@ const sendSubscriptionRenewalEmail = (
   nextBillingDate,
   link
 ) =>
-  sendTemplateEmail(email, TEMPLATE_IDS.SUBSCRIPTION_RENEWAL, {
-    FIRSTNAME: firstname,
-    PLAN_NAME: planName,
-    AMOUNT: amount,
-    NEXT_BILLING_DATE: nextBillingDate,
-    LINK: link,
+  sendTemplateEmail(email, TEMPLATE_IDS.subscriptionRenewal, {
+    firstname,
+    plan_name: planName,
+    amount,
+    next_billing_date: nextBillingDate,
+    link,
   });
+
 
 /* ─── Exports ─── */
 module.exports = {
