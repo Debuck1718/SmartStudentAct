@@ -24,6 +24,7 @@
         <option value="tr">Türkçe</option>
         <option value="ar">العربية</option>
         <option value="ru">Русский</option>
+        <option value="pt">Português</option>
       </select>
     </div>
 
@@ -56,8 +57,145 @@
     </div>
   </div>
 
-<script src="translate.js"></script>
 <script>
+const translations = {
+  loginTitle: {
+    en: "SmartStudentAct Login",
+    fr: "Connexion SmartStudentAct",
+    es: "Iniciar sesión en SmartStudentAct",
+    tr: "SmartStudentAct Girişi",
+    ar: "تسجيل الدخول إلى SmartStudentAct",
+    ru: "Вход в SmartStudentAct",
+    pt: "Login no SmartStudentAct"
+  },
+  email: {
+    en: "Email Address",
+    fr: "Adresse e-mail",
+    es: "Correo electrónico",
+    tr: "E-posta adresi",
+    ar: "عنوان البريد الإلكتروني",
+    ru: "Адрес электронной почты",
+    pt: "Endereço de e-mail"
+  },
+  password: {
+    en: "Password",
+    fr: "Mot de passe",
+    es: "Contraseña",
+    tr: "Şifre",
+    ar: "كلمة المرور",
+    ru: "Пароль",
+    pt: "Senha"
+  },
+  login: {
+    en: "Login",
+    fr: "Connexion",
+    es: "Iniciar sesión",
+    tr: "Giriş yap",
+    ar: "تسجيل الدخول",
+    ru: "Войти",
+    pt: "Entrar"
+  },
+  signupLink: {
+    en: "Don’t have an account? Sign up",
+    fr: "Pas de compte ? Inscrivez-vous",
+    es: "¿No tienes una cuenta? Regístrate",
+    tr: "Hesabınız yok mu? Kaydolun",
+    ar: "ليس لديك حساب؟ سجل",
+    ru: "Нет аккаунта? Зарегистрироваться",
+    pt: "Não tem uma conta? Cadastre-se"
+  },
+  forgotPasswordLink: {
+    en: "Forgot Password?",
+    fr: "Mot de passe oublié ?",
+    es: "¿Olvidaste tu contraseña?",
+    tr: "Şifrenizi mi unuttunuz?",
+    ar: "هل نسيت كلمة المرور؟",
+    ru: "Забыли пароль?",
+    pt: "Esqueceu sua senha?"
+  },
+  show: {
+    en: "Show",
+    fr: "Afficher",
+    es: "Mostrar",
+    tr: "Göster",
+    ar: "عرض",
+    ru: "Показать",
+    pt: "Mostrar"
+  },
+  hide: {
+    en: "Hide",
+    fr: "Masquer",
+    es: "Ocultar",
+    tr: "Gizle",
+    ar: "إخفاء",
+    ru: "Скрыть",
+    pt: "Ocultar"
+  },
+  emailEmpty: {
+    en: "Email is required.",
+    fr: "L'e-mail est requis.",
+    es: "Se requiere correo electrónico.",
+    tr: "E-posta gerekli.",
+    ar: "البريد الإلكتروني مطلوب.",
+    ru: "Требуется электронная почта.",
+    pt: "E-mail é obrigatório."
+  },
+  emailInvalid: {
+    en: "Invalid email address.",
+    fr: "Adresse e-mail invalide.",
+    es: "Dirección de correo electrónico no válida.",
+    tr: "Geçersiz e-posta adresi.",
+    ar: "عنوان البريد الإلكتروني غير صالح.",
+    ru: "Недействительный адрес электронной почты.",
+    pt: "Endereço de e-mail inválido."
+  },
+  passwordEmpty: {
+    en: "Password is required.",
+    fr: "Le mot de passe est requis.",
+    es: "Se requiere contraseña.",
+    tr: "Şifre gerekli.",
+    ar: "كلمة المرور مطلوبة.",
+    ru: "Пароль обязателен.",
+    pt: "Senha é obrigatória."
+  },
+  passwordMin: {
+    en: "Password must be at least 6 characters.",
+    fr: "Le mot de passe doit comporter au moins 6 caractères.",
+    es: "La contraseña debe tener al menos 6 caracteres.",
+    tr: "Şifre en az 6 karakter olmalı.",
+    ar: "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
+    ru: "Пароль должен содержать не менее 6 символов.",
+    pt: "A senha deve ter pelo menos 6 caracteres."
+  },
+  loginFailed: {
+    en: "Login failed. Please check your credentials.",
+    fr: "Échec de la connexion. Vérifiez vos identifiants.",
+    es: "Error al iniciar sesión. Verifique sus credenciales.",
+    tr: "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
+    ar: "فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد الخاصة بك.",
+    ru: "Ошибка входа. Проверьте свои учетные данные.",
+    pt: "Falha no login. Verifique suas credenciais."
+  },
+  unknownRole: {
+    en: "Unknown role. Please contact support.",
+    fr: "Rôle inconnu. Veuillez contacter le support.",
+    es: "Rol desconocido. Contacte con soporte.",
+    tr: "Bilinmeyen rol. Lütfen destekle iletişime geçin.",
+    ar: "دور غير معروف. يرجى الاتصال بالدعم.",
+    ru: "Неизвестная роль. Обратитесь в поддержку.",
+    pt: "Função desconhecida. Entre em contato com o suporte."
+  },
+  unexpectedError: {
+    en: "An unexpected error occurred.",
+    fr: "Une erreur inattendue s'est produite.",
+    es: "Ocurrió un error inesperado.",
+    tr: "Beklenmeyen bir hata oluştu.",
+    ar: "حدث خطأ غير متوقع.",
+    ru: "Произошла непредвиденная ошибка.",
+    pt: "Ocorreu um erro inesperado."
+  }
+};
+
 const API_BASE_URL = "https://smartstudentact.onrender.com/api"; 
 
 const emailInput = document.getElementById("emailInput");
@@ -155,14 +293,14 @@ async function handleLogin() {
     showBanner(translations.unexpectedError[currentLang], "error");
   } finally {
     loginButton.disabled = false;
-    loginButton.innerHTML = translations.login[currentLang];
+    loginButton.textContent = translations.login[currentLang];
   }
 }
 
 // Language change
 langSelect.addEventListener("change", (e) => {
   currentLang = e.target.value;
-  translatePage('login', currentLang);
+  document.getElementById("loginTitle").textContent = translations.loginTitle[currentLang];
   emailInput.placeholder = translations.email[currentLang];
   passwordInput.placeholder = translations.password[currentLang];
   passwordToggle.textContent = showPassword ? translations.hide[currentLang] : translations.show[currentLang];
@@ -171,3 +309,4 @@ langSelect.addEventListener("change", (e) => {
 </script>
 </body>
 </html>
+
