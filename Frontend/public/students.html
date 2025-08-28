@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SmartStudentAct - Dashboard</title>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-EWMR745QHX");
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
@@ -252,8 +266,8 @@
             id="insights-placeholder"
             class="italic text-gray-500 text-center"
           >
-            Click "Generate Insights" to get personalized feedback
-            on your academic and financial goals.          
+            Click "Generate Insights" to get personalized feedback on your
+            academic and financial goals.          
           </p>
                    
           <div id="insights-loading" class="text-center mt-4 hidden">
@@ -597,7 +611,7 @@
               data-i18n="cancel_btn"
               class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors"
             >
-            Cancel            
+              Cancel            
             </button>
                      
           </div>

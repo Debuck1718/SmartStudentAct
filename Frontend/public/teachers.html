@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title data-i18n="dashboardTitle">Teacher Dashboard</title>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-EWMR745QHX");
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
@@ -154,10 +168,7 @@
 
     <div id="promptModal" class="flex">
       <div class="modal-content">
-        <h2
-          id="promptTitle"
-          class="text-xl font-bold mb-2 text-gray-800"
-        ></h2>
+        <h2 id="promptTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
         <p id="promptMessage" class="text-gray-700 mb-4"></p>
         <textarea
           id="promptInput"
@@ -188,7 +199,10 @@
       <header
         class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200"
       >
-        <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0" data-i18n="dashboardTitle">
+        <h1
+          class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0"
+          data-i18n="dashboardTitle"
+        >
           📚 Teacher Dashboard
         </h1>
 
@@ -217,12 +231,42 @@
             class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0"
           >
             <div class="py-1" role="none">
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="en">English</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="fr">Français</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="es">Español</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="tr">Türkçe</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ar">العربية</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ru">Русский</a>
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                data-lang="en"
+                >English</a
+              >
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                data-lang="fr"
+                >Français</a
+              >
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                data-lang="es"
+                >Español</a
+              >
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                data-lang="tr"
+                >Türkçe</a
+              >
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                data-lang="ar"
+                >العربية</a
+              >
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                data-lang="ru"
+                >Русский</a
+              >
             </div>
           </div>
         </div>
@@ -274,7 +318,13 @@
               >
                 🤖 AI Essay Checker
               </a>
-              <a href="/public/quiz_dashboard.html" ... data-i18n="quizDashboard"> 📝 Quiz Dashboard </a>
+              <a
+                href="/public/quiz_dashboard.html"
+                ...
+                data-i18n="quizDashboard"
+              >
+                📝 Quiz Dashboard
+              </a>
               <a
                 href="/public/profile.html"
                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -345,8 +395,7 @@
         >
           🎓 Students in Your Class
         </h2>
-        <div id="studentsList" class="divide-y divide-gray-200">
-          </div>
+        <div id="studentsList" class="divide-y divide-gray-200"></div>
       </section>
 
       <section class="bg-white rounded-xl p-6 shadow-lg">
@@ -357,7 +406,10 @@
           ✏️ Create and Send Assignment
         </h2>
 
-        <label for="student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent"
+        <label
+          for="student-select"
+          class="block text-gray-700 font-bold mb-2"
+          data-i18n="selectStudent"
           >Select Student:</label
         >
         <div
@@ -367,11 +419,13 @@
           <select
             id="student-select"
             class="w-full p-3 bg-white text-gray-800 focus:outline-none"
-          >
-            </select>
+          ></select>
         </div>
 
-        <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle"
+        <label
+          for="assignmentTitle"
+          class="block text-gray-700 font-bold mb-2"
+          data-i18n="assignmentTitle"
           >Assignment Title:</label
         >
         <input
@@ -395,7 +449,10 @@
           class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
-        <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails"
+        <label
+          for="assignmentText"
+          class="block text-gray-700 font-bold mb-2"
+          data-i18n="assignmentDetails"
           >Assignment Details (max 1000 words or attach file):</label
         >
         <textarea
@@ -405,7 +462,11 @@
           placeholder="Type your assignment here..."
           maxlength="5000"
         ></textarea>
-        <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4" data-i18n="wordCount">
+        <p
+          id="wordCountText"
+          class="text-sm text-gray-500 text-right mb-4"
+          data-i18n="wordCount"
+        >
           Word count: 0
         </p>
 
@@ -420,7 +481,10 @@
             <input type="file" id="assignmentFile" class="hidden" />
           </label>
           <div id="fileStatus" class="flex items-center gap-2">
-            <span id="fileName" class="text-gray-700 text-sm italic" data-i18n="noFileSelected"
+            <span
+              id="fileName"
+              class="text-gray-700 text-sm italic"
+              data-i18n="noFileSelected"
               >No file selected.</span
             >
             <button
@@ -461,11 +525,13 @@
           <select
             id="points-student-select"
             class="w-full p-3 bg-white text-gray-800 focus:outline-none"
-          >
-            </select>
+          ></select>
         </div>
 
-        <label for="pointsInput" class="block text-gray-700 font-bold mb-2" data-i18n="pointsToAdd"
+        <label
+          for="pointsInput"
+          class="block text-gray-700 font-bold mb-2"
+          data-i18n="pointsToAdd"
           >Points to Add:</label
         >
         <input
@@ -477,7 +543,10 @@
           min="1"
         />
 
-        <label for="reasonText" class="block text-gray-700 font-bold mb-2" data-i18n="reasonOptional"
+        <label
+          for="reasonText"
+          class="block text-gray-700 font-bold mb-2"
+          data-i18n="reasonOptional"
           >Reason (Optional):</label
         >
         <textarea
@@ -503,8 +572,7 @@
         >
           📌 Overdue Tasks
         </h2>
-        <div id="overdueTasksList" class="divide-y divide-gray-200">
-          </div>
+        <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
       </section>
 
       <section class="bg-white rounded-xl p-6 shadow-lg">
@@ -514,8 +582,7 @@
         >
           📝 Assigned Tasks & Feedback
         </h2>
-        <div id="assignedTasksList" class="divide-y divide-gray-200">
-          </div>
+        <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
       </section>
 
       <section class="bg-white rounded-xl p-6 shadow-lg">
@@ -525,8 +592,7 @@
         >
           💬 Student Feedback Overview
         </h2>
-        <div id="feedbackList" class="divide-y divide-gray-200">
-          </div>
+        <div id="feedbackList" class="divide-y divide-gray-200"></div>
       </section>
 
       <section class="bg-white rounded-xl p-6 shadow-lg">
@@ -568,10 +634,14 @@
         class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center"
       >
         <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-          <h2 class="text-xl font-bold mb-4" data-i18n="contactUs">📩 Contact Us</h2>
+          <h2 class="text-xl font-bold mb-4" data-i18n="contactUs">
+            📩 Contact Us
+          </h2>
           <form id="contactForm" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium" data-i18n="yourName">Your Name</label>
+              <label class="block text-sm font-medium" data-i18n="yourName"
+                >Your Name</label
+              >
               <input
                 type="text"
                 id="contactName"
@@ -580,7 +650,9 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium" data-i18n="yourEmail">Your Email</label>
+              <label class="block text-sm font-medium" data-i18n="yourEmail"
+                >Your Email</label
+              >
               <input
                 type="email"
                 id="contactEmail"
@@ -589,7 +661,9 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium" data-i18n="message">Message</label>
+              <label class="block text-sm font-medium" data-i18n="message"
+                >Message</label
+              >
               <textarea
                 id="contactMessage"
                 rows="4"
@@ -624,384 +698,465 @@
         </p>
       </footer>
     </div>
-    
+
     <script src="translate.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const defaultLang = 'en';
-        translatePage('teacher-dashboard', defaultLang);
-        document.getElementById('language-menu-button').addEventListener('click', () => {
-          const dropdown = document.getElementById('language-dropdown-menu');
-          dropdown.classList.toggle('hidden');
-          setTimeout(() => dropdown.classList.toggle('opacity-0'), 10);
-        });
+      document.addEventListener("DOMContentLoaded", () => {
+        const defaultLang = "en";
+        translatePage("teacher-dashboard", defaultLang);
+        document
+          .getElementById("language-menu-button")
+          .addEventListener("click", () => {
+            const dropdown = document.getElementById("language-dropdown-menu");
+            dropdown.classList.toggle("hidden");
+            setTimeout(() => dropdown.classList.toggle("opacity-0"), 10);
+          });
 
-        document.querySelectorAll('#language-dropdown-menu a[data-lang]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const lang = e.target.getAttribute('data-lang');
-                translatePage('teacher-dashboard', lang);
-                document.getElementById('language-dropdown-menu').classList.add('hidden', 'opacity-0');
+        document
+          .querySelectorAll("#language-dropdown-menu a[data-lang]")
+          .forEach((link) => {
+            link.addEventListener("click", (e) => {
+              e.preventDefault();
+              const lang = e.target.getAttribute("data-lang");
+              translatePage("teacher-dashboard", lang);
+              document
+                .getElementById("language-dropdown-menu")
+                .classList.add("hidden", "opacity-0");
             });
-        });
+          });
       });
     </script>
 
-<script>
-  let students = [];
-  let overdueTasks = [];
-  let assignedTasks = [];
-  let feedbackList = [];
-  let selectedAssignmentFile = null;
-  let isDropdownVisible = false;
+    <script>
+      let students = [];
+      let overdueTasks = [];
+      let assignedTasks = [];
+      let feedbackList = [];
+      let selectedAssignmentFile = null;
+      let isDropdownVisible = false;
 
-  const DOM = {
-    loadingOverlay: document.getElementById("loadingOverlay"),
-    studentsList: document.getElementById("studentsList"),
-    overdueTasksList: document.getElementById("overdueTasksList"),
-    assignedTasksList: document.getElementById("assignedTasksList"),
-    feedbackList: document.getElementById("feedbackList"),
-    studentSelect: document.getElementById("student-select"),
-    assignmentTitle: document.getElementById("assignmentTitle"),
-    assignmentDueDate: document.getElementById("assignmentDueDate"),
-    assignmentText: document.getElementById("assignmentText"),
-    wordCountText: document.getElementById("wordCountText"),
-    assignmentFile: document.getElementById("assignmentFile"),
-    fileName: document.getElementById("fileName"),
-    clearFileButton: document.getElementById("clearFileButton"),
-    sendAssignmentButton: document.getElementById("sendAssignmentButton"),
-    termStart: document.getElementById("termStart"),
-    termEnd: document.getElementById("termEnd"),
-    saveCalendarButton: document.getElementById("saveCalendarButton"),
-    calendarMsg: document.getElementById("calendarMsg"),
+      const DOM = {
+        loadingOverlay: document.getElementById("loadingOverlay"),
+        studentsList: document.getElementById("studentsList"),
+        overdueTasksList: document.getElementById("overdueTasksList"),
+        assignedTasksList: document.getElementById("assignedTasksList"),
+        feedbackList: document.getElementById("feedbackList"),
+        studentSelect: document.getElementById("student-select"),
+        assignmentTitle: document.getElementById("assignmentTitle"),
+        assignmentDueDate: document.getElementById("assignmentDueDate"),
+        assignmentText: document.getElementById("assignmentText"),
+        wordCountText: document.getElementById("wordCountText"),
+        assignmentFile: document.getElementById("assignmentFile"),
+        fileName: document.getElementById("fileName"),
+        clearFileButton: document.getElementById("clearFileButton"),
+        sendAssignmentButton: document.getElementById("sendAssignmentButton"),
+        termStart: document.getElementById("termStart"),
+        termEnd: document.getElementById("termEnd"),
+        saveCalendarButton: document.getElementById("saveCalendarButton"),
+        calendarMsg: document.getElementById("calendarMsg"),
 
-    profileMenuButton: document.getElementById("profile-menu-button"),
-    profileDropdownMenu: document.getElementById("profile-dropdown-menu"),
-    logoutButton: document.getElementById("logoutButton"),
+        profileMenuButton: document.getElementById("profile-menu-button"),
+        profileDropdownMenu: document.getElementById("profile-dropdown-menu"),
+        logoutButton: document.getElementById("logoutButton"),
 
-    messageModal: document.getElementById("messageModal"),
-    modalTitle: document.getElementById("modalTitle"),
-    modalMessage: document.getElementById("modalMessage"),
-    promptModal: document.getElementById("promptModal"),
-    promptTitle: document.getElementById("promptTitle"),
-    promptMessage: document.getElementById("promptMessage"),
-    promptInput: document.getElementById("promptInput"),
-    okPromptBtn: document.getElementById("okPromptBtn"),
-    cancelPromptBtn: document.getElementById("cancelPromptBtn"),
+        messageModal: document.getElementById("messageModal"),
+        modalTitle: document.getElementById("modalTitle"),
+        modalMessage: document.getElementById("modalMessage"),
+        promptModal: document.getElementById("promptModal"),
+        promptTitle: document.getElementById("promptTitle"),
+        promptMessage: document.getElementById("promptMessage"),
+        promptInput: document.getElementById("promptInput"),
+        okPromptBtn: document.getElementById("okPromptBtn"),
+        cancelPromptBtn: document.getElementById("cancelPromptBtn"),
 
-    pointsStudentSelect: document.getElementById("points-student-select"),
-    pointsInput: document.getElementById("pointsInput"),
-    reasonText: document.getElementById("reasonText"),
-    addPointsButton: document.getElementById("addPointsButton"),
-  };
+        pointsStudentSelect: document.getElementById("points-student-select"),
+        pointsInput: document.getElementById("pointsInput"),
+        reasonText: document.getElementById("reasonText"),
+        addPointsButton: document.getElementById("addPointsButton"),
+      };
 
-  const API_BASE = "https://smartstudentact.onrender.com/api";
+      const API_BASE = "https://smartstudentact.onrender.com/api";
 
-  const sanitizeInput = (str) => {
-    if (typeof str !== "string") return "";
-    const temp = document.createElement("div");
-    temp.textContent = str;
-    return temp.innerHTML;
-  };
+      const sanitizeInput = (str) => {
+        if (typeof str !== "string") return "";
+        const temp = document.createElement("div");
+        temp.textContent = str;
+        return temp.innerHTML;
+      };
 
-  const showMessageModal = (title, message) => {
-    DOM.modalTitle.textContent = title;
-    DOM.modalMessage.textContent = message;
-    DOM.messageModal.style.display = "flex";
-  };
+      const showMessageModal = (title, message) => {
+        DOM.modalTitle.textContent = title;
+        DOM.modalMessage.textContent = message;
+        DOM.messageModal.style.display = "flex";
+      };
 
-  const closeMessageModal = () => {
-    DOM.messageModal.style.display = "none";
-  };
+      const closeMessageModal = () => {
+        DOM.messageModal.style.display = "none";
+      };
 
-  const toast = (msg) => showMessageModal("Notice", msg);
+      const toast = (msg) => showMessageModal("Notice", msg);
 
-  const fetchAPI = async (url, options = {}) => {
-    try {
-      const res = await fetch(`${API_BASE}${url}`, {
-        credentials: "include",
-        ...options,
+      const fetchAPI = async (url, options = {}) => {
+        try {
+          const res = await fetch(`${API_BASE}${url}`, {
+            credentials: "include",
+            ...options,
+          });
+          if (!res.ok) {
+            const errData = await res
+              .json()
+              .catch(() => ({ message: "Unknown error" }));
+            throw new Error(errData.message || `API Error: ${res.status}`);
+          }
+          return res;
+        } catch (err) {
+          console.error(`Fetch API Error for ${url}:`, err);
+          showMessageModal(
+            "Network Error",
+            `Could not connect to server. ${err.message}`
+          );
+          throw err;
+        }
+      };
+
+      const getWordCount = (text) =>
+        text
+          .trim()
+          .split(/\s+/)
+          .filter((w) => w.length > 0).length;
+
+      const renderList = (container, items, renderItem, emptyMessage) => {
+        container.innerHTML = "";
+        if (!items.length) {
+          container.innerHTML = `<p class="text-center italic text-gray-500 py-4">${emptyMessage}</p>`;
+          return;
+        }
+        const fragment = document.createDocumentFragment();
+        items.forEach((item) => {
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = renderItem(item);
+          fragment.appendChild(wrapper);
+        });
+        container.appendChild(fragment);
+      };
+
+      const init = async () => {
+        DOM.loadingOverlay.style.display = "flex";
+        try {
+          await Promise.all([
+            fetchUserData(),
+            fetchStudents(),
+            fetchOverdueTasks(),
+            fetchAssignedTasks(),
+            fetchFeedback(),
+          ]);
+          toggleSendAssignmentButtonState();
+          document.getElementById("currentYear").textContent =
+            new Date().getFullYear();
+        } catch (err) {
+          console.error("Initialization failed:", err);
+        } finally {
+          DOM.loadingOverlay.style.display = "none";
+        }
+      };
+
+      const fetchUserData = async () => {
+        try {
+          const res = await fetchAPI("/teacher/profile");
+          const data = await res.json();
+          const initialsEl = document.getElementById("profileInitials");
+          const nameEl = document.getElementById("profileName");
+          if (data.firstname && data.lastname) {
+            initialsEl.textContent =
+              `${data.firstname[0]}${data.lastname[0]}`.toUpperCase();
+            nameEl.textContent = `${data.firstname} ${data.lastname}`;
+          } else {
+            initialsEl.textContent = "T";
+            nameEl.textContent = "Teacher";
+          }
+        } catch (err) {
+          console.error("Error fetching profile:", err);
+        }
+      };
+
+      const toggleProfileDropdown = () => {
+        isDropdownVisible = !isDropdownVisible;
+        DOM.profileDropdownMenu.classList.toggle(
+          "opacity-0",
+          !isDropdownVisible
+        );
+        DOM.profileDropdownMenu.classList.toggle(
+          "invisible",
+          !isDropdownVisible
+        );
+      };
+
+      const logout = async () => {
+        try {
+          await fetchAPI("/auth/logout", { method: "POST" });
+          window.location.href = "/login";
+        } catch (err) {
+          console.error("Logout failed:", err);
+        }
+      };
+
+      window.addEventListener("click", (e) => {
+        if (
+          !DOM.profileMenuButton.contains(e.target) &&
+          !DOM.profileDropdownMenu.contains(e.target) &&
+          isDropdownVisible
+        ) {
+          toggleProfileDropdown();
+        }
       });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(errData.message || `API Error: ${res.status}`);
-      }
-      return res;
-    } catch (err) {
-      console.error(`Fetch API Error for ${url}:`, err);
-      showMessageModal("Network Error", `Could not connect to server. ${err.message}`);
-      throw err;
-    }
-  };
 
-  const getWordCount = (text) => text.trim().split(/\s+/).filter((w) => w.length > 0).length;
+      const fetchStudents = async () => {
+        try {
+          const res = await fetchAPI("/teacher/students");
+          students = await res.json();
+          renderStudents();
+        } catch {
+          renderList(
+            DOM.studentsList,
+            [],
+            () => "",
+            "Could not load student list."
+          );
+        }
+      };
 
-  const renderList = (container, items, renderItem, emptyMessage) => {
-    container.innerHTML = "";
-    if (!items.length) {
-      container.innerHTML = `<p class="text-center italic text-gray-500 py-4">${emptyMessage}</p>`;
-      return;
-    }
-    const fragment = document.createDocumentFragment();
-    items.forEach((item) => {
-      const wrapper = document.createElement("div");
-      wrapper.innerHTML = renderItem(item);
-      fragment.appendChild(wrapper);
-    });
-    container.appendChild(fragment);
-  };
-
-  const init = async () => {
-    DOM.loadingOverlay.style.display = "flex";
-    try {
-      await Promise.all([
-        fetchUserData(),
-        fetchStudents(),
-        fetchOverdueTasks(),
-        fetchAssignedTasks(),
-        fetchFeedback(),
-      ]);
-      toggleSendAssignmentButtonState();
-      document.getElementById("currentYear").textContent = new Date().getFullYear();
-    } catch (err) {
-      console.error("Initialization failed:", err);
-    } finally {
-      DOM.loadingOverlay.style.display = "none";
-    }
-  };
-
-  const fetchUserData = async () => {
-    try {
-      const res = await fetchAPI("/teacher/profile");
-      const data = await res.json();
-      const initialsEl = document.getElementById("profileInitials");
-      const nameEl = document.getElementById("profileName");
-      if (data.firstname && data.lastname) {
-        initialsEl.textContent = `${data.firstname[0]}${data.lastname[0]}`.toUpperCase();
-        nameEl.textContent = `${data.firstname} ${data.lastname}`;
-      } else {
-        initialsEl.textContent = "T";
-        nameEl.textContent = "Teacher";
-      }
-    } catch (err) {
-      console.error("Error fetching profile:", err);
-    }
-  };
-
-  const toggleProfileDropdown = () => {
-    isDropdownVisible = !isDropdownVisible;
-    DOM.profileDropdownMenu.classList.toggle("opacity-0", !isDropdownVisible);
-    DOM.profileDropdownMenu.classList.toggle("invisible", !isDropdownVisible);
-  };
-
-  const logout = async () => {
-    try {
-      await fetchAPI("/auth/logout", { method: "POST" });
-      window.location.href = "/login";
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
-
-  window.addEventListener("click", (e) => {
-    if (!DOM.profileMenuButton.contains(e.target) && !DOM.profileDropdownMenu.contains(e.target) && isDropdownVisible) {
-      toggleProfileDropdown();
-    }
-  });
-
-  const fetchStudents = async () => {
-    try {
-      const res = await fetchAPI("/teacher/students");
-      students = await res.json();
-      renderStudents();
-    } catch {
-      renderList(DOM.studentsList, [], () => "", "Could not load student list.");
-    }
-  };
-
-  const renderStudents = () => {
-    renderList(
-      DOM.studentsList,
-      students,
-      (s) => `
+      const renderStudents = () => {
+        renderList(
+          DOM.studentsList,
+          students,
+          (s) => `
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
           <span class="flex-1 text-gray-800 font-medium mb-2 sm:mb-0">
-            ${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (Grade ${sanitizeInput(s.grade)})
+            ${sanitizeInput(s.firstname)} ${sanitizeInput(
+            s.lastname
+          )} (Grade ${sanitizeInput(s.grade)})
           </span>
-          <button onclick="handleAssignClick('${sanitizeInput(s.email)}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600">
+          <button onclick="handleAssignClick('${sanitizeInput(
+            s.email
+          )}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600">
             Assign
           </button>
         </div>
       `,
-      "No students found in your class."
-    );
-    const optionsHtml = students.map(
-      (s) => `<option value="${sanitizeInput(s.email)}">${sanitizeInput(s.firstname)} ${sanitizeInput(s.lastname)} (${sanitizeInput(s.email)})</option>`
-    ).join("");
-    DOM.studentSelect.innerHTML = optionsHtml;
-    DOM.pointsStudentSelect.innerHTML = optionsHtml;
-  };
+          "No students found in your class."
+        );
+        const optionsHtml = students
+          .map(
+            (s) =>
+              `<option value="${sanitizeInput(s.email)}">${sanitizeInput(
+                s.firstname
+              )} ${sanitizeInput(s.lastname)} (${sanitizeInput(
+                s.email
+              )})</option>`
+          )
+          .join("");
+        DOM.studentSelect.innerHTML = optionsHtml;
+        DOM.pointsStudentSelect.innerHTML = optionsHtml;
+      };
 
-  const handleAssignClick = (email) => {
-    toast(`Preparing assignment for ${email}.`);
-    DOM.studentSelect.value = email;
-  };
+      const handleAssignClick = (email) => {
+        toast(`Preparing assignment for ${email}.`);
+        DOM.studentSelect.value = email;
+      };
 
-  const toggleSendAssignmentButtonState = () => {
-    const isFormValid =
-      DOM.studentSelect.value &&
-      DOM.assignmentTitle.value.trim() &&
-      DOM.assignmentDueDate.value &&
-      (getWordCount(DOM.assignmentText.value) > 0 || selectedAssignmentFile);
-    DOM.sendAssignmentButton.disabled = !isFormValid;
-    DOM.sendAssignmentButton.classList.toggle("opacity-50", !isFormValid);
-    DOM.sendAssignmentButton.classList.toggle("cursor-not-allowed", !isFormValid);
-  };
+      const toggleSendAssignmentButtonState = () => {
+        const isFormValid =
+          DOM.studentSelect.value &&
+          DOM.assignmentTitle.value.trim() &&
+          DOM.assignmentDueDate.value &&
+          (getWordCount(DOM.assignmentText.value) > 0 ||
+            selectedAssignmentFile);
+        DOM.sendAssignmentButton.disabled = !isFormValid;
+        DOM.sendAssignmentButton.classList.toggle("opacity-50", !isFormValid);
+        DOM.sendAssignmentButton.classList.toggle(
+          "cursor-not-allowed",
+          !isFormValid
+        );
+      };
 
-  const handleSendAssignment = async () => {
-    DOM.sendAssignmentButton.disabled = true;
-    try {
-      const formData = new FormData();
-      formData.append("studentEmail", DOM.studentSelect.value);
-      formData.append("title", DOM.assignmentTitle.value.trim());
-      formData.append("due_datetime", DOM.assignmentDueDate.value);
-      if (DOM.assignmentText.value.trim()) formData.append("description", DOM.assignmentText.value.trim());
-      if (selectedAssignmentFile) formData.append("assignmentFile", selectedAssignmentFile);
+      const handleSendAssignment = async () => {
+        DOM.sendAssignmentButton.disabled = true;
+        try {
+          const formData = new FormData();
+          formData.append("studentEmail", DOM.studentSelect.value);
+          formData.append("title", DOM.assignmentTitle.value.trim());
+          formData.append("due_datetime", DOM.assignmentDueDate.value);
+          if (DOM.assignmentText.value.trim())
+            formData.append("description", DOM.assignmentText.value.trim());
+          if (selectedAssignmentFile)
+            formData.append("assignmentFile", selectedAssignmentFile);
 
-      const res = await fetchAPI("/teacher/assignments", { method: "POST", body: formData });
-      const result = await res.json();
-      toast(result.message);
+          const res = await fetchAPI("/teacher/assignments", {
+            method: "POST",
+            body: formData,
+          });
+          const result = await res.json();
+          toast(result.message);
 
-      DOM.assignmentTitle.value = "";
-      DOM.assignmentDueDate.value = "";
-      DOM.assignmentText.value = "";
-      DOM.assignmentFile.value = "";
-      selectedAssignmentFile = null;
-      DOM.fileName.textContent = "No file selected.";
-      DOM.clearFileButton.classList.add("hidden");
-      toggleSendAssignmentButtonState();
-    } catch (err) {
-      console.error("Send assignment failed:", err);
-    } finally {
-      DOM.sendAssignmentButton.disabled = false;
-    }
-  };
+          DOM.assignmentTitle.value = "";
+          DOM.assignmentDueDate.value = "";
+          DOM.assignmentText.value = "";
+          DOM.assignmentFile.value = "";
+          selectedAssignmentFile = null;
+          DOM.fileName.textContent = "No file selected.";
+          DOM.clearFileButton.classList.add("hidden");
+          toggleSendAssignmentButtonState();
+        } catch (err) {
+          console.error("Send assignment failed:", err);
+        } finally {
+          DOM.sendAssignmentButton.disabled = false;
+        }
+      };
 
-  const handleSubmitFeedback = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const taskId = form.taskId.value;
-    const grade = form.grade.value;
-    const comments = form.comments.value;
-    const feedbackFile = form.feedbackFile.files[0];
+      const handleSubmitFeedback = async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const taskId = form.taskId.value;
+        const grade = form.grade.value;
+        const comments = form.comments.value;
+        const feedbackFile = form.feedbackFile.files[0];
 
-    if (!grade) return showMessageModal("Validation Error", "Please provide a grade.");
+        if (!grade)
+          return showMessageModal(
+            "Validation Error",
+            "Please provide a grade."
+          );
 
-    const submitButton = form.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
 
-    const formData = new FormData();
-    formData.append("taskId", taskId);
-    formData.append("grade", grade);
-    formData.append("comments", comments);
-    if (feedbackFile) formData.append("feedbackFile", feedbackFile);
+        const formData = new FormData();
+        formData.append("taskId", taskId);
+        formData.append("grade", grade);
+        formData.append("comments", comments);
+        if (feedbackFile) formData.append("feedbackFile", feedbackFile);
 
-    try {
-      const res = await fetchAPI("/teacher/feedback", { method: "POST", body: formData });
-      const result = await res.json();
-      showMessageModal("Feedback Sent", result.message);
-      await Promise.all([fetchAssignedTasks(), fetchFeedback()]);
-    } catch (err) {
-      console.error("Submit feedback failed:", err);
-    } finally {
-      submitButton.disabled = false;
-    }
-  };
+        try {
+          const res = await fetchAPI("/teacher/feedback", {
+            method: "POST",
+            body: formData,
+          });
+          const result = await res.json();
+          showMessageModal("Feedback Sent", result.message);
+          await Promise.all([fetchAssignedTasks(), fetchFeedback()]);
+        } catch (err) {
+          console.error("Submit feedback failed:", err);
+        } finally {
+          submitButton.disabled = false;
+        }
+      };
 
-  // =========================
-  // --- Points ---
-  // =========================
-  const handleAddPoints = async () => {
-    const studentEmail = DOM.pointsStudentSelect.value;
-    const points = DOM.pointsInput.value;
-    const reason = DOM.reasonText.value.trim();
-    if (!studentEmail || !points || points <= 0) {
-      return showMessageModal("Validation Error", "Please select a student and enter a valid number of points.");
-    }
+      // =========================
+      // --- Points ---
+      // =========================
+      const handleAddPoints = async () => {
+        const studentEmail = DOM.pointsStudentSelect.value;
+        const points = DOM.pointsInput.value;
+        const reason = DOM.reasonText.value.trim();
+        if (!studentEmail || !points || points <= 0) {
+          return showMessageModal(
+            "Validation Error",
+            "Please select a student and enter a valid number of points."
+          );
+        }
 
-    DOM.addPointsButton.disabled = true;
-    try {
-      const res = await fetchAPI("/teacher/points", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentEmail, points: parseInt(points, 10), reason }),
+        DOM.addPointsButton.disabled = true;
+        try {
+          const res = await fetchAPI("/teacher/points", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentEmail,
+              points: parseInt(points, 10),
+              reason,
+            }),
+          });
+          const result = await res.json();
+          showMessageModal("Success", result.message);
+          DOM.pointsInput.value = "";
+          DOM.reasonText.value = "";
+        } catch (err) {
+          console.error("Add points failed:", err);
+        } finally {
+          DOM.addPointsButton.disabled = false;
+        }
+      };
+
+      const handleSaveCalendar = async () => {
+        const termStart = DOM.termStart.value;
+        const termEnd = DOM.termEnd.value;
+        if (!termStart || !termEnd)
+          return showMessageModal(
+            "Validation Error",
+            "Please select both term start and end dates."
+          );
+
+        DOM.saveCalendarButton.disabled = true;
+        try {
+          const res = await fetchAPI("/teacher/calendar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ termStart, termEnd }),
+          });
+          const result = await res.json();
+          DOM.calendarMsg.textContent = result.message;
+          DOM.calendarMsg.classList.add("text-green-600");
+        } catch (err) {
+          console.error("Save calendar failed:", err);
+        } finally {
+          DOM.saveCalendarButton.disabled = false;
+        }
+      };
+
+      DOM.assignmentText.addEventListener("input", () => {
+        DOM.wordCountText.textContent = `Word Count: ${getWordCount(
+          DOM.assignmentText.value
+        )}`;
+        toggleSendAssignmentButtonState();
       });
-      const result = await res.json();
-      showMessageModal("Success", result.message);
-      DOM.pointsInput.value = "";
-      DOM.reasonText.value = "";
-    } catch (err) {
-      console.error("Add points failed:", err);
-    } finally {
-      DOM.addPointsButton.disabled = false;
-    }
-  };
+      DOM.assignmentTitle.addEventListener(
+        "input",
+        toggleSendAssignmentButtonState
+      );
+      DOM.assignmentDueDate.addEventListener(
+        "change",
+        toggleSendAssignmentButtonState
+      );
 
-  const handleSaveCalendar = async () => {
-    const termStart = DOM.termStart.value;
-    const termEnd = DOM.termEnd.value;
-    if (!termStart || !termEnd) return showMessageModal("Validation Error", "Please select both term start and end dates.");
-
-    DOM.saveCalendarButton.disabled = true;
-    try {
-      const res = await fetchAPI("/teacher/calendar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ termStart, termEnd }),
+      DOM.assignmentFile.addEventListener("change", (e) => {
+        selectedAssignmentFile = e.target.files[0] || null;
+        DOM.fileName.textContent = selectedAssignmentFile
+          ? selectedAssignmentFile.name
+          : "No file selected.";
+        DOM.clearFileButton.classList.toggle("hidden", !selectedAssignmentFile);
+        toggleSendAssignmentButtonState();
       });
-      const result = await res.json();
-      DOM.calendarMsg.textContent = result.message;
-      DOM.calendarMsg.classList.add("text-green-600");
-    } catch (err) {
-      console.error("Save calendar failed:", err);
-    } finally {
-      DOM.saveCalendarButton.disabled = false;
-    }
-  };
 
-  DOM.assignmentText.addEventListener("input", () => {
-    DOM.wordCountText.textContent = `Word Count: ${getWordCount(DOM.assignmentText.value)}`;
-    toggleSendAssignmentButtonState();
-  });
-  DOM.assignmentTitle.addEventListener("input", toggleSendAssignmentButtonState);
-  DOM.assignmentDueDate.addEventListener("change", toggleSendAssignmentButtonState);
+      DOM.clearFileButton.addEventListener("click", () => {
+        DOM.assignmentFile.value = "";
+        selectedAssignmentFile = null;
+        DOM.fileName.textContent = "No file selected.";
+        DOM.clearFileButton.classList.add("hidden");
+        toggleSendAssignmentButtonState();
+      });
 
-  DOM.assignmentFile.addEventListener("change", (e) => {
-    selectedAssignmentFile = e.target.files[0] || null;
-    DOM.fileName.textContent = selectedAssignmentFile ? selectedAssignmentFile.name : "No file selected.";
-    DOM.clearFileButton.classList.toggle("hidden", !selectedAssignmentFile);
-    toggleSendAssignmentButtonState();
-  });
+      DOM.sendAssignmentButton.addEventListener("click", handleSendAssignment);
+      DOM.addPointsButton.addEventListener("click", handleAddPoints);
+      DOM.saveCalendarButton.addEventListener("click", handleSaveCalendar);
+      DOM.profileMenuButton.addEventListener("click", toggleProfileDropdown);
+      DOM.logoutButton.addEventListener("click", logout);
 
-  DOM.clearFileButton.addEventListener("click", () => {
-    DOM.assignmentFile.value = "";
-    selectedAssignmentFile = null;
-    DOM.fileName.textContent = "No file selected.";
-    DOM.clearFileButton.classList.add("hidden");
-    toggleSendAssignmentButtonState();
-  });
+      document.addEventListener("submit", (e) => {
+        if (e.target.classList.contains("feedback-form"))
+          handleSubmitFeedback(e);
+      });
 
-  DOM.sendAssignmentButton.addEventListener("click", handleSendAssignment);
-  DOM.addPointsButton.addEventListener("click", handleAddPoints);
-  DOM.saveCalendarButton.addEventListener("click", handleSaveCalendar);
-  DOM.profileMenuButton.addEventListener("click", toggleProfileDropdown);
-  DOM.logoutButton.addEventListener("click", logout);
-
-  document.addEventListener("submit", (e) => {
-    if (e.target.classList.contains("feedback-form")) handleSubmitFeedback(e);
-  });
-
-  init();
-</script>
+      init();
+    </script>
   </body>
 </html>
