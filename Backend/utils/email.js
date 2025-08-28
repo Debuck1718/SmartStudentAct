@@ -123,12 +123,8 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
 // ─── Convenience Wrappers (params fixed to match Brevo placeholders) ───
 
 // Auth & Onboarding
-const sendOTPEmail = (email, firstname, otp) => {
-  if (isNaN(Number(otp)) || String(otp).length < 4) {
-    console.warn(`⚠️ [sendOTPEmail] Suspicious OTP value for ${email}:`, otp);
-  }
-  return sendTemplateEmail(email, TEMPLATE_IDS.otp, { firstname, otp });
-};
+const sendOTPEmail = (email, firstname, otp) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.otp, { firstname, otp });
 
 const sendWelcomeEmail = (email, firstname) =>
   sendTemplateEmail(email, TEMPLATE_IDS.welcome, { firstname });
@@ -234,6 +230,7 @@ const sendSubscriptionRenewalEmail = (
     next_billing_date: nextBillingDate,
     link,
   });
+
 
 /* ─── Exports ─── */
 module.exports = {
