@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="page-title">Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="./images/icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="./images/icon.png"
+    />
+    <link rel="manifest" href="/site.webmanifest" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -12,7 +26,6 @@
       referrerpolicy="no-referrer"
     />
     <style>
-      /* Custom styles to mimic React Native's StyleSheet.create */
       body {
         font-family: "Inter", sans-serif;
       }
@@ -82,14 +95,13 @@
       }
 
       .tab-button.active {
-        border-bottom-color: #3b82f6; /* Blue-500 */
+        border-bottom-color: #3b82f6; 
       }
     </style>
   </head>
   <body class="bg-gray-100 antialiased">
     <div id="app-container" class="container"></div>
 
-    <!-- Alert Modal -->
     <div
       id="alert-modal"
       class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4"
@@ -511,9 +523,8 @@
       const updateLang = (lang) => {
         currentLang = lang;
         document.documentElement.lang = lang;
-        render(); // Re-render the UI with the new language
+        render(); 
         
-        // Update modal content manually as they are not part of the main render flow
         document.getElementById('alert-cancel').textContent = translations[currentLang].alert.cancel;
         document.getElementById('alert-confirm').textContent = translations[currentLang].alert.ok;
         document.getElementById('contact-title').textContent = translations[currentLang].contactForm.title;
@@ -523,7 +534,6 @@
         document.getElementById('closeContact').textContent = translations[currentLang].contactForm.cancel;
         document.querySelector('#contactForm button[type="submit"]').textContent = translations[currentLang].contactForm.send;
 
-        // Manually update placeholder
         document.getElementById('search-term').placeholder = translations[currentLang].searchPlaceholder;
       };
 
@@ -675,12 +685,10 @@
           .addEventListener("click", handleLogout);
       };
 
-      // REFRACTORED: Using document.createElement to create DOM elements, which is safer and more performant than innerHTML.
       const renderUserManagement = () => {
         const container = document.getElementById("app-container");
         const usersSection = document.createElement("div");
-        
-        // Filters section
+
         const filtersHtml = `
           <div class="bg-white rounded-xl shadow-md p-4 mb-5">
             <h2 class="text-base sm:text-lg font-semibold text-gray-800">${translations[currentLang].filters}</h2>
@@ -777,7 +785,6 @@
         document.getElementById("grade-filter").value = state.gradeFilter;
       };
 
-      // REFRACTORED: Using document.createElement to create DOM elements, which is safer and more performant than innerHTML.
       const renderFileManagement = () => {
         const container = document.getElementById("app-container");
         const filesSection = document.createElement("div");
@@ -828,7 +835,6 @@
       const filterUsers = () => {
         let result = state.users;
 
-        // Search by name or email
         if (state.searchTerm) {
           const term = state.searchTerm.toLowerCase();
           result = result.filter(
@@ -839,7 +845,6 @@
           );
         }
 
-        // Filter by grade
         if (state.gradeFilter !== "all") {
           result = result.filter((u) => String(u.grade) === state.gradeFilter);
         }
@@ -868,7 +873,6 @@
         state.isLoading = true;
         render();
         try {
-          // This is a new endpoint for the file view functionality
           const res = await fetchAPI("/admin/my-school-files");
           state.files = await res.json();
         } catch (err) {
@@ -905,7 +909,6 @@
         );
       };
 
-      // COMPLETED: The logic for managing a user and handling the API call.
       const manageUser = async (email, action) => {
         try {
             const endpoint = `/admin/users/${email}/${action}`;
@@ -913,7 +916,6 @@
             const data = await res.json();
             if (data.status === 'success') {
                 showCustomAlert(translations[currentLang].alert.successTitle, data.message);
-                // Reload data after successful action
                 loadUsers();
             } else {
                 showCustomAlert(translations[currentLang].alert.title, data.message || translations[currentLang].alert.generalError(translations[currentLang][action]));
@@ -924,7 +926,6 @@
         }
       };
       
-      // ADDED: A confirmation function for the delete action to prevent accidental deletions.
       const confirmRemove = (email, userName) => {
         showCustomAlert(
             translations[currentLang].alert.confirmDeleteTitle,
@@ -953,7 +954,6 @@
         );
       };
 
-      // ADDED: Initial data fetch on window load.
       window.onload = () => {
         loadUsers();
       };

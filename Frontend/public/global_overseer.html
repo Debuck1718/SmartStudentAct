@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Global Overseer Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link
+  rel="icon"
+  type="image/png"
+  sizes="32x32"
+  href="./images/icon.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="16x16"
+  href="./images/icon.png"
+/>
+<link rel="manifest" href="/site.webmanifest" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
 body { font-family: "Inter", sans-serif; }
@@ -14,15 +28,16 @@ body { font-family: "Inter", sans-serif; }
 </head>
 <body class="bg-gray-100 antialiased">
 <div class="min-h-screen p-6">
-  <h1 class="text-3xl font-bold mb-6">Global Overseer Dashboard</h1>
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">Global Overseer Dashboard</h1>
+    <div class="flex space-x-4">
+      <button id="open-assign-region" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Assign Region</button>
+      <button id="logout-button" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Logout</button>
+    </div>
+  </div>
 
-  <!-- Assign Region Button -->
-  <button id="open-assign-region" class="mb-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Assign Region</button>
-
-  <!-- Dashboard Cards -->
   <div id="dashboard-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"></div>
 
-  <!-- All Files Section -->
   <div class="bg-white p-6 rounded-lg shadow">
     <div class="flex flex-col md:flex-row justify-between items-center mb-4">
       <h2 class="text-2xl font-semibold mb-2 md:mb-0">All Files</h2>
@@ -52,7 +67,6 @@ body { font-family: "Inter", sans-serif; }
   </div>
 </div>
 
-<!-- Assign Region Modal -->
 <div id="assign-region-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
   <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
     <div class="flex justify-between items-center mb-4">
@@ -76,7 +90,6 @@ body { font-family: "Inter", sans-serif; }
   </div>
 </div>
 
-<!-- Alert Modal -->
 <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
   <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
     <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
@@ -106,6 +119,7 @@ const alertMessage = document.getElementById("alert-message");
 const alertOk = document.getElementById("alert-ok");
 const fileSearch = document.getElementById("file-search");
 const fileFilter = document.getElementById("file-filter");
+const logoutButton = document.getElementById("logout-button");
 
 // Modal handlers
 openAssignRegionBtn.addEventListener("click", () => assignRegionModal.classList.remove("hidden"));
@@ -128,7 +142,7 @@ function showError(message) {
   dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
 }
 
-// Load dashboard and files
+
 async function loadDashboard() {
   showLoading();
   try {
@@ -136,7 +150,10 @@ async function loadDashboard() {
     const data = await res.json();
     if (!res.ok) {
       showError(data.message || "Failed to load dashboard.");
-      if (res.status === 401 || res.status === 403) localStorage.removeItem("jwt_token");
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem("jwt_token");
+        window.location.href = "/login.html"; 
+      }
       return;
     }
     renderDashboard(data);
@@ -169,13 +186,13 @@ function renderDashboard(data) {
   });
 }
 
-// Files
+
 function renderFiles() {
   let filteredFiles = filesData.filter(f => {
     const searchTerm = fileSearch.value.toLowerCase();
     const typeFilter = fileFilter.value;
     return (!searchTerm || f.filename.toLowerCase().includes(searchTerm))
-           && (!typeFilter || f.type === typeFilter);
+              && (!typeFilter || f.type === typeFilter);
   });
 
   filesTableBody.innerHTML = "";
@@ -198,11 +215,11 @@ function renderFiles() {
   });
 }
 
-// Filter/search
+
 fileSearch.addEventListener("input", renderFiles);
 fileFilter.addEventListener("change", renderFiles);
 
-// Assign region
+
 assignRegionConfirm.addEventListener("click", async () => {
   const email = overseerEmailInput.value.trim();
   const region = regionNameInput.value.trim();
@@ -228,8 +245,36 @@ assignRegionConfirm.addEventListener("click", async () => {
   }
 });
 
-// Initial load
-window.addEventListener("DOMContentLoaded", loadDashboard);
+
+logoutButton.addEventListener("click", async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/logout`, {
+      method: "POST",
+      credentials: "include"
+    });
+    if (res.ok) {
+      localStorage.removeItem("jwt_token");
+      window.location.href = "/login.html"; 
+    } else {
+      localStorage.removeItem("jwt_token");
+      window.location.href = "/login.html";
+    }
+  } catch (err) {
+    console.error("Logout failed:", err);
+    localStorage.removeItem("jwt_token");
+    window.location.href = "/login.html";
+  }
+});
+
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  if (!localStorage.getItem("jwt_token")) {
+    window.location.href = "/login.html"; 
+  } else {
+    loadDashboard();
+  }
+});
 </script>
 </body>
 </html>
