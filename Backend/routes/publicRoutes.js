@@ -77,16 +77,14 @@ module.exports = (eventBus, agenda) => {
     }
     next();
   };
-
 // ─── Signup OTP Route ───
 publicRouter.post(
   "/users/signup-otp",
   rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
   validate(signupOtpSchema),
   async (req, res) => {
-    const { email, ...rest } = req.body;
+    const { email, firstname, ...rest } = req.body;
 
-    // Generate OTP (fixed 123456 in dev, random in prod)
     const code =
       process.env.NODE_ENV === "production"
         ? Math.floor(100000 + Math.random() * 900000).toString()
@@ -96,20 +94,19 @@ publicRouter.post(
     req.session.signup = {
       ...rest,
       email,
+      firstname, 
       code,
       attempts: 0,
       timestamp: Date.now(),
     };
 
     logger.debug("[OTP] Generated for %s: %s", email, code);
-
-    // ─── Send OTP with retry and fallback ───
     try {
       const success = await (async () => {
         const retries = 3;
         for (let attempt = 1; attempt <= retries; attempt++) {
           try {
-            await sendOTPEmail(email, code);
+            await sendOTPEmail(email, code, firstname); 
             logger.info("✅ OTP email sent to %s (attempt %d)", email, attempt);
             return true;
           } catch (err) {
