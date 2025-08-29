@@ -363,20 +363,15 @@ protectedRouter.patch(
     const updateData = req.body;
 
     try {
-      const user = await User.findById(userId);
-      if (!user) {
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+        runValidators: true,
+      }).select('-password');
+
+      if (!updatedUser) {
+        logger.warn(`User with ID ${userId} not found during profile update.`);
         return res.status(404).json({ message: 'User not found.' });
       }
-
-      // Update only provided fields
-      Object.keys(updateData).forEach((key) => {
-        user[key] = updateData[key];
-      });
-
-      await user.save();
-
-      // Exclude password before returning
-      const updatedUser = await User.findById(userId).select('-password');
 
       res.status(200).json({
         message: 'Profile updated successfully.',
@@ -384,6 +379,11 @@ protectedRouter.patch(
         user: updatedUser,
       });
     } catch (error) {
+      if (error.name === 'ValidationError') {
+        // Return a more descriptive message for validation errors
+        const messages = Object.values(error.errors).map(val => val.message);
+        return res.status(400).json({ message: 'Validation failed', errors: messages });
+      }
       if (error.code === 11000) {
         return res
           .status(409)
@@ -394,7 +394,6 @@ protectedRouter.patch(
     }
   }
 );
-
 
 protectedRouter.post(
   "/profile/upload-photo",
