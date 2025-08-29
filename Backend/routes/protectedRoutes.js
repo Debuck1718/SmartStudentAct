@@ -537,6 +537,39 @@ protectedRouter.get(
     }
 );
 
+protectedRouter.get("/users", authenticateJWT, async (req, res) => {
+  try {
+    const { search = "" } = req.query;
+
+    if (!["admin", "global_overseer"].includes(req.user.role)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    let query = {};
+
+    if (req.user.role === "admin") {
+      query.schoolName = req.user.schoolName;
+    }
+
+    if (search) {
+      query.$or = [
+        { firstname: { $regex: search, $options: "i" } },
+        { lastname: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const users = await User.find(query)
+      .select("firstname lastname email role schoolName schoolCountry createdAt")
+      .lean();
+
+    res.json({ users });
+  } catch (err) {
+    console.error("❌ Error fetching users:", err);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
 protectedRouter.post('/admin/assign-region', authenticateJWT, hasRole(['global-overseer']), validate(assignRegionSchema), async (req, res) => {
     const { overseerEmail, region } = req.body;
     try {
