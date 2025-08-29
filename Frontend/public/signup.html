@@ -907,7 +907,6 @@
             checkFormValidity();
         });
 
-        // ─── Request OTP ───
         requestOtpButton.addEventListener("click", async () => {
             if (isSubmitting) return;
 
@@ -920,7 +919,20 @@
             }
 
             signupData = data;
-            const { password, confirmPassword, ...otpRequestData } = signupData;
+
+            // This is the CRITICAL FIX: Map 'grade' or 'teacherGrade' to 'educationLevel'
+            const educationLevel = signupData.occupation === 'student' ? signupData.grade : signupData.teacherGrade;
+
+            const otpRequestData = {
+                firstName: signupData.firstName,
+                lastName: signupData.lastName,
+                email: signupData.email,
+                phone: signupData.phone,
+                occupation: signupData.occupation,
+                schoolCountry: signupData.schoolCountry,
+                schoolName: signupData.schoolName,
+                educationLevel: educationLevel,
+            };
 
             setLoadingState(requestOtpButton, true, "Request OTP");
 
