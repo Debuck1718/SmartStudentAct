@@ -133,10 +133,13 @@ module.exports = (eventBus, agenda) => {
         attempts: 0,
         timestamp: Date.now(),
         temporaryUserId,
-        // Added default values for required fields in the User schema
         role: "student",
         occupation: "student",
         schoolCountry: "",
+        // Added defaults for conditionally required fields
+        educationLevel: "high",
+        grade: 10,
+        schoolName: "Default High School",
       };
 
       logger.debug("[OTP] Generated for %s: %s", email, code);
@@ -215,11 +218,12 @@ module.exports = (eventBus, agenda) => {
           email: decoded.email,
           phone: decoded.phone,
           password: decoded.passwordHash,
-          // Use the 'verified' field from the schema
           verified: true,
-          // These fields were added to signupData
           role: decoded.role,
           occupation: decoded.occupation,
+          educationLevel: decoded.educationLevel,
+          grade: decoded.grade,
+          schoolName: decoded.schoolName,
           schoolCountry: decoded.schoolCountry,
         });
         await newUser.save();
