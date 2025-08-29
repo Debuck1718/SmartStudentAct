@@ -93,7 +93,8 @@ module.exports = (eventBus, agenda) => {
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
     validate(signupOtpSchema),
     async (req, res) => {
-      const { firstName, lastName, email, phone, password, confirmPassword } =
+      // Renamed firstName and lastName to match the frontend and schema
+      const { firstname, lastname, email, phone, password, confirmPassword } =
         req.body;
 
       if (password !== confirmPassword) {
@@ -141,7 +142,7 @@ module.exports = (eventBus, agenda) => {
           const retries = 3;
           for (let attempt = 1; attempt <= retries; attempt++) {
             try {
-              await sendOTPEmail(email, firstName, code);
+              await sendOTPEmail(email, firstname, code);
               logger.info("OTP email sent to %s (attempt %d)", email, attempt);
               return true;
             } catch (err) {
