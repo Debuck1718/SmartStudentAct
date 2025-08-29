@@ -103,9 +103,11 @@ module.exports = (eventBus, agenda) => {
       const hashedPassword = await bcrypt.hash(password, 10);
       const temporaryUserId = uuidv4();
 
-      const existingUser = await User.findOne({ email });
       if (existingUser) {
-        if (bcrypt.compareSync(password, existingUser.password)) {
+        if (
+          existingUser.password &&
+          bcrypt.compareSync(password, existingUser.password)
+        ) {
           return res.status(200).json({
             step: "onboarding",
             message: "User exists. Proceed to onboarding.",
@@ -190,80 +192,79 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-publicRouter.post(
-  "/users/verify-otp",
-  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-  validate(verifyOtpSchema),
-  async (req, res) => {
-    const { code, email, password, otpToken } = req.body;
+  publicRouter.post(
+    "/users/verify-otp",
+    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+    validate(verifyOtpSchema),
+    async (req, res) => {
+      const { code, email, password, otpToken } = req.body;
 
-    try {
-      // Decode OTP token
-      const decoded = jwt.verify(otpToken, JWT_SECRET);
+      try {
+        // Decode OTP token
+        const decoded = jwt.verify(otpToken, JWT_SECRET);
 
-      if (decoded.email !== email || decoded.code !== code) {
-        return res.status(400).json({ message: "Invalid email or OTP." });
-      }
+        if (decoded.email !== email || decoded.code !== code) {
+          return res.status(400).json({ message: "Invalid email or OTP." });
+        }
 
-      // Check if user already exists
-      let existingUser = await User.findOne({ email });
+        // Check if user already exists
+        let existingUser = await User.findOne({ email });
 
-      if (existingUser) {
-        const isMatch = await existingUser.comparePassword(password);
-        if (!isMatch) {
-          return res.status(400).json({
-            message: "Password mismatch. Please restart signup.",
+        if (existingUser) {
+          const isMatch = await existingUser.comparePassword(password);
+          if (!isMatch) {
+            return res.status(400).json({
+              message: "Password mismatch. Please restart signup.",
+            });
+          }
+
+          // User exists and password matches — redirect to onboarding
+          return res.status(200).json({
+            status: "success",
+            message: "User exists. Proceed to onboarding.",
+            userId: existingUser._id,
           });
         }
 
-        // User exists and password matches — redirect to onboarding
-        return res.status(200).json({
-          status: "success",
-          message: "User exists. Proceed to onboarding.",
-          userId: existingUser._id,
+        // Create new user with default placeholder information
+        const newUser = new User({
+          _id: decoded.temporaryUserId,
+          firstname: decoded.firstname,
+          lastname: decoded.lastname,
+          email: decoded.email,
+          phone: decoded.phone,
+          password: decoded.passwordHash, // hashed password from signup
+          verified: true,
+          role: "student", // default role
+          occupation: "student", // default occupation
+          educationLevel: "high", // default education level
+          grade: "11", // default grade
+          schoolName: "My School", // default school
+          schoolCountry: "GH", // default country
         });
+
+        await newUser.save();
+
+        // Send welcome email (non-blocking)
+        sendWelcomeEmail(newUser.email, newUser.firstname).catch((err) => {
+          logger.error("Failed to send welcome email:", err);
+        });
+
+        return res.status(201).json({
+          status: "success",
+          message: "OTP verified successfully. Proceed to onboarding.",
+          userId: newUser._id,
+        });
+      } catch (err) {
+        logger.error("❌ Verify OTP error:", err);
+
+        if (err.name === "TokenExpiredError") {
+          return res.status(400).json({ message: "OTP expired." });
+        }
+        return res.status(500).json({ message: "OTP verification failed." });
       }
-
-      // Create new user with default placeholder information
-      const newUser = new User({
-        _id: decoded.temporaryUserId,
-        firstname: decoded.firstname,
-        lastname: decoded.lastname,
-        email: decoded.email,
-        phone: decoded.phone,
-        password: decoded.passwordHash, // hashed password from signup
-        verified: true,
-        role: "student",                // default role
-        occupation: "student",    // default occupation
-        educationLevel: "high",// default education level
-        grade: "11",         // default grade
-        schoolName: "My School",    // default school
-        schoolCountry: "GH", // default country
-      });
-
-      await newUser.save();
-
-      // Send welcome email (non-blocking)
-      sendWelcomeEmail(newUser.email, newUser.firstname).catch((err) => {
-        logger.error("Failed to send welcome email:", err);
-      });
-
-      return res.status(201).json({
-        status: "success",
-        message: "OTP verified successfully. Proceed to onboarding.",
-        userId: newUser._id,
-      });
-    } catch (err) {
-      logger.error("❌ Verify OTP error:", err);
-
-      if (err.name === "TokenExpiredError") {
-        return res.status(400).json({ message: "OTP expired." });
-      }
-      return res.status(500).json({ message: "OTP verification failed." });
     }
-  }
-);
-
+  );
 
   publicRouter.post("/users/login", async (req, res) => {
     try {
