@@ -38,13 +38,33 @@ module.exports = (eventBus, agenda) => {
       Joi.number().integer().min(5).max(12),
       Joi.string().valid("100","200","300","400","500","600")
     ).allow(null),
+    password: Joi.string().min(8).required(), // Added password validation
+    confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({ 'any.only': 'Passwords do not match' })
   }).unknown(true);
 
+  // Updated verifyOtpSchema to include all user sign-up fields for the second step.
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
-  });
+    confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({ 'any.only': 'Passwords do not match' }),
+    phone: Joi.string().pattern(/^\d{10,15}$/).required(),
+    firstname: Joi.string().min(2).max(50).required(),
+    lastname: Joi.string().min(2).max(50).required(),
+    occupation: Joi.string()
+      .valid("student", "teacher", "admin", "global_overseer", "overseer")
+      .required(),
+    schoolCountry: Joi.string().length(2).required(),
+    schoolName: Joi.string().max(100).required(),
+    grade: Joi.alternatives().try(
+      Joi.number().integer().min(5).max(12),
+      Joi.string().valid("100","200","300","400","500","600")
+    ).allow(null),
+    teacherGrade: Joi.alternatives().try(
+      Joi.number().integer().min(5).max(12),
+      Joi.string().valid("100","200","300","400","500","600")
+    ).allow(null),
+  }).unknown(true);
 
   const loginSchema = Joi.object({
     email: Joi.string().email().required(),
@@ -77,89 +97,86 @@ module.exports = (eventBus, agenda) => {
     next();
   };
 
-publicRouter.post(
-  "/users/signup-otp",
-  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-  validate(signupOtpSchema),
-  async (req, res) => {
-    const { email, firstname, ...rest } = req.body;
+  publicRouter.post(
+    "/users/signup-otp",
+    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+    validate(signupOtpSchema),
+    async (req, res) => {
+      const { email, firstname, ...rest } = req.body;
 
-    const code =
-      process.env.NODE_ENV === "production"
-        ? Math.floor(100000 + Math.random() * 900000).toString()
-        : "123456";
+      const code =
+        process.env.NODE_ENV === "production"
+          ? Math.floor(100000 + Math.random() * 900000).toString()
+          : "123456";
 
-    if (!req.session) req.session = {};
-    req.session.signup = {
-      ...rest,
-      email,
-      firstname, 
-      code,
-      attempts: 0,
-      timestamp: Date.now(),
-    };
+      if (!req.session) req.session = {};
+      req.session.signup = {
+        ...rest,
+        email,
+        firstname,
+        code,
+        attempts: 0,
+        timestamp: Date.now(),
+      };
 
-    logger.debug("[OTP] Generated for %s: %s", email, code);
+      logger.debug("[OTP] Generated for %s: %s", email, code);
 
-    try {
-      const success = await (async () => {
-        const retries = 3;
-        for (let attempt = 1; attempt <= retries; attempt++) {
-          try {
-            await sendOTPEmail(email, firstname, code); 
-            logger.info("OTP email sent to %s (attempt %d)", email, attempt);
-            return true;
-          } catch (err) {
-            logger.warn(
-              "⚠️ OTP send attempt %d failed for %s: %s",
-              attempt,
-              email,
-              err.message || err
-            );
-            if (attempt < retries) {
-              const delay = Math.pow(2, attempt) * 1000; 
-              logger.debug("⏳ Retrying in %ds...", delay / 1000);
-              await new Promise((r) => setTimeout(r, delay));
+      try {
+        const success = await (async () => {
+          const retries = 3;
+          for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+              await sendOTPEmail(email, firstname, code);
+              logger.info("OTP email sent to %s (attempt %d)", email, attempt);
+              return true;
+            } catch (err) {
+              logger.warn(
+                "⚠️ OTP send attempt %d failed for %s: %s",
+                attempt,
+                email,
+                err.message || err
+              );
+              if (attempt < retries) {
+                const delay = Math.pow(2, attempt) * 1000;
+                logger.debug("⏳ Retrying in %ds...", delay / 1000);
+                await new Promise((r) => setTimeout(r, delay));
+              }
             }
           }
+          return false;
+        })();
+
+        if (!success) {
+          logger.error("❌ All OTP send attempts failed for %s", email);
+          return res.status(500).json({ error: "Failed to send OTP" });
         }
-        return false;
-      })();
 
-      if (!success) {
-        logger.error("❌ All OTP send attempts failed for %s", email);
-        return res.status(500).json({ error: "Failed to send OTP" });
+        eventBus.emit("otp_sent", { email, otp: code });
+        res.json({ step: "verify", message: "OTP sent to your email" });
+      } catch (err) {
+        logger.error("❌ Unexpected OTP route error:", err);
+        res.status(500).json({ error: "Failed to send OTP" });
       }
-
-      eventBus.emit("otp_sent", { email, otp: code });
-      res.json({ step: "verify", message: "OTP sent to your email" });
-    } catch (err) {
-      logger.error("❌ Unexpected OTP route error:", err);
-      res.status(500).json({ error: "Failed to send OTP" });
     }
-  }
-);
+  );
 
   publicRouter.post(
     "/users/verify-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-    validate(verifyOtpSchema),
+    // Use the comprehensive schema for validation
+    validate(verifyOtpSchema), 
     async (req, res) => {
-      const { code, email, password } = req.body;
+      const { code, email, password, ...rest } = req.body;
       const signupData = req.session?.signup;
 
-      if (!signupData || signupData.email !== email) {
-        return res.status(400).json({ error: "Invalid email or OTP session expired" });
+      if (!signupData || signupData.email !== email || signupData.code !== code) {
+        return res.status(400).json({ error: "Invalid email, OTP, or session expired" });
       }
 
       signupData.attempts = (signupData.attempts || 0) + 1;
       if (signupData.attempts > 5) {
         delete req.session.signup;
         return res.status(429).json({ error: "Too many attempts, please request a new OTP" });
-      }
-
-      if (signupData.code !== code) {
-        return res.status(400).json({ error: "Invalid OTP" });
       }
 
       if (Date.now() - signupData.timestamp > 10 * 60 * 1000) {
@@ -172,11 +189,13 @@ publicRouter.post(
         const trialEndDate = new Date();
         trialEndDate.setDate(trialEndDate.getDate() + 30);
 
+        // Create the user using data from the request body
         const newUser = await User.create({
-          ...signupData,
+          ...rest,
+          email,
           password: hash,
           verified: true,
-          role: signupData.occupation,
+          role: rest.occupation,
           is_on_trial: true,
           trial_end_date: trialEndDate,
           subscription_status: "inactive",
@@ -199,9 +218,9 @@ publicRouter.post(
 
         res.cookie("access_token", token, {
           httpOnly: true,
-          secure: true, 
-          sameSite: "None", 
-          maxAge: 1000 * 60 * 60 * 24, 
+          secure: true,
+          sameSite: "None",
+          maxAge: 1000 * 60 * 60 * 24,
         });
         res.status(201).json({
           status: "success",
