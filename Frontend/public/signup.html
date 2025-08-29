@@ -1001,23 +1001,37 @@
         }
         checkFormValidity();
       });
+
       requestOtpButton.addEventListener("click", async () => {
         if (isSubmitting) return;
 
         const { errors, data } = validateForm();
 
         if (Object.keys(errors).length > 0) {
-          // This block should now be less likely to run due to live feedback
           showMessage("Please fill out all required fields correctly.");
           return;
         }
+
         signupData = data;
 
-        // This is the CRITICAL FIX: Map 'grade' or 'teacherGrade' to 'educationLevel'
-        const educationLevel =
-          signupData.occupation === "student"
-            ? signupData.grade
-            : signupData.teacherGrade;
+        // Determine educationLevel and grade correctly for students
+        let educationLevel, grade;
+        if (signupData.occupation === "student") {
+          const gradeValue = gradeSelect.value;
+          if (["5", "6", "7", "8", "9"].includes(gradeValue)) {
+            educationLevel = "junior";
+            grade = gradeValue;
+          } else if (["10", "11", "12"].includes(gradeValue)) {
+            educationLevel = "high";
+            grade = gradeValue;
+          } else if (["100", "200", "300", "400"].includes(gradeValue)) {
+            educationLevel = "university";
+            grade = gradeValue;
+          } else {
+            educationLevel = "";
+            grade = "";
+          }
+        }
 
         const otpRequestData = {
           firstname: firstNameInput.value.trim(),
@@ -1026,21 +1040,20 @@
           phone: phoneInput.value.trim(),
           occupation: occupationSelect.value,
           educationLevel:
-            occupationSelect.value === "student"
-              ? gradeSelect.value
-              : undefined,
+            signupData.occupation === "student" ? educationLevel : undefined,
+          grade: signupData.occupation === "student" ? grade : undefined,
           schoolName: schoolNameInput.value.trim(),
           schoolCountry: schoolCountrySelect.value,
           teacherGrade:
-            occupationSelect.value === "teacher"
+            signupData.occupation === "teacher"
               ? teacherGradeSelect.value
               : undefined,
           teacherSubject:
-            occupationSelect.value === "teacher"
+            signupData.occupation === "teacher"
               ? teacherSubjectInput.value.trim()
               : undefined,
           university:
-            occupationSelect.value === "teacher"
+            signupData.occupation === "teacher"
               ? universityInput.value.trim()
               : undefined,
         };
@@ -1071,7 +1084,6 @@
           setLoadingState(requestOtpButton, false, "Request OTP");
         }
       });
-
       // ─── Verify OTP ───
       verifyOtpButton.addEventListener("click", async () => {
         if (isSubmitting) return;
