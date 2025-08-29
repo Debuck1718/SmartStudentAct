@@ -167,23 +167,23 @@
 
       <div id="signupFormSection" class="form-section">
         <div class="flex flex-col md:flex-row gap-2 mb-2">
-          <label class="sr-only" for="firstNameInput">First Name</label>
+          <label class="sr-only" for="firstnameInput">First Name</label>
           <input
-            id="firstNameInput"
+            id="firstnameInput"
             type="text"
             placeholder="First Name"
             class="input flex-1"
           />
-          <label class="sr-only" for="lastNameInput">Last Name</label>
+          <label class="sr-only" for="lastnameInput">Last Name</label>
           <input
-            id="lastNameInput"
+            id="lastnameInput"
             type="text"
             placeholder="Last Name"
             class="input flex-1"
           />
         </div>
-        <p id="firstNameError" class="error-text hidden"></p>
-        <p id="lastNameError" class="error-text hidden"></p>
+        <p id="firstnameError" class="error-text hidden"></p>
+        <p id="lastnameError" class="error-text hidden"></p>
 
         <label class="sr-only" for="emailInput">Email</label>
         <input
@@ -310,208 +310,215 @@
       </button>
     </div>
 
-  <script>
-  const termsModal = document.getElementById("termsModal");
-  const openTermsLink = document.getElementById("openTermsLink");
-  const closeModalButton = document.getElementById("closeModalButton");
-  const signupFormSection = document.getElementById("signupFormSection");
-  const otpSection = document.getElementById("otpSection");
-  const firstNameInput = document.getElementById("firstNameInput");
-  const lastNameInput = document.getElementById("lastNameInput");
-  const emailInput = document.getElementById("emailInput");
-  const phoneInput = document.getElementById("phoneInput");
-  const passwordInput = document.getElementById("passwordInput");
-  const confirmPasswordInput = document.getElementById("confirmPasswordInput");
-  const requestOtpButton = document.getElementById("requestOtpButton");
-  const verifyOtpButton = document.getElementById("verifyOtpButton");
-  const otpInput = document.getElementById("otpInput");
-  const messageAlertBox = document.getElementById("messageAlertBox");
-  const messageAlertText = document.getElementById("messageAlertText");
+    <script>
+      const termsModal = document.getElementById("termsModal");
+      const openTermsLink = document.getElementById("openTermsLink");
+      const closeModalButton = document.getElementById("closeModalButton");
+      const signupFormSection = document.getElementById("signupFormSection");
+      const otpSection = document.getElementById("otpSection");
+      // Changed from firstNameInput to firstnameInput
+      const firstnameInput = document.getElementById("firstnameInput");
+      // Changed from lastNameInput to lastnameInput
+      const lastnameInput = document.getElementById("lastnameInput");
+      const emailInput = document.getElementById("emailInput");
+      const phoneInput = document.getElementById("phoneInput");
+      const passwordInput = document.getElementById("passwordInput");
+      const confirmPasswordInput = document.getElementById("confirmPasswordInput");
+      const requestOtpButton = document.getElementById("requestOtpButton");
+      const verifyOtpButton = document.getElementById("verifyOtpButton");
+      const otpInput = document.getElementById("otpInput");
+      const messageAlertBox = document.getElementById("messageAlertBox");
+      const messageAlertText = document.getElementById("messageAlertText");
 
-  const API_REQUEST_OTP = "https://smartstudentact.onrender.com/api/users/signup-otp";
-  const API_VERIFY_OTP = "https://smartstudentact.onrender.com/api/users/verify-otp";
+      const API_REQUEST_OTP = "https://smartstudentact.onrender.com/api/users/signup-otp";
+      const API_VERIFY_OTP = "https://smartstudentact.onrender.com/api/users/verify-otp";
 
-  let isSubmitting = false;
-  let userData = {}; // To store temporary user data
+      let isSubmitting = false;
+      let userData = {}; // To store temporary user data
 
-  function showMessage(message, type = 'error') {
-    messageAlertText.textContent = message;
-    if (type === 'error') {
-      messageAlertBox.classList.remove('bg-green-500');
-      messageAlertBox.classList.add('bg-red-500');
-    } else {
-      messageAlertBox.classList.remove('bg-red-500');
-      messageAlertBox.classList.add('bg-green-500');
-    }
-    messageAlertBox.classList.remove('hidden');
-  }
-
-  function setLoadingState(button, isLoading, originalText) {
-    isSubmitting = isLoading;
-    if (isLoading) {
-      button.disabled = true;
-      button.innerHTML = '<span class="spinner"></span>';
-    } else {
-      button.disabled = false;
-      button.innerHTML = originalText;
-    }
-  }
-
-  function validateForm() {
-    const errors = {};
-    const form = {
-      firstName: firstNameInput.value.trim(),
-      lastName: lastNameInput.value.trim(),
-      email: emailInput.value.trim(),
-      phone: phoneInput.value.trim(),
-      password: passwordInput.value,
-      confirmPassword: confirmPasswordInput.value,
-    };
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-    if (form.firstName === "") errors.firstName = "First name is required.";
-    if (form.lastName === "") errors.lastName = "Last name is required.";
-    if (!emailRegex.test(form.email)) errors.email = "Please enter a valid email address.";
-    if (!phoneRegex.test(form.phone)) errors.phone = "Please enter a valid phone number.";
-    if (!passRegex.test(form.password)) errors.password = "Password must be at least 8 characters, with at least one uppercase letter, one number, and one special character.";
-    if (form.password !== form.confirmPassword) errors.confirmPassword = "Passwords do not match.";
-
-    return { errors, data: form };
-  }
-
-  function updateUI() {
-    const { errors } = validateForm();
-    const inputs = {
-      firstName: firstNameInput,
-      lastName: lastNameInput,
-      email: emailInput,
-      phone: phoneInput,
-      password: passwordInput,
-      confirmPassword: confirmPasswordInput
-    };
-
-    Object.keys(inputs).forEach(key => {
-      const input = inputs[key];
-      const errorElement = document.getElementById(`${key}Error`);
-      if (errors[key]) {
-        input.classList.add('error');
-        errorElement.textContent = errors[key];
-        errorElement.classList.remove('hidden');
-      } else {
-        input.classList.remove('error');
-        errorElement.classList.add('hidden');
+      function showMessage(message, type = 'error') {
+        messageAlertText.textContent = message;
+        if (type === 'error') {
+          messageAlertBox.classList.remove('bg-green-500');
+          messageAlertBox.classList.add('bg-red-500');
+        } else {
+          messageAlertBox.classList.remove('bg-red-500');
+          messageAlertBox.classList.add('bg-green-500');
+        }
+        messageAlertBox.classList.remove('hidden');
       }
-    });
 
-    requestOtpButton.disabled = Object.keys(errors).length > 0;
-  }
+      function setLoadingState(button, isLoading, originalText) {
+        isSubmitting = isLoading;
+        if (isLoading) {
+          button.disabled = true;
+          button.innerHTML = '<span class="spinner"></span>';
+        } else {
+          button.disabled = false;
+          button.innerHTML = originalText;
+        }
+      }
 
-  const formInputs = [firstNameInput, lastNameInput, emailInput, phoneInput, passwordInput, confirmPasswordInput];
-  formInputs.forEach(input => input.addEventListener("input", updateUI));
-  formInputs.forEach(input => input.addEventListener("blur", updateUI));
+      function validateForm() {
+        const errors = {};
+        const form = {
+          // Changed from firstName to firstname
+          firstname: firstnameInput.value.trim(),
+          // Changed from lastName to lastname
+          lastname: lastnameInput.value.trim(),
+          email: emailInput.value.trim(),
+          phone: phoneInput.value.trim(),
+          password: passwordInput.value,
+          confirmPassword: confirmPasswordInput.value,
+        };
 
-  requestOtpButton.addEventListener("click", async () => {
-    if (isSubmitting) return;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-    const { errors, data } = validateForm();
-    if (Object.keys(errors).length > 0) {
-      showMessage("Please fix the errors in the form.");
-      return;
-    }
+        if (form.firstname === "") errors.firstname = "First name is required.";
+        if (form.lastname === "") errors.lastname = "Last name is required.";
+        if (!emailRegex.test(form.email)) errors.email = "Please enter a valid email address.";
+        if (!phoneRegex.test(form.phone)) errors.phone = "Please enter a valid phone number.";
+        if (!passRegex.test(form.password)) errors.password = "Password must be at least 8 characters, with at least one uppercase letter, one number, and one special character.";
+        if (form.password !== form.confirmPassword) errors.confirmPassword = "Passwords do not match.";
 
-    setLoadingState(requestOtpButton, true, "Request OTP");
+        return { errors, data: form };
+      }
 
-    try {
-      const response = await fetch(API_REQUEST_OTP, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+      function updateUI() {
+        const { errors } = validateForm();
+        const inputs = {
+          // Changed from firstName to firstname
+          firstname: firstnameInput,
+          // Changed from lastName to lastname
+          lastname: lastnameInput,
+          email: emailInput,
+          phone: phoneInput,
+          password: passwordInput,
+          confirmPassword: confirmPasswordInput
+        };
+
+        Object.keys(inputs).forEach(key => {
+          const input = inputs[key];
+          // Updated error element IDs to match
+          const errorElement = document.getElementById(`${key}Error`);
+          if (errors[key]) {
+            input.classList.add('error');
+            errorElement.textContent = errors[key];
+            errorElement.classList.remove('hidden');
+          } else {
+            input.classList.remove('error');
+            errorElement.classList.add('hidden');
+          }
+        });
+
+        requestOtpButton.disabled = Object.keys(errors).length > 0;
+      }
+
+      const formInputs = [firstnameInput, lastnameInput, emailInput, phoneInput, passwordInput, confirmPasswordInput];
+      formInputs.forEach(input => input.addEventListener("input", updateUI));
+      formInputs.forEach(input => input.addEventListener("blur", updateUI));
+
+      requestOtpButton.addEventListener("click", async () => {
+        if (isSubmitting) return;
+
+        const { errors, data } = validateForm();
+        if (Object.keys(errors).length > 0) {
+          showMessage("Please fix the errors in the form.");
+          return;
+        }
+
+        setLoadingState(requestOtpButton, true, "Request OTP");
+
+        try {
+          const response = await fetch(API_REQUEST_OTP, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          const responseData = await response.json();
+
+          if (!response.ok) {
+            throw new Error(responseData.message || "Failed to send OTP.");
+          }
+
+          // ✅ Redirect if user exists with same email & password
+          if (responseData.step === "onboarding") {
+            localStorage.setItem('userId', responseData.userId);
+            showMessage("User exists. Redirecting to onboarding...", "success");
+            return window.location.href = './onboarding.html';
+          }
+
+          userData = { ...data, otpToken: responseData.otpToken, userId: responseData.userId };
+          localStorage.setItem('tempUserData', JSON.stringify(userData));
+
+          showMessage("OTP sent successfully! Please check your email.", "success");
+          signupFormSection.classList.add("hidden");
+          otpSection.classList.remove("hidden");
+        } catch (err) {
+          showMessage(err.message || "Error sending OTP");
+        } finally {
+          setLoadingState(requestOtpButton, false, "Request OTP");
+        }
       });
-      const responseData = await response.json();
 
-      if (!response.ok) {
-        throw new Error(responseData.message || "Failed to send OTP.");
-      }
+      verifyOtpButton.addEventListener("click", async () => {
+        if (isSubmitting) return;
+        const otpValue = otpInput.value.trim();
+        if (otpValue.length < 6) {
+          showMessage("Please enter a 6-digit OTP.");
+          return;
+        }
 
-      // ✅ Redirect if user exists with same email & password
-      if (responseData.step === "onboarding") {
-        localStorage.setItem('userId', responseData.userId);
-        showMessage("User exists. Redirecting to onboarding...", "success");
-        return window.location.href = './onboarding.html';
-      }
+        setLoadingState(verifyOtpButton, true, "Verify OTP");
 
-      userData = { ...data, otpToken: responseData.otpToken, userId: responseData.userId };
-      localStorage.setItem('tempUserData', JSON.stringify(userData));
+        try {
+          const storedUserData = JSON.parse(localStorage.getItem('tempUserData'));
+          if (!storedUserData) {
+            throw new Error("User data not found. Please try signing up again.");
+          }
+          const verificationData = {
+            email: storedUserData.email,
+            password: storedUserData.password,
+            code: otpValue,
+            otpToken: storedUserData.otpToken,
+          };
 
-      showMessage("OTP sent successfully! Please check your email.", "success");
-      signupFormSection.classList.add("hidden");
-      otpSection.classList.remove("hidden");
-    } catch (err) {
-      showMessage(err.message || "Error sending OTP");
-    } finally {
-      setLoadingState(requestOtpButton, false, "Request OTP");
-    }
-  });
+          const response = await fetch(API_VERIFY_OTP, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(verificationData),
+          });
+          const data = await response.json();
 
-  verifyOtpButton.addEventListener("click", async () => {
-    if (isSubmitting) return;
-    const otpValue = otpInput.value.trim();
-    if (otpValue.length < 6) {
-      showMessage("Please enter a 6-digit OTP.");
-      return;
-    }
+          if (!response.ok) {
+            throw new Error(data.message || "OTP verification failed.");
+          }
 
-    setLoadingState(verifyOtpButton, true, "Verify OTP");
+          showMessage("Account verified! Redirecting to onboarding...", "success");
+          localStorage.setItem('userId', storedUserData.userId);
+          window.location.href = './onboarding.html';
 
-    try {
-      const storedUserData = JSON.parse(localStorage.getItem('tempUserData'));
-      if (!storedUserData) {
-        throw new Error("User data not found. Please try signing up again.");
-      }
-      const verificationData = {
-        email: storedUserData.email,
-        password: storedUserData.password,
-        code: otpValue,
-        otpToken: storedUserData.otpToken,
-      };
-
-      const response = await fetch(API_VERIFY_OTP, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(verificationData),
+        } catch (err) {
+          showMessage(err.message || "Error verifying OTP");
+        } finally {
+          setLoadingState(verifyOtpButton, false, "Verify OTP");
+        }
       });
-      const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "OTP verification failed.");
-      }
+      openTermsLink.addEventListener("click", () => {
+        termsModal.style.display = "flex";
+      });
 
-      showMessage("Account verified! Redirecting to onboarding...", "success");
-      localStorage.setItem('userId', storedUserData.userId);
-      window.location.href = './onboarding.html';
-
-    } catch (err) {
-      showMessage(err.message || "Error verifying OTP");
-    } finally {
-      setLoadingState(verifyOtpButton, false, "Verify OTP");
-    }
-  });
-
-  openTermsLink.addEventListener("click", () => {
-    termsModal.style.display = "flex";
-  });
-
-  closeModalButton.addEventListener("click", () => {
-    termsModal.style.display = "none";
-  });
-  window.addEventListener("click", (event) => {
-    if (event.target === termsModal) {
-      termsModal.style.display = "none";
-    }
-  });
-</script>
+      closeModalButton.addEventListener("click", () => {
+        termsModal.style.display = "none";
+      });
+      window.addEventListener("click", (event) => {
+        if (event.target === termsModal) {
+          termsModal.style.display = "none";
+        }
+      });
+    </script>
   </body>
 </html>
