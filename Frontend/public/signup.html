@@ -1088,8 +1088,8 @@
       verifyOtpButton.addEventListener("click", async () => {
         if (isSubmitting) return;
 
-        const otpValue = otpInput.value.trim();
-        const otpError = validateField("otp", otpValue);
+        const otpInput = document.getElementById("otpInput").value.trim();
+        const otpError = validateField("otp", otpInput);
 
         if (otpError) {
           setError("otpInput", otpError);
@@ -1100,10 +1100,11 @@
 
         setLoadingState(verifyOtpButton, true, "Verify OTP");
 
+        // Merge collected signup data with OTP code and token
         const verificationData = {
-          email: signupData.email,
-          password: signupData.password,
-          code: otpValue,
+          ...signupData, // all previously collected info
+          code: otpInput,
+          password: passwordInput.value, // ensure password is included
           otpToken: signupData.otpToken,
         };
 
@@ -1113,6 +1114,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(verificationData),
           });
+
           const data = await response.json();
 
           if (!response.ok) {
