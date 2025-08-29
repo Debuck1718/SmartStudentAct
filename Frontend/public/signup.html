@@ -1100,12 +1100,11 @@
 
         setLoadingState(verifyOtpButton, true, "Verify OTP");
 
-        // Merge collected signup data with OTP code and token
         const verificationData = {
-          ...signupData, // all previously collected info
-          code: otpInput,
+          ...signupData, // firstname, lastname, email, phone, occupation, schoolName, schoolCountry, educationLevel, grade, teacher info
           password: passwordInput.value, // ensure password is included
-          otpToken: signupData.otpToken,
+          code: otpInput, // OTP entered by user
+          otpToken: signupData.otpToken, // token from backend
         };
 
         try {
