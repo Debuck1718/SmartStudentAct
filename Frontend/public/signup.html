@@ -923,16 +923,19 @@
             // This is the CRITICAL FIX: Map 'grade' or 'teacherGrade' to 'educationLevel'
             const educationLevel = signupData.occupation === 'student' ? signupData.grade : signupData.teacherGrade;
 
-            const otpRequestData = {
-                firstName: signupData.firstName,
-                lastName: signupData.lastName,
-                email: signupData.email,
-                phone: signupData.phone,
-                occupation: signupData.occupation,
-                schoolCountry: signupData.schoolCountry,
-                schoolName: signupData.schoolName,
-                educationLevel: educationLevel,
-            };
+           const otpRequestData = {
+  firstname: firstNameInput.value.trim(),
+  lastname: lastNameInput.value.trim(),
+  email: emailInput.value.trim().toLowerCase(),
+  phone: phoneInput.value.trim(),
+  occupation: occupationSelect.value,
+  educationLevel: occupationSelect.value === "student" ? gradeSelect.value : undefined,
+  schoolName: schoolNameInput.value.trim(),
+  schoolCountry: schoolCountrySelect.value,
+  teacherGrade: occupationSelect.value === "teacher" ? teacherGradeSelect.value : undefined,
+  teacherSubject: occupationSelect.value === "teacher" ? teacherSubjectInput.value.trim() : undefined,
+  university: occupationSelect.value === "teacher" ? universityInput.value.trim() : undefined,
+};
 
             setLoadingState(requestOtpButton, true, "Request OTP");
 
