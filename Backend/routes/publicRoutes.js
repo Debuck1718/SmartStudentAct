@@ -234,11 +234,11 @@ publicRouter.post(
         password: decoded.passwordHash, // hashed password from signup
         verified: true,
         role: "student",                // default role
-        occupation: "Not specified",    // default occupation
-        educationLevel: "Not specified",// default education level
-        grade: "Not specified",         // default grade
-        schoolName: "Not specified",    // default school
-        schoolCountry: "Not specified", // default country
+        occupation: "student",    // default occupation
+        educationLevel: "high",// default education level
+        grade: "11",         // default grade
+        schoolName: "My School",    // default school
+        schoolCountry: "GH", // default country
       });
 
       await newUser.save();
