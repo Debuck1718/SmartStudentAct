@@ -39,7 +39,7 @@ module.exports = (eventBus, agenda) => {
       Joi.number().integer().min(5).max(12),
       Joi.string().valid("100","200","300","400","500","600")
     ).allow(null),
-    confirmPassword: Joi.string().min(8).required()
+
   });
 
   const verifyOtpSchema = Joi.object({
