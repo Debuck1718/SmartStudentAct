@@ -20,6 +20,7 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || "1d";
 module.exports = (eventBus, agenda) => {
   const publicRouter = express.Router();
 
+  // ✅ Signup schema (now allows all fields)
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\d{10,15}$/).required(),
     email: Joi.string().email().required(),
@@ -38,33 +39,14 @@ module.exports = (eventBus, agenda) => {
       Joi.number().integer().min(5).max(12),
       Joi.string().valid("100","200","300","400","500","600")
     ).allow(null),
-    password: Joi.string().min(8).required(), // Added password validation
-    confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({ 'any.only': 'Passwords do not match' })
-  }).unknown(true);
+    confirmPassword: Joi.string().min(8).required()
+  });
 
-  // Updated verifyOtpSchema to include all user sign-up fields for the second step.
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
-    confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({ 'any.only': 'Passwords do not match' }),
-    phone: Joi.string().pattern(/^\d{10,15}$/).required(),
-    firstname: Joi.string().min(2).max(50).required(),
-    lastname: Joi.string().min(2).max(50).required(),
-    occupation: Joi.string()
-      .valid("student", "teacher", "admin", "global_overseer", "overseer")
-      .required(),
-    schoolCountry: Joi.string().length(2).required(),
-    schoolName: Joi.string().max(100).required(),
-    grade: Joi.alternatives().try(
-      Joi.number().integer().min(5).max(12),
-      Joi.string().valid("100","200","300","400","500","600")
-    ).allow(null),
-    teacherGrade: Joi.alternatives().try(
-      Joi.number().integer().min(5).max(12),
-      Joi.string().valid("100","200","300","400","500","600")
-    ).allow(null),
-  }).unknown(true);
+  });
 
   const loginSchema = Joi.object({
     email: Joi.string().email().required(),
@@ -86,6 +68,7 @@ module.exports = (eventBus, agenda) => {
     message: Joi.string().min(5).max(2000).required(),
   });
 
+  // ✅ General validation middleware
   const validate = (schema) => (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
     if (error) {
@@ -97,6 +80,9 @@ module.exports = (eventBus, agenda) => {
     next();
   };
 
+  // --------------------
+  // SIGNUP OTP
+  // --------------------
   publicRouter.post(
     "/users/signup-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -160,23 +146,33 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
+  // --------------------
+  // VERIFY OTP
+  // --------------------
   publicRouter.post(
     "/users/verify-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-    // Use the comprehensive schema for validation
-    validate(verifyOtpSchema), 
+    validate(verifyOtpSchema),
     async (req, res) => {
-      const { code, email, password, ...rest } = req.body;
+      const { code, email, password } = req.body;
       const signupData = req.session?.signup;
 
-      if (!signupData || signupData.email !== email || signupData.code !== code) {
-        return res.status(400).json({ error: "Invalid email, OTP, or session expired" });
+      if (!signupData || signupData.email !== email) {
+        return res
+          .status(400)
+          .json({ error: "Invalid email or OTP session expired" });
       }
 
       signupData.attempts = (signupData.attempts || 0) + 1;
       if (signupData.attempts > 5) {
         delete req.session.signup;
-        return res.status(429).json({ error: "Too many attempts, please request a new OTP" });
+        return res
+          .status(429)
+          .json({ error: "Too many attempts, please request a new OTP" });
+      }
+
+      if (signupData.code !== code) {
+        return res.status(400).json({ error: "Invalid OTP" });
       }
 
       if (Date.now() - signupData.timestamp > 10 * 60 * 1000) {
@@ -189,13 +185,11 @@ module.exports = (eventBus, agenda) => {
         const trialEndDate = new Date();
         trialEndDate.setDate(trialEndDate.getDate() + 30);
 
-        // Create the user using data from the request body
         const newUser = await User.create({
-          ...rest,
-          email,
+          ...signupData,
           password: hash,
           verified: true,
-          role: rest.occupation,
+          role: signupData.occupation,
           is_on_trial: true,
           trial_end_date: trialEndDate,
           subscription_status: "inactive",
@@ -222,6 +216,7 @@ module.exports = (eventBus, agenda) => {
           sameSite: "None",
           maxAge: 1000 * 60 * 60 * 24,
         });
+
         res.status(201).json({
           status: "success",
           message: "Account created successfully.",
@@ -230,7 +225,9 @@ module.exports = (eventBus, agenda) => {
         });
       } catch (err) {
         if (err.code === 11000) {
-          return res.status(409).json({ error: "Email or phone already registered." });
+          return res
+            .status(409)
+            .json({ error: "Email or phone already registered." });
         }
         logger.error("❌ Verify OTP error:", err);
         res.status(500).json({ error: "Account creation failed." });
@@ -238,6 +235,9 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
+  // --------------------
+  // LOGIN
+  // --------------------
   publicRouter.post("/users/login", async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -270,9 +270,9 @@ module.exports = (eventBus, agenda) => {
 
       res.cookie("access_token", token, {
         httpOnly: true,
-        secure: true, 
-        sameSite: "None", 
-        maxAge: 1000 * 60 * 60 * 24, 
+        secure: true,
+        sameSite: "None",
+        maxAge: 1000 * 60 * 60 * 24,
       });
       res.json({
         status: true,
@@ -289,6 +289,9 @@ module.exports = (eventBus, agenda) => {
     }
   });
 
+  // --------------------
+  // FORGOT PASSWORD
+  // --------------------
   publicRouter.post(
     "/auth/forgot-password",
     validate(forgotPasswordSchema),
@@ -326,6 +329,9 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
+  // --------------------
+  // RESET PASSWORD
+  // --------------------
   publicRouter.post(
     "/auth/reset-password",
     validate(resetPasswordSchema),
@@ -355,6 +361,45 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
+
+publicRouter.post("/reset-password", async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ error: "Token and password are required." });
+    }
+
+    const resetToken = await ResetToken.findOne({ token }).populate("userId"); 
+    if (!resetToken) {
+      return res.status(400).json({ error: "Invalid or expired token." });
+    }
+
+    const strongPasswordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+    if (!strongPasswordRegex.test(password)) {
+      return res.status(400).json({ error: "Password does not meet security requirements." });
+    }
+
+    
+    const bcrypt = require("bcrypt");
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = resetToken.userId;
+    user.password = hashedPassword;
+    await user.save();
+    await resetToken.deleteOne();
+
+    res.json({ message: "Password reset successfully. You can now log in." });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ error: "Server error." });
+  }
+});
+
+
+  // --------------------
+  // CONTACT FORM
+  // --------------------
   publicRouter.post("/contact", validate(contactSchema), async (req, res) => {
     const { name, email, message } = req.body;
     try {
@@ -376,4 +421,3 @@ module.exports = (eventBus, agenda) => {
 
   return publicRouter;
 };
-
