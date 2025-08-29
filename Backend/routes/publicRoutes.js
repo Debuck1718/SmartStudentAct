@@ -103,10 +103,12 @@ module.exports = (eventBus, agenda) => {
       const hashedPassword = await bcrypt.hash(password, 10);
       const temporaryUserId = uuidv4();
 
+      const existingUser = await User.findOne({ email });
+
       if (existingUser) {
         if (
-          existingUser.password &&
-          bcrypt.compareSync(password, existingUser.password)
+          existingUser.passwordHash &&
+          bcrypt.compareSync(password, existingUser.passwordHash)
         ) {
           return res.status(200).json({
             step: "onboarding",
