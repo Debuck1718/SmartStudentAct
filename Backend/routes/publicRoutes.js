@@ -100,83 +100,48 @@ module.exports = (eventBus, agenda) => {
       if (password !== confirmPassword) {
         return res.status(400).json({ message: "Passwords do not match." });
       }
+
       const hashedPassword = await bcrypt.hash(password, 10);
       const temporaryUserId = uuidv4();
 
-      const existingUser = await User.findOne({ email });
-
-      if (existingUser) {
-        if (
-          existingUser.passwordHash &&
-          bcrypt.compareSync(password, existingUser.passwordHash)
-        ) {
+      try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          // 👉 Skip password check, send to onboarding
           return res.status(200).json({
             step: "onboarding",
             message: "User exists. Proceed to onboarding.",
             userId: existingUser._id,
           });
-        } else {
-          return res.status(409).json({
-            message: "Email already registered with a different password.",
-          });
         }
-      }
 
-      const code =
-        process.env.NODE_ENV === "production"
-          ? Math.floor(100000 + Math.random() * 900000).toString()
-          : "123456";
+        // If not existing, create OTP flow
+        const code =
+          process.env.NODE_ENV === "production"
+            ? Math.floor(100000 + Math.random() * 900000).toString()
+            : "123456";
 
-      const signupData = {
-        email,
-        firstname,
-        lastname,
-        phone,
-        passwordHash: hashedPassword,
-        code,
-        attempts: 0,
-        timestamp: Date.now(),
-        temporaryUserId,
-        role: "student",
-        occupation: "student",
-        schoolCountry: "",
-        // Added defaults for conditionally required fields
-        educationLevel: "high",
-        grade: 10,
-        schoolName: "Default High School",
-      };
+        const signupData = {
+          email,
+          firstname,
+          lastname,
+          phone,
+          passwordHash: hashedPassword,
+          code,
+          attempts: 0,
+          timestamp: Date.now(),
+          temporaryUserId,
+          role: "student",
+          occupation: "student",
+          schoolCountry: "",
+          educationLevel: "high",
+          grade: 10,
+          schoolName: "Default High School",
+        };
 
-      logger.debug("[OTP] Generated for %s: %s", email, code);
+        logger.debug("[OTP] Generated for %s: %s", email, code);
 
-      try {
-        const success = await (async () => {
-          const retries = 3;
-          for (let attempt = 1; attempt <= retries; attempt++) {
-            try {
-              await sendOTPEmail(email, firstname, code);
-              logger.info("OTP email sent to %s (attempt %d)", email, attempt);
-              return true;
-            } catch (err) {
-              logger.warn(
-                "⚠️ OTP send attempt %d failed for %s: %s",
-                attempt,
-                email,
-                err.message || err
-              );
-              if (attempt < retries) {
-                const delay = Math.pow(2, attempt) * 1000;
-                logger.debug("⏳ Retrying in %ds...", delay / 1000);
-                await new Promise((r) => setTimeout(r, delay));
-              }
-            }
-          }
-          return false;
-        })();
-
-        if (!success) {
-          logger.error("❌ All OTP send attempts failed for %s", email);
-          return res.status(500).json({ message: "Failed to send OTP" });
-        }
+        await sendOTPEmail(email, firstname, code);
 
         const otpToken = jwt.sign(signupData, JWT_SECRET, { expiresIn: "10m" });
 
