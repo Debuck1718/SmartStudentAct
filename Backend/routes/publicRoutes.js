@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
 const crypto = require("crypto");
 const Joi = require("joi");
+const { v4: uuidv4 } = require("uuid"); // Added UUID import
 const User = require("../models/User");
 const logger = require("../utils/logger");
 
@@ -93,7 +94,6 @@ module.exports = (eventBus, agenda) => {
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
     validate(signupOtpSchema),
     async (req, res) => {
-      // Renamed firstName and lastName to match the frontend and schema
       const { firstname, lastname, email, phone, password, confirmPassword } =
         req.body;
 
@@ -203,9 +203,31 @@ module.exports = (eventBus, agenda) => {
             .json({ message: "Password mismatch. Please restart signup." });
         }
 
+        // Create the new user in the database
+        const newUser = new User({
+          _id: decoded.temporaryUserId,
+          firstname: decoded.firstname,
+          lastname: decoded.lastname,
+          email: decoded.email,
+          phone: decoded.phone,
+          password: decoded.passwordHash,
+          isVerified: true,
+        });
+        await newUser.save();
+
+        // Send welcome email after successful verification
+        try {
+          await sendWelcomeEmail(newUser.email, newUser.firstname);
+          logger.info("Welcome email sent to %s", newUser.email);
+        } catch (emailErr) {
+          logger.error("❌ Failed to send welcome email to %s:", newUser.email, emailErr);
+          // Continue with the response even if the email fails to send
+        }
+
         res.status(200).json({
           status: "success",
           message: "OTP verified successfully. Proceed to onboarding.",
+          userId: newUser._id,
         });
       } catch (err) {
         logger.error("❌ Verify OTP error:", err);
@@ -384,8 +406,8 @@ module.exports = (eventBus, agenda) => {
         "evansbuckman1@gmail.com",
         `New Contact Form Message from ${name}`,
         `<p><strong>Name:</strong> ${name}</p>
-         <p><strong>Email:</strong> ${email}</p>
-         <p><strong>Message:</strong><br>${message}</p>`
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Message:</strong><br>${message}</p>`
       );
       res
         .status(200)

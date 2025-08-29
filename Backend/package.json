@@ -58,6 +58,7 @@
     "nodemailer": "^6.10.1",
     "sib-api-v3-sdk": "^8.5.0",
     "twilio": "^4.15.0",
+    "uuid": "^11.1.0",
     "web-push": "^3.5.0",
     "winston": "^3.17.0"
   },

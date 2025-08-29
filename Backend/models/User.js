@@ -4,6 +4,10 @@ const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
+    _id: {
+      type: String,
+      required: true,
+    },
     firstname: {
       type: String,
       required: true,
@@ -68,7 +72,6 @@ const userSchema = new mongoose.Schema(
         );
       },
     },
-    
     schoolName: {
       type: String,
       trim: true,
