@@ -20,37 +20,66 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || "1d";
 module.exports = (eventBus, agenda) => {
   const publicRouter = express.Router();
 
-// ✅ Full signup data (no password here)
-const signupOtpSchema = Joi.object({
-  phone: Joi.string().pattern(/^\d{10,15}$/).required(),
-  email: Joi.string().email().required(),
-  firstname: Joi.string().min(2).max(50).required(),
-  lastname: Joi.string().min(2).max(50).required(),
-  occupation: Joi.string()
-    .valid("student", "teacher", "admin", "global_overseer", "overseer")
-    .required(),
-  schoolCountry: Joi.string().length(2).required(),
-  schoolName: Joi.string().max(100).required(),
-  grade: Joi.alternatives().try(
-    Joi.number().integer().min(5).max(12),
-    Joi.string().valid("100","200","300","400","500","600")
-  ).allow(null),
-  teacherGrade: Joi.alternatives().try(
-    Joi.number().integer().min(5).max(12),
-    Joi.string().valid("100","200","300","400","500","600")
-  ).allow(null),
-});
+  // ✅ Updated signup schema to include conditional fields
+  const signupOtpSchema = Joi.object({
+    phone: Joi.string().pattern(/^\d{10,15}$/).required(),
+    email: Joi.string().email().required(),
+    firstname: Joi.string().min(2).max(50).required(),
+    lastname: Joi.string().min(2).max(50).required(),
+    occupation: Joi.string()
+      .valid("student", "teacher", "admin", "global_overseer", "overseer")
+      .required(),
+    schoolCountry: Joi.string().length(2).required(),
+    schoolName: Joi.string().max(100).required(),
+    grade: Joi.alternatives().try(
+      Joi.number().integer().min(5).max(12),
+      Joi.string().valid("100", "200", "300", "400", "500", "600")
+    ).allow(null),
+    teacherGrade: Joi.alternatives().try(
+      Joi.number().integer().min(5).max(12),
+      Joi.string().valid("100", "200", "300", "400", "500", "600")
+    ).allow(null),
+    // ----------------------------------------------------
+    //  ✅ NEW: Added these fields to collect all data upfront
+    // ----------------------------------------------------
+    educationLevel: Joi.string()
+      .valid("junior", "high", "university")
+      .when('occupation', {
+        is: 'student',
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      }),
+    university: Joi.string()
+      .when('educationLevel', {
+        is: 'university',
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      }),
+    uniLevel: Joi.string()
+      .valid("100", "200", "300", "400")
+      .when('educationLevel', {
+        is: 'university',
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      }),
+    teacherSubject: Joi.string()
+      .when('occupation', {
+        is: 'teacher',
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      }),
+  });
 
-
-const verifyOtpSchema = Joi.object({
-  code: Joi.string().length(6).pattern(/^\d+$/).required(),
-  email: Joi.string().email().required(),
-  password: Joi.string()
-    .min(8)
-    .pattern(/^(?=.*[A-Z])(?=.*[!@#$%^&*])/)
-    .message("Password must contain at least one uppercase and one special character")
-    .required(),
-});
+  const verifyOtpSchema = Joi.object({
+    code: Joi.string().length(6).pattern(/^\d+$/).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string()
+      .min(8)
+      .pattern(/^(?=.*[A-Z])(?=.*[!@#$%^&*])/)
+      .message("Password must contain at least one uppercase and one special character")
+      .required(),
+    otpToken: Joi.string().required(),
+  });
 
   const loginSchema = Joi.object({
     email: Joi.string().email().required(),
@@ -84,7 +113,7 @@ const verifyOtpSchema = Joi.object({
     next();
   };
 
- 
+
   publicRouter.post(
     "/users/signup-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -92,6 +121,7 @@ const verifyOtpSchema = Joi.object({
     async (req, res) => {
       const { email, firstname, ...rest } = req.body;
 
+      // ... existing code ...
       const code =
         process.env.NODE_ENV === "production"
           ? Math.floor(100000 + Math.random() * 900000).toString()
@@ -139,8 +169,18 @@ const verifyOtpSchema = Joi.object({
           return res.status(500).json({ error: "Failed to send OTP" });
         }
 
+        const otpToken = jwt.sign(
+          req.session.signup,
+          JWT_SECRET,
+          { expiresIn: "10m" }
+        );
+
         eventBus.emit("otp_sent", { email, otp: code });
-        res.json({ step: "verify", message: "OTP sent to your email" });
+        res.json({
+          step: "verify",
+          message: "OTP sent to your email",
+          otpToken
+        });
       } catch (err) {
         logger.error("❌ Unexpected OTP route error:", err);
         res.status(500).json({ error: "Failed to send OTP" });
@@ -149,116 +189,129 @@ const verifyOtpSchema = Joi.object({
   );
 
 
-publicRouter.post(
-  "/users/verify-otp",
-  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-  validate(verifyOtpSchema),
-  async (req, res) => {
-    const { code, email, password, otpToken } = req.body;
+  publicRouter.post(
+    "/users/verify-otp",
+    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+    validate(verifyOtpSchema),
+    async (req, res) => {
+      const { code, email, password, otpToken } = req.body;
 
-    try {
-      // Decode the JWT token and verify its integrity
-      const decoded = jwt.verify(otpToken, JWT_SECRET);
+      try {
+        // Decode the JWT token and verify its integrity
+        const decoded = jwt.verify(otpToken, JWT_SECRET);
 
-      // Verify that the email and OTP from the request match the token's payload
-      if (decoded.email !== email || decoded.code !== code) {
-        return res.status(400).json({ error: "Invalid email or OTP" });
-      }
+        // Verify that the email and OTP from the request match the token's payload
+        if (decoded.email !== email || decoded.code !== code) {
+          return res.status(400).json({ error: "Invalid email or OTP" });
+        }
 
-      // Check for an existing user with the same email or phone to prevent duplicates
-      const existingUser = await User.findOne({ 
-        $or: [{ email: decoded.email }, { phone: decoded.phone }] 
-      });
-      if (existingUser) {
-        return res.status(409).json({ error: "Email or phone already registered." });
-      }
-
-      // Hash the user's password for secure storage
-      const hash = await bcrypt.hash(password, 10);
-      
-      // Set a 30-day trial period
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 30);
-
-      // Construct the user data object from the decoded token payload
-      const userData = {
-        firstname: decoded.firstname,
-        lastname: decoded.lastname,
-        email: decoded.email,
-        phone: decoded.phone,
-        occupation: decoded.occupation,
-        schoolCountry: decoded.schoolCountry,
-        schoolName: decoded.schoolName,
-        grade: decoded.grade,
-        teacherGrade: decoded.teacherGrade,
-        password: hash, // Store the hashed password
-        verified: true,
-        role: decoded.occupation,
-        is_on_trial: true,
-        trial_end_date: trialEndDate,
-        subscription_status: "inactive",
-      };
-
-      // Create the new user in the database. This is the operation that's failing.
-      const newUser = await User.create(userData);
-
-      // Send a welcome email to the newly created user
-      await sendWelcomeEmail(newUser.email, newUser.firstname);
-
-      // Emit a custom event for other parts of the application to listen to
-      eventBus.emit("user_signed_up", {
-        userId: newUser._id,
-        email: newUser.email,
-        occupation: newUser.occupation,
-      });
-
-      // Sign a new JWT token for the user session
-      const token = jwt.sign(
-        { id: newUser._id, email: newUser.email, role: newUser.role },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES }
-      );
-
-      // Set the access token in a secure HTTP-only cookie
-      res.cookie("access_token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        maxAge: 1000 * 60 * 60 * 24,
-      });
-
-      // Send a success response back to the client
-      res.status(201).json({
-        status: "success",
-        message: "Account created successfully.",
-        token,
-        user: { id: newUser._id, email: newUser.email, role: newUser.role },
-      });
-    } catch (err) {
-      // Log the full error to the console for debugging
-      logger.error("❌ Verify OTP error:", err);
-      
-      // Differentiate between known and unknown errors
-      if (err.name === "TokenExpiredError") {
-        return res.status(400).json({ error: "OTP expired" });
-      } else if (err.name === "ValidationError") {
-        // Mongoose validation error
-        return res.status(400).json({
-          error: "Account creation failed due to validation errors.",
-          details: err.errors
+        // Check for an existing user with the same email or phone to prevent duplicates
+        const existingUser = await User.findOne({
+          $or: [{ email: decoded.email }, { phone: decoded.phone }]
         });
-      } else if (err.code === 11000) {
-        // Mongo duplicate key error
-        return res
-          .status(409)
-          .json({ error: "Email or phone already registered." });
-      } else {
-        // Catch-all for any other unexpected server error
-        res.status(500).json({ error: "Account creation failed." });
+        if (existingUser) {
+          return res.status(409).json({ error: "Email or phone already registered." });
+        }
+
+        // Hash the user's password for secure storage
+        const hash = await bcrypt.hash(password, 10);
+
+        // Set a 30-day trial period
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 30);
+
+        // Construct the user data object from the decoded token payload
+        // The token now contains all the necessary fields from the updated signupOtpSchema
+        const userData = {
+          firstname: decoded.firstname,
+          lastname: decoded.lastname,
+          email: decoded.email,
+          phone: decoded.phone,
+          occupation: decoded.occupation,
+          schoolCountry: decoded.schoolCountry,
+          schoolName: decoded.schoolName,
+          educationLevel: decoded.educationLevel, // ✅ NEW: added this
+          grade: decoded.grade,
+          university: decoded.university, // ✅ NEW: added this
+          uniLevel: decoded.uniLevel, // ✅ NEW: added this
+          teacherGrade: decoded.teacherGrade,
+          teacherSubject: decoded.teacherSubject, // ✅ NEW: added this
+          password: hash, // Store the hashed password
+          verified: true,
+          role: decoded.occupation,
+          is_on_trial: true,
+          trial_end_date: trialEndDate,
+          subscription_status: "inactive",
+        };
+        
+        // Remove fields from userData that might be null
+        Object.keys(userData).forEach(key => {
+            if (userData[key] === null || typeof userData[key] === 'undefined') {
+                delete userData[key];
+            }
+        });
+
+
+        // Create the new user in the database. This is the operation that's failing.
+        const newUser = await User.create(userData);
+
+        // Send a welcome email to the newly created user
+        await sendWelcomeEmail(newUser.email, newUser.firstname);
+
+        // Emit a custom event for other parts of the application to listen to
+        eventBus.emit("user_signed_up", {
+          userId: newUser._id,
+          email: newUser.email,
+          occupation: newUser.occupation,
+        });
+
+        // Sign a new JWT token for the user session
+        const token = jwt.sign(
+          { id: newUser._id, email: newUser.email, role: newUser.role },
+          JWT_SECRET,
+          { expiresIn: JWT_EXPIRES }
+        );
+
+        // Set the access token in a secure HTTP-only cookie
+        res.cookie("access_token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "None",
+          maxAge: 1000 * 60 * 60 * 24,
+        });
+
+        // Send a success response back to the client
+        res.status(201).json({
+          status: "success",
+          message: "Account created successfully.",
+          token,
+          user: { id: newUser._id, email: newUser.email, role: newUser.role },
+        });
+      } catch (err) {
+        // Log the full error to the console for debugging
+        logger.error("❌ Verify OTP error:", err);
+
+        // Differentiate between known and unknown errors
+        if (err.name === "TokenExpiredError") {
+          return res.status(400).json({ error: "OTP expired" });
+        } else if (err.name === "ValidationError") {
+          // Mongoose validation error
+          return res.status(400).json({
+            error: "Account creation failed due to validation errors.",
+            details: err.errors
+          });
+        } else if (err.code === 11000) {
+          // Mongo duplicate key error
+          return res
+            .status(409)
+            .json({ error: "Email or phone already registered." });
+        } else {
+          // Catch-all for any other unexpected server error
+          res.status(500).json({ error: "Account creation failed." });
+        }
       }
     }
-  }
-);
+  );
 
 
   publicRouter.post("/users/login", async (req, res) => {
