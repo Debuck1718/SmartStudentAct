@@ -113,18 +113,36 @@ module.exports = (eventBus, agenda) => {
     next();
   };
 
-router.post(
+publicRouter.post(
   "/users/signup-otp",
   rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
   validate(signupOtpSchema),
   async (req, res) => {
+
     const { firstName, lastName, email, phone, password, confirmPassword } = req.body;
 
     if (password !== confirmPassword) {
-        return res.status(400).json({ message: "Passwords do not match." });
+      return res.status(400).json({ message: "Passwords do not match." });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const temporaryUserId = uuidv4();
+
+    // ✅ Check if user already exists with same email
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      // If password matches, allow continuing to onboarding
+      if (bcrypt.compareSync(password, existingUser.password)) {
+        return res.status(200).json({
+          step: "onboarding",
+          message: "User exists. Proceed to onboarding.",
+          userId: existingUser._id,
+        });
+      } else {
+        return res.status(409).json({
+          message: "Email already registered with a different password.",
+        });
+      }
+    }
 
     const code =
       process.env.NODE_ENV === "production"
@@ -136,11 +154,11 @@ router.post(
       firstName,
       lastName,
       phone,
-      passwordHash: hashedPassword, 
+      passwordHash: hashedPassword,
       code,
       attempts: 0,
       timestamp: Date.now(),
-      temporaryUserId
+      temporaryUserId,
     };
 
     logger.debug("[OTP] Generated for %s: %s", email, code);
@@ -186,7 +204,7 @@ router.post(
         step: "verify",
         message: "OTP sent to your email",
         otpToken,
-        userId: temporaryUserId, 
+        userId: temporaryUserId,
       });
     } catch (err) {
       logger.error("❌ Unexpected OTP route error:", err);
@@ -196,7 +214,8 @@ router.post(
 );
 
 
-router.post(
+
+publicRouter.post(
   "/users/verify-otp",
   rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
   validate(verifyOtpSchema),
