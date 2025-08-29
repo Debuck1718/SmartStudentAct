@@ -1040,22 +1040,24 @@
           phone: phoneInput.value.trim(),
           occupation: occupationSelect.value,
           educationLevel:
-            signupData.occupation === "student" ? educationLevel : undefined,
-          grade: signupData.occupation === "student" ? grade : undefined,
+            occupationSelect.value === "student"
+              ? gradeSelect.value
+              : undefined,
           schoolName: schoolNameInput.value.trim(),
           schoolCountry: schoolCountrySelect.value,
           teacherGrade:
-            signupData.occupation === "teacher"
+            occupationSelect.value === "teacher"
               ? teacherGradeSelect.value
               : undefined,
           teacherSubject:
-            signupData.occupation === "teacher"
+            occupationSelect.value === "teacher"
               ? teacherSubjectInput.value.trim()
               : undefined,
           university:
-            signupData.occupation === "teacher"
+            occupationSelect.value === "teacher"
               ? universityInput.value.trim()
               : undefined,
+          passwordHash: bcrypt.hashSync(passwordInput.value.trim(), 10), // ✅ store hashed password in token
         };
 
         setLoadingState(requestOtpButton, true, "Request OTP");
@@ -1100,11 +1102,11 @@
 
         setLoadingState(verifyOtpButton, true, "Verify OTP");
 
-        const verificationData = {
-          email: signupData.email,
-          password: signupData.password,
-          code: otpInput,
-          otpToken: signupData.otpToken, // must come from OTP request response
+        const verifyData = {
+          email: emailInput.value.trim(),
+          password: passwordInput.value.trim(),
+          code: otpInput.value.trim(),
+          otpToken: signupData.otpToken,
         };
 
         try {
