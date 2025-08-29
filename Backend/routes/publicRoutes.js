@@ -189,129 +189,107 @@ module.exports = (eventBus, agenda) => {
   );
 
 
-  publicRouter.post(
-    "/users/verify-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-    validate(verifyOtpSchema),
-    async (req, res) => {
-      const { code, email, password, otpToken } = req.body;
+publicRouter.post(
+  "/users/verify-otp",
+  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+  validate(verifyOtpSchema),
+  async (req, res) => {
+    const { code, email, password, otpToken } = req.body;
 
-      try {
-        // Decode the JWT token and verify its integrity
-        const decoded = jwt.verify(otpToken, JWT_SECRET);
+    try {
+      const decoded = jwt.verify(otpToken, JWT_SECRET);
 
-        // Verify that the email and OTP from the request match the token's payload
-        if (decoded.email !== email || decoded.code !== code) {
-          return res.status(400).json({ error: "Invalid email or OTP" });
-        }
+      if (decoded.email !== email || decoded.code !== code) {
+        return res.status(400).json({ message: "Invalid email or OTP." });
+      }
 
-        // Check for an existing user with the same email or phone to prevent duplicates
-        const existingUser = await User.findOne({
-          $or: [{ email: decoded.email }, { phone: decoded.phone }]
+      const existingUser = await User.findOne({
+        $or: [{ email: decoded.email }, { phone: decoded.phone }],
+      });
+      if (existingUser) {
+        return res.status(409).json({ message: "Email or phone already registered." });
+      }
+
+      // ✅ Secure password handling
+      if (!bcrypt.compareSync(password, decoded.passwordHash)) {
+        return res.status(400).json({ message: "Password mismatch. Please restart signup." });
+      }
+
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 30);
+
+      const userData = {
+        firstname: decoded.firstname,
+        lastname: decoded.lastname,
+        email: decoded.email,
+        phone: decoded.phone,
+        occupation: decoded.occupation,
+        schoolCountry: decoded.schoolCountry,
+        schoolName: decoded.schoolName,
+        educationLevel: decoded.educationLevel,
+        grade: decoded.grade,
+        university: decoded.university,
+        uniLevel: decoded.uniLevel,
+        teacherGrade: decoded.teacherGrade,
+        teacherSubject: decoded.teacherSubject,
+        password: decoded.passwordHash, // ✅ safe to store
+        verified: true,
+        role: decoded.occupation,
+        is_on_trial: true,
+        trial_end_date: trialEndDate,
+        subscription_status: "inactive",
+      };
+
+      Object.keys(userData).forEach((key) => {
+        if (userData[key] == null) delete userData[key];
+      });
+
+      const newUser = await User.create(userData);
+      await sendWelcomeEmail(newUser.email, newUser.firstname);
+
+      eventBus.emit("user_signed_up", {
+        userId: newUser._id,
+        email: newUser.email,
+        occupation: newUser.occupation,
+      });
+
+      const token = jwt.sign(
+        { id: newUser._id, email: newUser.email, role: newUser.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES }
+      );
+
+      res.cookie("access_token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        maxAge: ms(JWT_EXPIRES), // ✅ match cookie with JWT
+      });
+
+      res.status(201).json({
+        status: "success",
+        message: "Account created successfully.",
+        user: { id: newUser._id, email: newUser.email, role: newUser.role },
+      });
+    } catch (err) {
+      logger.error("❌ Verify OTP error:", err);
+
+      if (err.name === "TokenExpiredError") {
+        return res.status(400).json({ message: "OTP expired." });
+      } else if (err.name === "ValidationError") {
+        return res.status(400).json({
+          message: "Account creation failed due to validation errors.",
+          details: err.errors,
         });
-        if (existingUser) {
-          return res.status(409).json({ error: "Email or phone already registered." });
-        }
-
-        // Hash the user's password for secure storage
-        const hash = await bcrypt.hash(password, 10);
-
-        // Set a 30-day trial period
-        const trialEndDate = new Date();
-        trialEndDate.setDate(trialEndDate.getDate() + 30);
-
-        // Construct the user data object from the decoded token payload
-        // The token now contains all the necessary fields from the updated signupOtpSchema
-        const userData = {
-          firstname: decoded.firstname,
-          lastname: decoded.lastname,
-          email: decoded.email,
-          phone: decoded.phone,
-          occupation: decoded.occupation,
-          schoolCountry: decoded.schoolCountry,
-          schoolName: decoded.schoolName,
-          educationLevel: decoded.educationLevel, // ✅ NEW: added this
-          grade: decoded.grade,
-          university: decoded.university, // ✅ NEW: added this
-          uniLevel: decoded.uniLevel, // ✅ NEW: added this
-          teacherGrade: decoded.teacherGrade,
-          teacherSubject: decoded.teacherSubject, // ✅ NEW: added this
-          password: hash, // Store the hashed password
-          verified: true,
-          role: decoded.occupation,
-          is_on_trial: true,
-          trial_end_date: trialEndDate,
-          subscription_status: "inactive",
-        };
-        
-        // Remove fields from userData that might be null
-        Object.keys(userData).forEach(key => {
-            if (userData[key] === null || typeof userData[key] === 'undefined') {
-                delete userData[key];
-            }
-        });
-
-
-        // Create the new user in the database. This is the operation that's failing.
-        const newUser = await User.create(userData);
-
-        // Send a welcome email to the newly created user
-        await sendWelcomeEmail(newUser.email, newUser.firstname);
-
-        // Emit a custom event for other parts of the application to listen to
-        eventBus.emit("user_signed_up", {
-          userId: newUser._id,
-          email: newUser.email,
-          occupation: newUser.occupation,
-        });
-
-        // Sign a new JWT token for the user session
-        const token = jwt.sign(
-          { id: newUser._id, email: newUser.email, role: newUser.role },
-          JWT_SECRET,
-          { expiresIn: JWT_EXPIRES }
-        );
-
-        // Set the access token in a secure HTTP-only cookie
-        res.cookie("access_token", token, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "None",
-          maxAge: 1000 * 60 * 60 * 24,
-        });
-
-        // Send a success response back to the client
-        res.status(201).json({
-          status: "success",
-          message: "Account created successfully.",
-          token,
-          user: { id: newUser._id, email: newUser.email, role: newUser.role },
-        });
-      } catch (err) {
-        // Log the full error to the console for debugging
-        logger.error("❌ Verify OTP error:", err);
-
-        // Differentiate between known and unknown errors
-        if (err.name === "TokenExpiredError") {
-          return res.status(400).json({ error: "OTP expired" });
-        } else if (err.name === "ValidationError") {
-          // Mongoose validation error
-          return res.status(400).json({
-            error: "Account creation failed due to validation errors.",
-            details: err.errors
-          });
-        } else if (err.code === 11000) {
-          // Mongo duplicate key error
-          return res
-            .status(409)
-            .json({ error: "Email or phone already registered." });
-        } else {
-          // Catch-all for any other unexpected server error
-          res.status(500).json({ error: "Account creation failed." });
-        }
+      } else if (err.code === 11000) {
+        return res.status(409).json({ message: "Email or phone already registered." });
+      } else {
+        return res.status(500).json({ message: "Account creation failed." });
       }
     }
-  );
+  }
+);
+
 
 
   publicRouter.post("/users/login", async (req, res) => {
