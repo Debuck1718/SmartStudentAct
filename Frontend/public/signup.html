@@ -1101,10 +1101,10 @@
         setLoadingState(verifyOtpButton, true, "Verify OTP");
 
         const verificationData = {
-          ...signupData, // firstname, lastname, email, phone, occupation, schoolName, schoolCountry, educationLevel, grade, teacher info
-          password: passwordInput.value, // ensure password is included
-          code: otpInput, // OTP entered by user
-          otpToken: signupData.otpToken, // token from backend
+          email: signupData.email,
+          password: signupData.password,
+          code: otpInput,
+          otpToken: signupData.otpToken, // must come from OTP request response
         };
 
         try {
@@ -1122,7 +1122,8 @@
 
           showMessage("Signup successful!", "success");
 
-          const userRole = data.role;
+          // Redirect based on role
+          const userRole = data.user.role;
           if (userRole === "student") {
             window.location.href = "/students.html";
           } else if (userRole === "teacher") {
