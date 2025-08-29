@@ -359,8 +359,13 @@ protectedRouter.patch(
   authenticateJWT,
   validate(settingsSchema),
   async (req, res) => {
-    const userId = req.userId;
+    // Prefer JWT userId, but allow fallback from body (onboarding)
+    const userId = req.userId || req.body.userId;
     const updateData = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required.' });
+    }
 
     try {
       const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
@@ -380,9 +385,10 @@ protectedRouter.patch(
       });
     } catch (error) {
       if (error.name === 'ValidationError') {
-        // Return a more descriptive message for validation errors
         const messages = Object.values(error.errors).map(val => val.message);
-        return res.status(400).json({ message: 'Validation failed', errors: messages });
+        return res
+          .status(400)
+          .json({ message: 'Validation failed', errors: messages });
       }
       if (error.code === 11000) {
         return res
@@ -394,6 +400,7 @@ protectedRouter.patch(
     }
   }
 );
+
 
 protectedRouter.post(
   "/profile/upload-photo",
