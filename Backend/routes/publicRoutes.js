@@ -20,33 +20,36 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || "1d";
 module.exports = (eventBus, agenda) => {
   const publicRouter = express.Router();
 
-  // ✅ Signup schema (now allows all fields)
-  const signupOtpSchema = Joi.object({
-    phone: Joi.string().pattern(/^\d{10,15}$/).required(),
-    email: Joi.string().email().required(),
-    firstname: Joi.string().min(2).max(50).required(),
-    lastname: Joi.string().min(2).max(50).required(),
-    occupation: Joi.string()
-      .valid("student", "teacher", "admin", "global_overseer", "overseer")
-      .required(),
-    schoolCountry: Joi.string().length(2).required(),
-    schoolName: Joi.string().max(100).required(),
-    grade: Joi.alternatives().try(
-      Joi.number().integer().min(5).max(12),
-      Joi.string().valid("100","200","300","400","500","600")
-    ).allow(null),
-    teacherGrade: Joi.alternatives().try(
-      Joi.number().integer().min(5).max(12),
-      Joi.string().valid("100","200","300","400","500","600")
-    ).allow(null),
 
-  });
+const signupOtpSchema = Joi.object({
+  phone: Joi.string().pattern(/^\d{10,15}$/).required(),
+  email: Joi.string().email().required(),
+  firstname: Joi.string().min(2).max(50).required(),
+  lastname: Joi.string().min(2).max(50).required(),
+  occupation: Joi.string()
+    .valid("student", "teacher", "admin", "global_overseer", "overseer")
+    .required(),
+  schoolCountry: Joi.string().length(2).required(),
+  schoolName: Joi.string().max(100).required(),
+  grade: Joi.alternatives().try(
+    Joi.number().integer().min(5).max(12),
+    Joi.string().valid("100","200","300","400","500","600")
+  ).allow(null),
+  teacherGrade: Joi.alternatives().try(
+    Joi.number().integer().min(5).max(12),
+    Joi.string().valid("100","200","300","400","500","600")
+  ).allow(null),
+});
 
-  const verifyOtpSchema = Joi.object({
-    code: Joi.string().length(6).pattern(/^\d+$/).required(),
-    email: Joi.string().email().required(),
-    password: Joi.string().min(8).required(),
-  });
+const verifyOtpSchema = Joi.object({
+  code: Joi.string().length(6).pattern(/^\d+$/).required(),
+  email: Joi.string().email().required(),
+  password: Joi.string()
+    .min(8)
+    .pattern(/^(?=.*[A-Z])(?=.*[!@#$%^&*])/)
+    .message("Password must contain at least one uppercase and one special character")
+    .required(),
+});
 
   const loginSchema = Joi.object({
     email: Joi.string().email().required(),
@@ -68,7 +71,7 @@ module.exports = (eventBus, agenda) => {
     message: Joi.string().min(5).max(2000).required(),
   });
 
-  // ✅ General validation middleware
+
   const validate = (schema) => (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
     if (error) {

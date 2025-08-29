@@ -68,7 +68,7 @@ const userSchema = new mongoose.Schema(
         );
       },
     },
-    // The schoolName field is now a single field for student, teacher, and admin.
+    
     schoolName: {
       type: String,
       trim: true,
