@@ -80,9 +80,7 @@ module.exports = (eventBus, agenda) => {
     next();
   };
 
-  // --------------------
-  // SIGNUP OTP
-  // --------------------
+ 
   publicRouter.post(
     "/users/signup-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -146,9 +144,7 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-  // --------------------
-  // VERIFY OTP
-  // --------------------
+
   publicRouter.post(
     "/users/verify-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -235,9 +231,7 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-  // --------------------
-  // LOGIN
-  // --------------------
+
   publicRouter.post("/users/login", async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -289,9 +283,7 @@ module.exports = (eventBus, agenda) => {
     }
   });
 
-  // --------------------
-  // FORGOT PASSWORD
-  // --------------------
+ 
   publicRouter.post(
     "/auth/forgot-password",
     validate(forgotPasswordSchema),
@@ -397,9 +389,7 @@ publicRouter.post("/reset-password", async (req, res) => {
 });
 
 
-  // --------------------
-  // CONTACT FORM
-  // --------------------
+
   publicRouter.post("/contact", validate(contactSchema), async (req, res) => {
     const { name, email, message } = req.body;
     try {
