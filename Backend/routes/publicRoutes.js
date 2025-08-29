@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
 const crypto = require("crypto");
 const Joi = require("joi");
-const { v4: uuidv4 } = require("uuid"); // Added UUID import
+const { v4: uuidv4 } = require("uuid");
 const User = require("../models/User");
 const logger = require("../utils/logger");
 
@@ -133,6 +133,10 @@ module.exports = (eventBus, agenda) => {
         attempts: 0,
         timestamp: Date.now(),
         temporaryUserId,
+        // Added default values for required fields in the User schema
+        role: "student",
+        occupation: "student",
+        schoolCountry: "",
       };
 
       logger.debug("[OTP] Generated for %s: %s", email, code);
@@ -211,7 +215,12 @@ module.exports = (eventBus, agenda) => {
           email: decoded.email,
           phone: decoded.phone,
           password: decoded.passwordHash,
-          isVerified: true,
+          // Use the 'verified' field from the schema
+          verified: true,
+          // These fields were added to signupData
+          role: decoded.role,
+          occupation: decoded.occupation,
+          schoolCountry: decoded.schoolCountry,
         });
         await newUser.save();
 
