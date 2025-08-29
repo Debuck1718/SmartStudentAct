@@ -198,21 +198,25 @@ publicRouter.post(
     const { code, email, password, otpToken } = req.body;
 
     try {
+      // Decode OTP token
       const decoded = jwt.verify(otpToken, JWT_SECRET);
 
       if (decoded.email !== email || decoded.code !== code) {
         return res.status(400).json({ message: "Invalid email or OTP." });
       }
 
+      // Check if user already exists
       let existingUser = await User.findOne({ email });
 
       if (existingUser) {
         const isMatch = await existingUser.comparePassword(password);
         if (!isMatch) {
-          return res
-            .status(400)
-            .json({ message: "Password mismatch. Please restart signup." });
+          return res.status(400).json({
+            message: "Password mismatch. Please restart signup.",
+          });
         }
+
+        // User exists and password matches — redirect to onboarding
         return res.status(200).json({
           status: "success",
           message: "User exists. Proceed to onboarding.",
@@ -220,48 +224,46 @@ publicRouter.post(
         });
       }
 
-        const newUser = new User({
-          _id: decoded.temporaryUserId,
-          firstname: decoded.firstname,
-          lastname: decoded.lastname,
-          email: decoded.email,
-          phone: decoded.phone,
-          password: decoded.passwordHash,
-          verified: true,
-          role: decoded.role,
-          occupation: decoded.occupation,
-          educationLevel: decoded.educationLevel,
-          grade: decoded.grade,
-          schoolName: decoded.schoolName,
-          schoolCountry: decoded.schoolCountry,
-        });
-        await newUser.save();
+      // Create new user with default placeholder information
+      const newUser = new User({
+        _id: decoded.temporaryUserId,
+        firstname: decoded.firstname,
+        lastname: decoded.lastname,
+        email: decoded.email,
+        phone: decoded.phone,
+        password: decoded.passwordHash, // hashed password from signup
+        verified: true,
+        role: "student",                // default role
+        occupation: "Not specified",    // default occupation
+        educationLevel: "Not specified",// default education level
+        grade: "Not specified",         // default grade
+        schoolName: "Not specified",    // default school
+        schoolCountry: "Not specified", // default country
+      });
 
-        // Send welcome email after successful verification
-        try {
-          await sendWelcomeEmail(newUser.email, newUser.firstname);
-          logger.info("Welcome email sent to %s", newUser.email);
-        } catch (emailErr) {
-          logger.error("❌ Failed to send welcome email to %s:", newUser.email, emailErr);
-          // Continue with the response even if the email fails to send
-        }
+      await newUser.save();
 
-        res.status(200).json({
-          status: "success",
-          message: "OTP verified successfully. Proceed to onboarding.",
-          userId: newUser._id,
-        });
-      } catch (err) {
-        logger.error("❌ Verify OTP error:", err);
+      // Send welcome email (non-blocking)
+      sendWelcomeEmail(newUser.email, newUser.firstname).catch((err) => {
+        logger.error("Failed to send welcome email:", err);
+      });
 
-        if (err.name === "TokenExpiredError") {
-          return res.status(400).json({ message: "OTP expired." });
-        } else {
-          return res.status(500).json({ message: "OTP verification failed." });
-        }
+      return res.status(201).json({
+        status: "success",
+        message: "OTP verified successfully. Proceed to onboarding.",
+        userId: newUser._id,
+      });
+    } catch (err) {
+      logger.error("❌ Verify OTP error:", err);
+
+      if (err.name === "TokenExpiredError") {
+        return res.status(400).json({ message: "OTP expired." });
       }
+      return res.status(500).json({ message: "OTP verification failed." });
     }
-  );
+  }
+);
+
 
   publicRouter.post("/users/login", async (req, res) => {
     try {
