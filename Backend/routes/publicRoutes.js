@@ -190,27 +190,36 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-  publicRouter.post(
-    "/users/verify-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-    validate(verifyOtpSchema),
-    async (req, res) => {
-      const { code, email, password, otpToken } = req.body;
+publicRouter.post(
+  "/users/verify-otp",
+  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+  validate(verifyOtpSchema),
+  async (req, res) => {
+    const { code, email, password, otpToken } = req.body;
 
-      try {
-        const decoded = jwt.verify(otpToken, JWT_SECRET);
+    try {
+      const decoded = jwt.verify(otpToken, JWT_SECRET);
 
-        if (decoded.email !== email || decoded.code !== code) {
-          return res.status(400).json({ message: "Invalid email or OTP." });
-        }
+      if (decoded.email !== email || decoded.code !== code) {
+        return res.status(400).json({ message: "Invalid email or OTP." });
+      }
 
-        if (!bcrypt.compareSync(password, decoded.passwordHash)) {
+      let existingUser = await User.findOne({ email });
+
+      if (existingUser) {
+        const isMatch = await existingUser.comparePassword(password);
+        if (!isMatch) {
           return res
             .status(400)
             .json({ message: "Password mismatch. Please restart signup." });
         }
+        return res.status(200).json({
+          status: "success",
+          message: "User exists. Proceed to onboarding.",
+          userId: existingUser._id,
+        });
+      }
 
-        // Create the new user in the database
         const newUser = new User({
           _id: decoded.temporaryUserId,
           firstname: decoded.firstname,
