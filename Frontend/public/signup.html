@@ -1057,7 +1057,7 @@
             occupationSelect.value === "teacher"
               ? universityInput.value.trim()
               : undefined,
-          passwordHash: bcrypt.hashSync(passwordInput.value.trim(), 10), // ✅ store hashed password in token
+          password: passwordInput.value.trim(), // ✅ store hashed password in token
         };
 
         setLoadingState(requestOtpButton, true, "Request OTP");
