@@ -20,9 +20,6 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || "1d";
 module.exports = (eventBus, agenda) => {
   const publicRouter = express.Router();
 
-  // ───────────────────────────────
-  // VALIDATION SCHEMAS
-  // ───────────────────────────────
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\d{10,15}$/).required(),
     email: Joi.string().email().required(),
@@ -91,9 +88,7 @@ module.exports = (eventBus, agenda) => {
     next();
   };
 
-  // ───────────────────────────────
-  // SIGNUP OTP
-  // ───────────────────────────────
+
   publicRouter.post(
     "/users/signup-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -111,7 +106,6 @@ module.exports = (eventBus, agenda) => {
       try {
         await sendOTPEmail(email, firstname, code);
 
-        // Create OTP JWT (expires in 10 minutes)
         const otpToken = jwt.sign(
           { ...req.body, code },
           JWT_SECRET,
@@ -132,9 +126,7 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-  // ───────────────────────────────
-  // VERIFY OTP
-  // ───────────────────────────────
+
   publicRouter.post(
     "/users/verify-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -149,12 +141,22 @@ module.exports = (eventBus, agenda) => {
           return res.status(400).json({ error: "Invalid email or OTP" });
         }
 
+
         const hash = await bcrypt.hash(password, 10);
+
         const trialEndDate = new Date();
         trialEndDate.setDate(trialEndDate.getDate() + 30);
 
         const newUser = await User.create({
-          ...decoded,
+          firstname: decoded.firstname,
+          lastname: decoded.lastname,
+          email: decoded.email,
+          phone: decoded.phone,
+          occupation: decoded.occupation,
+          schoolCountry: decoded.schoolCountry,
+          schoolName: decoded.schoolName,
+          grade: decoded.grade || null,
+          teacherGrade: decoded.teacherGrade || null,
           password: hash,
           verified: true,
           role: decoded.occupation,
@@ -162,6 +164,7 @@ module.exports = (eventBus, agenda) => {
           trial_end_date: trialEndDate,
           subscription_status: "inactive",
         });
+
 
         await sendWelcomeEmail(newUser.email, newUser.firstname);
         eventBus.emit("user_signed_up", {
@@ -204,103 +207,7 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-  // ───────────────────────────────
-  // LOGIN
-  // ───────────────────────────────
-  publicRouter.post("/users/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
 
-      if (!email || !password) {
-        return res
-          .status(400)
-          .json({ status: false, message: "Email and password are required." });
-      }
-
-      const user = await User.findOne({ email }).select("+password");
-      if (!user) {
-        return res
-          .status(401)
-          .json({ status: false, message: "Invalid credentials." });
-      }
-
-      const isMatch = await user.comparePassword(password);
-      if (!isMatch) {
-        return res
-          .status(401)
-          .json({ status: false, message: "Invalid credentials." });
-      }
-
-      const token = jwt.sign(
-        { id: user._id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: "1d" }
-      );
-
-      res.cookie("access_token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        maxAge: 1000 * 60 * 60 * 24,
-      });
-      res.json({
-        status: true,
-        message: "Login successful",
-        user: {
-          email: user.email,
-          role: user.role,
-          id: user._id,
-        },
-      });
-    } catch (err) {
-      console.error("Login error:", err);
-      return res.status(500).json({ status: false, message: "Server error" });
-    }
-  });
-
-  // ───────────────────────────────
-  // FORGOT PASSWORD
-  // ───────────────────────────────
-  publicRouter.post(
-    "/auth/forgot-password",
-    validate(forgotPasswordSchema),
-    async (req, res) => {
-      const { email } = req.body;
-      try {
-        const user = await User.findOne({ email });
-        if (!user) {
-          return res.status(200).json({
-            message: "If an account exists, a reset link has been sent.",
-          });
-        }
-
-        const token = crypto.randomBytes(32).toString("hex");
-        user.reset_password_token = token;
-        user.reset_password_expires = Date.now() + 3600000;
-        await user.save();
-
-        const resetLink = `${req.protocol}://${req.get(
-          "host"
-        )}/reset-password.html?token=${token}`;
-        await sendResetEmail(user.email, resetLink);
-
-        eventBus.emit("password_reset_requested", {
-          userId: user._id,
-          email: user.email,
-        });
-        res.status(200).json({
-          message: "If an account exists, a reset link has been sent.",
-        });
-      } catch (err) {
-        logger.error("❌ Forgot password error:", err);
-        res.status(500).json({ error: "Server error" });
-      }
-    }
-  );
-
-  // ───────────────────────────────
-  // RESET PASSWORD
-  // ───────────────────────────────
   publicRouter.post(
     "/auth/reset-password",
     validate(resetPasswordSchema),
@@ -330,9 +237,7 @@ module.exports = (eventBus, agenda) => {
     }
   );
 
-  // ───────────────────────────────
-  // CONTACT
-  // ───────────────────────────────
+
   publicRouter.post("/contact", validate(contactSchema), async (req, res) => {
     const { name, email, message } = req.body;
     try {
