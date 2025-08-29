@@ -113,83 +113,90 @@ module.exports = (eventBus, agenda) => {
     next();
   };
 
+router.post(
+  "/users/signup-otp",
+  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+  validate(signupOtpSchema),
+  async (req, res) => {
+    const { firstName, lastName, email, phone, password, confirmPassword } = req.body;
 
-  publicRouter.post(
-    "/users/signup-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-    validate(signupOtpSchema),
-    async (req, res) => {
-      const { email, firstname, ...rest } = req.body;
+    if (password !== confirmPassword) {
+        return res.status(400).json({ message: "Passwords do not match." });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const temporaryUserId = uuidv4();
 
-      // ... existing code ...
-      const code =
-        process.env.NODE_ENV === "production"
-          ? Math.floor(100000 + Math.random() * 900000).toString()
-          : "123456";
+    const code =
+      process.env.NODE_ENV === "production"
+        ? Math.floor(100000 + Math.random() * 900000).toString()
+        : "123456";
 
-      if (!req.session) req.session = {};
-      req.session.signup = {
-        ...rest,
-        email,
-        firstname,
-        code,
-        attempts: 0,
-        timestamp: Date.now(),
-      };
+    const signupData = {
+      email,
+      firstName,
+      lastName,
+      phone,
+      passwordHash: hashedPassword, 
+      code,
+      attempts: 0,
+      timestamp: Date.now(),
+      temporaryUserId
+    };
 
-      logger.debug("[OTP] Generated for %s: %s", email, code);
+    logger.debug("[OTP] Generated for %s: %s", email, code);
 
-      try {
-        const success = await (async () => {
-          const retries = 3;
-          for (let attempt = 1; attempt <= retries; attempt++) {
-            try {
-              await sendOTPEmail(email, firstname, code);
-              logger.info("OTP email sent to %s (attempt %d)", email, attempt);
-              return true;
-            } catch (err) {
-              logger.warn(
-                "⚠️ OTP send attempt %d failed for %s: %s",
-                attempt,
-                email,
-                err.message || err
-              );
-              if (attempt < retries) {
-                const delay = Math.pow(2, attempt) * 1000;
-                logger.debug("⏳ Retrying in %ds...", delay / 1000);
-                await new Promise((r) => setTimeout(r, delay));
-              }
+    try {
+      const success = await (async () => {
+        const retries = 3;
+        for (let attempt = 1; attempt <= retries; attempt++) {
+          try {
+            await sendOTPEmail(email, firstName, code);
+            logger.info("OTP email sent to %s (attempt %d)", email, attempt);
+            return true;
+          } catch (err) {
+            logger.warn(
+              "⚠️ OTP send attempt %d failed for %s: %s",
+              attempt,
+              email,
+              err.message || err
+            );
+            if (attempt < retries) {
+              const delay = Math.pow(2, attempt) * 1000;
+              logger.debug("⏳ Retrying in %ds...", delay / 1000);
+              await new Promise((r) => setTimeout(r, delay));
             }
           }
-          return false;
-        })();
-
-        if (!success) {
-          logger.error("❌ All OTP send attempts failed for %s", email);
-          return res.status(500).json({ error: "Failed to send OTP" });
         }
+        return false;
+      })();
 
-        const otpToken = jwt.sign(
-          req.session.signup,
-          JWT_SECRET,
-          { expiresIn: "10m" }
-        );
-
-        eventBus.emit("otp_sent", { email, otp: code });
-        res.json({
-          step: "verify",
-          message: "OTP sent to your email",
-          otpToken
-        });
-      } catch (err) {
-        logger.error("❌ Unexpected OTP route error:", err);
-        res.status(500).json({ error: "Failed to send OTP" });
+      if (!success) {
+        logger.error("❌ All OTP send attempts failed for %s", email);
+        return res.status(500).json({ message: "Failed to send OTP" });
       }
+
+      const otpToken = jwt.sign(
+        signupData,
+        JWT_SECRET,
+        { expiresIn: "10m" }
+      );
+
+      eventBus.emit("otp_sent", { email, otp: code });
+      res.json({
+        step: "verify",
+        message: "OTP sent to your email",
+        otpToken,
+        userId: temporaryUserId, 
+      });
+    } catch (err) {
+      logger.error("❌ Unexpected OTP route error:", err);
+      res.status(500).json({ message: "Failed to send OTP" });
     }
-  );
+  }
+);
 
 
-publicRouter.post(
+router.post(
   "/users/verify-otp",
   rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
   validate(verifyOtpSchema),
@@ -203,88 +210,22 @@ publicRouter.post(
         return res.status(400).json({ message: "Invalid email or OTP." });
       }
 
-      const existingUser = await User.findOne({
-        $or: [{ email: decoded.email }, { phone: decoded.phone }],
-      });
-      if (existingUser) {
-        return res.status(409).json({ message: "Email or phone already registered." });
-      }
-
-      // ✅ Secure password handling
       if (!bcrypt.compareSync(password, decoded.passwordHash)) {
         return res.status(400).json({ message: "Password mismatch. Please restart signup." });
       }
 
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 30);
-
-      const userData = {
-        firstname: decoded.firstname,
-        lastname: decoded.lastname,
-        email: decoded.email,
-        phone: decoded.phone,
-        occupation: decoded.occupation,
-        schoolCountry: decoded.schoolCountry,
-        schoolName: decoded.schoolName,
-        educationLevel: decoded.educationLevel,
-        grade: decoded.grade,
-        university: decoded.university,
-        uniLevel: decoded.uniLevel,
-        teacherGrade: decoded.teacherGrade,
-        teacherSubject: decoded.teacherSubject,
-        password: decoded.passwordHash, // ✅ safe to store
-        verified: true,
-        role: decoded.occupation,
-        is_on_trial: true,
-        trial_end_date: trialEndDate,
-        subscription_status: "inactive",
-      };
-
-      Object.keys(userData).forEach((key) => {
-        if (userData[key] == null) delete userData[key];
-      });
-
-      const newUser = await User.create(userData);
-      await sendWelcomeEmail(newUser.email, newUser.firstname);
-
-      eventBus.emit("user_signed_up", {
-        userId: newUser._id,
-        email: newUser.email,
-        occupation: newUser.occupation,
-      });
-
-      const token = jwt.sign(
-        { id: newUser._id, email: newUser.email, role: newUser.role },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES }
-      );
-
-      res.cookie("access_token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        maxAge: ms(JWT_EXPIRES), // ✅ match cookie with JWT
-      });
-
-      res.status(201).json({
+      res.status(200).json({
         status: "success",
-        message: "Account created successfully.",
-        user: { id: newUser._id, email: newUser.email, role: newUser.role },
+        message: "OTP verified successfully. Proceed to onboarding.",
       });
+
     } catch (err) {
       logger.error("❌ Verify OTP error:", err);
 
       if (err.name === "TokenExpiredError") {
         return res.status(400).json({ message: "OTP expired." });
-      } else if (err.name === "ValidationError") {
-        return res.status(400).json({
-          message: "Account creation failed due to validation errors.",
-          details: err.errors,
-        });
-      } else if (err.code === 11000) {
-        return res.status(409).json({ message: "Email or phone already registered." });
       } else {
-        return res.status(500).json({ message: "Account creation failed." });
+        return res.status(500).json({ message: "OTP verification failed." });
       }
     }
   }
