@@ -173,10 +173,14 @@ publicRouter.post(
 
       if (user) {
         // 🔹 Existing User Flow
-        const isMatch = await bcrypt.compare(password, user.password);
+        let isMatch = false;
+        // 🔑 NEW CHECK: Safely compare password only if it exists
+        if (user.password) {
+          isMatch = await bcrypt.compare(password, user.password);
+        }
 
         if (!isMatch) {
-          // 🔑 Update password on password mismatch during verification
+          // Update password if it doesn't match or the stored password was missing
           const newHashed = await bcrypt.hash(password, 10);
           user.password = newHashed;
           await user.save();
@@ -237,6 +241,7 @@ publicRouter.post(
     }
   }
 );
+
 
   publicRouter.post("/users/login", async (req, res) => {
     try {
