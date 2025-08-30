@@ -138,7 +138,7 @@ publicRouter.post(
         { expiresIn: "10m" }
       );
 
-      await sendOTPEmail(email, code);
+      await sendOTPEmail(email, code, existingUser.firstname);
 
       res.status(200).json({
         status: "success",
