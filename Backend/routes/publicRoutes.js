@@ -105,7 +105,7 @@ publicRouter.post(
           { expiresIn: "10m" }
         );
 
-        await sendOTPEmail(email, code);
+        await sendOTPEmail(email, firstname, code);
 
         return res.json({
           status: "success",
@@ -153,6 +153,7 @@ publicRouter.post(
 );
 
 
+// --- Verify OTP ---
 publicRouter.post(
   "/users/verify-otp",
   rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -167,73 +168,67 @@ publicRouter.post(
         return res.status(400).json({ message: "Invalid email or OTP." });
       }
 
-      // Existing user flow
+      // Check if user already exists
       let user = await User.findOne({ email });
+
       if (user) {
+        // 🔹 Existing User Flow
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-          // 🔑 Instead of rejecting → update password
+          // 🔑 Update password on password mismatch during verification
           const newHashed = await bcrypt.hash(password, 10);
           user.password = newHashed;
           await user.save();
-
-          return res.json({
-            status: "success",
-            message: "Password updated. User verified. Redirecting...",
-            userId: user._id,
-            role: user.occupation,
-          });
         }
 
-        // Password matches
-        return res.json({
+        return res.status(200).json({
           status: "success",
           message: "User verified. Redirecting...",
           userId: user._id,
           role: user.occupation,
         });
-      }
+      } else {
+        // 🔹 New User Flow
+        // Ensure all required fields for a new user are present in the JWT payload.
+        const requiredFields = ['temporaryUserId', 'firstname', 'lastname', 'email', 'occupation', 'schoolName', 'schoolCountry', 'passwordHash'];
+        const missingFields = requiredFields.filter(field => decoded[field] === undefined);
 
-      // New user flow
-      // 🚨 NEW CHECK: Ensure all required fields are present before proceeding
-      const requiredFields = ['firstname', 'lastname', 'email', 'occupation', 'schoolName', 'schoolCountry'];
-      const missingFields = requiredFields.filter(field => !decoded[field]);
+        if (missingFields.length > 0) {
+          logger.error(`❌ Verify-OTP failed: Missing fields for new user: ${missingFields.join(', ')}`);
+          return res.status(400).json({
+            message: "Incomplete user data in OTP token. Please restart signup.",
+          });
+        }
 
-      if (missingFields.length > 0) {
-        logger.error(`❌ Verify-OTP failed: Missing fields in JWT token: ${missingFields.join(', ')}`);
-        return res.status(400).json({
-          message: "Incomplete user data in OTP token. Please restart signup.",
+        const newUser = new User({
+          _id: decoded.temporaryUserId,
+          firstname: decoded.firstname,
+          lastname: decoded.lastname,
+          email: decoded.email,
+          phone: decoded.phone,
+          password: decoded.passwordHash,
+          verified: true,
+          role: decoded.occupation,
+          occupation: decoded.occupation,
+          educationLevel: decoded.educationLevel,
+          grade: decoded.grade,
+          schoolName: decoded.schoolName,
+          schoolCountry: decoded.schoolCountry,
+        });
+
+        await newUser.save();
+        sendWelcomeEmail(newUser.email, newUser.firstname).catch((e) =>
+          logger.error("Failed to send welcome:", e)
+        );
+
+        res.status(201).json({
+          status: "success",
+          message: "User created & verified. Redirecting...",
+          userId: newUser._id,
+          role: newUser.occupation,
         });
       }
-
-      const newUser = new User({
-        _id: decoded.temporaryUserId,
-        firstname: decoded.firstname,
-        lastname: decoded.lastname,
-        email: decoded.email,
-        phone: decoded.phone,
-        password: decoded.passwordHash,
-        verified: true,
-        role: decoded.occupation,
-        occupation: decoded.occupation,
-        educationLevel: decoded.educationLevel,
-        grade: decoded.grade,
-        schoolName: decoded.schoolName,
-        schoolCountry: decoded.schoolCountry,
-      });
-
-      await newUser.save();
-      sendWelcomeEmail(newUser.email, newUser.firstname).catch((e) =>
-        logger.error("Failed to send welcome:", e)
-      );
-
-      res.status(201).json({
-        status: "success",
-        message: "User created & verified. Redirecting...",
-        userId: newUser._id,
-        role: newUser.occupation,
-      });
     } catch (err) {
       logger.error("❌ Verify-OTP error:", err);
       if (err.name === "TokenExpiredError")
