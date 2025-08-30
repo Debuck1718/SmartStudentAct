@@ -440,7 +440,7 @@ protectedRouter.post(
 protectedRouter.post(
   "/admin/promote",
   authenticateJWT,
-  hasRole(["admin", "overseer", "global-overseer"]),
+  hasRole(["admin", "overseer", "global_overseer"]),
   validate(promoteUserSchema),
   async (req, res) => {
     const { email, role } = req.body;
@@ -459,7 +459,7 @@ protectedRouter.post(
 
       if (
         req.userRole === "admin" &&
-        ["overseer", "global-overseer"].includes(targetUser.role)
+        ["overseer", "global_overseer"].includes(targetUser.role)
       ) {
         return res
           .status(403)
@@ -467,7 +467,7 @@ protectedRouter.post(
       }
       if (
         req.userRole === "overseer" &&
-        targetUser.role === "global-overseer"
+        targetUser.role === "global_overseer"
       ) {
         return res
           .status(403)
@@ -486,7 +486,7 @@ protectedRouter.post(
 protectedRouter.post(
   "/admin/remove-user",
   authenticateJWT,
-  hasRole(["admin", "overseer", "global-overseer"]),
+  hasRole(["admin", "overseer", "global_overseer"]),
   validate(removeUserSchema),
   async (req, res) => {
     const { email } = req.body;
@@ -503,7 +503,7 @@ protectedRouter.post(
       if (
         actor.role === "overseer" &&
         (targetUser.role === "overseer" ||
-          targetUser.role === "global-overseer")
+          targetUser.role === "global_overseer")
       ) {
         return res
           .status(403)
@@ -518,7 +518,7 @@ protectedRouter.post(
             .json({ error: "Can only remove users from your school." });
         }
         if (
-          ["admin", "overseer", "global-overseer"].includes(targetUser.role)
+          ["admin", "overseer", "global_overseer"].includes(targetUser.role)
         ) {
           return res
             .status(403)
@@ -543,7 +543,7 @@ protectedRouter.post(
 protectedRouter.get(
   "/admin/schools",
   authenticateJWT,
-  hasRole(["admin", "overseer", "global-overseer"]),
+  hasRole(["admin", "overseer", "global_overseer"]),
   async (req, res) => {
     try {
       const schools = await User.aggregate([
@@ -563,7 +563,7 @@ protectedRouter.get(
 protectedRouter.post(
   "/admin/schools/add",
   authenticateJWT,
-  hasRole(["overseer", "global-overseer"]),
+  hasRole(["overseer", "global_overseer"]),
   validate(schoolSchema),
   async (req, res) => {
     const { name, country, tier } = req.body;
@@ -634,7 +634,7 @@ protectedRouter.get(
 );
 
 protectedRouter.get(
-  "/global-overseer/dashboard-overview",
+  "/global-overseer/dashboard",
   authenticateJWT,
   hasRole(["global_overseer"]),
   async (req, res) => {
@@ -722,7 +722,7 @@ protectedRouter.get("/users", authenticateJWT, async (req, res) => {
 protectedRouter.post(
   "/admin/assign-region",
   authenticateJWT,
-  hasRole(["global-overseer"]),
+  hasRole(["global_overseer"]),
   validate(assignRegionSchema),
   async (req, res) => {
     const { overseerEmail, region } = req.body;

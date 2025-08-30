@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Global Overseer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -30,7 +30,6 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-8">
 
-    <!-- Main Content Area -->
     <div class="container mx-auto bg-white rounded-2xl shadow-lg p-8">
         <header class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
             <h1 class="text-3xl font-bold text-gray-800">Global Overseer Dashboard</h1>
@@ -39,12 +38,10 @@
             </div>
         </header>
 
-        <!-- Dashboard Overview Section -->
         <section class="mb-8">
             <h2 class="text-2xl font-semibold text-gray-700 mb-4">Regional Overview</h2>
             <div id="dashboard-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Cards will be injected here -->
-            </div>
+                </div>
         </section>
 
         <section class="mb-8">
@@ -53,7 +50,6 @@
                 <div class="space-x-2">
                     <button id="open-assign-region" class="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-md">Assign Region</button>
                     <button id="open-request-btn" class="px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors duration-200 shadow-md">Make Request</button>
-                    <button id="open-terms-btn" class="px-4 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors duration-200 shadow-md">Terms & Conditions</button>
                 </div>
             </div>
             <div class="relative mb-4">
@@ -70,13 +66,11 @@
                         </tr>
                     </thead>
                     <tbody id="users-table-body" class="text-gray-600 text-sm font-light">
-                        <!-- User rows will be injected here -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- Files Section -->
         <section>
             <h2 class="text-2xl font-semibold text-gray-700 mb-4">File Management</h2>
             <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
@@ -101,14 +95,12 @@
                         </tr>
                     </thead>
                     <tbody id="files-table-body" class="text-gray-600 text-sm font-light">
-                        <!-- File rows will be injected here -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </section>
     </div>
 
-    <!-- Modal for Assigning Region -->
     <div id="assign-region-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl p-8 max-w-sm w-full relative modal-content">
             <button id="assign-region-close" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors duration-200">&times;</button>
@@ -128,7 +120,6 @@
         </div>
     </div>
 
-    <!-- Modal for Make Request -->
     <div id="request-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl p-8 max-w-lg w-full relative modal-content">
             <button id="request-close" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors duration-200">&times;</button>
@@ -144,27 +135,6 @@
         </div>
     </div>
 
-    <!-- Modal for Terms & Conditions -->
-    <div id="terms-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl p-8 max-w-2xl w-full relative modal-content">
-            <button id="terms-close" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors duration-200">&times;</button>
-            <h2 class="text-2xl font-bold mb-4">Terms and Conditions</h2>
-            <div class="text-gray-600 overflow-y-auto h-96 pr-4">
-                <h3 class="font-semibold text-lg mb-2">1. Acceptance of Terms</h3>
-                <p class="mb-4">By accessing and using this dashboard, you accept and agree to be bound by the terms and provisions of this agreement. Any participation in this service will constitute acceptance of this agreement.</p>
-                <h3 class="font-semibold text-lg mb-2">2. User Responsibilities</h3>
-                <p class="mb-4">You are responsible for maintaining the confidentiality of your account information. You agree to use the dashboard only for its intended purpose and in compliance with all applicable laws and regulations.</p>
-                <h3 class="font-semibold text-lg mb-2">3. Prohibited Conduct</h3>
-                <p class="mb-4">You must not use this service to engage in any unauthorized access, data manipulation, or any activity that could harm the integrity or security of the system. Unauthorized use may lead to termination of your access and legal action.</p>
-                <h3 class="font-semibold text-lg mb-2">4. Disclaimer of Warranties</h3>
-                <p class="mb-4">The services are provided "as is" and "as available" without any warranties of any kind, whether express or implied. We do not warrant that the service will be uninterrupted, error-free, or secure.</p>
-                <h3 class="font-semibold text-lg mb-2">5. Limitation of Liability</h3>
-                <p class="mb-4">In no event shall we be liable for any direct, indirect, incidental, special, or consequential damages arising out of or in any way connected with the use of the dashboard or any of its features.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Generic Alert Modal -->
     <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center modal-content">
             <h2 id="alert-title" class="text-xl font-bold mb-2"></h2>
@@ -173,7 +143,6 @@
         </div>
     </div>
 
-    <!-- Generic Confirmation Modal -->
     <div id="confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl p-8 max-w-sm w-full relative modal-content">
             <h2 id="confirm-title" class="text-xl font-bold mb-2"></h2>
@@ -211,17 +180,12 @@
         const alertMessage = document.getElementById("alert-message");
         const alertOk = document.getElementById("alert-ok");
 
-        // New Modals
         const requestModal = document.getElementById("request-modal");
         const openRequestBtn = document.getElementById("open-request-btn");
         const requestClose = document.getElementById("request-close");
         const requestCancel = document.getElementById("request-cancel");
         const requestSendBtn = document.getElementById("request-send");
         const requestTextArea = document.getElementById("request-text");
-
-        const termsModal = document.getElementById("terms-modal");
-        const openTermsBtn = document.getElementById("open-terms-btn");
-        const termsClose = document.getElementById("terms-close");
 
         const confirmModal = document.getElementById("confirm-modal");
         const confirmTitle = document.getElementById("confirm-title");
@@ -231,14 +195,12 @@
 
         // --- Core UI & Data Fetching Functions ---
 
-        /** Displays a generic alert modal. */
         function showAlert(title, message) {
             alertTitle.textContent = title;
             alertMessage.textContent = message;
             alertModal.classList.remove("hidden");
         }
 
-        /** Displays a generic confirmation modal. */
         function showConfirm(title, message, onConfirmCallback) {
             confirmTitle.textContent = title;
             confirmMessage.textContent = message;
@@ -259,10 +221,8 @@
             confirmCancelBtn.addEventListener('click', cancelHandler);
         }
 
-
         function showLoading() {
             dashboardCards.innerHTML = '<div class="spinner mx-auto"></div>';
-            filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
         }
 
         function showError(message) {
@@ -272,21 +232,17 @@
         async function loadDashboard() {
             showLoading();
             try {
-                const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard-overview`, { method: "GET", credentials: "include" });
+                const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard`, {
+                    method: "GET",
+                    credentials: "include"
+                });
                 const data = await res.json();
                 if (!res.ok) {
                     showError(data.message || "Failed to load dashboard.");
-                    if (res.status === 401 || res.status === 403) localStorage.removeItem("jwt_token");
+                    if (res.status === 401 || res.status === 403) window.location.href = "/login.html";
                     return;
                 }
                 renderDashboard(data);
-
-                const filesRes = await fetch(`${API_BASE_URL}/admin/all-files`, { method: "GET", credentials: "include" });
-                const filesDataRes = await filesRes.json();
-                if (filesRes.ok) {
-                    filesData = filesDataRes.files || [];
-                    renderFiles();
-                }
             } catch (err) {
                 console.error(err);
                 showError("An unexpected error occurred while loading the dashboard.");
@@ -307,6 +263,70 @@
                 `;
                 dashboardCards.appendChild(card);
             });
+        }
+
+        async function loadUsers(query = "") {
+            try {
+                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
+                const res = await fetch(`${API_BASE_URL}/users?search=${encodeURIComponent(query)}`, {
+                    method: "GET",
+                    credentials: "include"
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${data.message || "Failed to load users."}</td></tr>`;
+                    return;
+                }
+                renderUsers(data.users || []);
+            } catch (err) {
+                console.error(err);
+                usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch users.</td></tr>`;
+            }
+        }
+
+        function renderUsers(users) {
+            usersTableBody.innerHTML = "";
+            if (users.length === 0) {
+                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No users found.</td></tr>';
+                return;
+            }
+
+            users.forEach(user => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="border-t px-6 py-4 text-gray-700">${user.email}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${user.role}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${user.schoolName || user.teacherSchool || '-'}</td>
+                    <td class="border-t px-6 py-4 space-x-2">
+                        <button class="bg-green-600 text-white px-3 py-1 rounded-full text-xs hover:bg-green-700 transition-colors duration-200 shadow-sm"
+                            onclick="promoteUser('${user.email}')">Promote</button>
+                        <button class="bg-red-600 text-white px-3 py-1 rounded-full text-xs hover:bg-red-700 transition-colors duration-200 shadow-sm"
+                            onclick="removeUser('${user.email}')">Remove</button>
+                    </td>
+                `;
+                usersTableBody.appendChild(tr);
+            });
+        }
+        
+        async function loadFiles() {
+            try {
+                filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading files...</td></tr>';
+                const res = await fetch(`${API_BASE_URL}/global-overseer/all-files`, {
+                    method: "GET",
+                    credentials: "include"
+                });
+                const filesDataRes = await res.json();
+                if (!res.ok) {
+                    filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${filesDataRes.message || "Failed to load files."}</td></tr>`;
+                    filesData = [];
+                    return;
+                }
+                filesData = filesDataRes.files || [];
+                renderFiles();
+            } catch (err) {
+                console.error("Failed to load files:", err);
+                filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch files.</td></tr>`;
+            }
         }
 
         function renderFiles() {
@@ -330,85 +350,39 @@
                     <td class="border-t px-6 py-4 text-gray-700">${file.type}</td>
                     <td class="border-t px-6 py-4 text-gray-700">${file.uploaded_by || file.created_by}</td>
                     <td class="border-t px-6 py-4">
-                        <a href="${API_BASE_URL}/admin/view-file/${file.type.toLowerCase()}/${file.filename}" target="_blank" class="text-blue-600 hover:underline transition-colors duration-200">View</a>
+                        <a href="${API_BASE_URL}/admin/all-files/${file.type.toLowerCase()}/${file.filename}" target="_blank" class="text-blue-600 hover:underline transition-colors duration-200">View</a>
                     </td>
                 `;
                 filesTableBody.appendChild(tr);
             });
         }
 
-        // Load users
-        async function loadUsers(query="") {
-            try {
-                const res = await fetch(`${API_BASE_URL}/admin/users?search=${encodeURIComponent(query)}`, {
-                    method: "GET",
-                    credentials: "include"
-                });
-                const data = await res.json();
-                if (!res.ok) return showAlert("Error", data.error || "Failed to load users");
-                renderUsers(data.users || []);
-            } catch (err) {
-                console.error(err);
-                showAlert("Error", "Could not fetch users");
-            }
-        }
 
-        function renderUsers(users) {
-            usersTableBody.innerHTML = "";
-            if (users.length === 0) {
-                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No users found.</td></tr>';
-                return;
-            }
-
-            users.forEach(user => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="border-t px-6 py-4 text-gray-700">${user.email}</td>
-                    <td class="border-t px-6 py-4 text-gray-700">${user.role}</td>
-                    <td class="border-t px-6 py-4 text-gray-700">${user.schoolName || user.teacherSchool || '-'}</td>
-                    <td class="border-t px-6 py-4 space-x-2">
-                        <button class="bg-green-600 text-white px-3 py-1 rounded-full text-xs hover:bg-green-700 transition-colors duration-200 shadow-sm"
-                            onclick="openPromoteModal('${user.email}')">Promote</button>
-                        <button class="bg-red-600 text-white px-3 py-1 rounded-full text-xs hover:bg-red-700 transition-colors duration-200 shadow-sm"
-                            onclick="removeUser('${user.email}')">Remove</button>
-                    </td>
-                `;
-                usersTableBody.appendChild(tr);
-            });
-        }
-
-        // --- Event Listeners and Logic ---
-
-        // User Management
-        function openPromoteModal(email) {
+        async function promoteUser(email) {
             showConfirm(
                 "Promote User",
-                `Please enter a new role for ${email}. (admin, overseer, global-overseer, teacher, student)`,
-                () => {
-                    const role = prompt("Enter new role:"); // Using prompt() as a workaround for now, but should be replaced by a more complex modal.
+                `Please enter a new role for ${email}.`,
+                async () => {
+                    const role = prompt("Enter new role:");
                     if (role) {
-                        promoteUser(email, role);
+                        try {
+                            const res = await fetch(`${API_BASE_URL}/admin/promote`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                credentials: "include",
+                                body: JSON.stringify({ email, role })
+                            });
+                            const data = await res.json();
+                            if (!res.ok) return showAlert("Error", data.error || "Failed to promote user");
+                            showAlert("Success", "User promoted successfully");
+                            loadUsers(userSearch.value);
+                        } catch (err) {
+                            console.error(err);
+                            showAlert("Error", "Promotion failed");
+                        }
                     }
                 }
             );
-        }
-
-        async function promoteUser(email, role) {
-            try {
-                const res = await fetch(`${API_BASE_URL}/admin/promote`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ email, role })
-                });
-                const data = await res.json();
-                if (!res.ok) return showAlert("Error", data.error || "Failed to promote user");
-                showAlert("Success", "User promoted successfully");
-                loadUsers(userSearch.value);
-            } catch (err) {
-                console.error(err);
-                showAlert("Error", "Promotion failed");
-            }
         }
 
         async function removeUser(email) {
@@ -435,12 +409,10 @@
             );
         }
 
-        // Logout
         logoutBtn.addEventListener("click", async () => {
             try {
                 const res = await fetch(`${API_BASE_URL}/logout`, { method: "POST", credentials: "include" });
                 if (res.ok) {
-                    localStorage.removeItem("jwt_token");
                     window.location.href = "/login.html";
                 }
             } catch (err) {
@@ -448,7 +420,6 @@
             }
         });
 
-        // Modals
         openAssignRegionBtn.addEventListener("click", () => assignRegionModal.classList.remove("hidden"));
         assignRegionClose.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
         assignRegionCancel.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
@@ -460,7 +431,6 @@
         requestSendBtn.addEventListener("click", () => {
             const requestText = requestTextArea.value.trim();
             if (requestText) {
-                // Placeholder for sending request. You would implement an API call here.
                 showAlert("Request Sent", "Your request has been sent successfully.");
                 requestTextArea.value = "";
                 requestModal.classList.add("hidden");
@@ -468,11 +438,7 @@
                 showAlert("Error", "Request cannot be empty.");
             }
         });
-
-        openTermsBtn.addEventListener("click", () => termsModal.classList.remove("hidden"));
-        termsClose.addEventListener("click", () => termsModal.classList.add("hidden"));
-
-        // Assign region
+        
         assignRegionConfirm.addEventListener("click", async () => {
             const email = overseerEmailInput.value.trim();
             const region = regionNameInput.value.trim();
@@ -497,16 +463,16 @@
                 showAlert("Error", "Failed to assign region. Try again later.");
             }
         });
-
-        // Filter/search
+        
         fileSearch.addEventListener("input", renderFiles);
         fileFilter.addEventListener("change", renderFiles);
         userSearch.addEventListener("input", () => loadUsers(userSearch.value));
 
-        // Initial load
+
         window.addEventListener("DOMContentLoaded", () => {
-            loadUsers();
-            loadDashboard();
+            loadDashboard(); 
+            loadUsers(); 
+            loadFiles();
         });
     </script>
 </body>
