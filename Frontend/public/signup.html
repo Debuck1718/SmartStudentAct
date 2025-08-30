@@ -907,48 +907,49 @@
         }
       });
 
-      verifyOtpButton.addEventListener("click", async () => {
-        if (isSubmitting) return;
+     verifyOtpButton.addEventListener("click", async () => {
+    if (isSubmitting) return;
 
-        const otpCode = otpInput.value.trim();
-        if (!otpCode) {
-          showMessage("Please enter the OTP.");
-          return;
-        }
+    const otpCode = otpInput.value.trim();
+    if (!otpCode) {
+      showMessage("Please enter the OTP.");
+      return;
+    }
 
-        setLoadingState(verifyOtpButton, true, "Verify OTP");
+    setLoadingState(verifyOtpButton, true, "Verify OTP");
 
-        try {
-          const response = await fetch(API_VERIFY_OTP, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: userData.email,
-              password: userData.password,
-              code: otpCode,
-              otpToken: userData.otpToken,
-            }),
-          });
+    try {
+      const response = await fetch(API_VERIFY_OTP, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password,
+          code: otpCode,
+          otpToken: userData.otpToken,
+        }),
+      });
 
-          const responseData = await response.json();
+      const responseData = await response.json();
 
-          if (!response.ok) {
-            throw new Error(responseData.message || "Failed to verify OTP.");
-          }
-          
-          showMessage("Account verified successfully! Redirecting...", "success");
+      if (!response.ok) {
+        throw new Error(responseData.message || "Failed to verify OTP.");
+      }
+      
+      showMessage("Account verified successfully! Redirecting...", "success");
 
-          if (userData.occupation === "student") {
-              window.location.href = "./students.html";
-          } else if (userData.occupation === "teacher") {
-              window.location.href = "./teachers.html";
-          }
-        } catch (error) {
-          showMessage(error.message);
-        } finally {
-          setLoadingState(verifyOtpButton, false, "Verify OTP");
-        }
-      });
+      if (responseData.redirectUrl) {
+        window.location.href = responseData.redirectUrl;
+      } else {
+        throw new Error("Redirect URL not provided by the server.");
+      }
+
+    } catch (error) {
+      showMessage(error.message);
+    } finally {
+      setLoadingState(verifyOtpButton, false, "Verify OTP");
+    }
+});
 
       openTermsLink.addEventListener("click", (e) => {
         e.preventDefault();

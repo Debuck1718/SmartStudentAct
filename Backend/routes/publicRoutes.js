@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key";
 module.exports = (eventBus) => {
   const publicRouter = express.Router();
 
-  // --- Schemas ---
+
   const signupOtpSchema = Joi.object({
     phone: Joi.string()
       .pattern(/^\+?[1-9]\d{1,14}$/)
@@ -74,7 +74,7 @@ module.exports = (eventBus) => {
     next();
   };
 
-  // --- Request OTP / Signup ---
+
 publicRouter.post(
   "/users/signup-otp",
   rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -96,7 +96,6 @@ publicRouter.post(
 
       let existingUser = await User.findOne({ email });
 
-      // 🔹 If user already exists → just send OTP for verification
       if (existingUser) {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const otpToken = jwt.sign(
@@ -114,7 +113,6 @@ publicRouter.post(
         });
       }
 
-      // 🔹 If new user → hash password and generate temporary payload
       const passwordHash = await bcrypt.hash(password, 10);
       const temporaryUserId = uuidv4();
 
@@ -153,7 +151,6 @@ publicRouter.post(
 );
 
 
-// --- Verify OTP ---
 publicRouter.post(
   "/users/verify-otp",
   rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -168,38 +165,45 @@ publicRouter.post(
         return res.status(400).json({ message: "Invalid email or OTP." });
       }
 
-      // Check if user already exists
       let user = await User.findOne({ email });
 
       if (user) {
-        // 🔹 Existing User Flow
         let isMatch = false;
-        // 🔑 NEW CHECK: Safely compare password only if it exists
         if (user.password) {
           isMatch = await bcrypt.compare(password, user.password);
         }
 
         if (!isMatch) {
-          // Update password if it doesn't match or the stored password was missing
           const newHashed = await bcrypt.hash(password, 10);
           user.password = newHashed;
           await user.save();
         }
 
+        const token = jwt.sign(
+          { id: user._id, role: user.occupation },
+          JWT_SECRET,
+          { expiresIn: "1d" }
+        );
+
+        res.cookie("access_token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "None",
+          maxAge: 1000 * 60 * 60 * 24,
+        });
+
+        const redirectUrl = getRedirectUrl(user.occupation);
+
         return res.status(200).json({
           status: "success",
           message: "User verified. Redirecting...",
-          userId: user._id,
-          role: user.occupation,
+          redirectUrl, 
         });
       } else {
-        // 🔹 New User Flow
-        // Ensure all required fields for a new user are present in the JWT payload.
         const requiredFields = ['temporaryUserId', 'firstname', 'lastname', 'email', 'occupation', 'schoolName', 'schoolCountry', 'passwordHash'];
         const missingFields = requiredFields.filter(field => decoded[field] === undefined);
 
         if (missingFields.length > 0) {
-          logger.error(`❌ Verify-OTP failed: Missing fields for new user: ${missingFields.join(', ')}`);
           return res.status(400).json({
             message: "Incomplete user data in OTP token. Please restart signup.",
           });
@@ -222,77 +226,135 @@ publicRouter.post(
         });
 
         await newUser.save();
-        sendWelcomeEmail(newUser.email, newUser.firstname).catch((e) =>
-          logger.error("Failed to send welcome:", e)
+
+        const token = jwt.sign(
+          { id: newUser._id, role: newUser.occupation },
+          JWT_SECRET,
+          { expiresIn: "1d" }
         );
 
-        res.status(201).json({
+        res.cookie("access_token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "None",
+          maxAge: 1000 * 60 * 60 * 24,
+        });
+
+        const redirectUrl = getRedirectUrl(newUser.occupation);
+
+        sendWelcomeEmail(newUser.email, newUser.firstname).catch((e) =>
+          console.error("Failed to send welcome email:", e)
+        );
+
+        return res.status(201).json({
           status: "success",
           message: "User created & verified. Redirecting...",
-          userId: newUser._id,
-          role: newUser.occupation,
+          redirectUrl, 
         });
       }
     } catch (err) {
-      logger.error("❌ Verify-OTP error:", err);
+      console.error("❌ Verify-OTP error:", err);
       if (err.name === "TokenExpiredError")
         return res.status(400).json({ message: "OTP expired." });
-      res.status(500).json({ message: "OTP verification failed." });
+      return res.status(500).json({ message: "OTP verification failed." });
     }
   }
 );
 
+function getRedirectUrl(role) {
+  switch (role) {
+    case "global_overseer":
+      return "/global_overseer.html";
+    case "overseer":
+      return "/overseer.html";
+    case "admin":
+      return "/admin.html";
+    case "teacher":
+      return "/teachers.html";
+    case "student":
+      return "/students.html";
+    default:
+      return "/login.html";
+  }
+}
 
-  publicRouter.post("/users/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
 
-      if (!email || !password) {
-        return res
-          .status(400)
-          .json({ status: false, message: "Email and password are required." });
-      }
+ publicRouter.post("/users/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
 
-      const user = await User.findOne({ email }).select("+password");
-      if (!user) {
-        return res
-          .status(401)
-          .json({ status: false, message: "Invalid credentials." });
-      }
+      if (!email || !password) {
+        return res
+          .status(400)
+          .json({ status: false, message: "Email and password are required." });
+      }
 
-      const isMatch = await user.comparePassword(password);
-      if (!isMatch) {
-        return res
-          .status(401)
-          .json({ status: false, message: "Invalid credentials." });
-      }
+      const user = await User.findOne({ email }).select("+password");
+      if (!user) {
+        return res
+          .status(401)
+          .json({ status: false, message: "Invalid credentials." });
+      }
 
-      const token = jwt.sign(
-        { id: user._id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: "1d" }
-      );
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        return res
+          .status(401)
+          .json({ status: false, message: "Invalid credentials." });
+      }
 
-      res.cookie("access_token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        maxAge: 1000 * 60 * 60 * 24,
-      });
-      res.json({
-        status: true,
-        message: "Login successful",
-        user: {
-          email: user.email,
-          role: user.role,
-          id: user._id,
-        },
-      });
-    } catch (err) {
-      console.error("Login error:", err);
-      return res.status(500).json({ status: false, message: "Server error" });
-    }
-  });
+      const token = jwt.sign(
+        { id: user._id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+
+      // Set the HttpOnly cookie
+      res.cookie("access_token", token, {
+        httpOnly: true,
+        secure: true, // Only send over HTTPS
+        sameSite: "None", // Required for cross-site requests
+        maxAge: 1000 * 60 * 60 * 24, // 24 hours
+      });
+      
+      // Determine the redirect URL based on the user's role
+      let redirectUrl;
+      switch (user.role) {
+        case "global_overseer":
+          redirectUrl = "/global_overseer.html";
+          break;
+        case "overseer":
+          redirectUrl = "/overseer.html";
+          break;
+        case "admin":
+          redirectUrl = "/admin.html";
+          break;
+        case "teacher":
+          redirectUrl = "/teachers.html";
+          break;
+        case "student":
+          redirectUrl = "/students.html";
+          break;
+        default:
+          redirectUrl = "/login.html";
+      }
+
+      // Send the user data and the redirect URL back to the client
+      res.json({
+        status: true,
+        message: "Login successful",
+        user: {
+          email: user.email,
+          role: user.role,
+          id: user._id,
+        },
+        redirectUrl,
+      });
+    } catch (err) {
+      console.error("Login error:", err);
+      return res.status(500).json({ status: false, message: "Server error" });
+    }
+  });
 
   publicRouter.post(
     "/auth/forgot-password",
