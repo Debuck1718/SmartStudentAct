@@ -1,382 +1,514 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Global Overseer Dashboard</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="./images/icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="./images/icon.png"
-    />
-    <link rel="manifest" href="/site.webmanifest" />
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<style>
-body { font-family: "Inter", sans-serif; }
-.spinner { border: 4px solid rgba(0,0,0,0.1); width:36px; height:36px; border-radius:50%; border-left-color:#3b82f6; animation:spin 1s ease infinite; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .modal-content {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4f46e5;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 antialiased">
-<div class="min-h-screen p-6">
-  <h1 class="text-3xl font-bold mb-6">Global Overseer Dashboard</h1>
+<body class="bg-gray-100 min-h-screen p-8">
 
-  <div class="flex justify-end mb-4">
-  <button id="logout-btn" 
-    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-    <i class="fas fa-sign-out-alt mr-2"></i> Logout
-  </button>
-</div>
+    <!-- Main Content Area -->
+    <div class="container mx-auto bg-white rounded-2xl shadow-lg p-8">
+        <header class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Global Overseer Dashboard</h1>
+            <div class="space-x-4">
+                <button id="logout-btn" class="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors duration-200 shadow-md">Logout</button>
+            </div>
+        </header>
 
-  <button id="open-assign-region" class="mb-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Assign Region</button>
+        <!-- Dashboard Overview Section -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Regional Overview</h2>
+            <div id="dashboard-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards will be injected here -->
+            </div>
+        </section>
 
-  <div id="dashboard-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"></div>
+        <section class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-700">User Management</h2>
+                <div class="space-x-2">
+                    <button id="open-assign-region" class="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-md">Assign Region</button>
+                    <button id="open-request-btn" class="px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors duration-200 shadow-md">Make Request</button>
+                    <button id="open-terms-btn" class="px-4 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition-colors duration-200 shadow-md">Terms & Conditions</button>
+                </div>
+            </div>
+            <div class="relative mb-4">
+                <input type="text" id="user-search" placeholder="Search users by email" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+            </div>
+            <div class="overflow-x-auto bg-white rounded-xl shadow-inner p-4">
+                <table class="min-w-full bg-white rounded-xl">
+                    <thead>
+                        <tr class="bg-gray-200 text-left text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6">Email</th>
+                            <th class="py-3 px-6">Role</th>
+                            <th class="py-3 px-6">School/Region</th>
+                            <th class="py-3 px-6">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body" class="text-gray-600 text-sm font-light">
+                        <!-- User rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-  <div class="bg-white p-6 rounded-lg shadow">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-4">
-      <h2 class="text-2xl font-semibold mb-2 md:mb-0">All Files</h2>
-      <div class="flex space-x-2">
-        <input type="text" id="file-search" placeholder="Search by filename..." class="px-3 py-1 border rounded-lg"/>
-        <select id="file-filter" class="px-3 py-1 border rounded-lg">
-          <option value="">All Types</option>
-          <option value="Assignment">Assignment</option>
-          <option value="Submission">Submission</option>
-          <option value="Feedback">Feedback</option>
-        </select>
-      </div>
+        <!-- Files Section -->
+        <section>
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">File Management</h2>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
+                <input type="text" id="file-search" placeholder="Search files by name" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                <select id="file-filter" class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                    <option value="">All Types</option>
+                    <option value="Policy">Policy</option>
+                    <option value="Form">Form</option>
+                    <option value="Guide">Guide</option>
+                    <option value="Report">Report</option>
+                    <option value="Syllabus">Syllabus</option>
+                </select>
+            </div>
+            <div class="overflow-x-auto bg-white rounded-xl shadow-inner p-4">
+                <table class="min-w-full bg-white rounded-xl">
+                    <thead>
+                        <tr class="bg-gray-200 text-left text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6">Filename</th>
+                            <th class="py-3 px-6">Type</th>
+                            <th class="py-3 px-6">Uploaded By</th>
+                            <th class="py-3 px-6">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="files-table-body" class="text-gray-600 text-sm font-light">
+                        <!-- File rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow mt-6">
-  <div class="flex flex-col md:flex-row justify-between items-center mb-4">
-    <h2 class="text-2xl font-semibold mb-2 md:mb-0">User Management</h2>
-    <input type="text" id="user-search" 
-      placeholder="Search users by email..." 
-      class="px-3 py-1 border rounded-lg w-full md:w-64"/>
-  </div>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full border border-gray-200">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="py-2 px-4 text-left">Email</th>
-          <th class="py-2 px-4 text-left">Role</th>
-          <th class="py-2 px-4 text-left">School</th>
-          <th class="py-2 px-4 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="users-table-body"></tbody>
-    </table>
-  </div>
-</div>
-
-    <div class="overflow-x-auto">
-      <table class="min-w-full border border-gray-200">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="py-2 px-4 text-left cursor-pointer" data-sort="filename">Filename <i class="fas fa-sort"></i></th>
-            <th class="py-2 px-4 text-left cursor-pointer" data-sort="type">Type <i class="fas fa-sort"></i></th>
-            <th class="py-2 px-4 text-left cursor-pointer" data-sort="uploaded_by">Uploaded By <i class="fas fa-sort"></i></th>
-            <th class="py-2 px-4 text-left">Action</th>
-          </tr>
-        </thead>
-        <tbody id="files-table-body"></tbody>
-      </table>
+    <!-- Modal for Assigning Region -->
+    <div id="assign-region-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full relative modal-content">
+            <button id="assign-region-close" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors duration-200">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Assign Region</h2>
+            <div class="mb-4">
+                <label for="overseer-email" class="block text-sm font-medium text-gray-700">Overseer Email</label>
+                <input type="email" id="overseer-email" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all duration-200">
+            </div>
+            <div class="mb-4">
+                <label for="region-name" class="block text-sm font-medium text-gray-700">Region Name</label>
+                <input type="text" id="region-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-all duration-200">
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button id="assign-region-cancel" class="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition-colors duration-200">Cancel</button>
+                <button id="assign-region-confirm" class="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-200">Assign</button>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- Assign Region Modal -->
-<div id="assign-region-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="font-bold text-lg">Assign Region to Overseer</h3>
-      <button id="assign-region-close" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+    <!-- Modal for Make Request -->
+    <div id="request-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-lg w-full relative modal-content">
+            <button id="request-close" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors duration-200">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Make a New Request</h2>
+            <div class="mb-4">
+                <label for="request-text" class="block text-sm font-medium text-gray-700">Your Request</label>
+                <textarea id="request-text" rows="5" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 transition-all duration-200"></textarea>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button id="request-cancel" class="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition-colors duration-200">Cancel</button>
+                <button id="request-send" class="px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors duration-200">Send Request</button>
+            </div>
+        </div>
     </div>
-    <div class="space-y-3">
-      <div>
-        <label class="block text-sm font-semibold mb-1">Overseer Email</label>
-        <input type="email" id="overseer-email" class="w-full p-2 border rounded-lg" placeholder="overseer@example.com"/>
-      </div>
-      <div>
-        <label class="block text-sm font-semibold mb-1">Region Name</label>
-        <input type="text" id="region-name" class="w-full p-2 border rounded-lg" placeholder="Region Name"/>
-      </div>
-      <div class="flex justify-end space-x-2">
-        <button id="assign-region-cancel" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition">Cancel</button>
-        <button id="assign-region-confirm" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">Assign</button>
-      </div>
+
+    <!-- Modal for Terms & Conditions -->
+    <div id="terms-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-2xl w-full relative modal-content">
+            <button id="terms-close" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors duration-200">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Terms and Conditions</h2>
+            <div class="text-gray-600 overflow-y-auto h-96 pr-4">
+                <h3 class="font-semibold text-lg mb-2">1. Acceptance of Terms</h3>
+                <p class="mb-4">By accessing and using this dashboard, you accept and agree to be bound by the terms and provisions of this agreement. Any participation in this service will constitute acceptance of this agreement.</p>
+                <h3 class="font-semibold text-lg mb-2">2. User Responsibilities</h3>
+                <p class="mb-4">You are responsible for maintaining the confidentiality of your account information. You agree to use the dashboard only for its intended purpose and in compliance with all applicable laws and regulations.</p>
+                <h3 class="font-semibold text-lg mb-2">3. Prohibited Conduct</h3>
+                <p class="mb-4">You must not use this service to engage in any unauthorized access, data manipulation, or any activity that could harm the integrity or security of the system. Unauthorized use may lead to termination of your access and legal action.</p>
+                <h3 class="font-semibold text-lg mb-2">4. Disclaimer of Warranties</h3>
+                <p class="mb-4">The services are provided "as is" and "as available" without any warranties of any kind, whether express or implied. We do not warrant that the service will be uninterrupted, error-free, or secure.</p>
+                <h3 class="font-semibold text-lg mb-2">5. Limitation of Liability</h3>
+                <p class="mb-4">In no event shall we be liable for any direct, indirect, incidental, special, or consequential damages arising out of or in any way connected with the use of the dashboard or any of its features.</p>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- Alert Modal -->
-<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
-    <h3 id="alert-title" class="font-bold text-lg mb-2"></h3>
-    <p id="alert-message" class="text-sm text-gray-700 mb-4"></p>
-    <div class="flex justify-end">
-      <button id="alert-ok" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">OK</button>
+    <!-- Generic Alert Modal -->
+    <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center modal-content">
+            <h2 id="alert-title" class="text-xl font-bold mb-2"></h2>
+            <p id="alert-message" class="text-gray-700 mb-4"></p>
+            <button id="alert-ok" class="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-200">OK</button>
+        </div>
     </div>
-  </div>
-</div>
 
-<script>
-const API_BASE_URL = "https://smartstudentact.onrender.com/api";
-let filesData = [];
+    <!-- Generic Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full relative modal-content">
+            <h2 id="confirm-title" class="text-xl font-bold mb-2"></h2>
+            <p id="confirm-message" class="text-gray-700 mb-4"></p>
+            <div class="flex justify-end space-x-2">
+                <button id="confirm-cancel" class="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition-colors duration-200">Cancel</button>
+                <button id="confirm-confirm" class="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors duration-200">Confirm</button>
+            </div>
+        </div>
+    </div>
 
-const dashboardCards = document.getElementById("dashboard-cards");
-const filesTableBody = document.getElementById("files-table-body");
-const assignRegionModal = document.getElementById("assign-region-modal");
-const openAssignRegionBtn = document.getElementById("open-assign-region");
-const assignRegionClose = document.getElementById("assign-region-close");
-const assignRegionCancel = document.getElementById("assign-region-cancel");
-const assignRegionConfirm = document.getElementById("assign-region-confirm");
-const overseerEmailInput = document.getElementById("overseer-email");
-const regionNameInput = document.getElementById("region-name");
-const alertModal = document.getElementById("alert-modal");
-const alertTitle = document.getElementById("alert-title");
-const alertMessage = document.getElementById("alert-message");
-const alertOk = document.getElementById("alert-ok");
-const fileSearch = document.getElementById("file-search");
-const fileFilter = document.getElementById("file-filter");
+    <script>
+        const API_BASE_URL = "https://smartstudentact.onrender.com/api";
+        let filesData = [];
 
-// Modal handlers
-openAssignRegionBtn.addEventListener("click", () => assignRegionModal.classList.remove("hidden"));
-assignRegionClose.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
-assignRegionCancel.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
-alertOk.addEventListener("click", () => alertModal.classList.add("hidden"));
+        const dashboardCards = document.getElementById("dashboard-cards");
+        const filesTableBody = document.getElementById("files-table-body");
+        const userSearch = document.getElementById("user-search");
+        const usersTableBody = document.getElementById("users-table-body");
+        const logoutBtn = document.getElementById("logout-btn");
+        const fileSearch = document.getElementById("file-search");
+        const fileFilter = document.getElementById("file-filter");
 
-function showAlert(title, message) {
-  alertTitle.textContent = title;
-  alertMessage.textContent = message;
-  alertModal.classList.remove("hidden");
-}
+        // Modal elements
+        const assignRegionModal = document.getElementById("assign-region-modal");
+        const openAssignRegionBtn = document.getElementById("open-assign-region");
+        const assignRegionClose = document.getElementById("assign-region-close");
+        const assignRegionCancel = document.getElementById("assign-region-cancel");
+        const assignRegionConfirm = document.getElementById("assign-region-confirm");
+        const overseerEmailInput = document.getElementById("overseer-email");
+        const regionNameInput = document.getElementById("region-name");
 
-function showLoading() {
-  dashboardCards.innerHTML = '<div class="spinner mx-auto"></div>';
-  filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
-}
+        const alertModal = document.getElementById("alert-modal");
+        const alertTitle = document.getElementById("alert-title");
+        const alertMessage = document.getElementById("alert-message");
+        const alertOk = document.getElementById("alert-ok");
 
-function showError(message) {
-  dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
-}
+        // New Modals
+        const requestModal = document.getElementById("request-modal");
+        const openRequestBtn = document.getElementById("open-request-btn");
+        const requestClose = document.getElementById("request-close");
+        const requestCancel = document.getElementById("request-cancel");
+        const requestSendBtn = document.getElementById("request-send");
+        const requestTextArea = document.getElementById("request-text");
 
-// Load dashboard and files
-async function loadDashboard() {
-  showLoading();
-  try {
-    const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard-overview`, { method: "GET", credentials: "include" });
-    const data = await res.json();
-    if (!res.ok) {
-      showError(data.message || "Failed to load dashboard.");
-      if (res.status === 401 || res.status === 403) localStorage.removeItem("jwt_token");
-      return;
-    }
-    renderDashboard(data);
+        const termsModal = document.getElementById("terms-modal");
+        const openTermsBtn = document.getElementById("open-terms-btn");
+        const termsClose = document.getElementById("terms-close");
 
-    const filesRes = await fetch(`${API_BASE_URL}/admin/all-files`, { method: "GET", credentials: "include" });
-    const filesDataRes = await filesRes.json();
-    if (filesRes.ok) {
-      filesData = filesDataRes.files || [];
-      renderFiles();
-    }
-  } catch (err) {
-    console.error(err);
-    showError("An unexpected error occurred while loading the dashboard.");
-  }
-}
+        const confirmModal = document.getElementById("confirm-modal");
+        const confirmTitle = document.getElementById("confirm-title");
+        const confirmMessage = document.getElementById("confirm-message");
+        const confirmConfirmBtn = document.getElementById("confirm-confirm");
+        const confirmCancelBtn = document.getElementById("confirm-cancel");
 
-function renderDashboard(data) {
-  dashboardCards.innerHTML = "";
-  data.managedRegions.forEach(region => {
-    const card = document.createElement("div");
-    card.className = "bg-white p-6 rounded-lg shadow";
-    card.innerHTML = `
-      <h2 class="text-xl font-semibold mb-2">${region.name}</h2>
-      <p>Schools: ${region.totalSchools}</p>
-      <p>Admins: ${region.totalAdmins}</p>
-      <p>Teachers: ${region.totalTeachers}</p>
-      <p>Students: ${region.totalStudents}</p>
-    `;
-    dashboardCards.appendChild(card);
-  });
-}
+        // --- Core UI & Data Fetching Functions ---
 
-// Files
-function renderFiles() {
-  let filteredFiles = filesData.filter(f => {
-    const searchTerm = fileSearch.value.toLowerCase();
-    const typeFilter = fileFilter.value;
-    return (!searchTerm || f.filename.toLowerCase().includes(searchTerm))
-           && (!typeFilter || f.type === typeFilter);
-  });
+        /** Displays a generic alert modal. */
+        function showAlert(title, message) {
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertModal.classList.remove("hidden");
+        }
 
-  filesTableBody.innerHTML = "";
-  if (filteredFiles.length === 0) {
-    filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No files found.</td></tr>';
-    return;
-  }
+        /** Displays a generic confirmation modal. */
+        function showConfirm(title, message, onConfirmCallback) {
+            confirmTitle.textContent = title;
+            confirmMessage.textContent = message;
+            confirmModal.classList.remove("hidden");
 
-  filteredFiles.forEach(file => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="border px-4 py-2">${file.filename}</td>
-      <td class="border px-4 py-2">${file.type}</td>
-      <td class="border px-4 py-2">${file.uploaded_by || file.created_by}</td>
-      <td class="border px-4 py-2">
-        <a href="${API_BASE_URL}/admin/view-file/${file.type.toLowerCase()}/${file.filename}" target="_blank" class="text-blue-600 hover:underline">View</a>
-      </td>
-    `;
-    filesTableBody.appendChild(tr);
-  });
-}
+            const confirmHandler = () => {
+                onConfirmCallback();
+                confirmModal.classList.add("hidden");
+                confirmConfirmBtn.removeEventListener('click', confirmHandler);
+            };
 
-// Filter/search
-fileSearch.addEventListener("input", renderFiles);
-fileFilter.addEventListener("change", renderFiles);
+            const cancelHandler = () => {
+                confirmModal.classList.add("hidden");
+                confirmCancelBtn.removeEventListener('click', cancelHandler);
+            };
 
-// Assign region
-assignRegionConfirm.addEventListener("click", async () => {
-  const email = overseerEmailInput.value.trim();
-  const region = regionNameInput.value.trim();
-  if (!email || !region) return showAlert("Error", "Email and region cannot be empty.");
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/admin/assign-region`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ overseerEmail: email, region })
-    });
-    const data = await res.json();
-    if (!res.ok) return showAlert("Error", data.error || "Failed to assign region.");
-    showAlert("Success", data.message);
-    overseerEmailInput.value = "";
-    regionNameInput.value = "";
-    assignRegionModal.classList.add("hidden");
-    loadDashboard();
-  } catch (err) {
-    console.error(err);
-    showAlert("Error", "Failed to assign region. Try again later.");
-  }
-});
-
-const userSearch = document.getElementById("user-search");
-const usersTableBody = document.getElementById("users-table-body");
-const logoutBtn = document.getElementById("logout-btn");
-
-// Logout handler
-logoutBtn.addEventListener("click", async () => {
-  try {
-    const res = await fetch(`${API_BASE_URL}/logout`, {
-      method: "POST",
-      credentials: "include"
-    });
-    if (res.ok) {
-      localStorage.removeItem("jwt_token");
-      window.location.href = "/login.html"; // adjust your login path
-    }
-  } catch (err) {
-    console.error("Logout failed", err);
-  }
-});
-
-// Load users
-async function loadUsers(query="") {
-  try {
-    const res = await fetch(`${API_BASE_URL}/admin/users?search=${encodeURIComponent(query)}`, {
-      method: "GET",
-      credentials: "include"
-    });
-    const data = await res.json();
-    if (!res.ok) return showAlert("Error", data.error || "Failed to load users");
-    renderUsers(data.users || []);
-  } catch (err) {
-    console.error(err);
-    showAlert("Error", "Could not fetch users");
-  }
-}
-
-function renderUsers(users) {
-  usersTableBody.innerHTML = "";
-  if (users.length === 0) {
-    usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No users found.</td></tr>';
-    return;
-  }
-
-  users.forEach(user => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="border px-4 py-2">${user.email}</td>
-      <td class="border px-4 py-2">${user.role}</td>
-      <td class="border px-4 py-2">${user.schoolName || user.teacherSchool || '-'}</td>
-      <td class="border px-4 py-2 space-x-2">
-        <button class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700" 
-          onclick="promoteUser('${user.email}')">Promote</button>
-        <button class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700" 
-          onclick="removeUser('${user.email}')">Remove</button>
-      </td>
-    `;
-    usersTableBody.appendChild(tr);
-  });
-}
-
-// Promote user
-async function promoteUser(email) {
-  const role = prompt("Enter new role (admin, overseer, global-overseer, teacher, student):");
-  if (!role) return;
-  try {
-    const res = await fetch(`${API_BASE_URL}/admin/promote`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, role })
-    });
-    const data = await res.json();
-    if (!res.ok) return showAlert("Error", data.error || "Failed to promote user");
-    showAlert("Success", "User promoted successfully");
-    loadUsers(userSearch.value);
-  } catch (err) {
-    console.error(err);
-    showAlert("Error", "Promotion failed");
-  }
-}
-
-// Remove user
-async function removeUser(email) {
-  if (!confirm(`Are you sure you want to remove ${email}?`)) return;
-  try {
-    const res = await fetch(`${API_BASE_URL}/admin/remove-user`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email })
-    });
-    const data = await res.json();
-    if (!res.ok) return showAlert("Error", data.error || "Failed to remove user");
-    showAlert("Success", "User removed successfully");
-    loadUsers(userSearch.value);
-  } catch (err) {
-    console.error(err);
-    showAlert("Error", "Remove failed");
-  }
-}
+            confirmConfirmBtn.addEventListener('click', confirmHandler);
+            confirmCancelBtn.addEventListener('click', cancelHandler);
+        }
 
 
-userSearch.addEventListener("input", () => loadUsers(userSearch.value));
-window.addEventListener("DOMContentLoaded", () => {
-  loadUsers();
-  loadDashboard();
-});
-</script>
+        function showLoading() {
+            dashboardCards.innerHTML = '<div class="spinner mx-auto"></div>';
+            filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
+        }
+
+        function showError(message) {
+            dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
+        }
+
+        async function loadDashboard() {
+            showLoading();
+            try {
+                const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard-overview`, { method: "GET", credentials: "include" });
+                const data = await res.json();
+                if (!res.ok) {
+                    showError(data.message || "Failed to load dashboard.");
+                    if (res.status === 401 || res.status === 403) localStorage.removeItem("jwt_token");
+                    return;
+                }
+                renderDashboard(data);
+
+                const filesRes = await fetch(`${API_BASE_URL}/admin/all-files`, { method: "GET", credentials: "include" });
+                const filesDataRes = await filesRes.json();
+                if (filesRes.ok) {
+                    filesData = filesDataRes.files || [];
+                    renderFiles();
+                }
+            } catch (err) {
+                console.error(err);
+                showError("An unexpected error occurred while loading the dashboard.");
+            }
+        }
+
+        function renderDashboard(data) {
+            dashboardCards.innerHTML = "";
+            data.managedRegions.forEach(region => {
+                const card = document.createElement("div");
+                card.className = "bg-white p-6 rounded-2xl shadow-md";
+                card.innerHTML = `
+                    <h2 class="text-xl font-semibold mb-2 text-gray-800">${region.name}</h2>
+                    <p class="text-gray-600">Schools: ${region.totalSchools}</p>
+                    <p class="text-gray-600">Admins: ${region.totalAdmins}</p>
+                    <p class="text-gray-600">Teachers: ${region.totalTeachers}</p>
+                    <p class="text-gray-600">Students: ${region.totalStudents}</p>
+                `;
+                dashboardCards.appendChild(card);
+            });
+        }
+
+        function renderFiles() {
+            let filteredFiles = filesData.filter(f => {
+                const searchTerm = fileSearch.value.toLowerCase();
+                const typeFilter = fileFilter.value;
+                return (!searchTerm || f.filename.toLowerCase().includes(searchTerm)) &&
+                       (!typeFilter || f.type === typeFilter);
+            });
+
+            filesTableBody.innerHTML = "";
+            if (filteredFiles.length === 0) {
+                filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No files found.</td></tr>';
+                return;
+            }
+
+            filteredFiles.forEach(file => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="border-t px-6 py-4 text-gray-700">${file.filename}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${file.type}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${file.uploaded_by || file.created_by}</td>
+                    <td class="border-t px-6 py-4">
+                        <a href="${API_BASE_URL}/admin/view-file/${file.type.toLowerCase()}/${file.filename}" target="_blank" class="text-blue-600 hover:underline transition-colors duration-200">View</a>
+                    </td>
+                `;
+                filesTableBody.appendChild(tr);
+            });
+        }
+
+        // Load users
+        async function loadUsers(query="") {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/users?search=${encodeURIComponent(query)}`, {
+                    method: "GET",
+                    credentials: "include"
+                });
+                const data = await res.json();
+                if (!res.ok) return showAlert("Error", data.error || "Failed to load users");
+                renderUsers(data.users || []);
+            } catch (err) {
+                console.error(err);
+                showAlert("Error", "Could not fetch users");
+            }
+        }
+
+        function renderUsers(users) {
+            usersTableBody.innerHTML = "";
+            if (users.length === 0) {
+                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No users found.</td></tr>';
+                return;
+            }
+
+            users.forEach(user => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="border-t px-6 py-4 text-gray-700">${user.email}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${user.role}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${user.schoolName || user.teacherSchool || '-'}</td>
+                    <td class="border-t px-6 py-4 space-x-2">
+                        <button class="bg-green-600 text-white px-3 py-1 rounded-full text-xs hover:bg-green-700 transition-colors duration-200 shadow-sm"
+                            onclick="openPromoteModal('${user.email}')">Promote</button>
+                        <button class="bg-red-600 text-white px-3 py-1 rounded-full text-xs hover:bg-red-700 transition-colors duration-200 shadow-sm"
+                            onclick="removeUser('${user.email}')">Remove</button>
+                    </td>
+                `;
+                usersTableBody.appendChild(tr);
+            });
+        }
+
+        // --- Event Listeners and Logic ---
+
+        // User Management
+        function openPromoteModal(email) {
+            showConfirm(
+                "Promote User",
+                `Please enter a new role for ${email}. (admin, overseer, global-overseer, teacher, student)`,
+                () => {
+                    const role = prompt("Enter new role:"); // Using prompt() as a workaround for now, but should be replaced by a more complex modal.
+                    if (role) {
+                        promoteUser(email, role);
+                    }
+                }
+            );
+        }
+
+        async function promoteUser(email, role) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/promote`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ email, role })
+                });
+                const data = await res.json();
+                if (!res.ok) return showAlert("Error", data.error || "Failed to promote user");
+                showAlert("Success", "User promoted successfully");
+                loadUsers(userSearch.value);
+            } catch (err) {
+                console.error(err);
+                showAlert("Error", "Promotion failed");
+            }
+        }
+
+        async function removeUser(email) {
+            showConfirm(
+                "Confirm Removal",
+                `Are you sure you want to remove ${email}? This action cannot be undone.`,
+                async () => {
+                    try {
+                        const res = await fetch(`${API_BASE_URL}/admin/remove-user`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include",
+                            body: JSON.stringify({ email })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) return showAlert("Error", data.error || "Failed to remove user");
+                        showAlert("Success", "User removed successfully");
+                        loadUsers(userSearch.value);
+                    } catch (err) {
+                        console.error(err);
+                        showAlert("Error", "Remove failed");
+                    }
+                }
+            );
+        }
+
+        // Logout
+        logoutBtn.addEventListener("click", async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/logout`, { method: "POST", credentials: "include" });
+                if (res.ok) {
+                    localStorage.removeItem("jwt_token");
+                    window.location.href = "/login.html";
+                }
+            } catch (err) {
+                console.error("Logout failed", err);
+            }
+        });
+
+        // Modals
+        openAssignRegionBtn.addEventListener("click", () => assignRegionModal.classList.remove("hidden"));
+        assignRegionClose.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
+        assignRegionCancel.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
+        alertOk.addEventListener("click", () => alertModal.classList.add("hidden"));
+
+        openRequestBtn.addEventListener("click", () => requestModal.classList.remove("hidden"));
+        requestClose.addEventListener("click", () => requestModal.classList.add("hidden"));
+        requestCancel.addEventListener("click", () => requestModal.classList.add("hidden"));
+        requestSendBtn.addEventListener("click", () => {
+            const requestText = requestTextArea.value.trim();
+            if (requestText) {
+                // Placeholder for sending request. You would implement an API call here.
+                showAlert("Request Sent", "Your request has been sent successfully.");
+                requestTextArea.value = "";
+                requestModal.classList.add("hidden");
+            } else {
+                showAlert("Error", "Request cannot be empty.");
+            }
+        });
+
+        openTermsBtn.addEventListener("click", () => termsModal.classList.remove("hidden"));
+        termsClose.addEventListener("click", () => termsModal.classList.add("hidden"));
+
+        // Assign region
+        assignRegionConfirm.addEventListener("click", async () => {
+            const email = overseerEmailInput.value.trim();
+            const region = regionNameInput.value.trim();
+            if (!email || !region) return showAlert("Error", "Email and region cannot be empty.");
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/assign-region`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ overseerEmail: email, region })
+                });
+                const data = await res.json();
+                if (!res.ok) return showAlert("Error", data.error || "Failed to assign region.");
+                showAlert("Success", data.message);
+                overseerEmailInput.value = "";
+                regionNameInput.value = "";
+                assignRegionModal.classList.add("hidden");
+                loadDashboard();
+            } catch (err) {
+                console.error(err);
+                showAlert("Error", "Failed to assign region. Try again later.");
+            }
+        });
+
+        // Filter/search
+        fileSearch.addEventListener("input", renderFiles);
+        fileFilter.addEventListener("change", renderFiles);
+        userSearch.addEventListener("input", () => loadUsers(userSearch.value));
+
+        // Initial load
+        window.addEventListener("DOMContentLoaded", () => {
+            loadUsers();
+            loadDashboard();
+        });
+    </script>
 </body>
 </html>
+

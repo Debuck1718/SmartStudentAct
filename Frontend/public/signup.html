@@ -865,7 +865,7 @@
       formInputs.forEach((input) => input.addEventListener("input", updateUI));
       formInputs.forEach((input) => input.addEventListener("blur", updateUI));
 
-      rrequestOtpButton.addEventListener("click", async () => {
+      requestOtpButton.addEventListener("click", async () => {
         if (isSubmitting) return;
 
         const { errors, data } = validateForm();
@@ -889,18 +889,14 @@
             throw new Error(responseData.message || "Failed to send OTP.");
           }
 
-          // ✅ Save everything needed for verify step
           userData = {
             email: data.email,
             password: data.password,
             occupation: data.occupation,
-            otpToken: responseData.otpToken, // <-- store token from backend
+            otpToken: responseData.otpToken,
           };
 
-          showMessage(
-            "OTP sent to your email. Please check your inbox.",
-            "success"
-          );
+          showMessage("OTP sent to your email. Please check your inbox.", "success");
           signupFormSection.classList.add("hidden");
           otpSection.classList.remove("hidden");
           otpInput.focus();
@@ -928,9 +924,10 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               email: userData.email,
-              password: userData.password, // ✅ send password
+              password: userData.password,
               code: otpCode,
-              otpToken: userData.otpToken, // ✅ send token
+              otpToken: userData.otpToken,
+              occupation: userData.occupation
             }),
           });
 
@@ -940,22 +937,20 @@
             throw new Error(responseData.message || "Failed to verify OTP.");
           }
 
-          // ✅ Save login token from backend (if provided)
           if (responseData.token) {
-            localStorage.setItem("token", responseData.token);
+            localStorage.setItem("jwt_token", responseData.token);
+            showMessage("Account verified successfully! Redirecting...", "success");
+
+            if (userData.occupation === "student") {
+                window.location.href = "./students.html";
+            } else if (userData.occupation === "teacher") {
+                window.location.href = "./teachers.html";
+            }
+          } else {
+            showMessage("Verification successful, but no token received. Please log in.", "success");
+            window.location.href = "./login.html";
           }
 
-          showMessage(
-            "Account verified successfully! Redirecting...",
-            "success"
-          );
-
-          // ✅ Redirect based on occupation
-          if (userData.occupation === "student") {
-            window.location.href = "./students.html";
-          } else if (userData.occupation === "teacher") {
-            window.location.href = "./teachers.html";
-          }
         } catch (error) {
           showMessage(error.message);
         } finally {
@@ -963,7 +958,8 @@
         }
       });
 
-      openTermsLink.addEventListener("click", () => {
+      openTermsLink.addEventListener("click", (e) => {
+        e.preventDefault();
         termsModal.classList.add("flex");
         termsModal.classList.remove("hidden");
       });
