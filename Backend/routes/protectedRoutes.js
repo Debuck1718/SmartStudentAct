@@ -1399,7 +1399,7 @@ protectedRouter.get(
 );
 
 protectedRouter.get(
-  "/api/student/assignments",
+  "/student/assignments",
   authenticateJWT,
   hasRole("student"),
   async (req, res) => {

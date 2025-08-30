@@ -4,38 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SmartStudentAct - Dashboard</title>
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"
-    ></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
+      function gtag(){ dataLayer.push(arguments); }
       gtag("js", new Date());
-
       gtag("config", "G-EWMR745QHX");
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="./images/icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="./images/icon.png"
-    />
+    <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
@@ -57,753 +38,416 @@
     </style>
   </head>
   <body class="bg-gray-100 min-h-screen">
-            
-    <header
-      class="bg-[#2c3e50] text-white p-4 flex justify-between items-center rounded-b-xl shadow-lg"
-    >
-            
-      <button
-        id="menu-btn"
-        class="p-2 text-2xl"
-        aria-label="Open navigation menu"
-      >
-                <i class="fas fa-bars"></i>       
+
+    <!-- HEADER -->
+    <header class="bg-[#2c3e50] text-white p-4 flex justify-between items-center rounded-b-xl shadow-lg">
+      <button id="menu-btn" class="p-2 text-2xl" aria-label="Open navigation menu">
+        <i class="fas fa-bars"></i>
       </button>
-            
-      <span data-i18n="nav_title" class="text-xl font-bold flex-1 text-center"
-        >📘 SmartStudentAct</span
-      >
-            
-      <button
-        id="logout-btn"
-        class="bg-[#e74c3c] py-2 px-4 rounded-lg font-bold shadow-md hover:bg-[#c0392b] transition-colors"
-      >
-                <span data-i18n="logout">Logout</span>       
+      <span data-i18n="nav_title" class="text-xl font-bold flex-1 text-center">📘 SmartStudentAct</span>
+      <button id="logout-btn" class="bg-[#e74c3c] py-2 px-4 rounded-lg font-bold shadow-md hover:bg-[#c0392b] transition-colors">
+        <span data-i18n="logout">Logout</span>
       </button>
-          
     </header>
 
-            
+    <!-- MAIN CONTENT -->
     <main class="p-4 sm:p-6 lg:p-8">
-            
-      <h1
-        data-i18n="welcome_heading"
-        class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 my-4"
-      >
-                Welcome to SmartStudentAct       
+      <h1 data-i18n="welcome_heading" class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 my-4">
+        Welcome to SmartStudentAct
       </h1>
-            
-      <p
-        data-i18n="welcome_text"
-        class="text-lg text-center text-gray-600 mb-8"
-      >
-                Your learning & financial companion       
+      <p data-i18n="welcome_text" class="text-lg text-center text-gray-600 mb-8">
+        Your learning & financial companion
       </p>
 
-                  
+      <!-- ASSIGNMENTS -->
       <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-                
-        <h2
-          data-i18n="assignments_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-                    📚 Assignments         
-        </h2>
-                
-        <button
-          id="add-assignment-btn"
-          data-i18n="add_assignment_btn"
-          class="bg-[#2ecc71] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#27a760] transition-colors"
-        >
-                    + Add Assignment         
+        <h2 data-i18n="assignments_title" class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">📚 Assignments</h2>
+        <button id="add-assignment-btn" data-i18n="add_assignment_btn"
+          class="bg-[#2ecc71] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#27a760] transition-colors">
+          + Add Assignment
         </button>
-                
         <div id="assignments-list" class="space-y-4">
-                    
-          <p
-            data-i18n="no_assignments"
-            class="italic text-gray-500 text-center"
-          >
-                        No assignments added yet.           
-          </p>
-                  
+          <p data-i18n="no_assignments" class="italic text-gray-500 text-center">No assignments added yet.</p>
         </div>
-                
         <div id="assignments-loading" class="text-center mt-4 hidden">
-                    
-          <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>         
+          <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
         </div>
-              
       </section>
 
-                  
+      <!-- QUIZZES -->
       <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-                
-        <h2
-          data-i18n="quizzes_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-                    📝 Quizzes         
-        </h2>
-                
+        <h2 data-i18n="quizzes_title" class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">📝 Quizzes</h2>
         <div id="quizzes-list" class="space-y-4">
-                    
-          <p data-i18n="no_quizzes" class="italic text-gray-500 text-center">
-                        No quizzes assigned yet.           
-          </p>
-                  
+          <p data-i18n="no_quizzes" class="italic text-gray-500 text-center">No quizzes assigned yet.</p>
         </div>
-                
         <div id="quizzes-loading" class="text-center mt-4 hidden">
-                    
-          <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>         
+          <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
         </div>
-              
       </section>
 
-                  
+      <!-- BUDGET -->
       <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-                
-        <h2
-          data-i18n="budget_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-                    💰 Budget         
-        </h2>
-                
-        <button
-          id="add-budget-btn"
-          data-i18n="add_expense_btn"
-          class="bg-[#2ecc71] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#27a760] transition-colors"
-        >
-                    + Add Expense         
+        <h2 data-i18n="budget_title" class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">💰 Budget</h2>
+        <button id="add-budget-btn" data-i18n="add_expense_btn"
+          class="bg-[#2ecc71] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#27a760] transition-colors">
+          + Add Expense
         </button>
-                
         <div id="budget-list" class="space-y-4">
-                    
-          <p data-i18n="no_budget" class="italic text-gray-500 text-center">
-            No budget entries yet.
-          </p>
-                  
+          <p data-i18n="no_budget" class="italic text-gray-500 text-center">No budget entries yet.</p>
         </div>
-                
         <div id="budget-loading" class="text-center mt-4 hidden">
-                    
-          <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>         
+          <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
         </div>
-              
       </section>
 
-                  
+      <!-- WEEKLY GOAL -->
       <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-                
-        <h2
-          data-i18n="weekly_goal_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-                    🎯 Weekly Goal         
-        </h2>
-                
+        <h2 data-i18n="weekly_goal_title" class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">🎯 Weekly Goal</h2>
         <div class="space-y-4">
-                    
-          <input
-            id="goal-input"
-            type="text"
-            data-i18n-placeholder="goal_placeholder"
-            placeholder="Your weekly goal"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
-          />
-                    
+          <input id="goal-input" type="text" data-i18n-placeholder="goal_placeholder" placeholder="Your weekly goal"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base" />
           <p id="goal-error" class="text-red-500 text-sm hidden"></p>
-                    
-          <button
-            id="save-goal-btn"
-            data-i18n="save_goal_btn"
-            class="bg-[#3498db] text-white py-3 px-6 rounded-lg font-bold w-full hover:bg-[#2980b9] transition-colors"
-          >
-                        Save Goal           
+          <button id="save-goal-btn" data-i18n="save_goal_btn"
+            class="bg-[#3498db] text-white py-3 px-6 rounded-lg font-bold w-full hover:bg-[#2980b9] transition-colors">
+            Save Goal
           </button>
-                    
-          <p
-            id="saved-goal-text"
-            class="text-green-600 font-bold text-center mt-2 hidden"
-          ></p>
-                  
+          <p id="saved-goal-text" class="text-green-600 font-bold text-center mt-2 hidden"></p>
         </div>
-              
       </section>
 
-                  
+      <!-- AI INSIGHTS -->
       <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-                
         <div class="flex items-center justify-between mb-4">
-                    
-          <h2
-            data-i18n="ai_insights_title"
-            class="text-xl sm:text-2xl font-semibold text-gray-800"
-          >
-                        🤖 AI Insights           
-          </h2>
-                    
+          <h2 data-i18n="ai_insights_title" class="text-xl sm:text-2xl font-semibold text-gray-800">🤖 AI Insights</h2>
           <div class="flex items-center">
-                        
-            <label
-              data-i18n="subscribed_label"
-              for="subscription-toggle"
-              class="text-sm text-gray-500 mr-2"
-              >Subscribed?</label
-            >
-                        
-            <input
-              type="checkbox"
-              id="subscription-toggle"
-              class="form-checkbox h-5 w-5 text-blue-600 rounded"
-            />
-                      
+            <label data-i18n="subscribed_label" for="subscription-toggle" class="text-sm text-gray-500 mr-2">Subscribed?</label>
+            <input type="checkbox" id="subscription-toggle" class="form-checkbox h-5 w-5 text-blue-600 rounded" />
           </div>
-                    
         </div>
-                
-        <button
-          id="generate-insights-btn"
-          data-i18n="generate_insights_btn"
-          class="bg-[#1abc9c] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#16a085] transition-colors"
-        >
-                    Generate Insights         
+        <button id="generate-insights-btn" data-i18n="generate_insights_btn"
+          class="bg-[#1abc9c] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#16a085] transition-colors">
+          Generate Insights
         </button>
-                
         <div id="insights-container" class="space-y-4">
-                    
-          <p
-            data-i18n="insights_placeholder"
-            id="insights-placeholder"
-            class="italic text-gray-500 text-center"
-          >
-            Click "Generate Insights" to get personalized feedback on your
-            academic and financial goals.           
+          <p data-i18n="insights_placeholder" id="insights-placeholder" class="italic text-gray-500 text-center">
+            Click "Generate Insights" to get personalized feedback on your academic and financial goals.
           </p>
-                    
           <div id="insights-loading" class="text-center mt-4 hidden">
-                        
-            <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>         
-              
+            <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
           </div>
-                    
-          <div
-            id="insights-content"
-            class="bg-gray-50 p-4 rounded-lg shadow-sm hidden"
-          ></div>
-                  
+          <div id="insights-content" class="bg-gray-50 p-4 rounded-lg shadow-sm hidden"></div>
         </div>
-              
       </section>
 
-            
+      <!-- ASSIGNMENT SUBMISSION MODAL -->
+<div id="submission-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-md rounded-xl shadow-2xl p-6">
+    <h3 data-i18n="submit_assignment_title" class="text-2xl font-bold text-center mb-6">
+      Submit Assignment
+    </h3>
+    <form id="submission-form" class="space-y-4">
+      <textarea id="submission-text" data-i18n-placeholder="submission_text_placeholder"
+        placeholder="Write your answer here (optional)"
+        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"></textarea>
+
+      <input type="file" id="submission-file"
+        class="block w-full text-sm text-gray-600 border border-gray-300 rounded-lg cursor-pointer bg-gray-50" />
+
+      <div class="flex space-x-4 mt-6">
+        <button type="submit" data-i18n="submit_btn"
+          class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors">
+          Submit
+        </button>
+        <button type="button" id="cancel-submission-btn" data-i18n="cancel_btn"
+          class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Example assignment card with file download and submission button -->
+<div class="assignment-card bg-white shadow-md rounded-xl p-6 mt-4">
+  <h4 class="font-bold text-lg">Math Homework 1</h4>
+  <p class="text-sm text-gray-600">Due: 2025-09-15</p>
+
+  <!-- File download if teacher uploaded file -->
+  <button onclick="downloadFile('assignment', 'math_hw1.pdf')"
+    class="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+    <i class="fas fa-download mr-2"></i><span data-i18n="download_btn">Download</span>
+  </button>
+
+  <!-- Submit assignment -->
+  <button onclick="openSubmissionModal('12345')"
+    class="mt-3 ml-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm">
+    <i class="fas fa-upload mr-2"></i><span data-i18n="submit_btn">Submit</span>
+  </button>
+
+  <!-- Download feedback if available -->
+  <button onclick="downloadFile('feedback', 'feedback_math_hw1.pdf')"
+    class="mt-3 ml-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm">
+    <i class="fas fa-comments mr-2"></i><span data-i18n="feedback_btn">Feedback</span>
+  </button>
+</div>
+
+
+      <!-- FEEDBACK -->
       <section id="feedback" class="hidden p-6">
-                
-        <h2 data-i18n="feedback_title" class="text-xl font-bold mb-4">
-          My Assignment Feedback
-        </h2>
-                
+        <h2 data-i18n="feedback_title" class="text-xl font-bold mb-4">My Assignment Feedback</h2>
         <div id="feedback-list" class="space-y-4"></div>
-              
       </section>
 
-                  
+      <!-- REWARDS -->
       <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-                
-        <h2
-          data-i18n="rewards_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-          🏆 Rewards         
-        </h2>
-                
+        <h2 data-i18n="rewards_title" class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">🏆 Rewards</h2>
         <div id="rewards-wrap" class="space-y-4">
-                    
-          <p data-i18n="no_rewards" class="italic text-gray-500 text-center">
-            No rewards yet. Keep up the great work!           
-          </p>
-                  
+          <p data-i18n="no_rewards" class="italic text-gray-500 text-center">No rewards yet. Keep up the great work!</p>
         </div>
-              
       </section>
 
-                  
+      <!-- ANALYTICS -->
       <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-                
-        <h2
-          data-i18n="analytics_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-          📊 Analytics         
-        </h2>
-                
-        <div class="w-full h-64">
-                    <canvas id="analytics-chart"></canvas>         
-        </div>
-              
+        <h2 data-i18n="analytics_title" class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800">📊 Analytics</h2>
+        <div class="w-full h-64"><canvas id="analytics-chart"></canvas></div>
       </section>
 
-                  
-      <div
-        id="contactModal"
-        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center"
-      >
-                
+      <!-- CONTACT MODAL -->
+      <div id="contactModal" class="modal-overlay fixed inset-0 hidden flex items-center justify-center">
         <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-                  
-          <h2 data-i18n="contact_title" class="text-xl font-bold mb-4">
-            📩 Contact Us
-          </h2>
-                  
+          <h2 data-i18n="contact_title" class="text-xl font-bold mb-4">📩 Contact Us</h2>
           <form id="contactForm" class="space-y-4">
-                      
             <div>
-                          
-              <label data-i18n="name_label" class="block text-sm font-medium"
-                >Your Name</label
-              >
-                          
-              <input
-                type="text"
-                id="contactName"
-                required
-                class="w-full border rounded p-2"
-              />
-                        
+              <label data-i18n="name_label" class="block text-sm font-medium">Your Name</label>
+              <input type="text" id="contactName" required class="w-full border rounded p-2" />
             </div>
-                      
             <div>
-                          
-              <label data-i18n="email_label" class="block text-sm font-medium"
-                >Your Email</label
-              >
-                          
-              <input
-                type="email"
-                id="contactEmail"
-                required
-                class="w-full border rounded p-2"
-              />
-                        
+              <label data-i18n="email_label" class="block text-sm font-medium">Your Email</label>
+              <input type="email" id="contactEmail" required class="w-full border rounded p-2" />
             </div>
-                      
             <div>
-                          
-              <label data-i18n="message_label" class="block text-sm font-medium"
-                >Message</label
-              >
-                          
-              <textarea
-                id="contactMessage"
-                rows="4"
-                required
-                class="w-full border rounded p-2"
-              ></textarea>
-                        
+              <label data-i18n="message_label" class="block text-sm font-medium">Message</label>
+              <textarea id="contactMessage" rows="4" required class="w-full border rounded p-2"></textarea>
             </div>
-                      
             <div class="flex justify-end gap-2">
-                          
-              <button
-                type="button"
-                id="closeContact"
-                data-i18n="cancel_btn"
-                class="bg-gray-200 px-4 py-2 rounded"
-              >
-                Cancel            
-              </button>
-                          
-              <button
-                type="submit"
-                data-i18n="send_btn"
-                class="bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                Send            
-              </button>
-                        
+              <button type="button" id="closeContact" data-i18n="cancel_btn" class="bg-gray-200 px-4 py-2 rounded">Cancel</button>
+              <button type="submit" data-i18n="send_btn" class="bg-blue-600 text-white px-4 py-2 rounded">Send</button>
             </div>
-                      
           </form>
-                  
         </div>
-              
       </div>
 
-            
+      <!-- FOOTER -->
       <footer class="text-center text-gray-500 text-sm mt-8 mb-4">
-                
-        <span data-i18n="footer_text"
-          >&copy; 2025 SmartStudentAct – Empowering Students Globally.</span
-        >
-              
+        <span data-i18n="footer_text">&copy; 2025 SmartStudentAct – Empowering Students Globally.</span>
       </footer>
-          
     </main>
 
-            
-    <nav
-      class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] py-2 px-4 rounded-t-xl z-40"
-    >
-            
+    <!-- NAV BAR -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] py-2 px-4 rounded-t-xl z-40">
       <div class="flex justify-around items-center h-full">
-                
-        <a
-          href="/public/students.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors tab-active"
-          ><i class="fas fa-home text-2xl mb-1"></i
-          ><span data-i18n="dashboard_tab" class="text-xs font-medium"
-            >Dashboard</span
-          ></a
-        >
-                
-        <a
-          href="/public/completed-assignment.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
-          ><i class="fas fa-check-circle text-2xl mb-1"></i
-          ><span data-i18n="completed_tab" class="text-xs font-medium"
-            >Completed</span
-          ></a
-        >
-                
-        <a
-          href="/public/teachers-list.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
-          ><i class="fas fa-chalkboard-teacher text-2xl mb-1"></i
-          ><span data-i18n="teachers_tab" class="text-xs font-medium"
-            >Teachers</span
-          ></a
-        >
-                
-        <a
-          href="/public/financial.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
-          ><i class="fas fa-wallet text-2xl mb-1"></i
-          ><span data-i18n="financial_tab" class="text-xs font-medium"
-            >Financial</span
-          ></a
-        >
-                
-        <a
-          href="/public/AI Essay Checker.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
-          ><i class="fas fa-robot text-2xl mb-1"></i
-          ><span data-i18n="ai_checker_tab" class="text-xs font-medium">
-            🤖AI Checker</span
-          ></a
-        >
-                
-        <a
-          href="/public/profile.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
-          ><i class="fas fa-user-circle text-2xl mb-1"></i
-          ><span data-i18n="profile_tab" class="text-xs font-medium"
-            >👤Profile</span
-          ></a
-        >
-                
+        <a href="/public/students.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors tab-active">
+          <i class="fas fa-home text-2xl mb-1"></i>
+          <span data-i18n="dashboard_tab" class="text-xs font-medium">Dashboard</span>
+        </a>
+        <a href="/public/completed-assignment.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors">
+          <i class="fas fa-check-circle text-2xl mb-1"></i>
+          <span data-i18n="completed_tab" class="text-xs font-medium">Completed</span>
+        </a>
+        <a href="/public/teachers-list.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors">
+          <i class="fas fa-chalkboard-teacher text-2xl mb-1"></i>
+          <span data-i18n="teachers_tab" class="text-xs font-medium">Teachers</span>
+        </a>
+        <a href="/public/financial.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors">
+          <i class="fas fa-wallet text-2xl mb-1"></i>
+          <span data-i18n="financial_tab" class="text-xs font-medium">Financial</span>
+        </a>
+        <a href="/public/AI Essay Checker.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors">
+          <i class="fas fa-robot text-2xl mb-1"></i>
+          <span data-i18n="ai_checker_tab" class="text-xs font-medium">🤖AI Checker</span>
+        </a>
+        <a href="/public/profile.html" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors">
+          <i class="fas fa-user-circle text-2xl mb-1"></i>
+          <span data-i18n="profile_tab" class="text-xs font-medium">👤Profile</span>
+        </a>
       </div>
-          
     </nav>
 
-            
-    <div
-      id="assignment-modal"
-      class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-    >
-            
+       <!-- ASSIGNMENT MODAL -->
+    <div id="assignment-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
-                
-        <h3
-          data-i18n="add_assignment_modal_title"
-          class="text-2xl font-bold text-center mb-6"
-        >
-          Add Assignment
-        </h3>
-                
+        <h3 data-i18n="add_assignment_modal_title" class="text-2xl font-bold text-center mb-6">Add Assignment</h3>
         <div class="space-y-4">
-                  
-          <input
-            id="assignment-title-input"
-            data-i18n-placeholder="assignment_title_placeholder"
-            placeholder="Assignment Title"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
-          />
-                  
-          <p
-            id="assignment-title-error"
-            class="text-red-500 text-sm hidden"
-          ></p>
-                  
-          <input
-            id="assignment-subject-input"
-            data-i18n-placeholder="assignment_subject_placeholder"
-            placeholder="Subject (e.g., Math, History)"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
-          />
-                  
-          <p
-            id="assignment-subject-error"
-            class="text-red-500 text-sm hidden"
-          ></p>
-                  
+          <input id="assignment-title-input" data-i18n-placeholder="assignment_title_placeholder" placeholder="Assignment Title"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base" />
+
+          <input id="assignment-subject-input" data-i18n-placeholder="assignment_subject_placeholder" placeholder="Subject (e.g., Math, History)"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base" />
+
           <div class="flex space-x-4 mt-6">
-                      
-            <button
-              id="save-assignment-btn"
-              data-i18n="save_btn"
-              class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors"
-            >
-              Save            
-            </button>
-                      
-            <button
-              id="cancel-assignment-btn"
-              data-i18n="cancel_btn"
-              class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors"
-            >
-              Cancel            
-            </button>
-                    
+            <button id="save-assignment-btn" data-i18n="save_btn"
+              class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors">Save</button>
+            <button id="cancel-assignment-btn" data-i18n="cancel_btn"
+              class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors">Cancel</button>
           </div>
-                  
         </div>
-              
       </div>
-            
     </div>
 
-        
-    <div
-      id="budget-modal"
-      class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-    >
-            
+    <!-- BUDGET MODAL -->
+    <div id="budget-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
-                
-        <h3
-          data-i18n="add_budget_modal_title"
-          class="text-2xl font-bold text-center mb-6"
-        >
-          Add Budget Entry
-        </h3>
-                
+        <h3 data-i18n="add_budget_modal_title" class="text-2xl font-bold text-center mb-6">Add Budget Entry</h3>
         <div class="space-y-4">
-                  
-          <input
-            id="budget-title-input"
-            data-i18n-placeholder="budget_title_placeholder"
-            placeholder="Expense/Income Title"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
-          />
-                  
-          <p id="budget-title-error" class="text-red-500 text-sm hidden"></p>
-                  
-          <input
-            id="budget-amount-input"
-            data-i18n-placeholder="budget_amount_placeholder"
-            placeholder="Amount (GHS)"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
-          />
-                  
-          <p id="budget-amount-error" class="text-red-500 text-sm hidden"></p>
-                  
+          <input id="budget-title-input" data-i18n-placeholder="budget_title_placeholder" placeholder="Expense/Income Title"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base" />
+
+          <input id="budget-amount-input" data-i18n-placeholder="budget_amount_placeholder" placeholder="Amount (GHS)"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base" />
+
           <div class="flex space-x-4 mt-6">
-                      
-            <button
-              id="save-budget-btn"
-              data-i18n="save_btn"
-              class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors"
-            >
-              Save            
-            </button>
-                      
-            <button
-              id="cancel-budget-btn"
-              data-i18n="cancel_btn"
-              class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors"
-            >
-              Cancel            
-            </button>
-                    
+            <button id="save-budget-btn" data-i18n="save_btn"
+              class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors">Save</button>
+            <button id="cancel-budget-btn" data-i18n="cancel_btn"
+              class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors">Cancel</button>
           </div>
-                  
         </div>
-              
       </div>
-            
     </div>
 
-        
+
+    <!-- MENU MODAL -->
     <div id="menu-modal" class="modal-overlay fixed inset-0 z-50 flex p-4">
-            
-      <div
-        id="menu-content"
-        class="bg-white w-full max-w-[280px] h-full shadow-2xl p-6 transition-transform duration-300 -translate-x-full"
-      >
-                
-        <div
-          class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200"
-        >
-                  
-          <h3 data-i18n="menu_title" class="text-2xl font-bold">
-            SmartStudent Navigation
-          </h3>
-                  
-          <button id="close-menu-btn" class="text-4xl text-gray-600">
-                      &times;         
-          </button>
-                  
+      <div id="menu-content"
+        class="bg-white w-full max-w-[280px] h-full shadow-2xl p-6 transition-transform duration-300 -translate-x-full">
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+          <h3 data-i18n="menu_title" class="text-2xl font-bold">SmartStudent Navigation</h3>
+          <button id="close-menu-btn" class="text-4xl text-gray-600">&times;</button>
         </div>
-                
         <nav>
-                  
-          <a
-            href="/students.html"
-            data-i18n="menu_dashboard"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >🏠 Dashboard</a
-          >
-                  
-          <a
-            href="/financial.html"
-            data-i18n="menu_financial"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >💰 Financial</a
-          >
-                  
-          <a
-            href="/AI-Essay-Checker.html"
-            data-i18n="menu_ai_checker"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >🤖 AI Essay Checker</a
-          >
-                  
-          <a
-            href="/rewards.html"
-            data-i18n="menu_rewards"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >🏆 Rewards</a
-          >
-                  
-          <a
-            href="/settings.html"
-            data-i18n="menu_settings"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >⚙️ Settings</a
-          >
-                  
-          <a
-            href="/profile.html"
-            data-i18n="menu_profile"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >👤 Profile</a
-          >
-                  
+          <a href="/students.html" data-i18n="menu_dashboard"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">🏠 Dashboard</a>
+          <a href="/financial.html" data-i18n="menu_financial"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">💰 Financial</a>
+          <a href="/AI-Essay-Checker.html" data-i18n="menu_ai_checker"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">🤖 AI Essay Checker</a>
+          <a href="/rewards.html" data-i18n="menu_rewards"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">🏆 Rewards</a>
+          <a href="/settings.html" data-i18n="menu_settings"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">⚙️ Settings</a>
+          <a href="/profile.html" data-i18n="menu_profile"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors">👤 Profile</a>
           <div class="h-px bg-gray-200 my-4"></div>
-                  
-          <button
-            id="menu-logout-btn"
-            data-i18n="menu_logout"
-            class="bg-red-100 text-red-700 font-bold py-3 px-6 rounded-lg w-full text-lg mt-4 hover:bg-red-200 transition-colors"
-          >
-                        👋 Logout         
+          <button id="menu-logout-btn" data-i18n="menu_logout"
+            class="bg-red-100 text-red-700 font-bold py-3 px-6 rounded-lg w-full text-lg mt-4 hover:bg-red-200 transition-colors">
+            👋 Logout
           </button>
-                  
         </nav>
-              
       </div>
-            
     </div>
 
-        
-    <div
-      id="alert-modal"
-      class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-    >
-            
+    <!-- ALERT MODAL -->
+    <div id="alert-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
-                
-        <h3
-          data-i18n="alert_title"
-          id="alert-title"
-          class="text-2xl font-bold text-center mb-4"
-        ></h3>
-                
-        <p
-          data-i18n="alert_message"
-          id="alert-message"
-          class="text-lg text-center text-gray-600 mb-6"
-        ></p>
-                
+        <h3 data-i18n="alert_title" id="alert-title" class="text-2xl font-bold text-center mb-4"></h3>
+        <p data-i18n="alert_message" id="alert-message" class="text-lg text-center text-gray-600 mb-6"></p>
         <div class="flex justify-around space-x-4">
-                  
-          <button
-            id="alert-confirm-btn"
-            data-i18n="alert_confirm_btn"
-            class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-green-600 transition-colors hidden"
-          >
-                        Confirm          
-          </button>
-                  
-          <button
-            id="alert-cancel-btn"
-            data-i18n="alert_cancel_btn"
-            class="bg-gray-500 text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-gray-600 transition-colors"
-          >
-                        Cancel          
-          </button>
-                
+          <button id="alert-confirm-btn" data-i18n="alert_confirm_btn"
+            class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-green-600 transition-colors hidden">Confirm</button>
+          <button id="alert-cancel-btn" data-i18n="alert_cancel_btn"
+            class="bg-gray-500 text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-gray-600 transition-colors">Cancel</button>
         </div>
-              
       </div>
-          
     </div>
 
-    <!-- Language Switcher - Updated to Dropdown -->
+    <!-- LANGUAGE SWITCHER -->
     <div id="language-switcher" class="flex justify-center my-4 relative">
-        <select id="lang-select" class="px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer">
-            <option value="en">EN - English</option>
-            <option value="fr">FR - Français</option>
-            <option value="es">ES - Español</option>
-            <option value="tr">TR - Türkçe</option>
-            <option value="ar">AR - العربية</option>
-            <option value="ru">RU - Русский</option>
-        </select>
-        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-        </div>
+      <select id="lang-select"
+        class="px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer">
+        <option value="en">EN - English</option>
+        <option value="fr">FR - Français</option>
+        <option value="es">ES - Español</option>
+        <option value="tr">TR - Türkçe</option>
+        <option value="ar">AR - العربية</option>
+        <option value="ru">RU - Русский</option>
+      </select>
+      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+        </svg>
+      </div>
     </div>
-        
+
+    <!-- TRANSLATION SCRIPT -->
     <script src="translate.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // Set default language
         let currentLang = "en";
-
-        // Set default dashboard name (you can change this per page)
         const dashboardName = "students";
-
-        // Initial translation
         translatePage(dashboardName, currentLang);
 
-        // Language switch dropdown
         const langSelect = document.getElementById("lang-select");
         langSelect.addEventListener("change", (event) => {
-            const selectedLang = event.target.value;
-            currentLang = selectedLang;
-            translatePage(dashboardName, currentLang);
+          currentLang = event.target.value;
+          translatePage(dashboardName, currentLang);
         });
       });
     </script>
-  </body>
-</html>
 
-<script>
-    const API_BASE_URL = "https://smartstudentact.onrender.com/api";
+    <script>
+      const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 
-    const DOMElements = {
+      // --- Toast Notification System ---
+      function showToast(message, type = "info") {
+        const toastContainer = document.getElementById("toast-container") || createToastContainer();
+        const toast = document.createElement("div");
+        const colors = {
+          success: "bg-green-500",
+          error: "bg-red-500",
+          info: "bg-blue-500",
+          warning: "bg-yellow-500 text-black"
+        };
+
+        toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-lg shadow-lg mb-3 flex justify-between items-center animate-slideIn`;
+        toast.innerHTML = `
+          <span>${message}</span>
+          <button class="ml-4 font-bold">✕</button>
+        `;
+
+        toast.querySelector("button").addEventListener("click", () => {
+          toast.remove();
+        });
+
+        toastContainer.appendChild(toast);
+
+        // Auto-remove after 4s
+        setTimeout(() => {
+          toast.remove();
+        }, 4000);
+      }
+
+      function createToastContainer() {
+        const container = document.createElement("div");
+        container.id = "toast-container";
+        container.className = "fixed bottom-5 right-5 z-50 flex flex-col";
+        document.body.appendChild(container);
+
+        const style = document.createElement("style");
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+          .animate-slideIn {
+            animation: slideIn 0.4s ease-out;
+          }
+        `;
+        document.head.appendChild(style);
+        return container;
+      }
+
+      // --- DOM Elements ---
+      const DOMElements = {
         menuBtn: document.getElementById("menu-btn"),
         logoutBtn: document.getElementById("logout-btn"),
         addAssignmentBtn: document.getElementById("add-assignment-btn"),
@@ -815,15 +459,10 @@
         cancelBudgetBtn: document.getElementById("cancel-budget-btn"),
         closeMenuBtn: document.getElementById("close-menu-btn"),
         menuLogoutBtn: document.getElementById("menu-logout-btn"),
-        alertConfirmBtn: document.getElementById("alert-confirm-btn"),
-        alertCancelBtn: document.getElementById("alert-cancel-btn"),
         generateInsightsBtn: document.getElementById("generate-insights-btn"),
-        contactLink: document.getElementById("contactLink"),
         goalInput: document.getElementById("goal-input"),
         assignmentTitleInput: document.getElementById("assignment-title-input"),
-        assignmentSubjectInput: document.getElementById(
-            "assignment-subject-input"
-        ),
+        assignmentSubjectInput: document.getElementById("assignment-subject-input"),
         budgetTitleInput: document.getElementById("budget-title-input"),
         budgetAmountInput: document.getElementById("budget-amount-input"),
         subscriptionToggle: document.getElementById("subscription-toggle"),
@@ -844,651 +483,312 @@
         insightsContent: document.getElementById("insights-content"),
         insightsPlaceholder: document.getElementById("insights-placeholder"),
         rewardsWrap: document.getElementById("rewards-wrap"),
-        alertTitleEl: document.getElementById("alert-title"),
-        alertMessageEl: document.getElementById("alert-message"),
         assignmentModal: document.getElementById("assignment-modal"),
         budgetModal: document.getElementById("budget-modal"),
         menuModal: document.getElementById("menu-modal"),
         menuContent: document.getElementById("menu-content"),
-        alertModal: document.getElementById("alert-modal"),
+        submissionModal: document.getElementById("submission-modal"),
+  submissionForm: document.getElementById("submission-form"),
+  cancelSubmissionBtn: document.getElementById("cancel-submission-btn"),
         contactModal: document.getElementById("contactModal"),
         assignmentTitleError: document.getElementById("assignment-title-error"),
-        assignmentSubjectError: document.getElementById(
-            "assignment-subject-error"
-        ),
+        assignmentSubjectError: document.getElementById("assignment-subject-error"),
         budgetTitleError: document.getElementById("budget-title-error"),
         budgetAmountError: document.getElementById("budget-amount-error"),
         chartCanvas: document.getElementById("analytics-chart"),
-    };
+      };
 
-    const get = async (path) => {
-        const res = await fetch(`${API_BASE_URL}${path}`, {
-            method: "GET",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-        });
-        if (!res.ok)
-            throw await res.json().catch(() => ({ message: res.statusText }));
-        return res.json();
-    };
+      // --- Helpers for Modals ---
+      const showModal = (el) => el.classList.add("active");
+      const hideModal = (el) => el.classList.remove("active");
 
-    const post = async (path, body) => {
-        const res = await fetch(`${API_BASE_URL}${path}`, {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
-        if (!res.ok)
-            throw await res.json().catch(() => ({ message: res.statusText }));
-        return res.json();
-    };
-
-    const showModal = (el) => el.classList.add("active");
-    const hideModal = (el) => el.classList.remove("active");
-
-    let alertConfirmAction = null;
-    const showAlert = (title, message, onConfirm = null) => {
-        DOMElements.alertTitleEl.textContent = title;
-        DOMElements.alertMessageEl.textContent = message;
-        alertConfirmAction = onConfirm;
-        DOMElements.alertConfirmBtn.classList.toggle("hidden", !onConfirm);
-        showModal(DOMElements.alertModal);
-    };
-    const closeAlert = () => {
-        hideModal(DOMElements.alertModal);
-        alertConfirmAction = null;
-    };
-
-    const fetchAssignments = async () => {
-        if (!DOMElements.assignmentsLoading || !DOMElements.assignmentsList) return;
-        DOMElements.assignmentsLoading.classList.remove("hidden");
-        DOMElements.assignmentsList.innerHTML = "";
-        try {
-            const resp = await fetch(
-                `${API_BASE_URL}/student/assignments/${studentId}`, {
-                    method: "GET",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json" },
-                }
-            );
-            const data = await resp.json();
-            const assignments = data.assignments || data || [];
-            if (assignments.length === 0) {
-                DOMElements.assignmentsList.innerHTML =
-                    '<p class="italic text-gray-500 text-center">No assignments added yet.</p>';
-            } else {
-                assignments.forEach((a) => {
-                    const due = a.dueDate ?
-                        new Date(a.dueDate).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                        }) :
-                        "—";
-                    const div = document.createElement("div");
-                    div.className =
-                        "bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm";
-                    div.innerHTML = `
-                    <div>
-                        <h4 class="font-semibold text-lg">${a.title || "Untitled"}</h4>
-                        <p class="text-sm text-gray-600">Subject: ${
-                          a.class || a.subject || "—"
-                        }</p>
-                    </div>
-                    <span class="text-xs text-gray-400">Due: ${due}</span>`;
-                    DOMElements.assignmentsList.appendChild(div);
-                });
-            }
-        } catch (e) {
-            DOMElements.assignmentsList.innerHTML = `<p class="text-red-500 text-center">Failed to load assignments.</p>`;
-            console.error(e);
-        } finally {
-            DOMElements.assignmentsLoading.classList.add("hidden");
-        }
-    };
-
-    const fetchQuizzes = async () => {
-        if (!DOMElements.quizzesLoading || !DOMElements.quizzesList) return;
-        DOMElements.quizzesLoading.classList.remove("hidden");
-        DOMElements.quizzesList.innerHTML = "";
-        try {
-            const resp = await fetch(
-                `${API_BASE_URL}/student/quizzes/${studentId}`, {
-                    method: "GET",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json" },
-                }
-            );
-            const data = await resp.json();
-            const quizzes = data.quizzes || [];
-            if (quizzes.length === 0) {
-                DOMElements.quizzesList.innerHTML =
-                    '<p class="italic text-gray-500 text-center">No quizzes assigned yet.</p>';
-            } else {
-                quizzes.forEach((q) => {
-                    const div = document.createElement("div");
-                    div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
-                    div.innerHTML = `
-                        <h4 class="font-semibold text-lg mb-2">${q.title}</h4>
-                        <p class="text-sm text-gray-600 mb-2">From: ${
-                          q.teacherName || "Your teacher"
-                        }</p>
-                        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors" onclick="startQuiz('${
-                          q._id
-                        }')">
-                            Start Quiz
-                        </button>`;
-                    DOMElements.quizzesList.appendChild(div);
-                });
-            }
-        } catch (e) {
-            DOMElements.quizzesList.innerHTML = `<p class="text-red-500 text-center">Failed to load quizzes.</p>`;
-            console.error(e);
-        } finally {
-            DOMElements.quizzesLoading.classList.add("hidden");
-        }
-    };
-
-    const fetchBudget = async () => {
-        if (!DOMElements.budgetLoading || !DOMElements.budgetList) return;
-        DOMElements.budgetLoading.classList.remove("hidden");
-        DOMElements.budgetList.innerHTML = "";
-        try {
-            const resp = await fetch(`${API_BASE_URL}/budget`, {
-                method: "GET",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-            });
-            const data = await resp.json();
-            const budgets = data.budgets || data || [];
-            if (budgets.length === 0) {
-                DOMElements.budgetList.innerHTML =
-                    '<p class="italic text-gray-500 text-center">No budget entries yet.</p>';
-            } else {
-                budgets.forEach((entry) => {
-                    const isIncome =
-                        (entry.type || "").toLowerCase() === "income" ||
-                        entry.amount > 0;
-                    const color = isIncome ? "text-green-600" : "text-red-600";
-                    const sign = isIncome ? "+" : "-";
-                    const div = document.createElement("div");
-                    div.className =
-                        "bg-gray-50 p-4 rounded-lg flex justify-between items-center shadow-sm";
-                    div.innerHTML = `
-                    <div>
-                        <h4 class="font-semibold text-lg">${
-                          entry.description || entry.title || "Entry"
-                        }</h4>
-                        <p class="text-sm text-gray-600">${
-                          entry.type || (isIncome ? "income" : "expense")
-                        }</p>
-                    </div>
-                    <span class="font-bold ${color}">${sign}${Math.abs(
-                        entry.amount || 0
-                    ).toFixed(2)} GHS</span>`;
-                    DOMElements.budgetList.appendChild(div);
-                });
-            }
-            if (typeof drawAnalytics === 'function') {
-                drawAnalytics(budgets);
-            }
-        } catch (e) {
-            DOMElements.budgetList.innerHTML = `<p class="text-red-500 text-center">Failed to load budget entries.</p>`;
-            console.error(e);
-        } finally {
-            DOMElements.budgetLoading.classList.add("hidden");
-        }
-    };
-
-    const fetchGoal = async () => {
-        if (!DOMElements.savedGoalText || !DOMElements.goalInput) return;
-        try {
-            const resp = await fetch(`${API_BASE_URL}/goals`, {
-                method: "GET",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-            });
-            const data = await resp.json();
-            const goals = data.goals || [];
-            if (goals.length > 0) {
-                const latest = goals[goals.length - 1];
-                const text = latest.description || "(no description)";
-                DOMElements.goalInput.value = text;
-                DOMElements.savedGoalText.textContent = `Saved: ${text}`;
-                DOMElements.savedGoalText.classList.remove("hidden");
-            } else {
-                DOMElements.savedGoalText.textContent = "No goal saved yet.";
-                DOMElements.savedGoalText.classList.remove("hidden");
-            }
-        } catch (e) {
-            DOMElements.savedGoalText.textContent = "Failed to load goal.";
-            DOMElements.savedGoalText.classList.remove("hidden");
-            console.error(e);
-        }
-    };
-
-    const fetchRewards = async () => {
-        if (!DOMElements.rewardsWrap) return;
-        try {
-            const resp = await fetch(`${API_BASE_URL}/rewards/${studentId}`, {
-                method: "GET",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-            });
-            const data = await resp.json();
-            const {
-                name,
-                weeklyMessage,
-                badges = [],
-                termSummary = "",
-                termRewards = [],
-                treatSuggestions = [],
-                premiumRewards = [],
-            } = data || {};
-
-            DOMElements.rewardsWrap.innerHTML = `
-                <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
-                    <p class="font-semibold">Hey ${name || 'student'}! ${
-                      weeklyMessage || ""
-                    }</p>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-2">🎖️ Badges</h4>
-                    <div class="flex flex-wrap gap-2">${
-                      badges.length ?
-                      badges
-                      .map(
-                          (b) =>
-                          `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm">${b}</span>`
-                      )
-                      .join("") :
-                      '<span class="text-gray-500">No badges yet.</span>'
-                    }</div>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-1">📜 Term Summary</h4>
-                    <p class="text-gray-700">${
-                      termSummary || "Keep going—rewards unlock with consistency."
-                    }</p>
-                    ${
-                      termRewards.length ?
-                      `<ul class="list-disc ml-6 mt-2">${termRewards
-                      .map((r) => `<li>${r}</li>`)
-                      .join("")}</ul>` :
-                      ""
-                    }
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-2">🎉 Treat Suggestions</h4>
-                    <ul class="list-disc ml-6">${(treatSuggestions || [])
-                      .slice(0, 6)
-                      .map((t) => `<li>${t}</li>`)
-                      .join("")}</ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-2">🏅 Premium Rewards</h4>
-                    ${
-                      premiumRewards.length ?
-                      premiumRewards
-                      .map(
-                          (p) => `
-                        <div class="border rounded-lg p-3 mb-2">
-                            <div class="font-semibold">${p.name}</div>
-                            <div class="text-sm text-gray-600 mb-1">${p.description}</div>
-                            <div class="text-sm"><span class="font-semibold">Reward:</span> ${p.reward}</div>
-                        </div>`
-                      )
-                      .join("") :
-                      '<p class="text-gray-500">No premium rewards yet.</p>'
-                    }
-                </div>
-            `;
-        } catch (e) {
-            console.error(e);
-            DOMElements.rewardsWrap.innerHTML = `<p class="text-red-500 text-center">Failed to load rewards.</p>`;
-        }
-    };
-
-    const fetchStudentFeedback = async () => {
-        if (!DOMElements.feedbackList) return;
-        try {
-            const res = await fetch(
-                `${API_BASE_URL}/student/feedback/${studentId}`, {
-                    method: "GET",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json" },
-                }
-            );
-            const data = await res.json();
-            renderFeedback(data.feedback || []);
-        } catch (err) {
-            showAlert("Error", err.message || "Failed to fetch feedback.");
-        }
-    };
-
-    function renderFeedback(feedbacks) {
-        if (!DOMElements.feedbackList) return;
-        DOMElements.feedbackList.innerHTML = "";
-        if (feedbacks.length === 0) {
-            DOMElements.feedbackList.innerHTML =
-                '<p class="italic text-gray-500 text-center">No feedback received yet.</p>';
-            return;
-        }
-        feedbacks.forEach((fb) => {
-            const card = document.createElement("div");
-            card.className = "bg-white shadow rounded-lg p-4";
-            card.innerHTML = `
-                <p><strong>Assignment:</strong> ${fb.assignmentTitle}</p>
-                <p><strong>Submitted At:</strong> ${new Date(
-                  fb.submittedAt
-                ).toLocaleString()}</p>
-                <p><strong>Grade:</strong> ${fb.grade ?? "Not graded yet"}</p>
-                <p><strong>Comments:</strong> ${fb.comments ?? "No comments yet"}</p>
-                ${
-                  fb.feedbackFile ?
-                  `<p><a href="${fb.feedbackFile}" target="_blank" class="text-blue-500 underline">📂 Download Feedback File</a></p>` :
-                  ""
-                }`;
-            DOMElements.feedbackList.appendChild(card);
-        });
-    }
-
-    const handleSaveAssignment = async () => {
+      // --- Handlers with toast warnings ---
+      const handleSaveAssignment = async () => {
         let ok = true;
-        if (!DOMElements.assignmentTitleInput || !DOMElements.assignmentSubjectInput) return;
-
         if (!DOMElements.assignmentTitleInput.value.trim()) {
-            DOMElements.assignmentTitleError.textContent =
-                "Assignment title is required.";
-            DOMEElements.assignmentTitleError.classList.remove("hidden");
-            ok = false;
-        } else DOMElements.assignmentTitleError.classList.add("hidden");
-
+          showToast("Please enter a title for your assignment.", "warning");
+          ok = false;
+        }
         if (!DOMElements.assignmentSubjectInput.value.trim()) {
-            DOMElements.assignmentSubjectError.textContent =
-                "Subject is required.";
-            DOMElements.assignmentSubjectError.classList.remove("hidden");
-            ok = false;
-        } else DOMElements.assignmentSubjectError.classList.add("hidden");
-
+          showToast("Please enter the subject.", "warning");
+          ok = false;
+        }
         if (!ok) return;
 
         const payload = {
-            title: DOMElements.assignmentTitleInput.value.trim(),
-            description: "No description provided",
-            dueDate: new Date().toISOString(),
-            teacherId: studentId,
-            schoolId: "school-001",
-            classId: DOMElements.assignmentSubjectInput.value.trim(),
+          title: DOMElements.assignmentTitleInput.value.trim(),
+          description: "No description provided",
+          dueDate: new Date().toISOString(),
+          teacherId: studentId,
+          schoolId: "school-001",
+          classId: DOMElements.assignmentSubjectInput.value.trim(),
         };
 
         try {
-            const res = await fetch(`${API_BASE_URL}/teacher/assignments`, {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            if (!res.ok) throw await res.json();
-            hideModal(DOMElements.assignmentModal);
-            showAlert("Success", "Assignment added successfully!");
-            fetchAssignments();
+          const res = await fetch(`${API_BASE_URL}/teacher/assignments`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw await res.json();
+          hideModal(DOMElements.assignmentModal);
+          showToast("Assignment added successfully! 🎉", "success");
+          fetchAssignments();
         } catch (e) {
-            showAlert("Error", e.message || "Failed to add assignment.");
+          showToast(e.message || "Could not add assignment. Try again later.", "error");
         }
-    };
+      };
 
-    const handleSaveBudget = async () => {
+      const handleSaveBudget = async () => {
         let ok = true;
-        if (!DOMElements.budgetTitleInput || !DOMElements.budgetAmountInput) return;
-
         if (!DOMElements.budgetTitleInput.value.trim()) {
-            DOMElements.budgetTitleError.textContent = "Title is required.";
-            DOMElements.budgetTitleError.classList.remove("hidden");
-            ok = false;
-        } else DOMElements.budgetTitleError.classList.add("hidden");
-
-        if (
-            !DOMElements.budgetAmountInput.value.trim() ||
-            isNaN(DOMElements.budgetAmountInput.value)
-        ) {
-            DOMElements.budgetAmountError.textContent =
-                "Valid amount is required.";
-            DOMElements.budgetAmountError.classList.remove("hidden");
-            ok = false;
-        } else DOMElements.budgetAmountError.classList.add("hidden");
-
+          showToast("Please enter a title for this entry.", "warning");
+          ok = false;
+        }
+        if (!DOMElements.budgetAmountInput.value.trim() || isNaN(DOMElements.budgetAmountInput.value)) {
+          showToast("Please enter a valid amount.", "warning");
+          ok = false;
+        }
         if (!ok) return;
 
         const amount = parseFloat(DOMElements.budgetAmountInput.value);
         const payload = {
-            description: DOMElements.budgetTitleInput.value.trim(),
-            amount,
-            type: amount >= 0 ? "income" : "expense",
+          description: DOMElements.budgetTitleInput.value.trim(),
+          amount,
+          type: amount >= 0 ? "income" : "expense",
         };
 
         try {
-            const res = await fetch(`${API_BASE_URL}/budget`, {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            if (!res.ok) throw await res.json();
-            hideModal(DOMElements.budgetModal);
-            showAlert("Success", "Budget entry added successfully!");
-            fetchBudget();
+          const res = await fetch(`${API_BASE_URL}/budget`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw await res.json();
+          hideModal(DOMElements.budgetModal);
+          showToast("Budget entry added successfully ✅", "success");
+          fetchBudget();
         } catch (e) {
-            showAlert("Error", e.message || "Failed to add budget entry.");
+          showToast(e.message || "Could not save budget entry. Try again.", "error");
         }
-    };
+      };
 
-    const handleSaveGoal = async () => {
-        if (!DOMElements.goalInput) return;
+      const handleSaveGoal = async () => {
         const goalText = DOMElements.goalInput.value.trim();
         if (!goalText) {
-            DOMElements.goalErrorEl.textContent = "Weekly goal cannot be empty.";
-            DOMElements.goalErrorEl.classList.remove("hidden");
-            return;
+          showToast("Please write your weekly goal.", "warning");
+          return;
         }
-        DOMElements.goalErrorEl.classList.add("hidden");
 
-        const oneWeek = new Date(
-            Date.now() + 7 * 24 * 60 * 60 * 1000
-        ).toISOString();
         const payload = {
-            description: goalText,
-            target_date: oneWeek,
-            progress: 0,
-            type: "academic",
-            is_completed: false,
-            points: 0,
+          description: goalText,
+          target_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          progress: 0,
+          type: "academic",
+          is_completed: false,
+          points: 0,
         };
 
         try {
-            const res = await fetch(`${API_BASE_URL}/goals`, {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            if (!res.ok) throw await res.json();
-            showAlert("Success", "Weekly goal saved!");
-            fetchGoal();
+          const res = await fetch(`${API_BASE_URL}/goals`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw await res.json();
+          showToast("Weekly goal saved 🎯", "success");
+          fetchGoal();
         } catch (e) {
-            showAlert("Error", e.message || "Failed to save goal.");
+          showToast(e.message || "Could not save goal. Try again.", "error");
         }
-    };
-    const generateAiInsights = async () => {
-        if (!DOMElements.insightsPlaceholder || !DOMElements.insightsContent || !DOMElements.insightsLoading || !DOMElements.generateInsightsBtn) return;
-        DOMElements.insightsPlaceholder.classList.add("hidden");
-        DOMElements.insightsContent.classList.add("hidden");
-        DOMElements.insightsLoading.classList.remove("hidden");
-        DOMElements.generateInsightsBtn.disabled = true;
+      };
 
-        try {
-            const resp = await get(`/rewards/advice`);
-            const advice = resp.advice || {};
-            const studyAdvice =
-                advice.studyAdvice || "Keep working hard on your goals!";
-            const spendingAdvice =
-                advice.spendingAdvice ||
-                "Track your expenses to stay on top of your budget.";
+      // ---------- ASSIGNMENT SUBMISSION ----------
+function openSubmissionModal(assignmentId) {
+  DOMElements.submissionModal.dataset.assignmentId = assignmentId;
+  DOMElements.submissionModal.classList.add("active");
+}
 
-            DOMElements.insightsContent.innerHTML = `
-            <p class="mb-2"><span class="font-semibold">📚 Study:</span> ${studyAdvice}</p>
-            <p><span class="font-semibold">💰 Spending:</span> ${spendingAdvice}</p>
-        `;
-            DOMElements.insightsContent.classList.remove("hidden");
-        } catch (e) {
-            console.error(e);
+function closeSubmissionModal() {
+  DOMElements.submissionModal.classList.remove("active");
+}
 
-            if (e.status === 403) {
-                showAlert("Trial Expired", e.message);
-                DOMElements.insightsContent.textContent = e.message;
-            } else {
-                showAlert(
-                    "API Error",
-                    e.message ||
-                    "Failed to generate insights. Please try again later."
-                );
-                DOMElements.insightsContent.textContent =
-                    "Failed to load insights. Please try again.";
-            }
+async function handleSubmission(e) {
+  e.preventDefault();
+  const assignmentId = DOMElements.submissionModal.dataset.assignmentId;
+  const text = document.getElementById("submission-text").value;
+  const fileInput = document.getElementById("submission-file");
 
-            DOMElements.insightsContent.classList.remove("hidden");
-        } finally {
-            DOMElements.insightsLoading.classList.add("hidden");
-            DOMElements.generateInsightsBtn.disabled = false;
-        }
-    };
+  if (!assignmentId) {
+    showToast("Assignment ID missing.", "error");
+    return;
+  }
 
-    const handleContactFormSubmit = async (e) => {
+  const formData = new FormData();
+  formData.append("assignmentId", assignmentId);
+  if (text) formData.append("submissionText", text);
+  if (fileInput.files[0]) formData.append("file", fileInput.files[0]);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/student/submissions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${getToken()}` },
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      showToast(data.message || "Assignment submitted successfully!", "success");
+      closeSubmissionModal();
+      document.getElementById("submission-form").reset();
+    } else {
+      showToast(data.message || "Failed to submit assignment.", "error");
+    }
+  } catch (err) {
+    console.error("❌ Submission error:", err);
+    showToast("Something went wrong while submitting.", "error");
+  }
+}
+
+// ---------- ADVICE (AI INSIGHTS) ----------
+async function loadAdvice() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/advice`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    const data = await res.json();
+    if (res.ok && data.advice) {
+      // Update existing AI Insights section
+      const studyAdvice = document.getElementById("study-advice");
+      const spendingAdvice = document.getElementById("spending-advice");
+
+      if (studyAdvice) studyAdvice.textContent = data.advice.studyAdvice;
+      if (spendingAdvice) spendingAdvice.textContent = data.advice.spendingAdvice;
+    } else {
+      showToast(data.message || "Could not load advice.", "error");
+    }
+  } catch (err) {
+    console.error("❌ Advice fetch failed:", err);
+    showToast("Unable to load advice.", "error");
+  }
+}
+
+// ---------- FILE DOWNLOAD ----------
+function downloadFile(type, filename) {
+  let url = "";
+  if (type === "assignment") url = `${API_BASE_URL}/teacher/assignments/${filename}`;
+  if (type === "feedback") url = `${API_BASE_URL}/teacher/feedback/${filename}`;
+  if (!url) return;
+
+  fetch(url, { headers: { Authorization: `Bearer ${getToken()}` } })
+    .then((res) => {
+      if (!res.ok) throw new Error("Download failed.");
+      return res.blob();
+    })
+    .then((blob) => {
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    })
+    .catch(() => showToast("Failed to download file.", "error"));
+}
+
+      const handleContactFormSubmit = async (e) => {
         e.preventDefault();
-        if (!DOMElements.contactForm || !DOMElements.contactName || !DOMElements.contactEmail || !DOMElements.contactMessage) return;
         const payload = {
-            name: DOMElements.contactName.value,
-            email: DOMElements.contactEmail.value,
-            message: DOMElements.contactMessage.value,
+          name: DOMElements.contactName.value,
+          email: DOMElements.contactEmail.value,
+          message: DOMElements.contactMessage.value,
         };
-
         try {
-            const res = await fetch(`${API_BASE_URL}/contact`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            if (!res.ok) throw new Error("Failed to send message");
-            showAlert("Success", "Your message has been sent!");
-            hideModal(DOMElements.contactModal);
-            DOMElements.contactForm.reset();
+          const res = await fetch(`${API_BASE_URL}/contact`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw new Error("Failed");
+          hideModal(DOMElements.contactModal);
+          DOMElements.contactForm.reset();
+          showToast("Your message has been sent! 📩", "success");
         } catch (err) {
-            showAlert("Error", "Could not send message. Try again later.");
-            console.error(err);
+          showToast("We couldn’t send your message. Please try later.", "error");
         }
-    };
+      };
 
-    // --- EVENT LISTENERS ---
-    const setupEventListeners = () => {
+      // --- Event Listeners Setup ---
+      function setupEventListeners() {
         if (DOMElements.menuBtn) DOMElements.menuBtn.addEventListener("click", () => {
-            showModal(DOMElements.menuModal);
-            if (DOMElements.menuContent) {
-                DOMElements.menuContent.classList.remove("-translate-x-full");
-            }
+          showModal(DOMElements.menuModal);
+          DOMElements.menuContent.classList.remove("-translate-x-full");
         });
         if (DOMElements.closeMenuBtn) DOMElements.closeMenuBtn.addEventListener("click", () => {
-            if (DOMElements.menuContent) {
-                DOMElements.menuContent.classList.add("-translate-x-full");
-                setTimeout(() => hideModal(DOMElements.menuModal), 300);
-            }
+          DOMElements.menuContent.classList.add("-translate-x-full");
+          setTimeout(() => hideModal(DOMElements.menuModal), 300);
         });
-        if (DOMElements.addAssignmentBtn) DOMElements.addAssignmentBtn.addEventListener("click", () =>
-            showModal(DOMElements.assignmentModal)
-        );
-        if (DOMElements.addBudgetBtn) DOMElements.addBudgetBtn.addEventListener("click", () =>
-            showModal(DOMElements.budgetModal)
-        );
-        if (DOMElements.cancelAssignmentBtn) DOMElements.cancelAssignmentBtn.addEventListener("click", () =>
-            hideModal(DOMElements.assignmentModal)
-        );
-        if (DOMElements.cancelBudgetBtn) DOMElements.cancelBudgetBtn.addEventListener("click", () =>
-            hideModal(DOMElements.budgetModal)
-        );
-        if (DOMElements.contactLink) DOMElements.contactLink.addEventListener("click", () =>
-            showModal(DOMElements.contactModal)
-        );
-
-        document.addEventListener("click", (e) => {
-            if (e.target === DOMElements.menuModal)
-                hideModal(DOMElements.menuModal);
-            if (e.target === DOMElements.assignmentModal)
-                hideModal(DOMElements.assignmentModal);
-            if (e.target === DOMElements.budgetModal)
-                hideModal(DOMElements.budgetModal);
-            if (e.target === DOMElements.alertModal) closeAlert();
-            if (e.target === DOMElements.contactModal)
-                hideModal(DOMElements.contactModal);
-        });
-
-        if (DOMElements.saveAssignmentBtn) DOMElements.saveAssignmentBtn.addEventListener(
-            "click",
-            handleSaveAssignment
-        );
+        if (DOMElements.addAssignmentBtn) DOMElements.addAssignmentBtn.addEventListener("click", () => showModal(DOMElements.assignmentModal));
+        if (DOMElements.addBudgetBtn) DOMElements.addBudgetBtn.addEventListener("click", () => showModal(DOMElements.budgetModal));
+        if (DOMElements.cancelAssignmentBtn) DOMElements.cancelAssignmentBtn.addEventListener("click", () => hideModal(DOMElements.assignmentModal));
+        if (DOMElements.cancelBudgetBtn) DOMElements.cancelBudgetBtn.addEventListener("click", () => hideModal(DOMElements.budgetModal));
+        if (document.getElementById("closeContact")) document.getElementById("closeContact").addEventListener("click", () => hideModal(DOMElements.contactModal));
+        if (DOMElements.logoutBtn) DOMElements.logoutBtn.addEventListener("click", () => showToast("Logging out...", "info"));
+        if (DOMElements.menuLogoutBtn) DOMElements.menuLogoutBtn.addEventListener("click", () => showToast("Logging out...", "info"));
+        if (DOMElements.saveAssignmentBtn) DOMElements.saveAssignmentBtn.addEventListener("click", handleSaveAssignment);
         if (DOMElements.saveBudgetBtn) DOMElements.saveBudgetBtn.addEventListener("click", handleSaveBudget);
         if (DOMElements.saveGoalBtn) DOMElements.saveGoalBtn.addEventListener("click", handleSaveGoal);
-        if (DOMElements.logoutBtn) DOMElements.logoutBtn.addEventListener("click", () =>
-            showAlert("Log Out", "Are you sure you want to log out?", doLogout)
-        );
-        if (DOMElements.menuLogoutBtn) DOMElements.menuLogoutBtn.addEventListener("click", () =>
-            showAlert("Log Out", "Are you sure you want to log out?", doLogout)
-        );
-        if (DOMElements.generateInsightsBtn) DOMElements.generateInsightsBtn.addEventListener(
-            "click",
-            generateAiInsights
-        );
+        if (DOMElements.contactForm) DOMElements.contactForm.addEventListener("submit", handleContactFormSubmit);
 
-        if (DOMElements.alertConfirmBtn) DOMElements.alertConfirmBtn.addEventListener("click", () => {
-            if (alertConfirmAction) alertConfirmAction();
-            closeAlert();
+        document.addEventListener("click", (e) => {
+          if (e.target === DOMElements.menuModal) hideModal(DOMElements.menuModal);
+          if (e.target === DOMElements.assignmentModal) hideModal(DOMElements.assignmentModal);
+          if (e.target === DOMElements.budgetModal) hideModal(DOMElements.budgetModal);
+          if (e.target === DOMElements.contactModal) hideModal(DOMElements.contactModal);
         });
-        if (DOMElements.alertCancelBtn) DOMElements.alertCancelBtn.addEventListener("click", closeAlert);
+      }
 
-        if (DOMElements.contactForm) DOMElements.contactForm.addEventListener(
-            "submit",
-            handleContactFormSubmit
-        );
+      function setupExtendedEventListeners() {
+  // Assignment submission
+  if (DOMElements.submissionForm) {
+    DOMElements.submissionForm.addEventListener("submit", handleSubmission);
+  }
+  if (DOMElements.cancelSubmissionBtn) {
+    DOMElements.cancelSubmissionBtn.addEventListener("click", closeSubmissionModal);
+  }
 
-        if (DOMElements.subscriptionToggle) DOMElements.subscriptionToggle.addEventListener("change", (e) => {
-            isSubscribed = e.target.checked;
-        });
-    };
+  // Load advice (AI Insights) whenever dashboard loads
+  if (document.getElementById("study-advice") || document.getElementById("spending-advice")) {
+    loadAdvice();
+  }
+}
 
-    const init = async () => {
+      // --- Init ---
+      const init = async () => {
         try {
-            setupEventListeners();
-            await Promise.all([
-                fetchAssignments(),
-                fetchQuizzes(),
-                fetchBudget(),
-                fetchGoal(),
-                fetchRewards(),
-                fetchStudentFeedback(),
-            ]);
+          setupEventListeners();
+          setupExtendedEventListeners();
+          await Promise.all([
+            fetchAssignments(),
+            fetchQuizzes(),
+            fetchBudget(),
+            fetchGoal(),
+            fetchRewards(),
+            fetchStudentFeedback(),
+          ]);
         } catch (err) {
-            console.error("Initialization failed:", err);
-            showAlert(
-                "Error",
-                "Could not load dashboard. Please log in again.",
-                () => {
-                    localStorage.clear();
-                    window.location.href = "/login.html";
-                }
-            );
+          showToast("Could not load dashboard. Please log in again.", "error");
+          console.error(err);
         }
-    };
+      };
 
-    window.addEventListener("DOMContentLoaded", init);
-</script>
+      window.addEventListener("DOMContentLoaded", init);
+    </script>
+  </body>
+</html>
+
   </body>
 </html>
