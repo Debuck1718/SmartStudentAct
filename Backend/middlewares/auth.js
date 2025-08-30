@@ -4,10 +4,10 @@ const logger = require("../utils/logger");
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key";
 
 const PUBLIC_ROUTES = [
-  "api/users/login",
-  "api/users/signup",
-  "api/auth/forgot-password",
-  "api/auth/reset-password",
+  "/users/login",
+  "/users/signup",
+  "/auth/forgot-password",
+  "/auth/reset-password",
 ];
 
 
