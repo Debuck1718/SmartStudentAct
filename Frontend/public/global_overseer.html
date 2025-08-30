@@ -154,327 +154,327 @@
         </div>
     </div>
 
-    <script>
-        const API_BASE_URL = "https://smartstudentact.onrender.com/api";
-        let filesData = [];
+<script>
+        const API_BASE_URL = "https://smartstudentact.onrender.com/api";
+        let filesData = [];
 
-        const dashboardCards = document.getElementById("dashboard-cards");
-        const filesTableBody = document.getElementById("files-table-body");
-        const userSearch = document.getElementById("user-search");
-        const usersTableBody = document.getElementById("users-table-body");
-        const logoutBtn = document.getElementById("logout-btn");
-        const fileSearch = document.getElementById("file-search");
-        const fileFilter = document.getElementById("file-filter");
+        const dashboardCards = document.getElementById("dashboard-cards");
+        const filesTableBody = document.getElementById("files-table-body");
+        const userSearch = document.getElementById("user-search");
+        const usersTableBody = document.getElementById("users-table-body");
+        const logoutBtn = document.getElementById("logout-btn");
+        const fileSearch = document.getElementById("file-search");
+        const fileFilter = document.getElementById("file-filter");
 
-        // Modal elements
-        const assignRegionModal = document.getElementById("assign-region-modal");
-        const openAssignRegionBtn = document.getElementById("open-assign-region");
-        const assignRegionClose = document.getElementById("assign-region-close");
-        const assignRegionCancel = document.getElementById("assign-region-cancel");
-        const assignRegionConfirm = document.getElementById("assign-region-confirm");
-        const overseerEmailInput = document.getElementById("overseer-email");
-        const regionNameInput = document.getElementById("region-name");
+        // Modal elements
+        const assignRegionModal = document.getElementById("assign-region-modal");
+        const openAssignRegionBtn = document.getElementById("open-assign-region");
+        const assignRegionClose = document.getElementById("assign-region-close");
+        const assignRegionCancel = document.getElementById("assign-region-cancel");
+        const assignRegionConfirm = document.getElementById("assign-region-confirm");
+        const overseerEmailInput = document.getElementById("overseer-email");
+        const regionNameInput = document.getElementById("region-name");
 
-        const alertModal = document.getElementById("alert-modal");
-        const alertTitle = document.getElementById("alert-title");
-        const alertMessage = document.getElementById("alert-message");
-        const alertOk = document.getElementById("alert-ok");
+        const alertModal = document.getElementById("alert-modal");
+        const alertTitle = document.getElementById("alert-title");
+        const alertMessage = document.getElementById("alert-message");
+        const alertOk = document.getElementById("alert-ok");
 
-        const requestModal = document.getElementById("request-modal");
-        const openRequestBtn = document.getElementById("open-request-btn");
-        const requestClose = document.getElementById("request-close");
-        const requestCancel = document.getElementById("request-cancel");
-        const requestSendBtn = document.getElementById("request-send");
-        const requestTextArea = document.getElementById("request-text");
+        const requestModal = document.getElementById("request-modal");
+        const openRequestBtn = document.getElementById("open-request-btn");
+        const requestClose = document.getElementById("request-close");
+        const requestCancel = document.getElementById("request-cancel");
+        const requestSendBtn = document.getElementById("request-send");
+        const requestTextArea = document.getElementById("request-text");
 
-        const confirmModal = document.getElementById("confirm-modal");
-        const confirmTitle = document.getElementById("confirm-title");
-        const confirmMessage = document.getElementById("confirm-message");
-        const confirmConfirmBtn = document.getElementById("confirm-confirm");
-        const confirmCancelBtn = document.getElementById("confirm-cancel");
+        const confirmModal = document.getElementById("confirm-modal");
+        const confirmTitle = document.getElementById("confirm-title");
+        const confirmMessage = document.getElementById("confirm-message");
+        const confirmConfirmBtn = document.getElementById("confirm-confirm");
+        const confirmCancelBtn = document.getElementById("confirm-cancel");
 
-        // --- Core UI & Data Fetching Functions ---
+        // --- Core UI & Data Fetching Functions ---
 
-        function showAlert(title, message) {
-            alertTitle.textContent = title;
-            alertMessage.textContent = message;
-            alertModal.classList.remove("hidden");
-        }
+        function showAlert(title, message) {
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertModal.classList.remove("hidden");
+        }
 
-        function showConfirm(title, message, onConfirmCallback) {
-            confirmTitle.textContent = title;
-            confirmMessage.textContent = message;
-            confirmModal.classList.remove("hidden");
+        function showConfirm(title, message, onConfirmCallback) {
+            confirmTitle.textContent = title;
+            confirmMessage.textContent = message;
+            confirmModal.classList.remove("hidden");
 
-            const confirmHandler = () => {
-                onConfirmCallback();
-                confirmModal.classList.add("hidden");
-                confirmConfirmBtn.removeEventListener('click', confirmHandler);
-            };
+            const confirmHandler = () => {
+                onConfirmCallback();
+                confirmModal.classList.add("hidden");
+                confirmConfirmBtn.removeEventListener('click', confirmHandler);
+            };
 
-            const cancelHandler = () => {
-                confirmModal.classList.add("hidden");
-                confirmCancelBtn.removeEventListener('click', cancelHandler);
-            };
+            const cancelHandler = () => {
+                confirmModal.classList.add("hidden");
+                confirmCancelBtn.removeEventListener('click', cancelHandler);
+            };
 
-            confirmConfirmBtn.addEventListener('click', confirmHandler);
-            confirmCancelBtn.addEventListener('click', cancelHandler);
-        }
+            confirmConfirmBtn.addEventListener('click', confirmHandler);
+            confirmCancelBtn.addEventListener('click', cancelHandler);
+        }
 
-        function showLoading() {
-            dashboardCards.innerHTML = '<div class="spinner mx-auto"></div>';
-        }
+        function showLoading() {
+            dashboardCards.innerHTML = '<div class="spinner mx-auto"></div>';
+        }
 
-        function showError(message) {
-            dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
-        }
+        function showError(message) {
+            dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
+        }
 
-        async function loadDashboard() {
-            showLoading();
-            try {
-                const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard`, {
-                    method: "GET",
-                    credentials: "include"
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    showError(data.message || "Failed to load dashboard.");
-                    if (res.status === 401 || res.status === 403) window.location.href = "/login.html";
-                    return;
-                }
-                renderDashboard(data);
-            } catch (err) {
-                console.error(err);
-                showError("An unexpected error occurred while loading the dashboard.");
-            }
-        }
+        async function loadDashboard() {
+            showLoading();
+            try {
+                const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard`, {
+                    method: "GET",
+                    credentials: "include"
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    showError(data.message || "Failed to load dashboard.");
+                    if (res.status === 401 || res.status === 403) window.location.href = "/login.html";
+                    return;
+                }
+                renderDashboard(data);
+            } catch (err) {
+                console.error(err);
+                showError("An unexpected error occurred while loading the dashboard.");
+            }
+        }
 
-        function renderDashboard(data) {
-            dashboardCards.innerHTML = "";
-            data.managedRegions.forEach(region => {
-                const card = document.createElement("div");
-                card.className = "bg-white p-6 rounded-2xl shadow-md";
-                card.innerHTML = `
-                    <h2 class="text-xl font-semibold mb-2 text-gray-800">${region.name}</h2>
-                    <p class="text-gray-600">Schools: ${region.totalSchools}</p>
-                    <p class="text-gray-600">Admins: ${region.totalAdmins}</p>
-                    <p class="text-gray-600">Teachers: ${region.totalTeachers}</p>
-                    <p class="text-gray-600">Students: ${region.totalStudents}</p>
-                `;
-                dashboardCards.appendChild(card);
-            });
-        }
+        function renderDashboard(data) {
+            dashboardCards.innerHTML = "";
+            data.managedRegions.forEach(region => {
+                const card = document.createElement("div");
+                card.className = "bg-white p-6 rounded-2xl shadow-md";
+                card.innerHTML = `
+                    <h2 class="text-xl font-semibold mb-2 text-gray-800">${region.name}</h2>
+                    <p class="text-gray-600">Schools: ${region.totalSchools}</p>
+                    <p class="text-gray-600">Admins: ${region.totalAdmins}</p>
+                    <p class="text-gray-600">Teachers: ${region.totalTeachers}</p>
+                    <p class="text-gray-600">Students: ${region.totalStudents}</p>
+                `;
+                dashboardCards.appendChild(card);
+            });
+        }
 
-        async function loadUsers(query = "") {
-            try {
-                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
-                const res = await fetch(`${API_BASE_URL}/users?search=${encodeURIComponent(query)}`, {
-                    method: "GET",
-                    credentials: "include"
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${data.message || "Failed to load users."}</td></tr>`;
-                    return;
-                }
-                renderUsers(data.users || []);
-            } catch (err) {
-                console.error(err);
-                usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch users.</td></tr>`;
-            }
-        }
+        async function loadUsers(query = "") {
+            try {
+                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
+                const res = await fetch(`${API_BASE_URL}/global-overseer/users?search=${encodeURIComponent(query)}`, {
+                    method: "GET",
+                    credentials: "include"
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${data.message || "Failed to load users."}</td></tr>`;
+                    return;
+                }
+                renderUsers(data.users || []);
+            } catch (err) {
+                console.error(err);
+                usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch users.</td></tr>`;
+            }
+        }
 
-        function renderUsers(users) {
-            usersTableBody.innerHTML = "";
-            if (users.length === 0) {
-                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No users found.</td></tr>';
-                return;
-            }
+        function renderUsers(users) {
+            usersTableBody.innerHTML = "";
+            if (users.length === 0) {
+                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No users found.</td></tr>';
+                return;
+            }
 
-            users.forEach(user => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="border-t px-6 py-4 text-gray-700">${user.email}</td>
-                    <td class="border-t px-6 py-4 text-gray-700">${user.role}</td>
-                    <td class="border-t px-6 py-4 text-gray-700">${user.schoolName || user.teacherSchool || '-'}</td>
-                    <td class="border-t px-6 py-4 space-x-2">
-                        <button class="bg-green-600 text-white px-3 py-1 rounded-full text-xs hover:bg-green-700 transition-colors duration-200 shadow-sm"
-                            onclick="promoteUser('${user.email}')">Promote</button>
-                        <button class="bg-red-600 text-white px-3 py-1 rounded-full text-xs hover:bg-red-700 transition-colors duration-200 shadow-sm"
-                            onclick="removeUser('${user.email}')">Remove</button>
-                    </td>
-                `;
-                usersTableBody.appendChild(tr);
-            });
-        }
-        
-        async function loadFiles() {
-            try {
-                filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading files...</td></tr>';
-                const res = await fetch(`${API_BASE_URL}/global-overseer/all-files`, {
-                    method: "GET",
-                    credentials: "include"
-                });
-                const filesDataRes = await res.json();
-                if (!res.ok) {
-                    filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${filesDataRes.message || "Failed to load files."}</td></tr>`;
-                    filesData = [];
-                    return;
-                }
-                filesData = filesDataRes.files || [];
-                renderFiles();
-            } catch (err) {
-                console.error("Failed to load files:", err);
-                filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch files.</td></tr>`;
-            }
-        }
+            users.forEach(user => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="border-t px-6 py-4 text-gray-700">${user.email}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${user.role}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${user.schoolName || user.teacherSchool || '-'}</td>
+                    <td class="border-t px-6 py-4 space-x-2">
+                        <button class="bg-green-600 text-white px-3 py-1 rounded-full text-xs hover:bg-green-700 transition-colors duration-200 shadow-sm"
+                            onclick="promoteUser('${user.email}')">Promote</button>
+                        <button class="bg-red-600 text-white px-3 py-1 rounded-full text-xs hover:bg-red-700 transition-colors duration-200 shadow-sm"
+                            onclick="removeUser('${user.email}')">Remove</button>
+                    </td>
+                `;
+                usersTableBody.appendChild(tr);
+            });
+        }
+        
+        async function loadFiles() {
+            try {
+                filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading files...</td></tr>';
+                const res = await fetch(`${API_BASE_URL}/global-overseer/all-files`, {
+                    method: "GET",
+                    credentials: "include"
+                });
+                const filesDataRes = await res.json();
+                if (!res.ok) {
+                    filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${filesDataRes.message || "Failed to load files."}</td></tr>`;
+                    filesData = [];
+                    return;
+                }
+                filesData = filesDataRes.files || [];
+                renderFiles();
+            } catch (err) {
+                console.error("Failed to load files:", err);
+                filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch files.</td></tr>`;
+            }
+        }
 
-        function renderFiles() {
-            let filteredFiles = filesData.filter(f => {
-                const searchTerm = fileSearch.value.toLowerCase();
-                const typeFilter = fileFilter.value;
-                return (!searchTerm || f.filename.toLowerCase().includes(searchTerm)) &&
-                       (!typeFilter || f.type === typeFilter);
-            });
+        function renderFiles() {
+            let filteredFiles = filesData.filter(f => {
+                const searchTerm = fileSearch.value.toLowerCase();
+                const typeFilter = fileFilter.value;
+                return (!searchTerm || f.filename.toLowerCase().includes(searchTerm)) &&
+                       (!typeFilter || f.type === typeFilter);
+            });
 
-            filesTableBody.innerHTML = "";
-            if (filteredFiles.length === 0) {
-                filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No files found.</td></tr>';
-                return;
-            }
+            filesTableBody.innerHTML = "";
+            if (filteredFiles.length === 0) {
+                filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No files found.</td></tr>';
+                return;
+            }
 
-            filteredFiles.forEach(file => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="border-t px-6 py-4 text-gray-700">${file.filename}</td>
-                    <td class="border-t px-6 py-4 text-gray-700">${file.type}</td>
-                    <td class="border-t px-6 py-4 text-gray-700">${file.uploaded_by || file.created_by}</td>
-                    <td class="border-t px-6 py-4">
-                        <a href="${API_BASE_URL}/admin/all-files/${file.type.toLowerCase()}/${file.filename}" target="_blank" class="text-blue-600 hover:underline transition-colors duration-200">View</a>
-                    </td>
-                `;
-                filesTableBody.appendChild(tr);
-            });
-        }
-
-
-        async function promoteUser(email) {
-            showConfirm(
-                "Promote User",
-                `Please enter a new role for ${email}.`,
-                async () => {
-                    const role = prompt("Enter new role:");
-                    if (role) {
-                        try {
-                            const res = await fetch(`${API_BASE_URL}/admin/promote`, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                credentials: "include",
-                                body: JSON.stringify({ email, role })
-                            });
-                            const data = await res.json();
-                            if (!res.ok) return showAlert("Error", data.error || "Failed to promote user");
-                            showAlert("Success", "User promoted successfully");
-                            loadUsers(userSearch.value);
-                        } catch (err) {
-                            console.error(err);
-                            showAlert("Error", "Promotion failed");
-                        }
-                    }
-                }
-            );
-        }
-
-        async function removeUser(email) {
-            showConfirm(
-                "Confirm Removal",
-                `Are you sure you want to remove ${email}? This action cannot be undone.`,
-                async () => {
-                    try {
-                        const res = await fetch(`${API_BASE_URL}/admin/remove-user`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            credentials: "include",
-                            body: JSON.stringify({ email })
-                        });
-                        const data = await res.json();
-                        if (!res.ok) return showAlert("Error", data.error || "Failed to remove user");
-                        showAlert("Success", "User removed successfully");
-                        loadUsers(userSearch.value);
-                    } catch (err) {
-                        console.error(err);
-                        showAlert("Error", "Remove failed");
-                    }
-                }
-            );
-        }
-
-        logoutBtn.addEventListener("click", async () => {
-            try {
-                const res = await fetch(`${API_BASE_URL}/logout`, { method: "POST", credentials: "include" });
-                if (res.ok) {
-                    window.location.href = "/login.html";
-                }
-            } catch (err) {
-                console.error("Logout failed", err);
-            }
-        });
-
-        openAssignRegionBtn.addEventListener("click", () => assignRegionModal.classList.remove("hidden"));
-        assignRegionClose.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
-        assignRegionCancel.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
-        alertOk.addEventListener("click", () => alertModal.classList.add("hidden"));
-
-        openRequestBtn.addEventListener("click", () => requestModal.classList.remove("hidden"));
-        requestClose.addEventListener("click", () => requestModal.classList.add("hidden"));
-        requestCancel.addEventListener("click", () => requestModal.classList.add("hidden"));
-        requestSendBtn.addEventListener("click", () => {
-            const requestText = requestTextArea.value.trim();
-            if (requestText) {
-                showAlert("Request Sent", "Your request has been sent successfully.");
-                requestTextArea.value = "";
-                requestModal.classList.add("hidden");
-            } else {
-                showAlert("Error", "Request cannot be empty.");
-            }
-        });
-        
-        assignRegionConfirm.addEventListener("click", async () => {
-            const email = overseerEmailInput.value.trim();
-            const region = regionNameInput.value.trim();
-            if (!email || !region) return showAlert("Error", "Email and region cannot be empty.");
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/admin/assign-region`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ overseerEmail: email, region })
-                });
-                const data = await res.json();
-                if (!res.ok) return showAlert("Error", data.error || "Failed to assign region.");
-                showAlert("Success", data.message);
-                overseerEmailInput.value = "";
-                regionNameInput.value = "";
-                assignRegionModal.classList.add("hidden");
-                loadDashboard();
-            } catch (err) {
-                console.error(err);
-                showAlert("Error", "Failed to assign region. Try again later.");
-            }
-        });
-        
-        fileSearch.addEventListener("input", renderFiles);
-        fileFilter.addEventListener("change", renderFiles);
-        userSearch.addEventListener("input", () => loadUsers(userSearch.value));
+            filteredFiles.forEach(file => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="border-t px-6 py-4 text-gray-700">${file.filename}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${file.type}</td>
+                    <td class="border-t px-6 py-4 text-gray-700">${file.uploaded_by || file.created_by}</td>
+                    <td class="border-t px-6 py-4">
+                        <a href="${API_BASE_URL}/global-overseer/view-file/${file.type.toLowerCase()}/${file.filename}" target="_blank" class="text-blue-600 hover:underline transition-colors duration-200">View</a>
+                    </td>
+                `;
+                filesTableBody.appendChild(tr);
+            });
+        }
 
 
-        window.addEventListener("DOMContentLoaded", () => {
-            loadDashboard(); 
-            loadUsers(); 
-            loadFiles();
-        });
-    </script>
+        async function promoteUser(email) {
+            showConfirm(
+                "Promote User",
+                `Please enter a new role for ${email}.`,
+                async () => {
+                    const role = prompt("Enter new role:");
+                    if (role) {
+                        try {
+                            const res = await fetch(`${API_BASE_URL}/global-overseer/promote`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                credentials: "include",
+                                body: JSON.stringify({ email, role })
+                            });
+                            const data = await res.json();
+                            if (!res.ok) return showAlert("Error", data.error || "Failed to promote user");
+                            showAlert("Success", "User promoted successfully");
+                            loadUsers(userSearch.value);
+                        } catch (err) {
+                            console.error(err);
+                            showAlert("Error", "Promotion failed");
+                        }
+                    }
+                }
+            );
+        }
+
+        async function removeUser(email) {
+            showConfirm(
+                "Confirm Removal",
+                `Are you sure you want to remove ${email}? This action cannot be undone.`,
+                async () => {
+                    try {
+                        const res = await fetch(`${API_BASE_URL}/global-overseer/remove-user`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include",
+                            body: JSON.stringify({ email })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) return showAlert("Error", data.error || "Failed to remove user");
+                        showAlert("Success", "User removed successfully");
+                        loadUsers(userSearch.value);
+                    } catch (err) {
+                        console.error(err);
+                        showAlert("Error", "Remove failed");
+                    }
+                }
+            );
+        }
+
+        logoutBtn.addEventListener("click", async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/logout`, { method: "POST", credentials: "include" });
+                if (res.ok) {
+                    window.location.href = "/login.html";
+                }
+            } catch (err) {
+                console.error("Logout failed", err);
+            }
+        });
+
+        openAssignRegionBtn.addEventListener("click", () => assignRegionModal.classList.remove("hidden"));
+        assignRegionClose.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
+        assignRegionCancel.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
+        alertOk.addEventListener("click", () => alertModal.classList.add("hidden"));
+
+        openRequestBtn.addEventListener("click", () => requestModal.classList.remove("hidden"));
+        requestClose.addEventListener("click", () => requestModal.classList.add("hidden"));
+        requestCancel.addEventListener("click", () => requestModal.classList.add("hidden"));
+        requestSendBtn.addEventListener("click", () => {
+            const requestText = requestTextArea.value.trim();
+            if (requestText) {
+                showAlert("Request Sent", "Your request has been sent successfully.");
+                requestTextArea.value = "";
+                requestModal.classList.add("hidden");
+            } else {
+                showAlert("Error", "Request cannot be empty.");
+            }
+        });
+        
+        assignRegionConfirm.addEventListener("click", async () => {
+            const email = overseerEmailInput.value.trim();
+            const region = regionNameInput.value.trim();
+            if (!email || !region) return showAlert("Error", "Email and region cannot be empty.");
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/global-overseer/assign-region`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ overseerEmail: email, region })
+                });
+                const data = await res.json();
+                if (!res.ok) return showAlert("Error", data.error || "Failed to assign region.");
+                showAlert("Success", data.message);
+                overseerEmailInput.value = "";
+                regionNameInput.value = "";
+                assignRegionModal.classList.add("hidden");
+                loadDashboard();
+            } catch (err) {
+                console.error(err);
+                showAlert("Error", "Failed to assign region. Try again later.");
+            }
+        });
+        
+        fileSearch.addEventListener("input", renderFiles);
+        fileFilter.addEventListener("change", renderFiles);
+        userSearch.addEventListener("input", () => loadUsers(userSearch.value));
+
+
+        window.addEventListener("DOMContentLoaded", () => {
+            loadDashboard(); 
+            loadUsers(); 
+            loadFiles();
+        });
+    </script>
 </body>
 </html>
 

@@ -292,6 +292,10 @@ async function handleLogin() {
             return;
         }
 
+        if (data.token) {
+              localStorage.setItem('token', data.token);
+        }
+
         if (data.redirectUrl) {
           showBanner("Login successful, redirecting...", "success");
           window.location.href = data.redirectUrl;
