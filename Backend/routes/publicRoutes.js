@@ -74,6 +74,85 @@ module.exports = (eventBus) => {
     next();
   };
 
+  // --- Request OTP / Signup ---
+publicRouter.post(
+  "/users/signup-otp",
+  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+  validate(signupOtpSchema),
+  async (req, res) => {
+    try {
+      const {
+        firstname,
+        lastname,
+        email,
+        phone,
+        password,
+        occupation,
+        schoolName,
+        schoolCountry,
+        educationLevel,
+        grade,
+      } = req.body;
+
+      let existingUser = await User.findOne({ email });
+
+      // 🔹 If user already exists → just send OTP for verification
+      if (existingUser) {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpToken = jwt.sign(
+          { email, code },
+          JWT_SECRET,
+          { expiresIn: "10m" }
+        );
+
+        await sendOTPEmail(email, code);
+
+        return res.json({
+          status: "success",
+          message: "OTP sent to existing user.",
+          otpToken,
+        });
+      }
+
+      // 🔹 If new user → hash password and generate temporary payload
+      const passwordHash = await bcrypt.hash(password, 10);
+      const temporaryUserId = uuidv4();
+
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpToken = jwt.sign(
+        {
+          temporaryUserId,
+          firstname,
+          lastname,
+          email,
+          phone,
+          passwordHash,
+          occupation,
+          schoolName,
+          schoolCountry,
+          educationLevel,
+          grade,
+          code,
+        },
+        JWT_SECRET,
+        { expiresIn: "10m" }
+      );
+
+      await sendOTPEmail(email, code);
+
+      res.status(200).json({
+        status: "success",
+        message: "OTP sent. Please verify to complete signup.",
+        otpToken,
+      });
+    } catch (err) {
+      logger.error("❌ Signup-OTP error:", err);
+      res.status(500).json({ message: "Signup failed." });
+    }
+  }
+);
+
+
   // --- Verify OTP ---
   publicRouter.post(
     "/users/verify-otp",
