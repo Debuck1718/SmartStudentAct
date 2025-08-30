@@ -936,21 +936,14 @@
           if (!response.ok) {
             throw new Error(responseData.message || "Failed to verify OTP.");
           }
+          
+          showMessage("Account verified successfully! Redirecting...", "success");
 
-          if (responseData.token) {
-            localStorage.setItem("jwt_token", responseData.token);
-            showMessage("Account verified successfully! Redirecting...", "success");
-
-            if (userData.occupation === "student") {
-                window.location.href = "./students.html";
-            } else if (userData.occupation === "teacher") {
-                window.location.href = "./teachers.html";
-            }
-          } else {
-            showMessage("Verification successful, but no token received. Please log in.", "success");
-            window.location.href = "./login.html";
+          if (userData.occupation === "student") {
+              window.location.href = "./students.html";
+          } else if (userData.occupation === "teacher") {
+              window.location.href = "./teachers.html";
           }
-
         } catch (error) {
           showMessage(error.message);
         } finally {
