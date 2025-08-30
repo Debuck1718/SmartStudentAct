@@ -363,8 +363,9 @@ protectedRouter.patch(
     const userId = req.userId || req.body.userId;
     const updateData = req.body;
 
+    // This check is a good practice, though authenticateJWT should prevent it from being null
     if (!userId) {
-      return res.status(400).json({ message: 'User ID is required.' });
+        return res.status(401).json({ message: 'Authentication failed. User ID not found.' });
     }
 
     try {

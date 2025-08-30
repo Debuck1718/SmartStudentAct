@@ -2,25 +2,18 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
-const crypto = require("crypto");
 const Joi = require("joi");
 const { v4: uuidv4 } = require("uuid");
 const User = require("../models/User");
 const logger = require("../utils/logger");
-
-const {
-  sendOTPEmail,
-  sendWelcomeEmail,
-  sendResetEmail,
-  sendContactEmail,
-} = require("../utils/email");
+const { sendOTPEmail, sendWelcomeEmail } = require("../utils/email");
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key";
-const JWT_EXPIRES = process.env.JWT_EXPIRES || "1d";
 
-module.exports = (eventBus, agenda) => {
+module.exports = (eventBus) => {
   const publicRouter = express.Router();
 
+  // --- Schemas ---
   const signupOtpSchema = Joi.object({
     phone: Joi.string()
       .pattern(/^\+?[1-9]\d{1,14}$/)
@@ -30,31 +23,23 @@ module.exports = (eventBus, agenda) => {
     lastname: Joi.string().min(2).max(50).required(),
     password: Joi.string()
       .min(8)
-      .pattern(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-      )
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
       .message(
-        "Password must be at least 8 characters, with at least one uppercase letter, one number, and one special character."
+        "Password must be at least 8 characters, with one uppercase, one number, one special char."
       )
       .required(),
-    confirmPassword: Joi.string()
-      .valid(Joi.ref("password"))
-      .required()
-      .messages({ "any.only": "Passwords do not match." }),
+    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+    occupation: Joi.string().valid("student", "teacher").required(),
+    schoolName: Joi.string().allow(""),
+    schoolCountry: Joi.string().allow(""),
+    educationLevel: Joi.string().allow(""),
+    grade: Joi.string().allow(""),
   });
 
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
     email: Joi.string().email().required(),
-    password: Joi.string()
-      .min(8)
-      .pattern(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-      )
-      .message(
-        "Password must be at least 8 characters, with at least one uppercase letter, one number, and one special character."
-      )
-      .required(),
+    password: Joi.string().required(),
     otpToken: Joi.string().required(),
   });
 
@@ -89,76 +74,7 @@ module.exports = (eventBus, agenda) => {
     next();
   };
 
-  publicRouter.post(
-    "/users/signup-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-    validate(signupOtpSchema),
-    async (req, res) => {
-      const { firstname, lastname, email, phone, password, confirmPassword } =
-        req.body;
-
-      if (password !== confirmPassword) {
-        return res.status(400).json({ message: "Passwords do not match." });
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const temporaryUserId = uuidv4();
-
-      try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-          // 👉 Skip password check, send to onboarding
-          return res.status(200).json({
-            step: "onboarding",
-            message: "User exists. Proceed to onboarding.",
-            userId: existingUser._id,
-          });
-        }
-
-        // If not existing, create OTP flow
-        const code =
-          process.env.NODE_ENV === "production"
-            ? Math.floor(100000 + Math.random() * 900000).toString()
-            : "123456";
-
-        const signupData = {
-          email,
-          firstname,
-          lastname,
-          phone,
-          passwordHash: hashedPassword,
-          code,
-          attempts: 0,
-          timestamp: Date.now(),
-          temporaryUserId,
-          role: "student",
-          occupation: "student",
-          schoolCountry: "",
-          educationLevel: "high",
-          grade: 10,
-          schoolName: "Default High School",
-        };
-
-        logger.debug("[OTP] Generated for %s: %s", email, code);
-
-        await sendOTPEmail(email, firstname, code);
-
-        const otpToken = jwt.sign(signupData, JWT_SECRET, { expiresIn: "10m" });
-
-        eventBus.emit("otp_sent", { email, otp: code });
-        res.json({
-          step: "verify",
-          message: "OTP sent to your email",
-          otpToken,
-          userId: temporaryUserId,
-        });
-      } catch (err) {
-        logger.error("❌ Unexpected OTP route error:", err);
-        res.status(500).json({ message: "Failed to send OTP" });
-      }
-    }
-  );
-
+  // --- Verify OTP ---
   publicRouter.post(
     "/users/verify-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -167,68 +83,73 @@ module.exports = (eventBus, agenda) => {
       const { code, email, password, otpToken } = req.body;
 
       try {
-        // Decode OTP token
         const decoded = jwt.verify(otpToken, JWT_SECRET);
 
         if (decoded.email !== email || decoded.code !== code) {
           return res.status(400).json({ message: "Invalid email or OTP." });
         }
 
-        // Check if user already exists
-        let existingUser = await User.findOne({ email });
+        // Existing user flow
+        let user = await User.findOne({ email });
+        if (user) {
+          const isMatch = await bcrypt.compare(password, user.password);
 
-        if (existingUser) {
-          const isMatch = await existingUser.comparePassword(password);
           if (!isMatch) {
-            return res.status(400).json({
-              message: "Password mismatch. Please restart signup.",
+            // 🔑 Instead of rejecting → update password
+            const newHashed = await bcrypt.hash(password, 10);
+            user.password = newHashed;
+            await user.save();
+
+            return res.json({
+              status: "success",
+              message: "Password updated. User verified. Redirecting...",
+              userId: user._id,
+              role: user.occupation,
             });
           }
 
-          // User exists and password matches — redirect to onboarding
-          return res.status(200).json({
+          // Password matches
+          return res.json({
             status: "success",
-            message: "User exists. Proceed to onboarding.",
-            userId: existingUser._id,
+            message: "User verified. Redirecting...",
+            userId: user._id,
+            role: user.occupation,
           });
         }
 
-        // Create new user with default placeholder information
+        // New user flow
         const newUser = new User({
           _id: decoded.temporaryUserId,
           firstname: decoded.firstname,
           lastname: decoded.lastname,
           email: decoded.email,
           phone: decoded.phone,
-          password: decoded.passwordHash, // hashed password from signup
+          password: decoded.passwordHash,
           verified: true,
-          role: "student", // default role
-          occupation: "student", // default occupation
-          educationLevel: "high", // default education level
-          grade: "11", // default grade
-          schoolName: "My School", // default school
-          schoolCountry: "GH", // default country
+          role: decoded.occupation,
+          occupation: decoded.occupation,
+          educationLevel: decoded.educationLevel,
+          grade: decoded.grade,
+          schoolName: decoded.schoolName,
+          schoolCountry: decoded.schoolCountry,
         });
 
         await newUser.save();
+        sendWelcomeEmail(newUser.email, newUser.firstname).catch((e) =>
+          logger.error("Failed to send welcome:", e)
+        );
 
-        // Send welcome email (non-blocking)
-        sendWelcomeEmail(newUser.email, newUser.firstname).catch((err) => {
-          logger.error("Failed to send welcome email:", err);
-        });
-
-        return res.status(201).json({
+        res.status(201).json({
           status: "success",
-          message: "OTP verified successfully. Proceed to onboarding.",
+          message: "User created & verified. Redirecting...",
           userId: newUser._id,
+          role: newUser.occupation,
         });
       } catch (err) {
-        logger.error("❌ Verify OTP error:", err);
-
-        if (err.name === "TokenExpiredError") {
+        logger.error("❌ Verify-OTP error:", err);
+        if (err.name === "TokenExpiredError")
           return res.status(400).json({ message: "OTP expired." });
-        }
-        return res.status(500).json({ message: "OTP verification failed." });
+        res.status(500).json({ message: "OTP verification failed." });
       }
     }
   );
