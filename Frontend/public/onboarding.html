@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Complete Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link
       rel="icon"
       type="image/png"
@@ -692,13 +692,12 @@
         setLoadingState(completeProfileButton, true, "Complete Profile");
 
         try {
+          // PATCH request with correct shape
           const response = await fetch(API_UPDATE_PROFILE, {
             method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
+            credentials: "include", 
           });
 
           const responseData = await response.json();
