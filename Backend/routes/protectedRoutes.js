@@ -1392,7 +1392,21 @@ protectedRouter.get(
     }
   }
 );
+protectedRouter.get("/auth/check", authenticateJWT, (req, res) => {
+  res.json({
+    status: true,
+    message: "Authenticated",
+    user: {
+      id: req.user.id,
+      email: req.user.email,
+      role: req.user.role,
+    },
+  });
+});
 
+// ================== STUDENT ROUTES ==================
+
+// 📌 Get assignments
 protectedRouter.get(
   "/student/assignments",
   authenticateJWT,
@@ -1419,6 +1433,7 @@ protectedRouter.get(
   }
 );
 
+// 📌 Submit assignment
 protectedRouter.post(
   "/student/submissions",
   authenticateJWT,
@@ -1462,6 +1477,7 @@ protectedRouter.post(
   }
 );
 
+// 📌 Get teachers in student's school
 protectedRouter.get(
   "/student/teachers/my-school",
   authenticateJWT,
@@ -1487,6 +1503,7 @@ protectedRouter.get(
   }
 );
 
+// 📌 Get quizzes
 protectedRouter.get(
   "/student/quizzes",
   authenticateJWT,
@@ -1515,6 +1532,7 @@ protectedRouter.get(
   }
 );
 
+// 📌 Submit quiz answers
 protectedRouter.post(
   "/student/quizzes/:assignmentId/submit",
   authenticateJWT,
@@ -1576,6 +1594,7 @@ protectedRouter.post(
   }
 );
 
+// 📌 Get quiz result
 protectedRouter.get(
   "/student/quizzes/:assignmentId/result",
   authenticateJWT,

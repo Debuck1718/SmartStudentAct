@@ -229,25 +229,27 @@
             dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${message}</div>`;
         }
 
-        async function loadDashboard() {
-            showLoading();
-            try {
-                const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard`, {
-                    method: "GET",
-                    credentials: "include"
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    showError(data.message || "Failed to load dashboard.");
-                    if (res.status === 401 || res.status === 403) window.location.href = "/login.html";
-                    return;
-                }
-                renderDashboard(data);
-            } catch (err) {
-                console.error(err);
-                showError("An unexpected error occurred while loading the dashboard.");
-            }
-        }
+async function loadDashboard() {
+        showLoading();
+        try {
+            const res = await fetch(`${API_BASE_URL}/global-overseer/dashboard`, {
+                method: "GET",
+                credentials: "include"
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showError(data.message || "Failed to load dashboard.");
+                if (res.status === 401 || res.status === 403) {
+                    window.location.href = "/login.html"; // Session expired
+                }
+                return;
+            }
+            renderDashboard(data);
+        } catch (err) {
+            console.error(err);
+            showError("An unexpected error occurred while loading the dashboard.");
+        }
+    }
 
         function renderDashboard(data) {
             dashboardCards.innerHTML = "";
@@ -265,24 +267,28 @@
             });
         }
 
-        async function loadUsers(query = "") {
-            try {
-                usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
-                const res = await fetch(`${API_BASE_URL}/global-overseer/users?search=${encodeURIComponent(query)}`, {
-                    method: "GET",
-                    credentials: "include"
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${data.message || "Failed to load users."}</td></tr>`;
-                    return;
-                }
-                renderUsers(data.users || []);
-            } catch (err) {
-                console.error(err);
-                usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch users.</td></tr>`;
-            }
-        }
+       async function loadUsers(query = "") {
+        try {
+            usersTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
+            const res = await fetch(`${API_BASE_URL}/global-overseer/users?search=${encodeURIComponent(query)}`, {
+                method: "GET",
+                credentials: "include"
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                if (res.status === 401 || res.status === 403) {
+                    return window.location.href = "/login.html";
+                }
+                usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${data.message || "Failed to load users."}</td></tr>`;
+                return;
+            }
+            renderUsers(data.users || []);
+        } catch (err) {
+            console.error(err);
+            usersTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch users.</td></tr>`;
+        }
+    }
+
 
         function renderUsers(users) {
             usersTableBody.innerHTML = "";
@@ -308,55 +314,29 @@
             });
         }
         
-        async function loadFiles() {
-            try {
-                filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading files...</td></tr>';
-                const res = await fetch(`${API_BASE_URL}/global-overseer/all-files`, {
-                    method: "GET",
-                    credentials: "include"
-                });
-                const filesDataRes = await res.json();
-                if (!res.ok) {
-                    filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${filesDataRes.message || "Failed to load files."}</td></tr>`;
-                    filesData = [];
-                    return;
-                }
-                filesData = filesDataRes.files || [];
-                renderFiles();
-            } catch (err) {
-                console.error("Failed to load files:", err);
-                filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch files.</td></tr>`;
-            }
-        }
-
-        function renderFiles() {
-            let filteredFiles = filesData.filter(f => {
-                const searchTerm = fileSearch.value.toLowerCase();
-                const typeFilter = fileFilter.value;
-                return (!searchTerm || f.filename.toLowerCase().includes(searchTerm)) &&
-                       (!typeFilter || f.type === typeFilter);
-            });
-
-            filesTableBody.innerHTML = "";
-            if (filteredFiles.length === 0) {
-                filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No files found.</td></tr>';
-                return;
-            }
-
-            filteredFiles.forEach(file => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="border-t px-6 py-4 text-gray-700">${file.filename}</td>
-                    <td class="border-t px-6 py-4 text-gray-700">${file.type}</td>
-                    <td class="border-t px-6 py-4 text-gray-700">${file.uploaded_by || file.created_by}</td>
-                    <td class="border-t px-6 py-4">
-                        <a href="${API_BASE_URL}/global-overseer/view-file/${file.type.toLowerCase()}/${file.filename}" target="_blank" class="text-blue-600 hover:underline transition-colors duration-200">View</a>
-                    </td>
-                `;
-                filesTableBody.appendChild(tr);
-            });
-        }
-
+       async function loadFiles() {
+        try {
+            filesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading files...</td></tr>';
+            const res = await fetch(`${API_BASE_URL}/global-overseer/all-files`, {
+                method: "GET",
+                credentials: "include"
+            });
+            const filesDataRes = await res.json();
+            if (!res.ok) {
+                if (res.status === 401 || res.status === 403) {
+                    return window.location.href = "/login.html";
+                }
+                filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">${filesDataRes.message || "Failed to load files."}</td></tr>`;
+                filesData = [];
+                return;
+            }
+            filesData = filesDataRes.files || [];
+            renderFiles();
+        } catch (err) {
+            console.error("Failed to load files:", err);
+            filesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch files.</td></tr>`;
+        }
+    }
 
         async function promoteUser(email) {
             showConfirm(
@@ -366,7 +346,7 @@
                     const role = prompt("Enter new role:");
                     if (role) {
                         try {
-                            const res = await fetch(`${API_BASE_URL}/global-overseer/promote`, {
+                            const res = await fetch(`${API_BASE_URL}/admin/promote`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 credentials: "include",
@@ -391,7 +371,7 @@
                 `Are you sure you want to remove ${email}? This action cannot be undone.`,
                 async () => {
                     try {
-                        const res = await fetch(`${API_BASE_URL}/global-overseer/remove-user`, {
+                        const res = await fetch(`${API_BASE_URL}/admin/remove-user`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             credentials: "include",
@@ -410,15 +390,18 @@
         }
 
         logoutBtn.addEventListener("click", async () => {
-            try {
-                const res = await fetch(`${API_BASE_URL}/logout`, { method: "POST", credentials: "include" });
-                if (res.ok) {
-                    window.location.href = "/login.html";
-                }
-            } catch (err) {
-                console.error("Logout failed", err);
-            }
-        });
+        try {
+            const res = await fetch("https://smartstudentact.onrender.com/logout", {
+                method: "POST",
+                credentials: "include"
+            });
+            if (res.ok) {
+                window.location.href = "/login.html";
+            }
+        } catch (err) {
+            console.error("Logout failed", err);
+        }
+    });
 
         openAssignRegionBtn.addEventListener("click", () => assignRegionModal.classList.remove("hidden"));
         assignRegionClose.addEventListener("click", () => assignRegionModal.classList.add("hidden"));
@@ -445,7 +428,7 @@
             if (!email || !region) return showAlert("Error", "Email and region cannot be empty.");
 
             try {
-                const res = await fetch(`${API_BASE_URL}/global-overseer/assign-region`, {
+                const res = await fetch(`${API_BASE_URL}/admin/assign-region`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",

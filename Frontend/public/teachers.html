@@ -740,436 +740,225 @@
       });
     </script>
 
-    <script>
-      let students = [];
-      let overdueTasks = [];
-      let assignedTasks = [];
-      let feedbackList = [];
-      let selectedAssignmentFile = null;
-      let isDropdownVisible = false;
+   <script>
+  const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 
-      const DOM = {
-        loadingOverlay: document.getElementById("loadingOverlay"),
-        studentsList: document.getElementById("studentsList"),
-        overdueTasksList: document.getElementById("overdueTasksList"),
-        assignedTasksList: document.getElementById("assignedTasksList"),
-        feedbackList: document.getElementById("feedbackList"),
-        studentSelect: document.getElementById("student-select"),
-        assignmentTitle: document.getElementById("assignmentTitle"),
-        assignmentDueDate: document.getElementById("assignmentDueDate"),
-        assignmentText: document.getElementById("assignmentText"),
-        wordCountText: document.getElementById("wordCountText"),
-        assignmentFile: document.getElementById("assignmentFile"),
-        fileName: document.getElementById("fileName"),
-        clearFileButton: document.getElementById("clearFileButton"),
-        sendAssignmentButton: document.getElementById("sendAssignmentButton"),
-        termStart: document.getElementById("termStart"),
-        termEnd: document.getElementById("termEnd"),
-        saveCalendarButton: document.getElementById("saveCalendarButton"),
-        calendarMsg: document.getElementById("calendarMsg"),
+  // --- Toast Notification ---
+  function showToast(message, type = "info") {
+    const container = document.getElementById("toast-container") || createToastContainer();
+    const toast = document.createElement("div");
+    const colors = {
+      success: "bg-green-500",
+      error: "bg-red-500",
+      info: "bg-blue-500",
+      warning: "bg-yellow-500",
+    };
+    toast.className = `p-3 my-2 text-white rounded shadow ${colors[type] || colors.info}`;
+    toast.innerText = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
 
-        profileMenuButton: document.getElementById("profile-menu-button"),
-        profileDropdownMenu: document.getElementById("profile-dropdown-menu"),
-        logoutButton: document.getElementById("logoutButton"),
+  function createToastContainer() {
+    const container = document.createElement("div");
+    container.id = "toast-container";
+    container.className = "fixed top-4 right-4 z-50";
+    document.body.appendChild(container);
+    return container;
+  }
 
-        messageModal: document.getElementById("messageModal"),
-        modalTitle: document.getElementById("modalTitle"),
-        modalMessage: document.getElementById("modalMessage"),
-        promptModal: document.getElementById("promptModal"),
-        promptTitle: document.getElementById("promptTitle"),
-        promptMessage: document.getElementById("promptMessage"),
-        promptInput: document.getElementById("promptInput"),
-        okPromptBtn: document.getElementById("okPromptBtn"),
-        cancelPromptBtn: document.getElementById("cancelPromptBtn"),
-
-        pointsStudentSelect: document.getElementById("points-student-select"),
-        pointsInput: document.getElementById("pointsInput"),
-        reasonText: document.getElementById("reasonText"),
-        addPointsButton: document.getElementById("addPointsButton"),
-      };
-
-      const API_BASE = "https://smartstudentact.onrender.com/api";
-
-      const sanitizeInput = (str) => {
-        if (typeof str !== "string") return "";
-        const temp = document.createElement("div");
-        temp.textContent = str;
-        return temp.innerHTML;
-      };
-
-      const showMessageModal = (title, message) => {
-        DOM.modalTitle.textContent = title;
-        DOM.modalMessage.textContent = message;
-        DOM.messageModal.style.display = "flex";
-      };
-
-      const closeMessageModal = () => {
-        DOM.messageModal.style.display = "none";
-      };
-
-      const toast = (msg) => showMessageModal("Notice", msg);
-
-      const fetchAPI = async (url, options = {}) => {
-        try {
-          const res = await fetch(`${API_BASE}${url}`, {
-            credentials: "include",
-            ...options,
-          });
-          if (!res.ok) {
-            const errData = await res
-              .json()
-              .catch(() => ({ message: "Unknown error" }));
-            throw new Error(errData.message || `API Error: ${res.status}`);
-          }
-          return res;
-        } catch (err) {
-          console.error(`Fetch API Error for ${url}:`, err);
-          showMessageModal(
-            "Network Error",
-            `Could not connect to server. ${err.message}`
-          );
-          throw err;
-        }
-      };
-
-      const getWordCount = (text) =>
-        text
-          .trim()
-          .split(/\s+/)
-          .filter((w) => w.length > 0).length;
-
-      const renderList = (container, items, renderItem, emptyMessage) => {
-        container.innerHTML = "";
-        if (!items.length) {
-          container.innerHTML = `<p class="text-center italic text-gray-500 py-4">${emptyMessage}</p>`;
-          return;
-        }
-        const fragment = document.createDocumentFragment();
-        items.forEach((item) => {
-          const wrapper = document.createElement("div");
-          wrapper.innerHTML = renderItem(item);
-          fragment.appendChild(wrapper);
-        });
-        container.appendChild(fragment);
-      };
-
-      const init = async () => {
-        DOM.loadingOverlay.style.display = "flex";
-        try {
-          await Promise.all([
-            fetchUserData(),
-            fetchStudents(),
-            fetchOverdueTasks(),
-            fetchAssignedTasks(),
-            fetchFeedback(),
-          ]);
-          toggleSendAssignmentButtonState();
-          document.getElementById("currentYear").textContent =
-            new Date().getFullYear();
-        } catch (err) {
-          console.error("Initialization failed:", err);
-        } finally {
-          DOM.loadingOverlay.style.display = "none";
-        }
-      };
-
-      const fetchUserData = async () => {
-        try {
-          const res = await fetchAPI("/teacher/profile");
-          const data = await res.json();
-          const initialsEl = document.getElementById("profileInitials");
-          const nameEl = document.getElementById("profileName");
-          if (data.firstname && data.lastname) {
-            initialsEl.textContent =
-              `${data.firstname[0]}${data.lastname[0]}`.toUpperCase();
-            nameEl.textContent = `${data.firstname} ${data.lastname}`;
-          } else {
-            initialsEl.textContent = "T";
-            nameEl.textContent = "Teacher";
-          }
-        } catch (err) {
-          console.error("Error fetching profile:", err);
-        }
-      };
-
-      const toggleProfileDropdown = () => {
-        isDropdownVisible = !isDropdownVisible;
-        DOM.profileDropdownMenu.classList.toggle(
-          "opacity-0",
-          !isDropdownVisible
-        );
-        DOM.profileDropdownMenu.classList.toggle(
-          "invisible",
-          !isDropdownVisible
-        );
-      };
-
-      const logout = async () => {
-        try {
-          await fetchAPI("/auth/logout", { method: "POST" });
-          window.location.href = "/login";
-        } catch (err) {
-          console.error("Logout failed:", err);
-        }
-      };
-
-      window.addEventListener("click", (e) => {
-        if (
-          !DOM.profileMenuButton.contains(e.target) &&
-          !DOM.profileDropdownMenu.contains(e.target) &&
-          isDropdownVisible
-        ) {
-          toggleProfileDropdown();
-        }
+  // --- Authenticated Fetch ---
+  async function fetchAPI(endpoint, options = {}) {
+    try {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        credentials: "include", // send cookies
+        headers: {
+          ...(options.headers || {}),
+        },
       });
 
-      const fetchStudents = async () => {
-        try {
-          const res = await fetchAPI("/teacher/students");
-          students = await res.json();
-          renderStudents();
-        } catch {
-          renderList(
-            DOM.studentsList,
-            [],
-            () => "",
-            "Could not load student list."
-          );
-        }
-      };
+      // Auto redirect on 401
+      if (res.status === 401) {
+        showToast("Session expired. Please log in again.", "warning");
+        window.location.href = "/login.html";
+        return null;
+      }
 
-      const renderStudents = () => {
-        renderList(
-          DOM.studentsList,
-          students,
+      return res;
+    } catch (err) {
+      console.error("Fetch error:", err);
+      showToast("Network error, please try again.", "error");
+      return null;
+    }
+  }
+
+  // --- Auth Check ---
+  async function checkAuth() {
+    const res = await fetchAPI("/auth/check");
+    if (!res || !res.ok) {
+      window.location.href = "/login.html";
+    }
+  }
+
+  // --- Logout ---
+  async function logout() {
+    const res = await fetchAPI("/users/logout", { method: "POST" });
+    if (res && res.ok) {
+      showToast("Logged out successfully.", "success");
+      window.location.href = "/login.html";
+    }
+  }
+
+  // --- Fetch Teacher Profile ---
+  async function fetchTeacherProfile() {
+    const res = await fetchAPI("/teacher/profile");
+    if (res && res.ok) {
+      const data = await res.json();
+      document.getElementById("teacher-name").innerText = data.name || "Teacher";
+    }
+  }
+
+  // --- Fetch Students ---
+  async function fetchStudents() {
+    const res = await fetchAPI("/teacher/students");
+    if (res && res.ok) {
+      const students = await res.json();
+      const container = document.getElementById("students-list");
+      container.innerHTML = students
+        .map(
           (s) => `
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4">
-          <span class="flex-1 text-gray-800 font-medium mb-2 sm:mb-0">
-            ${sanitizeInput(s.firstname)} ${sanitizeInput(
-            s.lastname
-          )} (Grade ${sanitizeInput(s.grade)})
-          </span>
-          <button onclick="handleAssignClick('${sanitizeInput(
-            s.email
-          )}')" class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600">
-            Assign
-          </button>
-        </div>
-      `,
-          "No students found in your class."
-        );
-        const optionsHtml = students
-          .map(
-            (s) =>
-              `<option value="${sanitizeInput(s.email)}">${sanitizeInput(
-                s.firstname
-              )} ${sanitizeInput(s.lastname)} (${sanitizeInput(
-                s.email
-              )})</option>`
-          )
-          .join("");
-        DOM.studentSelect.innerHTML = optionsHtml;
-        DOM.pointsStudentSelect.innerHTML = optionsHtml;
-      };
+          <div class="p-2 border-b">
+            ${s.name} - Points: ${s.points || 0}
+          </div>`
+        )
+        .join("");
+    }
+  }
 
-      const handleAssignClick = (email) => {
-        toast(`Preparing assignment for ${email}.`);
-        DOM.studentSelect.value = email;
-      };
+  // --- Assignment Upload ---
+  async function submitAssignment(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const res = await fetchAPI("/teacher/assignments", {
+      method: "POST",
+      body: formData,
+    });
+    if (res && res.ok) {
+      showToast("Assignment created successfully.", "success");
+      e.target.reset();
+      fetchAssignedTasks();
+    } else {
+      showToast("Failed to create assignment.", "error");
+    }
+  }
 
-      const toggleSendAssignmentButtonState = () => {
-        const isFormValid =
-          DOM.studentSelect.value &&
-          DOM.assignmentTitle.value.trim() &&
-          DOM.assignmentDueDate.value &&
-          (getWordCount(DOM.assignmentText.value) > 0 ||
-            selectedAssignmentFile);
-        DOM.sendAssignmentButton.disabled = !isFormValid;
-        DOM.sendAssignmentButton.classList.toggle("opacity-50", !isFormValid);
-        DOM.sendAssignmentButton.classList.toggle(
-          "cursor-not-allowed",
-          !isFormValid
-        );
-      };
+  // --- Submit Feedback ---
+  async function submitFeedback(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const res = await fetchAPI("/teacher/feedback", {
+      method: "POST",
+      body: formData,
+    });
+    if (res && res.ok) {
+      showToast("Feedback submitted.", "success");
+      e.target.reset();
+      fetchFeedback();
+    } else {
+      showToast("Failed to submit feedback.", "error");
+    }
+  }
 
-      const handleSendAssignment = async () => {
-        DOM.sendAssignmentButton.disabled = true;
-        try {
-          const formData = new FormData();
-          formData.append("studentEmail", DOM.studentSelect.value);
-          formData.append("title", DOM.assignmentTitle.value.trim());
-          formData.append("due_datetime", DOM.assignmentDueDate.value);
-          if (DOM.assignmentText.value.trim())
-            formData.append("description", DOM.assignmentText.value.trim());
-          if (selectedAssignmentFile)
-            formData.append("assignmentFile", selectedAssignmentFile);
+  // --- Award Points ---
+  async function submitPoints(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target).entries());
+    const res = await fetchAPI("/teacher/points", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res && res.ok) {
+      showToast("Points awarded.", "success");
+      e.target.reset();
+      fetchStudents();
+    } else {
+      showToast("Failed to award points.", "error");
+    }
+  }
 
-          const res = await fetchAPI("/teacher/assignments", {
-            method: "POST",
-            body: formData,
-          });
-          const result = await res.json();
-          toast(result.message);
+  // --- Save Term Dates ---
+  async function saveCalendar(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target).entries());
+    const res = await fetchAPI("/teacher/calendar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res && res.ok) {
+      showToast("Calendar updated.", "success");
+    } else {
+      showToast("Failed to save calendar.", "error");
+    }
+  }
 
-          DOM.assignmentTitle.value = "";
-          DOM.assignmentDueDate.value = "";
-          DOM.assignmentText.value = "";
-          DOM.assignmentFile.value = "";
-          selectedAssignmentFile = null;
-          DOM.fileName.textContent = "No file selected.";
-          DOM.clearFileButton.classList.add("hidden");
-          toggleSendAssignmentButtonState();
-        } catch (err) {
-          console.error("Send assignment failed:", err);
-        } finally {
-          DOM.sendAssignmentButton.disabled = false;
-        }
-      };
+  // --- Fetch Assigned Tasks ---
+  async function fetchAssignedTasks() {
+    const res = await fetchAPI("/teacher/assignments");
+    if (res && res.ok) {
+      const tasks = await res.json();
+      const container = document.getElementById("assigned-tasks");
+      container.innerHTML = tasks
+        .map((t) => `<div class="p-2 border-b">${t.title} - Due: ${t.dueDate}</div>`)
+        .join("");
+    }
+  }
 
-      const handleSubmitFeedback = async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const taskId = form.taskId.value;
-        const grade = form.grade.value;
-        const comments = form.comments.value;
-        const feedbackFile = form.feedbackFile.files[0];
+  // --- Fetch Feedback ---
+  async function fetchFeedback() {
+    const res = await fetchAPI("/teacher/feedback");
+    if (res && res.ok) {
+      const feedbacks = await res.json();
+      const container = document.getElementById("feedback-list");
+      container.innerHTML = feedbacks
+        .map((f) => `<div class="p-2 border-b">${f.student}: ${f.comment}</div>`)
+        .join("");
+    }
+  }
 
-        if (!grade)
-          return showMessageModal(
-            "Validation Error",
-            "Please provide a grade."
-          );
+  // --- Fetch Overdue Tasks ---
+  async function fetchOverdueTasks() {
+    const res = await fetchAPI("/teacher/overdue-tasks");
+    if (res && res.ok) {
+      const overdue = await res.json();
+      const container = document.getElementById("overdue-tasks");
+      container.innerHTML = overdue.length
+        ? overdue.map((t) => `<div class="p-2 border-b">${t.title} (Due: ${t.dueDate})</div>`).join("")
+        : `<div class="p-2">No overdue tasks 🎉</div>`;
+    }
+  }
 
-        const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
+  // --- Init ---
+  async function init() {
+    await checkAuth();
+    await fetchTeacherProfile();
+    await fetchStudents();
+    await fetchAssignedTasks();
+    await fetchFeedback();
+    await fetchOverdueTasks();
 
-        const formData = new FormData();
-        formData.append("taskId", taskId);
-        formData.append("grade", grade);
-        formData.append("comments", comments);
-        if (feedbackFile) formData.append("feedbackFile", feedbackFile);
+    // Hook forms
+    document.getElementById("assignment-form")?.addEventListener("submit", submitAssignment);
+    document.getElementById("feedback-form")?.addEventListener("submit", submitFeedback);
+    document.getElementById("points-form")?.addEventListener("submit", submitPoints);
+    document.getElementById("calendar-form")?.addEventListener("submit", saveCalendar);
+    document.getElementById("logout-btn")?.addEventListener("click", logout);
+  }
 
-        try {
-          const res = await fetchAPI("/teacher/feedback", {
-            method: "POST",
-            body: formData,
-          });
-          const result = await res.json();
-          showMessageModal("Feedback Sent", result.message);
-          await Promise.all([fetchAssignedTasks(), fetchFeedback()]);
-        } catch (err) {
-          console.error("Submit feedback failed:", err);
-        } finally {
-          submitButton.disabled = false;
-        }
-      };
+  document.addEventListener("DOMContentLoaded", init);
+</script>
 
-      // =========================
-      // --- Points ---
-      // =========================
-      const handleAddPoints = async () => {
-        const studentEmail = DOM.pointsStudentSelect.value;
-        const points = DOM.pointsInput.value;
-        const reason = DOM.reasonText.value.trim();
-        if (!studentEmail || !points || points <= 0) {
-          return showMessageModal(
-            "Validation Error",
-            "Please select a student and enter a valid number of points."
-          );
-        }
-
-        DOM.addPointsButton.disabled = true;
-        try {
-          const res = await fetchAPI("/teacher/points", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              studentEmail,
-              points: parseInt(points, 10),
-              reason,
-            }),
-          });
-          const result = await res.json();
-          showMessageModal("Success", result.message);
-          DOM.pointsInput.value = "";
-          DOM.reasonText.value = "";
-        } catch (err) {
-          console.error("Add points failed:", err);
-        } finally {
-          DOM.addPointsButton.disabled = false;
-        }
-      };
-
-      const handleSaveCalendar = async () => {
-        const termStart = DOM.termStart.value;
-        const termEnd = DOM.termEnd.value;
-        if (!termStart || !termEnd)
-          return showMessageModal(
-            "Validation Error",
-            "Please select both term start and end dates."
-          );
-
-        DOM.saveCalendarButton.disabled = true;
-        try {
-          const res = await fetchAPI("/teacher/calendar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ termStart, termEnd }),
-          });
-          const result = await res.json();
-          DOM.calendarMsg.textContent = result.message;
-          DOM.calendarMsg.classList.add("text-green-600");
-        } catch (err) {
-          console.error("Save calendar failed:", err);
-        } finally {
-          DOM.saveCalendarButton.disabled = false;
-        }
-      };
-
-      DOM.assignmentText.addEventListener("input", () => {
-        DOM.wordCountText.textContent = `Word Count: ${getWordCount(
-          DOM.assignmentText.value
-        )}`;
-        toggleSendAssignmentButtonState();
-      });
-      DOM.assignmentTitle.addEventListener(
-        "input",
-        toggleSendAssignmentButtonState
-      );
-      DOM.assignmentDueDate.addEventListener(
-        "change",
-        toggleSendAssignmentButtonState
-      );
-
-      DOM.assignmentFile.addEventListener("change", (e) => {
-        selectedAssignmentFile = e.target.files[0] || null;
-        DOM.fileName.textContent = selectedAssignmentFile
-          ? selectedAssignmentFile.name
-          : "No file selected.";
-        DOM.clearFileButton.classList.toggle("hidden", !selectedAssignmentFile);
-        toggleSendAssignmentButtonState();
-      });
-
-      DOM.clearFileButton.addEventListener("click", () => {
-        DOM.assignmentFile.value = "";
-        selectedAssignmentFile = null;
-        DOM.fileName.textContent = "No file selected.";
-        DOM.clearFileButton.classList.add("hidden");
-        toggleSendAssignmentButtonState();
-      });
-
-      DOM.sendAssignmentButton.addEventListener("click", handleSendAssignment);
-      DOM.addPointsButton.addEventListener("click", handleAddPoints);
-      DOM.saveCalendarButton.addEventListener("click", handleSaveCalendar);
-      DOM.profileMenuButton.addEventListener("click", toggleProfileDropdown);
-      DOM.logoutButton.addEventListener("click", logout);
-
-      document.addEventListener("submit", (e) => {
-        if (e.target.classList.contains("feedback-form"))
-          handleSubmitFeedback(e);
-      });
-
-      init();
-    </script>
   </body>
 </html>

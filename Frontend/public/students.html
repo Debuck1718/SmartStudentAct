@@ -722,174 +722,95 @@
     <script>
       const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 
-      // --- DOM Elements ---
-      const DOMElements = {
-        menuBtn: document.getElementById("menu-btn"),
-        logoutBtn: document.getElementById("logout-btn"),
-        addAssignmentBtn: document.getElementById("add-assignment-btn"),
-        addBudgetBtn: document.getElementById("add-budget-btn"),
-        saveGoalBtn: document.getElementById("save-goal-btn"),
-        saveAssignmentBtn: document.getElementById("save-assignment-btn"),
-        cancelAssignmentBtn: document.getElementById("cancel-assignment-btn"),
-        saveBudgetBtn: document.getElementById("save-budget-btn"),
-        cancelBudgetBtn: document.getElementById("cancel-budget-btn"),
-        closeMenuBtn: document.getElementById("close-menu-btn"),
-        menuLogoutBtn: document.getElementById("menu-logout-btn"),
-        generateInsightsBtn: document.getElementById("generate-insights-btn"),
-        goalInput: document.getElementById("goal-input"),
-        assignmentTitleInput: document.getElementById("assignment-title-input"),
-        assignmentSubjectInput: document.getElementById(
-          "assignment-subject-input"
-        ),
-        budgetTitleInput: document.getElementById("budget-title-input"),
-        budgetAmountInput: document.getElementById("budget-amount-input"),
-        subscriptionToggle: document.getElementById("subscription-toggle"),
-        contactName: document.getElementById("contactName"),
-        contactEmail: document.getElementById("contactEmail"),
-        contactMessage: document.getElementById("contactMessage"),
-        contactForm: document.getElementById("contactForm"),
-        goalErrorEl: document.getElementById("goal-error"),
-        savedGoalText: document.getElementById("saved-goal-text"),
-        assignmentsList: document.getElementById("assignments-list"),
-        budgetList: document.getElementById("budget-list"),
-        quizzesList: document.getElementById("quizzes-list"),
-        feedbackList: document.getElementById("feedback-list"),
-        assignmentsLoading: document.getElementById("assignments-loading"),
-        budgetLoading: document.getElementById("budget-loading"),
-        quizzesLoading: document.getElementById("quizzes-loading"),
-        insightsLoading: document.getElementById("insights-loading"),
-        insightsContent: document.getElementById("insights-content"),
-        insightsPlaceholder: document.getElementById("insights-placeholder"),
-        rewardsWrap: document.getElementById("rewards-wrap"),
-        assignmentModal: document.getElementById("assignment-modal"),
-        budgetModal: document.getElementById("budget-modal"),
-        menuModal: document.getElementById("menu-modal"),
-        menuContent: document.getElementById("menu-content"),
-        submissionModal: document.getElementById("submission-modal"),
-        submissionForm: document.getElementById("submission-form"),
-        cancelSubmissionBtn: document.getElementById("cancel-submission-btn"),
-        contactModal: document.getElementById("contactModal"),
-        chartCanvas: document.getElementById("analytics-chart"),
-        alertModal: document.getElementById("alert-modal"),
-        alertTitle: document.getElementById("alert-title"),
-        alertMessage: document.getElementById("alert-message"),
-        alertConfirmBtn: document.getElementById("alert-confirm-btn"),
-        alertCancelBtn: document.getElementById("alert-cancel-btn"),
-      };
+  // --- DOM Elements ---
+  const DOMElements = {
+    menuBtn: document.getElementById("menu-btn"),
+    logoutBtn: document.getElementById("logout-btn"),
+    addAssignmentBtn: document.getElementById("add-assignment-btn"),
+    addBudgetBtn: document.getElementById("add-budget-btn"),
+    saveGoalBtn: document.getElementById("save-goal-btn"),
+    saveAssignmentBtn: document.getElementById("save-assignment-btn"),
+    cancelAssignmentBtn: document.getElementById("cancel-assignment-btn"),
+    saveBudgetBtn: document.getElementById("save-budget-btn"),
+    cancelBudgetBtn: document.getElementById("cancel-budget-btn"),
+    closeMenuBtn: document.getElementById("close-menu-btn"),
+    menuLogoutBtn: document.getElementById("menu-logout-btn"),
+    generateInsightsBtn: document.getElementById("generate-insights-btn"),
+    goalInput: document.getElementById("goal-input"),
+    assignmentTitleInput: document.getElementById("assignment-title-input"),
+    assignmentSubjectInput: document.getElementById("assignment-subject-input"),
+    budgetTitleInput: document.getElementById("budget-title-input"),
+    budgetAmountInput: document.getElementById("budget-amount-input"),
+    subscriptionToggle: document.getElementById("subscription-toggle"),
+    contactName: document.getElementById("contactName"),
+    contactEmail: document.getElementById("contactEmail"),
+    contactMessage: document.getElementById("contactMessage"),
+    contactForm: document.getElementById("contactForm"),
+    goalErrorEl: document.getElementById("goal-error"),
+    savedGoalText: document.getElementById("saved-goal-text"),
+    assignmentsList: document.getElementById("assignments-list"),
+    budgetList: document.getElementById("budget-list"),
+    quizzesList: document.getElementById("quizzes-list"),
+    feedbackList: document.getElementById("feedback-list"),
+    assignmentsLoading: document.getElementById("assignments-loading"),
+    budgetLoading: document.getElementById("budget-loading"),
+    quizzesLoading: document.getElementById("quizzes-loading"),
+    insightsLoading: document.getElementById("insights-loading"),
+    insightsContent: document.getElementById("insights-content"),
+    insightsPlaceholder: document.getElementById("insights-placeholder"),
+    rewardsWrap: document.getElementById("rewards-wrap"),
+    assignmentModal: document.getElementById("assignment-modal"),
+    budgetModal: document.getElementById("budget-modal"),
+    menuModal: document.getElementById("menu-modal"),
+    menuContent: document.getElementById("menu-content"),
+    submissionModal: document.getElementById("submission-modal"),
+    submissionForm: document.getElementById("submission-form"),
+    cancelSubmissionBtn: document.getElementById("cancel-submission-btn"),
+    contactModal: document.getElementById("contactModal"),
+    chartCanvas: document.getElementById("analytics-chart"),
+    alertModal: document.getElementById("alert-modal"),
+    alertTitle: document.getElementById("alert-title"),
+    alertMessage: document.getElementById("alert-message"),
+    alertConfirmBtn: document.getElementById("alert-confirm-btn"),
+    alertCancelBtn: document.getElementById("alert-cancel-btn"),
+  };
 
-      // --- Helpers for Modals & Alerts ---
-      const showModal = (el) => el.classList.add("active");
-      const hideModal = (el) => el.classList.remove("active");
+  // --- Helpers ---
+  const showModal = (el) => el.classList.add("active");
+  const hideModal = (el) => el.classList.remove("active");
 
-      const showAlertModal = (title, message) => {
-        DOMElements.alertTitle.textContent = title;
-        DOMElements.alertMessage.textContent = message;
-        showModal(DOMElements.alertModal);
-      };
+  const showToast = (message, type = "info") => {
+    const container = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    const colors = {
+      success: "bg-green-500",
+      error: "bg-red-500",
+      info: "bg-blue-500",
+      warning: "bg-yellow-500",
+    };
+    toast.className = `${colors[type] || colors.info} text-white px-4 py-2 rounded shadow`;
+    toast.innerText = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  };
 
-      const hideAlertModal = () => {
-        hideModal(DOMElements.alertModal);
-      };
-
-      // --- Toast Notification System ---
-      function showToast(message, type = "info") {
-        const toastContainer =
-          document.getElementById("toast-container") || createToastContainer();
-        const toast = document.createElement("div");
-        const colors = {
-          success: "bg-green-500",
-          error: "bg-red-500",
-          info: "bg-blue-500",
-          warning: "bg-yellow-500 text-black",
-        };
-
-        toast.className = `${
-          colors[type] || colors.info
-        } text-white px-4 py-3 rounded-lg shadow-lg mb-3 flex justify-between items-center animate-slideIn`;
-        toast.innerHTML = `<span>${message}</span><button class="ml-4 font-bold">✕</button>`;
-
-        toast
-          .querySelector("button")
-          .addEventListener("click", () => toast.remove());
-        toastContainer.appendChild(toast);
-
-        setTimeout(() => toast.remove(), 4000);
-      }
-
-      function createToastContainer() {
-        const container = document.createElement("div");
-        container.id = "toast-container";
-        container.className = "fixed bottom-5 right-5 z-50 flex flex-col";
-        document.body.appendChild(container);
-        const style = document.createElement("style");
-        style.textContent = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } .animate-slideIn { animation: slideIn 0.4s ease-out; }`;
-        document.head.appendChild(style);
-        return container;
-      }
-
-      // --- Token Helper ---
-      function getToken() {
-        return localStorage.getItem("token");
-      }
-
-      // --- Fetch Wrapper with Auth ---
-      async function fetchWithAuth(endpoint, options = {}) {
-        const token = getToken();
-        if (!token) {
-          showAlertModal(
-            "Authentication Required",
-            "Please log in to access this page."
-          );
-          setTimeout(() => {
-            window.location.href = "/login.html";
-          }, 2000);
-          throw new Error("No authentication token found.");
-        }
-
-        const headers = {
-          ...(options.headers || {}),
-          Authorization: `Bearer ${token}`,
-        };
-
-        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-          ...options,
-          headers,
-        });
-
-        if (res.status === 401) {
-          showAlertModal(
-            "Session Expired",
-            "Your session has expired. Please log in again."
-          );
-          localStorage.removeItem("token");
-          setTimeout(() => {
-            window.location.href = "/login.html";
-          }, 2000);
-          throw new Error("Authentication failed.");
-        }
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || "Request failed");
-        }
-        return res.json();
-      }
-
-      // --- Function to check authentication on page load ---
-      function checkAuthentication() {
-        const token = getToken();
-        if (!token) {
-          showAlertModal(
-            "Authentication Required",
-            "You must be logged in to view this dashboard."
-          );
-          setTimeout(() => {
-            window.location.href = "/login.html";
-          }, 3000);
-          return false;
-        }
-        return true;
-      }
+  // --- Auth Check ---
+  async function checkAuthentication() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/check`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Not authenticated");
+      return true;
+    } catch (err) {
+      showToast("Please login first.", "error");
+      setTimeout(() => {
+        window.location.href = "/login.html";
+      }, 1500);
+      return false;
+    }
+  }
 
       // --- Handlers with toast ---
       const handleSaveAssignment = async () => {
@@ -1018,13 +939,20 @@
         }
       }
 
-      const handleLogout = () => {
-        localStorage.removeItem("token");
+      async function handleLogout() {
+      try {
+        await fetch(`${API_BASE_URL}/users/logout`, {
+          method: "POST",
+          credentials: "include",
+        });
         showToast("You have been logged out.", "info");
         setTimeout(() => {
           window.location.href = "/login.html";
         }, 1000);
-      };
+      } catch (err) {
+        showToast("Logout failed.", "error");
+      }
+    }
 
       const handleGenerateInsights = async () => {
         try {
@@ -1038,49 +966,32 @@
         }
       };
 
-      // --- Initial data fetches on page load ---
-      function fetchAssignments() {
-        /* ... */
-      }
-      function fetchBudget() {
-        /* ... */
-      }
-      function fetchQuizzes() {
-        /* ... */
-      }
-      function fetchGoal() {
-        /* ... */
-      }
-      function fetchRewards() {
-        /* ... */
-      }
-      function loadAnalytics() {
-        /* ... */
-      }
-      function downloadFile(type, filename) {
-        /* ... */
-      }
-      function openSubmissionModal(assignmentId) {
-        /* ... */
-      }
-      function loadAdvice() {
-        /* ... */
-      }
+      // --- Dashboard init stubs ---
+  function fetchAssignments() { /* ... */ }
+  function fetchBudget() { /* ... */ }
+  function fetchQuizzes() { /* ... */ }
+  function fetchGoal() { /* ... */ }
+  function fetchRewards() { /* ... */ }
+  function loadAnalytics() { /* ... */ }
 
-      // Initialize all dashboard components
-      function initializeDashboard() {
-        fetchAssignments();
-        fetchBudget();
-        fetchQuizzes();
-        fetchGoal();
-        fetchRewards();
-        loadAnalytics();
-      }
+  function initializeDashboard() {
+    fetchAssignments();
+    fetchBudget();
+    fetchQuizzes();
+    fetchGoal();
+    fetchRewards();
+    loadAnalytics();
+  }
 
-      document.addEventListener("DOMContentLoaded", () => {
-        if (checkAuthentication()) {
-          initializeDashboard();
-        }
+  // --- Bootstrapping ---
+  document.addEventListener("DOMContentLoaded", async () => {
+    const isAuth = await checkAuthentication();
+    if (!isAuth) return;
+
+    initializeDashboard();
+
+    DOMElements.logoutBtn.addEventListener("click", handleLogout);
+    DOMElements.menuLogoutBtn.addEventListener("click", handleLogout);
 
         DOMElements.alertCancelBtn.addEventListener("click", () => {
           hideAlertModal();

@@ -7,14 +7,22 @@ const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const User = require("../models/User");
 const logger = require("../utils/logger");
-const { sendOTPEmail, sendWelcomeEmail, sendResetEmail, sendContactEmail } = require("../utils/email");
+const {
+  sendOTPEmail,
+  sendWelcomeEmail,
+  sendResetEmail,
+  sendContactEmail,
+} = require("../utils/email");
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "your-refresh-secret-key";
+const NODE_ENV = process.env.NODE_ENV || "development";
+const isProd = NODE_ENV === "production";
 
 module.exports = (eventBus) => {
   const publicRouter = express.Router();
 
+  // ─── Token Generators ──────────────────────────────
   function generateAccessToken(user) {
     return jwt.sign(
       { id: user._id, role: user.role || user.occupation, email: user.email },
@@ -24,30 +32,26 @@ module.exports = (eventBus) => {
   }
 
   function generateRefreshToken(user) {
-    return jwt.sign(
-      { id: user._id },
-      JWT_REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
+    return jwt.sign({ id: user._id }, JWT_REFRESH_SECRET, { expiresIn: "7d" });
   }
 
   function setAuthCookies(res, accessToken, refreshToken) {
     res.cookie("access_token", accessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      maxAge: 15 * 60 * 1000, 
+      secure: isProd,
+      sameSite: isProd ? "None" : "Lax",
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      maxAge: 7 * 24 * 60 * 60 * 1000, 
+      secure: isProd,
+      sameSite: isProd ? "None" : "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }
 
- 
+  // ─── Schemas ──────────────────────────────
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
     email: Joi.string().email().required(),
@@ -106,7 +110,7 @@ module.exports = (eventBus) => {
     next();
   };
 
-
+  // ─── Signup OTP ──────────────────────────────
   publicRouter.post(
     "/users/signup-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -177,7 +181,7 @@ module.exports = (eventBus) => {
     }
   );
 
-
+  // ─── Verify OTP ──────────────────────────────
   publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
     const { code, email, password, otpToken } = req.body;
     try {
@@ -267,36 +271,35 @@ module.exports = (eventBus) => {
     }
   }
 
-  
-publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email }).select("+password");
-    if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ status: false, message: "Invalid credentials." });
+  // ─── Login ──────────────────────────────
+  publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email }).select("+password");
+      if (!user || !(await user.comparePassword(password))) {
+        return res.status(401).json({ status: false, message: "Invalid credentials." });
+      }
+
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+
+      await User.findByIdAndUpdate(user._id, { refreshToken });
+
+      setAuthCookies(res, accessToken, refreshToken);
+
+      res.json({
+        status: true,
+        message: "Login successful",
+        user: { email: user.email, role: user.role, id: user._id },
+        redirectUrl: getRedirectUrl(user.role),
+      });
+    } catch (err) {
+      console.error("Login error:", err);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
+  });
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-
-    await User.findByIdAndUpdate(user._id, { refreshToken });
-
-    setAuthCookies(res, accessToken, refreshToken);
-
-    res.json({
-      status: true,
-      message: "Login successful",
-      user: { email: user.email, role: user.role, id: user._id },
-      redirectUrl: getRedirectUrl(user.role),
-    });
-  } catch (err) {
-    console.error("Login error:", err);
-    return res.status(500).json({ status: false, message: "Server error" });
-  }
-});
-
-
-
+  // ─── Refresh ──────────────────────────────
   publicRouter.post("/users/refresh", async (req, res) => {
     try {
       const refreshToken = req.cookies.refresh_token;
@@ -318,22 +321,22 @@ publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
     }
   });
 
-
+  // ─── Logout ──────────────────────────────
   publicRouter.post("/users/logout", async (req, res) => {
     try {
       const refreshToken = req.cookies.refresh_token;
       if (refreshToken) {
         await User.updateOne({ refreshToken }, { $unset: { refreshToken: "" } });
       }
-      res.clearCookie("access_token");
-      res.clearCookie("refresh_token");
+      res.clearCookie("access_token", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+      res.clearCookie("refresh_token", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
       res.json({ message: "Logged out successfully." });
     } catch (err) {
       res.status(500).json({ error: "Server error." });
     }
   });
 
-
+  // ─── Forgot Password ──────────────────────────────
   publicRouter.post("/auth/forgot-password", validate(forgotPasswordSchema), async (req, res) => {
     const { email } = req.body;
     try {
@@ -358,6 +361,7 @@ publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
     }
   });
 
+  // ─── Reset Password ──────────────────────────────
   publicRouter.post("/auth/reset-password", validate(resetPasswordSchema), async (req, res) => {
     const { token, newPassword } = req.body;
     try {
@@ -381,6 +385,7 @@ publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
     }
   });
 
+  // ─── Contact ──────────────────────────────
   publicRouter.post("/contact", validate(contactSchema), async (req, res) => {
     const { name, email, message } = req.body;
     try {
