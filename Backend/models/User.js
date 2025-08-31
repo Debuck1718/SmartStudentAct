@@ -1,7 +1,3 @@
-// models/User.js
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-
 const userSchema = new mongoose.Schema(
   {
     _id: {
@@ -48,6 +44,13 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "teacher", "admin", "overseer", "global_overseer"],
       required: true,
     },
+
+    // 🔑 NEW FIELD
+    refreshToken: {
+      type: String,
+      select: false,
+    },
+
     occupation: {
       type: String,
       enum: ["student", "teacher", "admin"],
@@ -55,6 +58,7 @@ const userSchema = new mongoose.Schema(
         return this.role === "student" || this.role === "teacher" || this.role === "admin";
       },
     },
+
     educationLevel: {
       type: String,
       enum: ["junior", "high", "university"],

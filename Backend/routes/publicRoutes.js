@@ -268,32 +268,33 @@ module.exports = (eventBus) => {
   }
 
   
-  publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email }).select("+password");
-      if (!user || !(await user.comparePassword(password))) {
-        return res.status(401).json({ status: false, message: "Invalid credentials." });
-      }
-
-      const accessToken = generateAccessToken(user);
-      const refreshToken = generateRefreshToken(user);
-      user.refreshToken = refreshToken;
-      await user.save();
-
-      setAuthCookies(res, accessToken, refreshToken);
-
-      res.json({
-        status: true,
-        message: "Login successful",
-        user: { email: user.email, role: user.role, id: user._id },
-        redirectUrl: getRedirectUrl(user.role),
-      });
-    } catch (err) {
-      console.error("Login error:", err);
-      return res.status(500).json({ status: false, message: "Server error" });
+publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email }).select("+password");
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ status: false, message: "Invalid credentials." });
     }
-  });
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    await User.findByIdAndUpdate(user._id, { refreshToken });
+
+    setAuthCookies(res, accessToken, refreshToken);
+
+    res.json({
+      status: true,
+      message: "Login successful",
+      user: { email: user.email, role: user.role, id: user._id },
+      redirectUrl: getRedirectUrl(user.role),
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ status: false, message: "Server error" });
+  }
+});
+
 
 
   publicRouter.post("/users/refresh", async (req, res) => {
