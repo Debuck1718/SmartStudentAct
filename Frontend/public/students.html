@@ -30,7 +30,7 @@
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
       body {
         font-family: "Inter", sans-serif;
-        background: #f4f4f4;
+        background: #f0f2f5;
         padding-bottom: 70px;
       }
       .modal-overlay {
@@ -41,18 +41,19 @@
         display: flex;
       }
       .tab-active {
-        color: #3498db;
+        color: #3b82f6;
+        border-bottom: 2px solid #3b82f6;
       }
     </style>
   </head>
-  <body class="bg-gray-100 min-h-screen">
+  <body class="min-h-screen">
     <!-- HEADER -->
     <header
-      class="bg-[#2c3e50] text-white p-4 flex justify-between items-center rounded-b-xl shadow-lg"
+      class="bg-white text-gray-800 p-4 flex justify-between items-center shadow-lg rounded-b-3xl"
     >
       <button
         id="menu-btn"
-        class="p-2 text-2xl"
+        class="p-2 text-2xl text-blue-600 focus:outline-none"
         aria-label="Open navigation menu"
       >
         <i class="fas fa-bars"></i>
@@ -62,7 +63,7 @@
       >
       <button
         id="logout-btn"
-        class="bg-[#e74c3c] py-2 px-4 rounded-lg font-bold shadow-md hover:bg-[#c0392b] transition-colors"
+        class="bg-red-500 py-2 px-4 rounded-full font-bold shadow-md text-white hover:bg-red-600 transition-colors"
       >
         <span data-i18n="logout">Logout</span>
       </button>
@@ -70,325 +71,365 @@
 
     <!-- MAIN CONTENT -->
     <main class="p-4 sm:p-6 lg:p-8">
-      <h1
-        data-i18n="welcome_heading"
-        class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 my-4"
-      >
-        Welcome to SmartStudentAct
-      </h1>
-      <p
-        data-i18n="welcome_text"
-        class="text-lg text-center text-gray-600 mb-8"
-      >
-        Your learning & financial companion
-      </p>
+      <div class="max-w-4xl mx-auto">
+        <h1
+          data-i18n="welcome_heading"
+          class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mt-8 mb-4"
+        >
+          Welcome to SmartStudentAct
+        </h1>
+        <p
+          data-i18n="welcome_text"
+          class="text-lg text-center text-gray-600 mb-8"
+        >
+          Your learning & financial companion
+        </p>
 
-      <!-- ASSIGNMENTS -->
-      <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2
-          data-i18n="assignments_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
+        <!-- ASSIGNMENTS -->
+        <section
+          class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300"
         >
-          📚 Assignments
-        </h2>
-        <button
-          id="add-assignment-btn"
-          data-i18n="add_assignment_btn"
-          class="bg-[#2ecc71] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#27a760] transition-colors"
-        >
-          + Add Assignment
-        </button>
-        <div id="assignments-list" class="space-y-4">
-          <p
-            data-i18n="no_assignments"
-            class="italic text-gray-500 text-center"
-          >
-            No assignments added yet.
-          </p>
-        </div>
-        <div id="assignments-loading" class="text-center mt-4 hidden">
-          <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
-        </div>
-      </section>
-
-      <!-- QUIZZES -->
-      <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2
-          data-i18n="quizzes_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-          📝 Quizzes
-        </h2>
-        <div id="quizzes-list" class="space-y-4">
-          <p data-i18n="no_quizzes" class="italic text-gray-500 text-center">
-            No quizzes assigned yet.
-          </p>
-        </div>
-        <div id="quizzes-loading" class="text-center mt-4 hidden">
-          <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
-        </div>
-      </section>
-
-      <!-- BUDGET -->
-      <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2
-          data-i18n="budget_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-          💰 Budget
-        </h2>
-        <button
-          id="add-budget-btn"
-          data-i18n="add_expense_btn"
-          class="bg-[#2ecc71] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#27a760] transition-colors"
-        >
-          + Add Expense
-        </button>
-        <div id="budget-list" class="space-y-4">
-          <p data-i18n="no_budget" class="italic text-gray-500 text-center">
-            No budget entries yet.
-          </p>
-        </div>
-        <div id="budget-loading" class="text-center mt-4 hidden">
-          <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
-        </div>
-      </section>
-
-      <!-- WEEKLY GOAL -->
-      <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2
-          data-i18n="weekly_goal_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-          🎯 Weekly Goal
-        </h2>
-        <div class="space-y-4">
-          <input
-            id="goal-input"
-            type="text"
-            data-i18n-placeholder="goal_placeholder"
-            placeholder="Your weekly goal"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
-          />
-          <p id="goal-error" class="text-red-500 text-sm hidden"></p>
-          <button
-            id="save-goal-btn"
-            data-i18n="save_goal_btn"
-            class="bg-[#3498db] text-white py-3 px-6 rounded-lg font-bold w-full hover:bg-[#2980b9] transition-colors"
-          >
-            Save Goal
-          </button>
-          <p
-            id="saved-goal-text"
-            class="text-green-600 font-bold text-center mt-2 hidden"
-          ></p>
-        </div>
-      </section>
-
-      <!-- AI INSIGHTS -->
-      <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-        <div class="flex items-center justify-between mb-4">
           <h2
-            data-i18n="ai_insights_title"
-            class="text-xl sm:text-2xl font-semibold text-gray-800"
+            data-i18n="assignments_title"
+            class="text-2xl font-semibold mb-4 text-gray-800 flex items-center"
           >
-            🤖 AI Insights
+            📚 Assignments
           </h2>
-          <div class="flex items-center">
-            <label
-              data-i18n="subscribed_label"
-              for="subscription-toggle"
-              class="text-sm text-gray-500 mr-2"
-              >Subscribed?</label
-            >
-            <input
-              type="checkbox"
-              id="subscription-toggle"
-              class="form-checkbox h-5 w-5 text-blue-600 rounded"
-            />
-          </div>
-        </div>
-        <button
-          id="generate-insights-btn"
-          data-i18n="generate_insights_btn"
-          class="bg-[#1abc9c] text-white py-3 px-6 rounded-lg font-bold w-full mb-4 hover:bg-[#16a085] transition-colors"
-        >
-          Generate Insights
-        </button>
-        <div id="insights-container" class="space-y-4">
-          <p
-            data-i18n="insights_placeholder"
-            id="insights-placeholder"
-            class="italic text-gray-500 text-center"
+          <button
+            id="add-assignment-btn"
+            data-i18n="add_assignment_btn"
+            class="bg-green-500 text-white py-3 px-6 rounded-full font-bold w-full mb-4 shadow-lg hover:bg-green-600 transition-colors"
           >
-            Click "Generate Insights" to get personalized feedback on your
-            academic and financial goals.
-          </p>
-          <div id="insights-loading" class="text-center mt-4 hidden">
+            + Add Assignment
+          </button>
+          <div id="assignments-list" class="space-y-4">
+            <p
+              data-i18n="no_assignments"
+              class="italic text-gray-500 text-center"
+            >
+              No assignments added yet.
+            </p>
+          </div>
+          <div id="assignments-loading" class="text-center mt-4 hidden">
             <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
           </div>
-          <div
-            id="insights-content"
-            class="bg-gray-50 p-4 rounded-lg shadow-sm hidden"
-          ></div>
-        </div>
-      </section>
+        </section>
 
-      <!-- ASSIGNMENT SUBMISSION MODAL -->
-      <div
-        id="submission-modal"
-        class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-      >
-        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl p-6">
-          <h3
-            data-i18n="submit_assignment_title"
-            class="text-2xl font-bold text-center mb-6"
+        <!-- QUIZZES -->
+        <section
+          class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300"
+        >
+          <h2
+            data-i18n="quizzes_title"
+            class="text-2xl font-semibold mb-4 text-gray-800 flex items-center"
           >
-            Submit Assignment
-          </h3>
-          <form id="submission-form" class="space-y-4">
-            <textarea
-              id="submission-text"
-              data-i18n-placeholder="submission_text_placeholder"
-              placeholder="Write your answer here (optional)"
-              class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
-            ></textarea>
+            📝 Quizzes
+          </h2>
+          <div id="quizzes-list" class="space-y-4">
+            <p data-i18n="no_quizzes" class="italic text-gray-500 text-center">
+              No quizzes assigned yet.
+            </p>
+          </div>
+          <div id="quizzes-loading" class="text-center mt-4 hidden">
+            <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
+          </div>
+        </section>
 
+        <!-- BUDGET -->
+        <section
+          class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300"
+        >
+          <h2
+            data-i18n="budget_title"
+            class="text-2xl font-semibold mb-4 text-gray-800 flex items-center"
+          >
+            💰 Budget
+          </h2>
+          <button
+            id="add-budget-btn"
+            data-i18n="add_expense_btn"
+            class="bg-green-500 text-white py-3 px-6 rounded-full font-bold w-full mb-4 shadow-lg hover:bg-green-600 transition-colors"
+          >
+            + Add Expense
+          </button>
+          <div id="budget-list" class="space-y-4">
+            <p data-i18n="no_budget" class="italic text-gray-500 text-center">
+              No budget entries yet.
+            </p>
+          </div>
+          <div id="budget-loading" class="text-center mt-4 hidden">
+            <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
+          </div>
+        </section>
+
+        <!-- WEEKLY GOAL -->
+        <section
+          class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300"
+        >
+          <h2
+            data-i18n="weekly_goal_title"
+            class="text-2xl font-semibold mb-4 text-gray-800 flex items-center"
+          >
+            🎯 Weekly Goal
+          </h2>
+          <div class="space-y-4">
             <input
-              type="file"
-              id="submission-file"
-              class="block w-full text-sm text-gray-600 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
+              id="goal-input"
+              type="text"
+              data-i18n-placeholder="goal_placeholder"
+              placeholder="Your weekly goal"
+              class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base"
             />
+            <p id="goal-error" class="text-red-500 text-sm hidden"></p>
+            <button
+              id="save-goal-btn"
+              data-i18n="save_goal_btn"
+              class="bg-blue-500 text-white py-3 px-6 rounded-full font-bold w-full shadow-lg hover:bg-blue-600 transition-colors"
+            >
+              Save Goal
+            </button>
+            <p
+              id="saved-goal-text"
+              class="text-green-600 font-bold text-center mt-2 hidden"
+            ></p>
+          </div>
+        </section>
 
-            <div class="flex space-x-4 mt-6">
-              <button
-                type="submit"
-                data-i18n="submit_btn"
-                class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors"
+        <!-- AI INSIGHTS -->
+        <section
+          class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h2
+              data-i18n="ai_insights_title"
+              class="text-2xl font-semibold text-gray-800 flex items-center"
+            >
+              🤖 AI Insights
+            </h2>
+            <div class="flex items-center">
+              <label
+                data-i18n="subscribed_label"
+                for="subscription-toggle"
+                class="text-sm text-gray-500 mr-2"
+                >Subscribed?</label
               >
-                Submit
-              </button>
-              <button
-                type="button"
-                id="cancel-submission-btn"
-                data-i18n="cancel_btn"
-                class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors"
-              >
-                Cancel
-              </button>
+              <input
+                type="checkbox"
+                id="subscription-toggle"
+                class="form-checkbox h-5 w-5 text-blue-600 rounded"
+              />
             </div>
-          </form>
+          </div>
+          <button
+            id="generate-insights-btn"
+            data-i18n="generate_insights_btn"
+            class="bg-purple-500 text-white py-3 px-6 rounded-full font-bold w-full mb-4 shadow-lg hover:bg-purple-600 transition-colors"
+          >
+            Generate Insights
+          </button>
+          <div id="insights-container" class="space-y-4">
+            <p
+              data-i18n="insights_placeholder"
+              id="insights-placeholder"
+              class="italic text-gray-500 text-center"
+            >
+              Click "Generate Insights" to get personalized feedback on your
+              academic and financial goals.
+            </p>
+            <div id="insights-loading" class="text-center mt-4 hidden">
+              <i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i>
+            </div>
+            <div
+              id="insights-content"
+              class="bg-gray-50 p-4 rounded-xl shadow-inner hidden"
+            ></div>
+          </div>
+        </section>
+
+        <!-- ASSIGNMENT SUBMISSION MODAL -->
+        <div
+          id="submission-modal"
+          class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <div
+            class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 border border-gray-200"
+          >
+            <h3
+              data-i18n="submit_assignment_title"
+              class="text-2xl font-bold text-center mb-6 text-gray-800"
+            >
+              Submit Assignment
+            </h3>
+            <form id="submission-form" class="space-y-4">
+              <textarea
+                id="submission-text"
+                data-i18n-placeholder="submission_text_placeholder"
+                placeholder="Write your answer here (optional)"
+                class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base resize-none"
+                rows="6"
+              ></textarea>
+
+              <input
+                type="file"
+                id="submission-file"
+                class="block w-full text-sm text-gray-600 border border-gray-300 rounded-xl cursor-pointer bg-gray-50 p-2"
+              />
+
+              <div class="flex space-x-4 mt-6">
+                <button
+                  type="submit"
+                  data-i18n="submit_btn"
+                  class="bg-green-500 text-white font-bold py-3 px-6 rounded-full flex-1 shadow-lg hover:bg-green-600 transition-colors"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  id="cancel-submission-btn"
+                  data-i18n="cancel_btn"
+                  class="bg-gray-500 text-white font-bold py-3 px-6 rounded-full flex-1 shadow-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
 
-      <!-- Example assignment card with file download and submission button -->
-      <div class="assignment-card bg-white shadow-md rounded-xl p-6 mt-4">
-        <h4 class="font-bold text-lg">Math Homework 1</h4>
-        <p class="text-sm text-gray-600">Due: 2025-09-15</p>
-
-        <!-- File download if teacher uploaded file -->
-        <button
-          onclick="downloadFile('assignment', 'math_hw1.pdf')"
-          class="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+        <!-- Example assignment card with file download and submission button -->
+        <div
+          class="assignment-card bg-white shadow-xl rounded-3xl p-6 mt-4 hover:scale-105 transition-transform duration-300"
         >
-          <i class="fas fa-download mr-2"></i
-          ><span data-i18n="download_btn">Download</span>
-        </button>
+          <h4 class="font-bold text-xl text-gray-800">Math Homework 1</h4>
+          <p class="text-sm text-gray-600 mb-4">Due: 2025-09-15</p>
 
-        <!-- Submit assignment -->
-        <button
-          onclick="openSubmissionModal('12345')"
-          class="mt-3 ml-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
-        >
-          <i class="fas fa-upload mr-2"></i
-          ><span data-i18n="submit_btn">Submit</span>
-        </button>
+          <div class="flex flex-wrap gap-2">
+            <!-- File download if teacher uploaded file -->
+            <button
+              onclick="downloadFile('assignment', 'math_hw1.pdf')"
+              class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors text-sm font-medium shadow-md"
+            >
+              <i class="fas fa-download mr-2"></i
+              ><span data-i18n="download_btn">Download</span>
+            </button>
 
-        <!-- Download feedback if available -->
-        <button
-          onclick="downloadFile('feedback', 'feedback_math_hw1.pdf')"
-          class="mt-3 ml-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm"
-        >
-          <i class="fas fa-comments mr-2"></i
-          ><span data-i18n="feedback_btn">Feedback</span>
-        </button>
-      </div>
+            <!-- Submit assignment -->
+            <button
+              onclick="openSubmissionModal('12345')"
+              class="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition-colors text-sm font-medium shadow-md"
+            >
+              <i class="fas fa-upload mr-2"></i
+              ><span data-i18n="submit_btn">Submit</span>
+            </button>
 
-      <!-- FEEDBACK -->
-      <section id="feedback" class="hidden p-6">
-        <h2 data-i18n="feedback_title" class="text-xl font-bold mb-4">
-          My Assignment Feedback
-        </h2>
-        <div id="feedback-list" class="space-y-4"></div>
-      </section>
-
-      <!-- REWARDS -->
-      <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2
-          data-i18n="rewards_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
-        >
-          🏆 Rewards
-        </h2>
-        <div id="rewards-wrap" class="space-y-4">
-          <p data-i18n="no_rewards" class="italic text-gray-500 text-center">
-            No rewards yet. Keep up the great work!
-          </p>
+            <!-- Download feedback if available -->
+            <button
+              onclick="downloadFile('feedback', 'feedback_math_hw1.pdf')"
+              class="bg-purple-500 text-white px-4 py-2 rounded-full hover:bg-purple-600 transition-colors text-sm font-medium shadow-md"
+            >
+              <i class="fas fa-comments mr-2"></i
+              ><span data-i18n="feedback_btn">Feedback</span>
+            </button>
+          </div>
         </div>
-      </section>
 
-      <!-- ANALYTICS -->
-      <section class="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2
-          data-i18n="analytics_title"
-          class="text-xl sm:text-2xl font-semibold mb-4 text-gray-800"
+        <!-- FEEDBACK -->
+        <section
+          id="feedback"
+          class="hidden bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300"
         >
-          📊 Analytics
-        </h2>
-        <div class="w-full h-64"><canvas id="analytics-chart"></canvas></div>
-      </section>
+          <h2
+            data-i18n="feedback_title"
+            class="text-2xl font-semibold mb-4 text-gray-800 flex items-center"
+          >
+            My Assignment Feedback
+          </h2>
+          <div id="feedback-list" class="space-y-4"></div>
+        </section>
+
+        <!-- REWARDS -->
+        <section
+          class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300"
+        >
+          <h2
+            data-i18n="rewards_title"
+            class="text-2xl font-semibold mb-4 text-gray-800 flex items-center"
+          >
+            🏆 Rewards
+          </h2>
+          <div id="rewards-wrap" class="space-y-4">
+            <p data-i18n="no_rewards" class="italic text-gray-500 text-center">
+              No rewards yet. Keep up the great work!
+            </p>
+          </div>
+        </section>
+
+        <!-- ANALYTICS -->
+        <section
+          class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300"
+        >
+          <h2
+            data-i18n="analytics_title"
+            class="text-2xl font-semibold mb-4 text-gray-800 flex items-center"
+          >
+            📊 Analytics
+          </h2>
+          <div class="w-full h-64"><canvas id="analytics-chart"></canvas></div>
+        </section>
+      </div>
 
       <!-- CONTACT MODAL -->
       <div
         id="contactModal"
-        class="modal-overlay fixed inset-0 hidden flex items-center justify-center"
+        class="modal-overlay fixed inset-0 hidden flex items-center justify-center p-4"
       >
-        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-          <h2 data-i18n="contact_title" class="text-xl font-bold mb-4">
+        <div
+          class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-md border border-gray-200"
+        >
+          <h2
+            data-i18n="contact_title"
+            class="text-2xl font-bold mb-4 text-gray-800 text-center"
+          >
             📩 Contact Us
           </h2>
           <form id="contactForm" class="space-y-4">
             <div>
-              <label data-i18n="name_label" class="block text-sm font-medium"
+              <label
+                data-i18n="name_label"
+                class="block text-sm font-medium text-gray-700"
                 >Your Name</label
               >
               <input
                 type="text"
                 id="contactName"
                 required
-                class="w-full border rounded p-2"
+                class="w-full border rounded-xl p-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label data-i18n="email_label" class="block text-sm font-medium"
+              <label
+                data-i18n="email_label"
+                class="block text-sm font-medium text-gray-700"
                 >Your Email</label
               >
               <input
                 type="email"
                 id="contactEmail"
                 required
-                class="w-full border rounded p-2"
+                class="w-full border rounded-xl p-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label data-i18n="message_label" class="block text-sm font-medium"
+              <label
+                data-i18n="message_label"
+                class="block text-sm font-medium text-gray-700"
                 >Message</label
               >
               <textarea
                 id="contactMessage"
                 rows="4"
                 required
-                class="w-full border rounded p-2"
+                class="w-full border rounded-xl p-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 resize-none"
               ></textarea>
             </div>
             <div class="flex justify-end gap-2">
@@ -396,14 +437,14 @@
                 type="button"
                 id="closeContact"
                 data-i18n="cancel_btn"
-                class="bg-gray-200 px-4 py-2 rounded"
+                class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-300 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 data-i18n="send_btn"
-                class="bg-blue-600 text-white px-4 py-2 rounded"
+                class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors font-medium shadow-md"
               >
                 Send
               </button>
@@ -422,12 +463,12 @@
 
     <!-- NAV BAR -->
     <nav
-      class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] py-2 px-4 rounded-t-xl z-40"
+      class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.1)] py-2 px-4 rounded-t-3xl z-40"
     >
       <div class="flex justify-around items-center h-full">
         <a
           href="/public/students.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors tab-active"
+          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-500 transition-colors tab-active"
         >
           <i class="fas fa-home text-2xl mb-1"></i>
           <span data-i18n="dashboard_tab" class="text-xs font-medium"
@@ -436,7 +477,7 @@
         </a>
         <a
           href="/public/completed-assignment.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
+          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-500 transition-colors"
         >
           <i class="fas fa-check-circle text-2xl mb-1"></i>
           <span data-i18n="completed_tab" class="text-xs font-medium"
@@ -445,7 +486,7 @@
         </a>
         <a
           href="/public/teachers-list.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
+          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-500 transition-colors"
         >
           <i class="fas fa-chalkboard-teacher text-2xl mb-1"></i>
           <span data-i18n="teachers_tab" class="text-xs font-medium"
@@ -454,7 +495,7 @@
         </a>
         <a
           href="/public/financial.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
+          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-500 transition-colors"
         >
           <i class="fas fa-wallet text-2xl mb-1"></i>
           <span data-i18n="financial_tab" class="text-xs font-medium"
@@ -463,7 +504,7 @@
         </a>
         <a
           href="/public/AI Essay Checker.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
+          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-500 transition-colors"
         >
           <i class="fas fa-robot text-2xl mb-1"></i>
           <span data-i18n="ai_checker_tab" class="text-xs font-medium"
@@ -472,7 +513,7 @@
         </a>
         <a
           href="/public/profile.html"
-          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-[#3498db] transition-colors"
+          class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-500 transition-colors"
         >
           <i class="fas fa-user-circle text-2xl mb-1"></i>
           <span data-i18n="profile_tab" class="text-xs font-medium"
@@ -487,10 +528,12 @@
       id="assignment-modal"
       class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
     >
-      <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
+      <div
+        class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 border border-gray-200"
+      >
         <h3
           data-i18n="add_assignment_modal_title"
-          class="text-2xl font-bold text-center mb-6"
+          class="text-2xl font-bold text-center mb-6 text-gray-800"
         >
           Add Assignment
         </h3>
@@ -499,28 +542,28 @@
             id="assignment-title-input"
             data-i18n-placeholder="assignment_title_placeholder"
             placeholder="Assignment Title"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base"
           />
 
           <input
             id="assignment-subject-input"
             data-i18n-placeholder="assignment_subject_placeholder"
             placeholder="Subject (e.g., Math, History)"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base"
           />
 
           <div class="flex space-x-4 mt-6">
             <button
               id="save-assignment-btn"
               data-i18n="save_btn"
-              class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors"
+              class="bg-green-500 text-white font-bold py-3 px-6 rounded-full flex-1 shadow-lg hover:bg-green-600 transition-colors"
             >
               Save
             </button>
             <button
               id="cancel-assignment-btn"
               data-i18n="cancel_btn"
-              class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors"
+              class="bg-gray-500 text-white font-bold py-3 px-6 rounded-full flex-1 shadow-lg hover:bg-gray-600 transition-colors"
             >
               Cancel
             </button>
@@ -534,10 +577,12 @@
       id="budget-modal"
       class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
     >
-      <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
+      <div
+        class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 border border-gray-200"
+      >
         <h3
           data-i18n="add_budget_modal_title"
-          class="text-2xl font-bold text-center mb-6"
+          class="text-2xl font-bold text-center mb-6 text-gray-800"
         >
           Add Budget Entry
         </h3>
@@ -546,28 +591,28 @@
             id="budget-title-input"
             data-i18n-placeholder="budget_title_placeholder"
             placeholder="Expense/Income Title"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base"
           />
 
           <input
             id="budget-amount-input"
             data-i18n-placeholder="budget_amount_placeholder"
             placeholder="Amount (GHS)"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base"
           />
 
           <div class="flex space-x-4 mt-6">
             <button
               id="save-budget-btn"
               data-i18n="save_btn"
-              class="bg-[#28a745] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#218838] transition-colors"
+              class="bg-green-500 text-white font-bold py-3 px-6 rounded-full flex-1 shadow-lg hover:bg-green-600 transition-colors"
             >
               Save
             </button>
             <button
               id="cancel-budget-btn"
               data-i18n="cancel_btn"
-              class="bg-[#6c757d] text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-[#5a6268] transition-colors"
+              class="bg-gray-500 text-white font-bold py-3 px-6 rounded-full flex-1 shadow-lg hover:bg-gray-600 transition-colors"
             >
               Cancel
             </button>
@@ -580,7 +625,7 @@
     <div id="menu-modal" class="modal-overlay fixed inset-0 z-50 flex p-4">
       <div
         id="menu-content"
-        class="bg-white w-full max-w-[280px] h-full shadow-2xl p-6 transition-transform duration-300 -translate-x-full"
+        class="bg-white w-full max-w-[280px] h-full shadow-2xl p-6 transition-transform duration-300 -translate-x-full rounded-tr-3xl rounded-br-3xl"
       >
         <div
           class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200"
@@ -596,91 +641,55 @@
           <a
             href="/students.html"
             data-i18n="menu_dashboard"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-100 transition-colors rounded-xl px-2"
             >🏠 Dashboard</a
           >
           <a
             href="/financial.html"
             data-i18n="menu_financial"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-100 transition-colors rounded-xl px-2"
             >💰 Financial</a
           >
           <a
             href="/AI-Essay-Checker.html"
             data-i18n="menu_ai_checker"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-100 transition-colors rounded-xl px-2"
             >🤖 AI Essay Checker</a
           >
           <a
             href="/rewards.html"
             data-i18n="menu_rewards"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-100 transition-colors rounded-xl px-2"
             >🏆 Rewards</a
           >
           <a
             href="/settings.html"
             data-i18n="menu_settings"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-100 transition-colors rounded-xl px-2"
             >⚙️ Settings</a
           >
           <a
             href="/profile.html"
             data-i18n="menu_profile"
-            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors"
+            class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-100 transition-colors rounded-xl px-2"
             >👤 Profile</a
           >
           <div class="h-px bg-gray-200 my-4"></div>
           <button
             id="menu-logout-btn"
             data-i18n="menu_logout"
-            class="bg-red-100 text-red-700 font-bold py-3 px-6 rounded-lg w-full text-lg mt-4 hover:bg-red-200 transition-colors"
+            class="bg-red-100 text-red-700 font-bold py-3 px-6 rounded-full w-full text-lg mt-4 hover:bg-red-200 transition-colors shadow-md"
           >
             👋 Logout
           </button>
         </nav>
       </div>
     </div>
-
-    <!-- ALERT MODAL -->
-    <div
-      id="alert-modal"
-      class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-    >
-      <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl p-6">
-        <h3
-          data-i18n="alert_title"
-          id="alert-title"
-          class="text-2xl font-bold text-center mb-4"
-        ></h3>
-        <p
-          data-i18n="alert_message"
-          id="alert-message"
-          class="text-lg text-center text-gray-600 mb-6"
-        ></p>
-        <div class="flex justify-around space-x-4">
-          <button
-            id="alert-confirm-btn"
-            data-i18n="alert_confirm_btn"
-            class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-green-600 transition-colors hidden"
-          >
-            Confirm
-          </button>
-          <button
-            id="alert-cancel-btn"
-            data-i18n="alert_cancel_btn"
-            class="bg-gray-500 text-white font-bold py-3 px-6 rounded-lg flex-1 hover:bg-gray-600 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- LANGUAGE SWITCHER -->
     <div id="language-switcher" class="flex justify-center my-4 relative">
       <select
         id="lang-select"
-        class="px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer"
+        class="px-3 py-2 bg-white border border-gray-300 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer text-sm"
       >
         <option value="en">EN - English</option>
         <option value="fr">FR - Français</option>
@@ -768,11 +777,6 @@
     cancelSubmissionBtn: document.getElementById("cancel-submission-btn"),
     contactModal: document.getElementById("contactModal"),
     chartCanvas: document.getElementById("analytics-chart"),
-    alertModal: document.getElementById("alert-modal"),
-    alertTitle: document.getElementById("alert-title"),
-    alertMessage: document.getElementById("alert-message"),
-    alertConfirmBtn: document.getElementById("alert-confirm-btn"),
-    alertCancelBtn: document.getElementById("alert-cancel-btn"),
   };
 
   // --- Helpers ---
@@ -966,32 +970,49 @@
         }
       };
 
-      // --- Dashboard init stubs ---
-  function fetchAssignments() { /* ... */ }
-  function fetchBudget() { /* ... */ }
-  function fetchQuizzes() { /* ... */ }
-  function fetchGoal() { /* ... */ }
-  function fetchRewards() { /* ... */ }
-  function loadAnalytics() { /* ... */ }
+      // --- Initial data fetches on page load ---
+      function fetchAssignments() {
+        /* ... */
+      }
+      function fetchBudget() {
+        /* ... */
+      }
+      function fetchQuizzes() {
+        /* ... */
+      }
+      function fetchGoal() {
+        /* ... */
+      }
+      function fetchRewards() {
+        /* ... */
+      }
+      function loadAnalytics() {
+        /* ... */
+      }
+      function downloadFile(type, filename) {
+        /* ... */
+      }
+      function openSubmissionModal(assignmentId) {
+        /* ... */
+      }
+      function loadAdvice() {
+        /* ... */
+      }
 
-  function initializeDashboard() {
-    fetchAssignments();
-    fetchBudget();
-    fetchQuizzes();
-    fetchGoal();
-    fetchRewards();
-    loadAnalytics();
-  }
+      // Initialize all dashboard components
+      function initializeDashboard() {
+        fetchAssignments();
+        fetchBudget();
+        fetchQuizzes();
+        fetchGoal();
+        fetchRewards();
+        loadAnalytics();
+      }
 
-  // --- Bootstrapping ---
-  document.addEventListener("DOMContentLoaded", async () => {
-    const isAuth = await checkAuthentication();
-    if (!isAuth) return;
-
-    initializeDashboard();
-
-    DOMElements.logoutBtn.addEventListener("click", handleLogout);
-    DOMElements.menuLogoutBtn.addEventListener("click", handleLogout);
+      document.addEventListener("DOMContentLoaded", () => {
+        if (checkAuthentication()) {
+          initializeDashboard();
+        }
 
         DOMElements.alertCancelBtn.addEventListener("click", () => {
           hideAlertModal();
