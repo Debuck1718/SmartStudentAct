@@ -5,20 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-i18n="loginTitle">SmartStudentAct Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
-      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="./images/icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="./images/icon.png"
-    />
-    <link rel="manifest" href="/site.webmanifest" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
   <style>
     body { font-family: "Inter", sans-serif; background-color: #f5f5f5; }
     .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
@@ -29,7 +19,7 @@
 
   <div class="w-full max-w-md bg-white shadow-md rounded-2xl p-8">
 
-    <!-- Language Dropdown -->
+    
     <div class="mb-4 text-right">
       <select id="language-select" class="border border-gray-300 rounded-md p-2 text-sm">
         <option value="en">English</option>
@@ -42,7 +32,9 @@
       </select>
     </div>
 
-    <h1 id="loginTitle" class="text-2xl font-bold text-center text-gray-800 mb-6" data-i18n="loginTitle">SmartStudentAct Login</h1>
+    <h1 id="loginTitle" class="text-2xl font-bold text-center text-gray-800 mb-6" data-i18n="loginTitle">
+      SmartStudentAct Login
+    </h1>
 
     <div id="banner" class="hidden text-center mb-4 p-3 rounded-lg text-sm transition-all duration-300"></div>
 
@@ -72,144 +64,6 @@
   </div>
 
 <script>
-const translations = {
-  loginTitle: {
-    en: "SmartStudentAct Login",
-    fr: "Connexion SmartStudentAct",
-    es: "Iniciar sesión en SmartStudentAct",
-    tr: "SmartStudentAct Girişi",
-    ar: "تسجيل الدخول إلى SmartStudentAct",
-    ru: "Вход в SmartStudentAct",
-    pt: "Login no SmartStudentAct"
-  },
-  email: {
-    en: "Email Address",
-    fr: "Adresse e-mail",
-    es: "Correo electrónico",
-    tr: "E-posta adresi",
-    ar: "عنوان البريد الإلكتروني",
-    ru: "Адрес электронной почты",
-    pt: "Endereço de e-mail"
-  },
-  password: {
-    en: "Password",
-    fr: "Mot de passe",
-    es: "Contraseña",
-    tr: "Şifre",
-    ar: "كلمة المرور",
-    ru: "Пароль",
-    pt: "Senha"
-  },
-  login: {
-    en: "Login",
-    fr: "Connexion",
-    es: "Iniciar sesión",
-    tr: "Giriş yap",
-    ar: "تسجيل الدخول",
-    ru: "Войти",
-    pt: "Entrar"
-  },
-  signupLink: {
-    en: "Don’t have an account? Sign up",
-    fr: "Pas de compte ? Inscrivez-vous",
-    es: "¿No tienes una cuenta? Regístrate",
-    tr: "Hesabınız yok mu? Kaydolun",
-    ar: "ليس لديك حساب؟ سجل",
-    ru: "Нет аккаунта? Зарегистрироваться",
-    pt: "Não tem uma conta? Cadastre-se"
-  },
-  forgotPasswordLink: {
-    en: "Forgot Password?",
-    fr: "Mot de passe oublié ?",
-    es: "¿Olvidaste tu contraseña?",
-    tr: "Şifrenizi mi unuttunuz?",
-    ar: "هل نسيت كلمة المرور؟",
-    ru: "Забыли пароль?",
-    pt: "Esqueceu sua senha?"
-  },
-  show: {
-    en: "Show",
-    fr: "Afficher",
-    es: "Mostrar",
-    tr: "Göster",
-    ar: "عرض",
-    ru: "Показать",
-    pt: "Mostrar"
-  },
-  hide: {
-    en: "Hide",
-    fr: "Masquer",
-    es: "Ocultar",
-    tr: "Gizle",
-    ar: "إخفاء",
-    ru: "Скрыть",
-    pt: "Ocultar"
-  },
-  emailEmpty: {
-    en: "Email is required.",
-    fr: "L'e-mail est requis.",
-    es: "Se requiere correo electrónico.",
-    tr: "E-posta gerekli.",
-    ar: "البريد الإلكتروني مطلوب.",
-    ru: "Требуется электронная почта.",
-    pt: "E-mail é obrigatório."
-  },
-  emailInvalid: {
-    en: "Invalid email address.",
-    fr: "Adresse e-mail invalide.",
-    es: "Dirección de correo electrónico no válida.",
-    tr: "Geçersiz e-posta adresi.",
-    ar: "عنوان البريد الإلكتروني غير صالح.",
-    ru: "Недействительный адрес электронной почты.",
-    pt: "Endereço de e-mail inválido."
-  },
-  passwordEmpty: {
-    en: "Password is required.",
-    fr: "Le mot de passe est requis.",
-    es: "Se requiere contraseña.",
-    tr: "Şifre gerekli.",
-    ar: "كلمة المرور مطلوبة.",
-    ru: "Пароль обязателен.",
-    pt: "Senha é obrigatória."
-  },
-  passwordMin: {
-    en: "Password must be at least 6 characters.",
-    fr: "Le mot de passe doit comporter au moins 6 caractères.",
-    es: "La contraseña debe tener al menos 6 caracteres.",
-    tr: "Şifre en az 6 karakter olmalı.",
-    ar: "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
-    ru: "Пароль должен содержать не менее 6 символов.",
-    pt: "A senha deve ter pelo menos 6 caracteres."
-  },
-  loginFailed: {
-    en: "Login failed. Please check your credentials.",
-    fr: "Échec de la connexion. Vérifiez vos identifiants.",
-    es: "Error al iniciar sesión. Verifique sus credenciales.",
-    tr: "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
-    ar: "فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد الخاصة بك.",
-    ru: "Ошибка входа. Проверьте свои учетные данные.",
-    pt: "Falha no login. Verifique suas credenciais."
-  },
-  unknownRole: {
-    en: "Unknown role. Please contact support.",
-    fr: "Rôle inconnu. Veuillez contacter le support.",
-    es: "Rol desconocido. Contacte con soporte.",
-    tr: "Bilinmeyen rol. Lütfen destekle iletişime geçin.",
-    ar: "دور غير معروف. يرجى الاتصال بالدعم.",
-    ru: "Неизвестная роль. Обратитесь в поддержку.",
-    pt: "Função desconhecida. Entre em contato com o suporte."
-  },
-  unexpectedError: {
-    en: "An unexpected error occurred.",
-    fr: "Une erreur inattendue s'est produite.",
-    es: "Ocurrió un error inesperado.",
-    tr: "Beklenmeyen bir hata oluştu.",
-    ar: "حدث خطأ غير متوقع.",
-    ru: "Произошла непредвиденная ошибка.",
-    pt: "Ocorreu um erro inesperado."
-  }
-};
-
 const API_BASE_URL = "https://smartstudentact.onrender.com"; 
 
 const emailInput = document.getElementById("emailInput");
@@ -232,95 +86,51 @@ function showBanner(message, type='error') {
   else bannerEl.classList.add("bg-gray-100","text-gray-700");
 }
 
-function hideBanner() { bannerEl.classList.add("hidden"); }
-
-function setError(el, message, inputEl) {
-  if(message) { el.textContent = message; inputEl.classList.add("border-red-500"); }
-  else { el.textContent=""; inputEl.classList.remove("border-red-500"); }
-}
-
-function validateEmail(email) {
-  if(!email.trim()) return translations.emailEmpty[currentLang];
-  if(!/\S+@\S+\.\S+/.test(email)) return translations.emailInvalid[currentLang];
-  return null;
-}
-
-function validatePassword(pw) {
-  if(!pw.trim()) return translations.passwordEmpty[currentLang];
-  if(pw.length < 6) return translations.passwordMin[currentLang];
-  return null;
-}
-
-emailInput.addEventListener("input", () => { setError(emailErrorEl, null, emailInput); hideBanner(); });
-passwordInput.addEventListener("input", () => { setError(passwordErrorEl, null, passwordInput); hideBanner(); });
-passwordToggle.addEventListener("click", () => {
-  showPassword = !showPassword;
-  passwordInput.type = showPassword ? "text" : "password";
-  passwordToggle.textContent = showPassword ? translations.hide[currentLang] : translations.show[currentLang];
-});
-
-loginButton.addEventListener("click", handleLogin);
 
 async function handleLogin() {
-    setError(emailErrorEl, null, emailInput);
-    setError(passwordErrorEl, null, passwordInput);
-    hideBanner();
+    const email = emailInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
 
-    const emailErr = validateEmail(emailInput.value);
-    const pwErr = validatePassword(passwordInput.value);
-    if(emailErr || pwErr) {
-        setError(emailErrorEl, emailErr, emailInput);
-        setError(passwordErrorEl, pwErr, passwordInput);
-        return;
-    }
+    if(!email || !password) {
+      showBanner("Email and password are required.", "error");
+      return;
+    }
 
-    loginButton.disabled = true;
-    loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
+    loginButton.disabled = true;
+    loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/users/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ email: emailInput.value.trim().toLowerCase(), password: passwordInput.value })
-        });
+    try {
+        const res = await fetch(`${API_BASE_URL}/users/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include", 
+            body: JSON.stringify({ email, password })
+        });
 
-        const data = await res.json();
+        const data = await res.json();
 
-        if(!res.ok) {
-            showBanner(data.message || translations.loginFailed[currentLang], 'error');
-            return;
-        }
-
-        if (data.token) {
-              localStorage.setItem('token', data.token);
+        if(!res.ok) {
+            showBanner(data.message || "Login failed. Please check your credentials.", "error");
+            return;
         }
 
-        if (data.redirectUrl) {
-          showBanner("Login successful, redirecting...", "success");
-          window.location.href = data.redirectUrl;
-        } else {
-          showBanner(data.message || "An unexpected error occurred.", "error");
-        }
+        if (data.redirectUrl) {
+            showBanner("Login successful! Redirecting...", "success");
+            setTimeout(() => window.location.href = data.redirectUrl, 800);
+        } else {
+            showBanner("Unexpected login response. Please try again.", "error");
+        }
 
-    } catch(err) {
-        console.error("Login error:", err);
-        showBanner(translations.unexpectedError[currentLang], "error");
-    } finally {
-        loginButton.disabled = false;
-        loginButton.textContent = translations.login[currentLang];
-    }
+    } catch(err) {
+        console.error("Login error:", err);
+        showBanner("Unexpected error occurred.", "error");
+    } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = "Login";
+    }
 }
 
-langSelect.addEventListener("change", (e) => {
-  currentLang = e.target.value;
-  document.getElementById("loginTitle").textContent = translations.loginTitle[currentLang];
-  emailInput.placeholder = translations.email[currentLang];
-  passwordInput.placeholder = translations.password[currentLang];
-  passwordToggle.textContent = showPassword ? translations.hide[currentLang] : translations.show[currentLang];
-  loginButton.textContent = translations.login[currentLang];
-});
+loginButton.addEventListener("click", handleLogin);
 </script>
 </body>
 </html>
-

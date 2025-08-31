@@ -865,91 +865,69 @@
       formInputs.forEach((input) => input.addEventListener("input", updateUI));
       formInputs.forEach((input) => input.addEventListener("blur", updateUI));
 
-      requestOtpButton.addEventListener("click", async () => {
-        if (isSubmitting) return;
+      async function requestOTP(event) {
+        event.preventDefault();
 
-        const { errors, data } = validateForm();
-        if (Object.keys(errors).length > 0) {
-          showMessage("Please fix the errors in the form.");
-          return;
-        }
+        const form = event.target;
+        const data = {
+          firstname: form.firstname.value.trim(),
+          lastname: form.lastname.value.trim(),
+          email: form.email.value.trim().toLowerCase(),
+          password: form.password.value,
+          role: form.role.value,
+        };
 
-        setLoadingState(requestOtpButton, true, "Request OTP");
+        userData = data;
 
         try {
           const response = await fetch(API_REQUEST_OTP, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include", 
             body: JSON.stringify(data),
           });
 
-          const responseData = await response.json();
+          const result = await response.json();
 
-          if (!response.ok) {
-            throw new Error(responseData.message || "Failed to send OTP.");
-          }
+          if (!response.ok)
+            throw new Error(result.message || "Failed to send OTP");
 
-          userData = {
-            email: data.email,
-            password: data.password,
-            occupation: data.occupation,
-            otpToken: responseData.otpToken,
-          };
-
-          showMessage("OTP sent to your email. Please check your inbox.", "success");
-          signupFormSection.classList.add("hidden");
-          otpSection.classList.remove("hidden");
-          otpInput.focus();
-        } catch (error) {
-          showMessage(error.message);
-        } finally {
-          setLoadingState(requestOtpButton, false, "Request OTP");
+          alert("✅ OTP sent to your email. Please check and verify.");
+          document.getElementById("otp-section").classList.remove("hidden");
+        } catch (err) {
+          alert("❌ " + err.message);
         }
-      });
+      }
 
-     verifyOtpButton.addEventListener("click", async () => {
-    if (isSubmitting) return;
+      async function verifyOTP(event) {
+        event.preventDefault();
 
-    const otpCode = otpInput.value.trim();
-    if (!otpCode) {
-      showMessage("Please enter the OTP.");
-      return;
-    }
+        const otpCode = document.getElementById("otp").value.trim();
 
-    setLoadingState(verifyOtpButton, true, "Verify OTP");
+        try {
+          const response = await fetch(API_VERIFY_OTP, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include", 
+            body: JSON.stringify({
+              email: userData.email,
+              password: userData.password,
+              code: otpCode,
+              otpToken: userData.otpToken, 
+            }),
+          });
 
-    try {
-      const response = await fetch(API_VERIFY_OTP, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: userData.email,
-          password: userData.password,
-          code: otpCode,
-          otpToken: userData.otpToken,
-        }),
-      });
+          const result = await response.json();
 
-      const responseData = await response.json();
+          if (!response.ok)
+            throw new Error(result.message || "OTP verification failed");
 
-      if (!response.ok) {
-        throw new Error(responseData.message || "Failed to verify OTP.");
-      }
-      
-      showMessage("Account verified successfully! Redirecting...", "success");
-
-      if (responseData.redirectUrl) {
-        window.location.href = responseData.redirectUrl;
-      } else {
-        throw new Error("Redirect URL not provided by the server.");
-      }
-
-    } catch (error) {
-      showMessage(error.message);
-    } finally {
-      setLoadingState(verifyOtpButton, false, "Verify OTP");
-    }
-});
+          alert("🎉 Account created successfully! You can now log in.");
+          window.location.href = "/login.html";
+        } catch (err) {
+          alert("❌ " + err.message);
+        }
+      }
 
       openTermsLink.addEventListener("click", (e) => {
         e.preventDefault();

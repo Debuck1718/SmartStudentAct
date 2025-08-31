@@ -229,11 +229,11 @@ const settingsSchema = Joi.object({
     .optional(),
   occupation: Joi.string().valid("student", "teacher").required(),
 
-  // Common fields
+
   schoolName: Joi.string().max(100).required(),
   schoolCountry: Joi.string().max(100).required(),
 
-  // Student-specific fields
+
   educationLevel: Joi.string()
     .valid("junior", "high", "university")
     .when("occupation", {
@@ -247,7 +247,7 @@ const settingsSchema = Joi.object({
     otherwise: Joi.optional(),
   }),
 
-  // Teacher-specific fields
+
   teacherGrade: Joi.string().when("occupation", {
     is: "teacher",
     then: Joi.required(),
@@ -278,12 +278,6 @@ const validate = (schema) => (req, res, next) => {
   next();
 };
 
-protectedRouter.post("/logout", authenticateJWT, (req, res) => {
-  eventBus.emit("user_logged_out", { userId: req.userId });
-  res.json({
-    message: "Logged out successfully (client should discard token).",
-  });
-});
 
 protectedRouter.post(
   "/timezone",
@@ -343,7 +337,7 @@ protectedRouter.patch(
 protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
   const userId = req.userId;
   try {
-    const user = await User.findById(userId).select("-password"); // Exclude password for security
+    const user = await User.findById(userId).select("-password"); 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -359,11 +353,10 @@ protectedRouter.patch(
   authenticateJWT,
   validate(settingsSchema),
   async (req, res) => {
-    // Prefer JWT userId, but allow fallback from body (onboarding)
+  
     const userId = req.userId || req.body.userId;
     const updateData = req.body;
 
-    // This check is a good practice, though authenticateJWT should prevent it from being null
     if (!userId) {
         return res.status(401).json({ message: 'Authentication failed. User ID not found.' });
     }
