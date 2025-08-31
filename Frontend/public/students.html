@@ -1014,11 +1014,6 @@
           initializeDashboard();
         }
 
-        DOMElements.alertCancelBtn.addEventListener("click", () => {
-          hideAlertModal();
-          window.location.href = "/login.html";
-        });
-
         DOMElements.addAssignmentBtn.addEventListener("click", () =>
           showModal(DOMElements.assignmentModal)
         );
