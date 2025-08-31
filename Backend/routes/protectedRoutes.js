@@ -1431,7 +1431,6 @@ protectedRouter.get(
   }
 );
 
-// 📌 Submit assignment
 protectedRouter.post(
   "/student/submissions",
   authenticateJWT,

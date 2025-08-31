@@ -321,7 +321,7 @@ module.exports = (eventBus) => {
     }
   });
 
-  // ─── Logout ──────────────────────────────
+  
   publicRouter.post("/users/logout", async (req, res) => {
     try {
       const refreshToken = req.cookies.refresh_token;

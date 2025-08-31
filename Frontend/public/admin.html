@@ -188,7 +188,7 @@
         push: (path) => (window.location.href = path),
       };
 
-      // --- TRANSLATION DATA ---
+      
       const translations = {
         en: {
           title: "Admin Dashboard",
@@ -539,38 +539,36 @@
 
 
       const fetchAPI = async (url, options = {}) => {
-        try {
-          const token = localStorage.getItem("jwtToken");
-          const headers = {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          };
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      credentials: 'include', 
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-          const response = await fetch(`${API_BASE_URL}${url}`, {
-            ...options,
-            headers,
-          });
+    if (response.status === 401) {
+      showCustomAlert(
+        translations[currentLang].alert.sessionExpiredTitle,
+        translations[currentLang].alert.sessionExpiredMessage
+      );
+      router.replace("/login.html");
+      return { ok: false, status: 401 };
+    }
 
-          if (response.status === 401) {
-            showCustomAlert(
-              translations[currentLang].alert.sessionExpiredTitle,
-              translations[currentLang].alert.sessionExpiredMessage,
-            );
-            router.replace("/login.html");
-            return { ok: false, status: 401 };
-          }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || translations[currentLang].alert.apiFailed(""));
+    }
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || translations[currentLang].alert.apiFailed(""));
-          }
+    return response;
+  } catch (error) {
+    console.error("Fetch error:", error);
+    throw error;
+  }
+};
 
-          return response;
-        } catch (error) {
-          console.error("Fetch error:", error);
-          throw error;
-        }
-      };
 
       const showCustomAlert = (title, message, options) => {
         const modal = document.getElementById("alert-modal");
@@ -612,78 +610,63 @@
         isLoading: true,
       };
 
-      const render = () => {
-        const container = document.getElementById("app-container");
-        container.innerHTML = "";
-
-        if (state.isLoading) {
-          container.innerHTML = `
-            <div class="loading-container">
-              <i class="fas fa-spinner fa-spin text-blue-500 text-5xl"></i>
-              <p class="mt-4 text-base text-gray-600">${translations[currentLang].loading}</p>
-            </div>
-          `;
-          return;
-        }
-
-        const header = `
-          <div class="flex flex-row justify-between items-center mb-5 pb-2 border-b border-gray-200">
-            <div class="flex items-center space-x-4">
-              <img src="${
-                state.user?.profile_picture_url ||
-                "https://placehold.co/40x40/94a3b8/ffffff?text=U"
-              }" alt="Profile Picture" class="rounded-full w-10 h-10 shadow-md"/>
-              <button onclick="router.push('/profile.html')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
-                <i class="fas fa-user-circle text-2xl"></i>
-              </button>
-              <button onclick="router.push('/settings.html')" class="p-2 text-gray-700 hover:text-gray-900 transition duration-300">
-                <i class="fas fa-cog text-2xl"></i>
-              </button>
-            </div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex-1 text-center">${translations[currentLang].title}</h1>
-            <div class="flex items-center space-x-2">
-              <button onclick="updateLang('en')" class="lang-button text-gray-600 hover:text-blue-500 transition duration-300 ${currentLang === 'en' ? 'font-bold' : ''}">EN</button>
-              <button onclick="updateLang('fr')" class="lang-button text-gray-600 hover:text-blue-500 transition duration-300 ${currentLang === 'fr' ? 'font-bold' : ''}">FR</button>
-              <button onclick="updateLang('es')" class="lang-button text-gray-600 hover:text-blue-500 transition duration-300 ${currentLang === 'es' ? 'font-bold' : ''}">ES</button>
-              <button onclick="updateLang('tr')" class="lang-button text-gray-600 hover:text-blue-500 transition duration-300 ${currentLang === 'tr' ? 'font-bold' : ''}">TR</button>
-              <button onclick="updateLang('ar')" class="lang-button text-gray-600 hover:text-blue-500 transition duration-300 ${currentLang === 'ar' ? 'font-bold' : ''}">AR</button>
-              <button onclick="updateLang('ru')" class="lang-button text-gray-600 hover:text-blue-500 transition duration-300 ${currentLang === 'ru' ? 'font-bold' : ''}">RU</button>
+   
+const renderHeader = () => {
+  const container = document.getElementById("app-container");
 
 
-              <button id="logout-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition duration-300 ml-4">
-                ${translations[currentLang].logout}
-              </button>
-            </div>
-          </div>
-        `;
-        container.innerHTML += header;
+  const header = `
+    <div class="flex justify-between items-center mb-5 pb-2 border-b border-gray-200">
+      <div class="flex items-center space-x-4">
+        <img src="${state.user?.profile_picture_url || 'https://placehold.co/40x40/94a3b8/ffffff?text=U'}" class="rounded-full w-10 h-10 shadow-md"/>
+        <button onclick="router.push('/profile.html')" class="p-2 text-gray-700 hover:text-gray-900"><i class="fas fa-user-circle text-2xl"></i></button>
+        <button onclick="router.push('/settings.html')" class="p-2 text-gray-700 hover:text-gray-900"><i class="fas fa-cog text-2xl"></i></button>
+      </div>
+      <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex-1 text-center">${translations[currentLang].title}</h1>
+      <div class="flex items-center space-x-2">
+        <select id="lang-select" class="border rounded-lg px-2 py-1">
+          <option value="en" ${currentLang==='en'?'selected':''}>EN</option>
+          <option value="fr" ${currentLang==='fr'?'selected':''}>FR</option>
+          <option value="es" ${currentLang==='es'?'selected':''}>ES</option>
+          <option value="tr" ${currentLang==='tr'?'selected':''}>TR</option>
+          <option value="ar" ${currentLang==='ar'?'selected':''}>AR</option>
+          <option value="ru" ${currentLang==='ru'?'selected':''}>RU</option>
+        </select>
+        <button id="logout-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 ml-4">
+          ${translations[currentLang].logout}
+        </button>
+      </div>
+    </div>
+  `;
 
-        const tabs = `
-          <div class="flex border-b border-gray-300 mb-5">
-            <button id="tab-users" class="tab-button ${
-              state.activeTab === "users"
-                ? "active text-blue-600"
-                : "text-gray-600"
-            }" onclick="changeTab('users')">${translations[currentLang].manageUsers}</button>
-            <button id="tab-files" class="tab-button ${
-              state.activeTab === "files"
-                ? "active text-blue-600"
-                : "text-gray-600"
-            }" onclick="changeTab('files')">${translations[currentLang].manageFiles}</button>
-          </div>
-        `;
-        container.innerHTML += tabs;
+  container.innerHTML = header; 
 
-        if (state.activeTab === "users") {
-          renderUserManagement();
-        } else if (state.activeTab === "files") {
-          renderFileManagement();
-        }
 
-        document
-          .getElementById("logout-button")
-          .addEventListener("click", handleLogout);
-      };
+  const langDropdown = document.getElementById("lang-select");
+  langDropdown.addEventListener("change", (e) => updateLang(e.target.value));
+
+  const tabs = `
+    <div class="flex border-b border-gray-300 mb-5">
+      <button id="tab-users" class="tab-button ${state.activeTab === "users" ? "active text-blue-600" : "text-gray-600"}" onclick="changeTab('users')">
+        ${translations[currentLang].manageUsers}
+      </button>
+      <button id="tab-files" class="tab-button ${state.activeTab === "files" ? "active text-blue-600" : "text-gray-600"}" onclick="changeTab('files')">
+        ${translations[currentLang].manageFiles}
+      </button>
+    </div>
+  `;
+  container.innerHTML += tabs;
+
+ 
+  if (state.activeTab === "users") {
+    renderUserManagement();
+  } else if (state.activeTab === "files") {
+    renderFileManagement();
+  }
+
+
+  document.getElementById("logout-button").addEventListener("click", handleLogout);
+};
 
       const renderUserManagement = () => {
         const container = document.getElementById("app-container");
@@ -857,7 +840,7 @@
         state.isLoading = true;
         render();
         try {
-          const res = await fetchAPI("/admin/users");
+          const res = await fetchAPI("/global-overseer/users");
           state.users = await res.json();
           filterUsers();
         } catch (err) {
@@ -894,7 +877,7 @@
               text: translations[currentLang].alert.logout,
               onPress: async () => {
                 try {
-                  await fetchAPI("/logout", { method: "POST" });
+                  await fetchAPI("/users/logout", { method: "POST" });
                   router.replace("/login.html");
                 } catch (error) {
                   console.error("Logout failed:", error);
@@ -911,7 +894,7 @@
 
       const manageUser = async (email, action) => {
         try {
-            const endpoint = `/admin/users/${email}/${action}`;
+            const endpoint = `/global-overseer/users/${email}/${action}`;
             const res = await fetchAPI(endpoint, { method: "PUT" });
             const data = await res.json();
             if (data.status === 'success') {
@@ -936,7 +919,7 @@
                     text: translations[currentLang].alert.delete,
                     onPress: async () => {
                         try {
-                            const res = await fetchAPI(`/admin/users/${email}/delete`, { method: "DELETE" });
+                            const res = await fetchAPI(`/global-overseer/users${email}/delete`, { method: "DELETE" });
                             const data = await res.json();
                             if (data.status === 'success') {
                                 showCustomAlert(translations[currentLang].alert.successTitle, data.message);
