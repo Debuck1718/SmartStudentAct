@@ -677,40 +677,42 @@ protectedRouter.get(
   }
 );
 
-protectedRouter.get("/users", authenticateJWT, async (req, res) => {
-  try {
-    const { search = "" } = req.query;
+protectedRouter.get(
+  "/global-overseer/users",
+  authenticateJWT,
+  async (req, res) => {
+    try {
+      const { search = "" } = req.query;
 
-    if (!["admin", "global_overseer"].includes(req.user.role)) {
-      return res.status(403).json({ error: "Forbidden" });
+      if (!["admin", "global_overseer"].includes(req.user.role)) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      let query = {};
+      if (req.user.role === "admin") {
+        query.schoolName = req.user.schoolName;
+      }
+
+      if (search) {
+        query.$or = [
+          { firstname: { $regex: search, $options: "i" } },
+          { lastname: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const users = await User.find(query)
+        .select("firstname lastname email role schoolName schoolCountry createdAt")
+        .lean();
+
+      res.json({ users });
+    } catch (err) {
+      console.error("❌ Error fetching users:", err);
+      res.status(500).json({ error: "Failed to fetch users" });
     }
-
-    let query = {};
-
-    if (req.user.role === "admin") {
-      query.schoolName = req.user.schoolName;
-    }
-
-    if (search) {
-      query.$or = [
-        { firstname: { $regex: search, $options: "i" } },
-        { lastname: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    const users = await User.find(query)
-      .select(
-        "firstname lastname email role schoolName schoolCountry createdAt"
-      )
-      .lean();
-
-    res.json({ users });
-  } catch (err) {
-    console.error("❌ Error fetching users:", err);
-    res.status(500).json({ error: "Failed to fetch users" });
   }
-});
+);
+
 
 protectedRouter.post(
   "/admin/assign-region",
@@ -750,7 +752,7 @@ protectedRouter.post(
 );
 
 protectedRouter.get(
-  "/admin/all-files",
+  "/global-overseer/all-files",
   authenticateJWT,
   hasRole(["global_overseer"]),
   async (req, res) => {
@@ -758,6 +760,7 @@ protectedRouter.get(
       const assignments = await Assignment.find({
         attachment_file: { $ne: null },
       }).select("title attachment_file created_by");
+
       const assignmentFiles = assignments.map((a) => ({
         id: a._id,
         filename: path.basename(a.attachment_file),
@@ -772,6 +775,7 @@ protectedRouter.get(
           { feedback_file: { $ne: null } },
         ],
       }).populate("user_id", "email");
+
       const submissionFiles = submissions.flatMap((s) => {
         const files = [];
         if (s.submission_file) {
@@ -800,12 +804,10 @@ protectedRouter.get(
       res.status(200).json({ success: true, files: allFiles });
     } catch (error) {
       logger.error("Error fetching all files for overseer:", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to retrieve all file data." });
+      res.status(500).json({ success: false, message: "Failed to retrieve all file data." });
     }
   }
-);
+); 
 
 protectedRouter.get(
   "/admin/view-file/:type/:filename",
