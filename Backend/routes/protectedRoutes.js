@@ -1404,9 +1404,7 @@ protectedRouter.get("/auth/check", authenticateJWT, (req, res) => {
   });
 });
 
-// ================== STUDENT ROUTES ==================
 
-// 📌 Get assignments
 protectedRouter.get(
   "/student/assignments",
   authenticateJWT,
