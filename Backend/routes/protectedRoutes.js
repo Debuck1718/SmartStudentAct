@@ -1867,11 +1867,15 @@ const checkUserCountryAndRole = async (req, res, next) => {
 
 
 protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
-  const { occupation, school } = req.user;
-  const userCountry = req.fullUser.schoolCountry; 
-
   try {
-    const price = await paymentController.getUserPrice(userCountry, occupation, school);
+    const user = req.fullUser; // pass full user to pricing service
+    if (!user) {
+      return res.status(400).json({ error: "User data not available." });
+    }
+
+    const { occupation, school } = req.user; 
+    const price = await paymentController.getUserPrice(user, occupation, school);
+
     res.json(price);
   } catch (err) {
     logger.error("Error getting user price:", err);

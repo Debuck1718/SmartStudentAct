@@ -53,52 +53,49 @@ function normalizeCountry(user) {
 }
 
 async function getUserPrice(user, role, schoolName) {
-  if (!user) throw new Error("User object is required.");
-  if (!role) role = user.role || 'student';
+    if (!user) throw new Error("User data missing.");
 
-  if (['overseer', 'global_overseer'].includes(role)) {
-    return { usdPrice: 0, localPrice: 0, currency: 'USD' };
-  }
-
-  let usdPrice = 0;
-  let tier = 1;
-
-  const countryCode = normalizeCountry(user);
-  if (!countryCode) throw new Error("User country not found.");
-
-  try {
-    if (schoolName) {
-      const school = await School.findOne({ name: new RegExp(`^${schoolName}$`, 'i') });
-      if (school && school.tier) tier = school.tier;
+    if (['overseer', 'global_overseer'].includes(role)) {
+        return { usdPrice: 0, localPrice: 0, currency: 'USD' };
     }
-  } catch (error) {
-    logger.error('Error fetching school data:', error);
-  }
 
-  // Determine base USD price
-  if (tier === 3 || tier === 4) {
-    usdPrice = pricingData.tier3_4[role] || pricingData.default[role];
-  } else if (pricingData.regional[countryCode]) {
-    usdPrice = pricingData.regional[countryCode][role] ?? pricingData.default[role];
-  } else {
-    usdPrice = pricingData.default[role];
-  }
+    let usdPrice = pricingData.default[role] || 1; // default fallback
+    let tier = 1;
 
-  // Apply teacher-free condition
-  if (role === 'teacher' && pricingData.regional[countryCode]?.teacher_free) {
-    usdPrice = 0;
-  }
+    const countryCode = normalizeCountry(user);
+    if (!countryCode) {
+        console.warn("User country not found, defaulting to USD.");
+    }
 
-  const currency = COUNTRY_CURRENCY_MAP[countryCode] || 'USD';
-  const rate = await getRate(currency);
+    try {
+        if (schoolName) {
+            const school = await School.findOne({ name: new RegExp(`^${schoolName}$`, 'i') });
+            if (school && school.tier) tier = school.tier;
+        }
+    } catch (err) {
+        console.error("Error fetching school data:", err);
+    }
 
-  const localPrice = (rate && !isNaN(rate)) ? parseFloat((usdPrice * rate).toFixed(2)) : usdPrice;
+    if (tier === 3 || tier === 4) {
+        usdPrice = pricingData.tier3_4[role] ?? usdPrice;
+    } else if (pricingData.regional[countryCode]?.[role] != null) {
+        usdPrice = pricingData.regional[countryCode][role];
+    }
 
-  return {
-    usdPrice,
-    localPrice,
-    currency,
-  };
+    if (role === 'teacher' && pricingData.regional[countryCode]?.teacher_free) {
+        usdPrice = 0;
+    }
+
+    const currency = COUNTRY_CURRENCY_MAP[countryCode] || 'USD';
+    const rate = await getRate(currency).catch(() => null); // fallback to null if API fails
+
+    const localPrice = (usdPrice != null && rate != null) ? (usdPrice * rate).toFixed(2) : usdPrice ?? 0;
+
+    return {
+        usdPrice: usdPrice ?? 0,
+        localPrice: parseFloat(localPrice) || 0,
+        currency: currency || 'USD'
+    };
 }
 
 module.exports = { getUserPrice };
