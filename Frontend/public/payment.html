@@ -64,7 +64,117 @@
 
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script>
-    // translations object remains unchanged (omitted for brevity)...
+    // ✅ Translations
+    const translations = {
+      en: {
+        pageTitle: "Upgrade Your Account",
+        trialEndedTitle: "Trial Ended",
+        trialEndedMessage: "Your trial period has expired. Please upgrade to continue enjoying all features.",
+        subscriptionFee: "Subscription Fee",
+        payButton: "Proceed to Payment",
+        okButton: "OK",
+        loadingPrice: "Loading price...",
+        initiatingPayment: "Initiating payment...",
+        verifyingPayment: "Verifying payment...",
+        paymentSuccess: "Payment successful!",
+        subscriptionActive: "Your subscription is now active.",
+        paymentCanceled: "Payment canceled.",
+        paymentError: "Payment failed",
+        verificationFailed: "Verification failed",
+        error: "Error",
+        networkError: "Network error. Please try again."
+      },
+      fr: {
+        pageTitle: "Améliorez votre compte",
+        trialEndedTitle: "Essai terminé",
+        trialEndedMessage: "Votre période d’essai est terminée. Veuillez passer à la version payante pour continuer à profiter de toutes les fonctionnalités.",
+        subscriptionFee: "Frais d’abonnement",
+        payButton: "Procéder au paiement",
+        okButton: "OK",
+        loadingPrice: "Chargement du prix...",
+        initiatingPayment: "Initialisation du paiement...",
+        verifyingPayment: "Vérification du paiement...",
+        paymentSuccess: "Paiement réussi !",
+        subscriptionActive: "Votre abonnement est maintenant actif.",
+        paymentCanceled: "Paiement annulé.",
+        paymentError: "Échec du paiement",
+        verificationFailed: "Échec de la vérification",
+        error: "Erreur",
+        networkError: "Erreur réseau. Veuillez réessayer."
+      },
+      es: {
+        pageTitle: "Mejora tu cuenta",
+        trialEndedTitle: "Prueba finalizada",
+        trialEndedMessage: "Tu período de prueba ha expirado. Por favor actualiza para seguir disfrutando de todas las funciones.",
+        subscriptionFee: "Cuota de suscripción",
+        payButton: "Proceder al pago",
+        okButton: "OK",
+        loadingPrice: "Cargando precio...",
+        initiatingPayment: "Iniciando pago...",
+        verifyingPayment: "Verificando pago...",
+        paymentSuccess: "¡Pago exitoso!",
+        subscriptionActive: "Tu suscripción ya está activa.",
+        paymentCanceled: "Pago cancelado.",
+        paymentError: "Error de pago",
+        verificationFailed: "Error de verificación",
+        error: "Error",
+        networkError: "Error de red. Inténtalo de nuevo."
+      },
+      tr: {
+        pageTitle: "Hesabınızı Yükseltin",
+        trialEndedTitle: "Deneme Süresi Bitti",
+        trialEndedMessage: "Deneme süreniz sona erdi. Tüm özelliklerden faydalanmaya devam etmek için lütfen yükseltin.",
+        subscriptionFee: "Abonelik Ücreti",
+        payButton: "Ödemeye Devam Et",
+        okButton: "Tamam",
+        loadingPrice: "Fiyat yükleniyor...",
+        initiatingPayment: "Ödeme başlatılıyor...",
+        verifyingPayment: "Ödeme doğrulanıyor...",
+        paymentSuccess: "Ödeme başarılı!",
+        subscriptionActive: "Aboneliğiniz artık aktif.",
+        paymentCanceled: "Ödeme iptal edildi.",
+        paymentError: "Ödeme başarısız",
+        verificationFailed: "Doğrulama başarısız",
+        error: "Hata",
+        networkError: "Ağ hatası. Lütfen tekrar deneyin."
+      },
+      ar: {
+        pageTitle: "ترقية حسابك",
+        trialEndedTitle: "انتهت الفترة التجريبية",
+        trialEndedMessage: "انتهت فترة التجربة الخاصة بك. يرجى الترقية للاستمرار في الاستمتاع بجميع الميزات.",
+        subscriptionFee: "رسوم الاشتراك",
+        payButton: "المتابعة إلى الدفع",
+        okButton: "حسناً",
+        loadingPrice: "جاري تحميل السعر...",
+        initiatingPayment: "جارٍ بدء الدفع...",
+        verifyingPayment: "جارٍ التحقق من الدفع...",
+        paymentSuccess: "تم الدفع بنجاح!",
+        subscriptionActive: "اشتراكك مفعل الآن.",
+        paymentCanceled: "تم إلغاء الدفع.",
+        paymentError: "فشل الدفع",
+        verificationFailed: "فشل التحقق",
+        error: "خطأ",
+        networkError: "خطأ في الشبكة. حاول مرة أخرى."
+      },
+      ru: {
+        pageTitle: "Обновите свой аккаунт",
+        trialEndedTitle: "Пробный период завершён",
+        trialEndedMessage: "Ваш пробный период истёк. Пожалуйста, обновите, чтобы продолжить пользоваться всеми функциями.",
+        subscriptionFee: "Абонентская плата",
+        payButton: "Перейти к оплате",
+        okButton: "OK",
+        loadingPrice: "Загрузка цены...",
+        initiatingPayment: "Инициация платежа...",
+        verifyingPayment: "Проверка платежа...",
+        paymentSuccess: "Платёж успешен!",
+        subscriptionActive: "Ваша подписка теперь активна.",
+        paymentCanceled: "Платёж отменён.",
+        paymentError: "Ошибка платежа",
+        verificationFailed: "Проверка не удалась",
+        error: "Ошибка",
+        networkError: "Сетевая ошибка. Попробуйте снова."
+      }
+    };
 
     const payButton=document.getElementById('payButton');
     const messageDiv=document.getElementById('message');
@@ -75,7 +185,6 @@
     const PAYSTACK_PUBLIC_KEY='pk_live_7d871b198024f60a328d95812595be2443695fcb';
     let finalAmount=0, finalCurrency='';
 
-    // ✅ centralized auth-aware fetch
     async function authFetch(url, options={}){
       const res = await fetch(url, {
         ...options,
@@ -149,6 +258,3 @@
   </script>
 </body>
 </html>
-
-
-
