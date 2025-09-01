@@ -1868,7 +1868,7 @@ const checkUserCountryAndRole = async (req, res, next) => {
 
 protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   const { occupation, school } = req.user;
-  const userCountry = req.fullUser.country;
+  const userCountry = req.fullUser.schoolCountry; 
 
   try {
     const price = await paymentController.getUserPrice(userCountry, occupation, school);
@@ -1878,6 +1878,7 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
     res.status(500).json({ error: "Failed to retrieve pricing information." });
   }
 });
+
 
 
 protectedRouter.post(
