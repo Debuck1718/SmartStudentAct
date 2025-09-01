@@ -1,37 +1,51 @@
-// In controllers/paymentController.js
+// controllers/paymentController.js
 const { getPaymentDetails } = require('../services/pricingService');
 const { initPaystackPayment } = require('../services/paystackService');
 const { initFlutterwavePayment } = require('../services/flutterwaveService');
-const { validatePaymentRequest } = require('../utils/validator'); // New file for validation
-const { handleWebhook } = require('./webhookController'); // A new controller for webhooks
+const { validatePaymentRequest } = require('../utils/validator'); 
+const { handleWebhook } = require('./webhookController');
 
 async function initializePayment(req, res) {
   try {
-    // 1. Validate the incoming request data. 🔐
+   
     const { error } = validatePaymentRequest(req.body);
     if (error) {
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
 
-    const { countryCode, userType, schoolId, email, paymentMethod, phoneNumber } = req.body;
+    const { paymentMethod, phoneNumber } = req.body;
+    const user = req.user; 
+    if (!user || !user.email) {
+      return res.status(400).json({ success: false, message: "User information missing." });
+    }
 
-    // 2. Get all necessary details from a single pricing service call. ⚙️
-    const { amount, currency, gateway } = await getPaymentDetails({
-      countryCode,
-      userType,
-      schoolId,
+    const schoolName = user.schoolName || '';
+    const userRole = user.occupation || user.role || 'student';
+
+    const paymentDetails = await getPaymentDetails({
+      user,
+      role: userRole,
+      schoolName,
       paymentMethod
     });
 
+    if (!paymentDetails || typeof paymentDetails.amount !== 'number' || !paymentDetails.currency) {
+      return res.status(400).json({ success: false, message: "Pricing not available for this user." });
+    }
+
+    const { amount, currency, gateway } = paymentDetails;
+
+    if (amount <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid payment amount." });
+    }
+
     let paymentResponse;
-    // 3. The controller routes based on the service's decision. 🛣️
     if (gateway === 'paystack') {
-      paymentResponse = await initPaystackPayment({ email, amount, currency, phoneNumber });
+      paymentResponse = await initPaystackPayment({ email: user.email, amount, currency, phoneNumber });
     } else if (gateway === 'flutterwave') {
-      paymentResponse = await initFlutterwavePayment({ email, amount, currency, phoneNumber });
+      paymentResponse = await initFlutterwavePayment({ email: user.email, amount, currency, phoneNumber });
     } else {
-      // This should ideally never be reached if pricingService is robust.
-      return res.status(400).json({ success: false, message: 'Invalid payment details provided.' });
+      return res.status(400).json({ success: false, message: 'Unsupported payment gateway.' });
     }
 
     res.json({ success: true, paymentData: paymentResponse });
@@ -41,8 +55,7 @@ async function initializePayment(req, res) {
   }
 }
 
-// Separate webhook handling is essential for scalability and security.
-// This is not a direct part of the user's checkout flow.
+
 const handlePaystackWebhook = (req, res) => handleWebhook(req, res, 'paystack');
 const handleFlutterwaveWebhook = (req, res) => handleWebhook(req, res, 'flutterwave');
 
