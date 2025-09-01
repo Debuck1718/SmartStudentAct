@@ -22,7 +22,7 @@ const isProd = NODE_ENV === "production";
 module.exports = (eventBus) => {
   const publicRouter = express.Router();
 
-  // ─── Token Generators ──────────────────────────────
+  // --- Token helpers ---
   function generateAccessToken(user) {
     return jwt.sign(
       { id: user._id, role: user.role || user.occupation, email: user.email },
@@ -41,17 +41,18 @@ module.exports = (eventBus) => {
       secure: isProd,
       sameSite: isProd ? "None" : "Lax",
       maxAge: 15 * 60 * 1000,
+      domain: ".smartstudentact.com"
     });
-
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? "None" : "Lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      domain: ".smartstudentact.com"
     });
   }
 
-  // ─── Schemas ──────────────────────────────
+  // --- Joi validation schemas ---
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
     email: Joi.string().email().required(),
@@ -60,9 +61,7 @@ module.exports = (eventBus) => {
     password: Joi.string()
       .min(8)
       .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-      .message(
-        "Password must be at least 8 characters, with one uppercase, one number, one special char."
-      )
+      .message("Password must be at least 8 characters, with one uppercase, one number, one special char.")
       .required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
     occupation: Joi.string().valid("student", "teacher").required(),
@@ -110,70 +109,30 @@ module.exports = (eventBus) => {
     next();
   };
 
-  // ─── Signup OTP ──────────────────────────────
+  // --- Signup OTP ---
   publicRouter.post(
     "/users/signup-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
     validate(signupOtpSchema),
     async (req, res) => {
       try {
-        const {
-          firstname,
-          lastname,
-          email,
-          phone,
-          password,
-          occupation,
-          schoolName,
-          schoolCountry,
-          educationLevel,
-          grade,
-        } = req.body;
+        const { firstname, lastname, email, phone, password, occupation, schoolName, schoolCountry, educationLevel, grade } = req.body;
 
-        let existingUser = await User.findOne({ email });
-
+        const existingUser = await User.findOne({ email });
         const code = Math.floor(100000 + Math.random() * 900000).toString();
 
         if (existingUser) {
           const otpToken = jwt.sign({ email, code }, JWT_SECRET, { expiresIn: "10m" });
           await sendOTPEmail(email, firstname, code);
-
-          return res.json({
-            status: "success",
-            message: "OTP sent to existing user.",
-            otpToken,
-          });
+          return res.json({ status: "success", message: "OTP sent to existing user.", otpToken });
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
         const temporaryUserId = uuidv4();
-
-        const otpToken = jwt.sign(
-          {
-            temporaryUserId,
-            firstname,
-            lastname,
-            email,
-            phone,
-            passwordHash,
-            occupation,
-            schoolName,
-            schoolCountry,
-            educationLevel,
-            grade,
-            code,
-          },
-          JWT_SECRET,
-          { expiresIn: "10m" }
-        );
+        const otpToken = jwt.sign({ temporaryUserId, firstname, lastname, email, phone, passwordHash, occupation, schoolName, schoolCountry, educationLevel, grade, code }, JWT_SECRET, { expiresIn: "10m" });
 
         await sendOTPEmail(email, firstname, code);
-
-        res.status(200).json({
-          status: "success",
-          message: "OTP sent. Please verify to complete signup.",
-          otpToken,
-        });
+        res.status(200).json({ status: "success", message: "OTP sent. Please verify to complete signup.", otpToken });
       } catch (err) {
         logger.error("❌ Signup-OTP error:", err);
         res.status(500).json({ message: "Signup failed." });
@@ -181,7 +140,7 @@ module.exports = (eventBus) => {
     }
   );
 
-  // ─── Verify OTP ──────────────────────────────
+  // --- Verify OTP and auto-start trial ---
   publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
     const { code, email, password, otpToken } = req.body;
     try {
@@ -194,13 +153,9 @@ module.exports = (eventBus) => {
       let user = await User.findOne({ email });
 
       if (user) {
-        let isMatch = false;
-        if (user.password) {
-          isMatch = await bcrypt.compare(password, user.password);
-        }
+        const isMatch = user.password ? await bcrypt.compare(password, user.password) : false;
         if (!isMatch) {
-          const newHashed = await bcrypt.hash(password, 10);
-          user.password = newHashed;
+          user.password = await bcrypt.hash(password, 10);
           await user.save();
         }
 
@@ -211,12 +166,12 @@ module.exports = (eventBus) => {
 
         setAuthCookies(res, accessToken, refreshToken);
 
-        return res.status(200).json({
-          status: "success",
-          message: "User verified.",
-          redirectUrl: getRedirectUrl(user.occupation),
-        });
+        return res.status(200).json({ status: "success", message: "User verified.", redirectUrl: getRedirectUrl(user) });
       } else {
+        const now = new Date();
+        const trialDurationDays = 30;
+        const trialEndsAt = new Date(now.getTime() + trialDurationDays * 24 * 60 * 60 * 1000);
+
         const newUser = new User({
           _id: decoded.temporaryUserId,
           firstname: decoded.firstname,
@@ -231,6 +186,10 @@ module.exports = (eventBus) => {
           grade: decoded.grade,
           schoolName: decoded.schoolName,
           schoolCountry: decoded.schoolCountry,
+          is_on_trial: true,
+          has_used_trial: true,
+          trial_starts_at: now,
+          trial_ends_at: trialEndsAt
         });
 
         await newUser.save();
@@ -242,64 +201,37 @@ module.exports = (eventBus) => {
 
         setAuthCookies(res, accessToken, refreshToken);
 
-        sendWelcomeEmail(newUser.email, newUser.firstname).catch((e) =>
-          console.error("Failed to send welcome email:", e)
-        );
+        sendWelcomeEmail(newUser.email, newUser.firstname).catch(console.error);
 
-        return res.status(201).json({
-          status: "success",
-          message: "User created & verified.",
-          redirectUrl: getRedirectUrl(newUser.occupation),
-        });
+        return res.status(201).json({ status: "success", message: "User created & verified.", redirectUrl: getRedirectUrl(newUser) });
       }
     } catch (err) {
       console.error("❌ Verify-OTP error:", err);
-      if (err.name === "TokenExpiredError")
-        return res.status(400).json({ message: "OTP expired." });
+      if (err.name === "TokenExpiredError") return res.status(400).json({ message: "OTP expired." });
       return res.status(500).json({ message: "OTP verification failed." });
     }
   });
 
-  function getRedirectUrl(role) {
-    switch (role) {
-      case "global_overseer": return "/global_overseer.html";
-      case "overseer": return "/overseer.html";
-      case "admin": return "/admin.html";
-      case "teacher": return "/teachers.html";
-      case "student": return "/students.html";
-      default: return "/login.html";
-    }
-  }
-
-  // ─── Login ──────────────────────────────
+  // --- Login ---
   publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
     try {
       const { email, password } = req.body;
       const user = await User.findOne({ email }).select("+password");
-      if (!user || !(await user.comparePassword(password))) {
-        return res.status(401).json({ status: false, message: "Invalid credentials." });
-      }
+      if (!user || !(await user.comparePassword(password))) return res.status(401).json({ status: false, message: "Invalid credentials." });
 
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
-
       await User.findByIdAndUpdate(user._id, { refreshToken });
 
       setAuthCookies(res, accessToken, refreshToken);
-
-      res.json({
-        status: true,
-        message: "Login successful",
-        user: { email: user.email, role: user.role, id: user._id },
-        redirectUrl: getRedirectUrl(user.role),
-      });
+      res.json({ status: true, message: "Login successful", user: { email: user.email, role: user.role, id: user._id }, redirectUrl: getRedirectUrl(user) });
     } catch (err) {
       console.error("Login error:", err);
       return res.status(500).json({ status: false, message: "Server error" });
     }
   });
 
-  // ─── Refresh ──────────────────────────────
+  // --- Token refresh ---
   publicRouter.post("/users/refresh", async (req, res) => {
     try {
       const refreshToken = req.cookies.refresh_token;
@@ -310,10 +242,8 @@ module.exports = (eventBus) => {
 
       jwt.verify(refreshToken, JWT_REFRESH_SECRET, (err) => {
         if (err) return res.status(403).json({ error: "Expired refresh token." });
-
         const newAccessToken = generateAccessToken(user);
         setAuthCookies(res, newAccessToken, refreshToken);
-
         res.json({ message: "Token refreshed." });
       });
     } catch (err) {
@@ -321,29 +251,26 @@ module.exports = (eventBus) => {
     }
   });
 
-  
+  // --- Logout ---
   publicRouter.post("/users/logout", async (req, res) => {
     try {
       const refreshToken = req.cookies.refresh_token;
-      if (refreshToken) {
-        await User.updateOne({ refreshToken }, { $unset: { refreshToken: "" } });
-      }
-      res.clearCookie("access_token", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
-      res.clearCookie("refresh_token", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+      if (refreshToken) await User.updateOne({ refreshToken }, { $unset: { refreshToken: "" } });
+
+      res.clearCookie("access_token", { httpOnly: true, secure: true, sameSite: "None", domain: ".smartstudentact.com" });
+      res.clearCookie("refresh_token", { httpOnly: true, secure: true, sameSite: "None", domain: ".smartstudentact.com" });
       res.json({ message: "Logged out successfully." });
     } catch (err) {
       res.status(500).json({ error: "Server error." });
     }
   });
 
-  // ─── Forgot Password ──────────────────────────────
+  // --- Forgot / Reset password ---
   publicRouter.post("/auth/forgot-password", validate(forgotPasswordSchema), async (req, res) => {
     const { email } = req.body;
     try {
       const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(200).json({ message: "If an account exists, a reset link has been sent." });
-      }
+      if (!user) return res.status(200).json({ message: "If an account exists, a reset link has been sent." });
 
       const token = crypto.randomBytes(32).toString("hex");
       user.reset_password_token = token;
@@ -361,17 +288,11 @@ module.exports = (eventBus) => {
     }
   });
 
-  // ─── Reset Password ──────────────────────────────
   publicRouter.post("/auth/reset-password", validate(resetPasswordSchema), async (req, res) => {
     const { token, newPassword } = req.body;
     try {
-      const user = await User.findOne({
-        reset_password_token: token,
-        reset_password_expires: { $gt: Date.now() },
-      });
-      if (!user) {
-        return res.status(400).json({ message: "Password reset token is invalid or expired." });
-      }
+      const user = await User.findOne({ reset_password_token: token, reset_password_expires: { $gt: Date.now() } });
+      if (!user) return res.status(400).json({ message: "Password reset token is invalid or expired." });
 
       user.password = await bcrypt.hash(newPassword, 10);
       user.reset_password_token = undefined;
@@ -385,7 +306,7 @@ module.exports = (eventBus) => {
     }
   });
 
-  // ─── Contact ──────────────────────────────
+  // --- Contact ---
   publicRouter.post("/contact", validate(contactSchema), async (req, res) => {
     const { name, email, message } = req.body;
     try {
@@ -393,8 +314,8 @@ module.exports = (eventBus) => {
         "evansbuckman1@gmail.com",
         `New Contact Form Message from ${name}`,
         `<p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Message:</strong><br>${message}</p>`
+         <p><strong>Email:</strong> ${email}</p>
+         <p><strong>Message:</strong><br>${message}</p>`
       );
       res.status(200).json({ message: "Your message has been sent successfully." });
     } catch (err) {
@@ -402,6 +323,31 @@ module.exports = (eventBus) => {
       res.status(500).json({ error: "Failed to send message." });
     }
   });
+
+  // --- Redirect helper ---
+  function getRedirectUrl(user) {
+    const { role, is_on_trial, trial_ends_at, subscription_status, payment_date } = user;
+    const now = new Date();
+
+    if (role === "global_overseer") return "/global_overseer.html";
+    if (role === "overseer") return "/overseer.html";
+
+    let subscriptionActive = false;
+    if (subscription_status === "active" && payment_date) {
+      const expiry = new Date(payment_date);
+      expiry.setMonth(expiry.getMonth() + 1);
+      subscriptionActive = now < expiry;
+    }
+
+    const trialActive = is_on_trial && trial_ends_at && now < new Date(trial_ends_at);
+
+    if (role === "admin" || role === "teacher" || role === "student") {
+      if (trialActive || subscriptionActive) return `/${role}s.html`;
+      return "/payment.html";
+    }
+
+    return "/login.html";
+  }
 
   return publicRouter;
 };

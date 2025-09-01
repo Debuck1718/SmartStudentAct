@@ -47,21 +47,17 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "teacher", "admin", "overseer", "global_overseer"],
       required: true,
     },
-
-    // 🔑 NEW FIELD
     refreshToken: {
       type: String,
       select: false,
     },
-
     occupation: {
       type: String,
       enum: ["student", "teacher", "admin"],
       required: function () {
-        return this.role === "student" || this.role === "teacher" || this.role === "admin";
+        return ["student", "teacher", "admin"].includes(this.role);
       },
     },
-
     educationLevel: {
       type: String,
       enum: ["junior", "high", "university"],
@@ -74,9 +70,7 @@ const userSchema = new mongoose.Schema(
       min: 1,
       max: 12,
       required: function () {
-        return (
-          this.occupation === "student" && this.educationLevel !== "university"
-        );
+        return this.occupation === "student" && this.educationLevel !== "university";
       },
     },
     schoolName: {
@@ -84,11 +78,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100,
       required: function () {
-        return (
-          this.occupation === "student" ||
-          this.occupation === "teacher" ||
-          this.occupation === "admin"
-        );
+        return ["student", "teacher", "admin"].includes(this.occupation);
       },
     },
     university: {
@@ -96,20 +86,14 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: 150,
       required: function () {
-        return (
-          this.occupation === "student" &&
-          this.educationLevel === "university"
-        );
+        return this.occupation === "student" && this.educationLevel === "university";
       },
     },
     uniLevel: {
       type: String,
       enum: ["100", "200", "300", "400"],
       required: function () {
-        return (
-          this.occupation === "student" &&
-          this.educationLevel === "university"
-        );
+        return this.occupation === "student" && this.educationLevel === "university";
       },
     },
     program: {
@@ -138,10 +122,18 @@ const userSchema = new mongoose.Schema(
     lockoutUntil: { type: Date, default: null },
     reset_password_token: { type: String, select: false },
     reset_password_expires: { type: Date, select: false },
-    is_on_trial: { type: Boolean, default: true },
-    trial_end_date: {
+
+   
+    is_on_trial: {
+      type: Boolean,
+      default: function () {
+        return !["overseer", "global_overseer"].includes(this.role);
+      },
+    },
+    trial_end_at: {
       type: Date,
-      default: () => {
+      default: function () {
+        if (["overseer", "global_overseer"].includes(this.role)) return null;
         const date = new Date();
         date.setDate(date.getDate() + 30);
         return date;
@@ -150,10 +142,24 @@ const userSchema = new mongoose.Schema(
     subscription_status: {
       type: String,
       enum: ["inactive", "active", "expired"],
-      default: "inactive",
+      default: function () {
+        return ["overseer", "global_overseer"].includes(this.role) ? "active" : "inactive";
+      },
     },
-    payment_gateway: { type: String, trim: true },
-    payment_date: Date,
+    payment_gateway: {
+      type: String,
+      trim: true,
+      required: function () {
+        return !["overseer", "global_overseer"].includes(this.role);
+      },
+    },
+    payment_date: {
+      type: Date,
+      required: function () {
+        return !["overseer", "global_overseer"].includes(this.role);
+      },
+    },
+
     managedRegions: {
       type: [String],
       default: [],
@@ -161,11 +167,7 @@ const userSchema = new mongoose.Schema(
     schoolCountry: {
       type: String,
       required: function () {
-        return (
-          this.role === "student" ||
-          this.role === "teacher" ||
-          this.role === "admin"
-        );
+        return ["student", "teacher", "admin"].includes(this.role);
       },
       trim: true,
       maxlength: 100,
@@ -180,6 +182,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   try {
@@ -191,9 +194,11 @@ userSchema.pre("save", async function (next) {
   }
 });
 
+
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
+
 
 userSchema.set("toJSON", {
   transform: function (doc, ret) {

@@ -209,164 +209,106 @@
     </div>
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      <header
-        class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200"
+    <header
+  class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200"
+>
+  <h1
+    class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0"
+    data-i18n="dashboardTitle"
+  >
+    📚 Teacher Dashboard
+  </h1>
+
+  <div class="flex items-center space-x-6">
+    <!-- 🌍 Language Switcher -->
+    <div class="relative inline-block text-left">
+      <button
+        type="button"
+        class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        id="language-menu-button"
       >
-        <h1
-          class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0"
-          data-i18n="dashboardTitle"
+        <span id="currentLanguage" class="font-medium text-gray-700">EN</span>
+        <svg
+          class="h-5 w-5 text-gray-400"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
         >
-          📚 Teacher Dashboard
-        </h1>
-
-        <div class="relative inline-block text-left mr-4">
-          <button
-            type="button"
-            class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            id="language-menu-button"
-          >
-            <span class="font-medium text-gray-700">Language</span>
-            <svg
-              class="h-5 w-5 text-gray-400"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
-          <div
-            id="language-dropdown-menu"
-            class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0"
-          >
-            <div class="py-1" role="none">
-              <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                data-lang="en"
-                >English</a
-              >
-              <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                data-lang="fr"
-                >Français</a
-              >
-              <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                data-lang="es"
-                >Español</a
-              >
-              <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                data-lang="tr"
-                >Türkçe</a
-              >
-              <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                data-lang="ar"
-                >العربية</a
-              >
-              <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                data-lang="ru"
-                >Русский</a
-              >
-            </div>
-          </div>
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+      <div
+        id="language-dropdown-menu"
+        class="hidden origin-top-right absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0"
+      >
+        <div class="py-1" role="none">
+          <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="en">EN</button>
+          <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="fr">FR</button>
+          <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="es">ES</button>
+          <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="tr">TR</button>
+          <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ar">AR</button>
+          <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-lang="ru">RU</button>
         </div>
+      </div>
+    </div>
 
-        <div class="relative inline-block text-left">
-          <button
-            id="profile-menu-button"
-            type="button"
-            class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <span
-              class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-500"
-            >
-              <span id="profileInitials" class="font-medium text-lg text-white"
-                >TS</span
-              >
-            </span>
-            <span
-              id="profileName"
-              class="font-medium text-gray-700 hidden sm:inline"
-              >Teacher</span
-            >
-            <svg
-              class="h-5 w-5 text-gray-400"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
+    <!-- 👤 Profile Preview Placeholder -->
+    <div class="flex items-center space-x-3">
+      <img
+        id="profileAvatar"
+        src="./images/default-avatar.png"
+        alt="Profile Avatar"
+        class="h-10 w-10 rounded-full object-cover border border-gray-300"
+      />
+      <span id="profilePreviewName" class="hidden sm:inline font-medium text-gray-700">
+        Teacher
+      </span>
+    </div>
 
-          <div
-            id="profile-dropdown-menu"
-            class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0"
-            role="menu"
-            aria-orientation="vertical"
-            aria-labelledby="profile-menu-button"
-          >
-            <div class="py-1" role="none">
-              <a
-                href="/AI-Essay-Checker.html"
-                class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors px-4"
-                data-i18n="aiEssayChecker"
-              >
-                🤖 AI Essay Checker
-              </a>
-              <a
-                href="/public/quiz_dashboard.html"
-                ...
-                data-i18n="quizDashboard"
-              >
-                📝 Quiz Dashboard
-              </a>
-              <a
-                href="/public/profile.html"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                role="menuitem"
-                data-i18n="yourProfile"
-              >
-                Your Profile
-              </a>
-              <a
-                href="/public/settings.html"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                role="menuitem"
-                data-i18n="settings"
-              >
-                Settings
-              </a>
-              <hr class="my-1 border-gray-100" role="none" />
-              <button
-                id="logoutButton"
-                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                role="menuitem"
-                data-i18n="signOut"
-              >
-                🚪 Sign out
-              </button>
-            </div>
-          </div>
+    <!-- ▼ Profile Dropdown -->
+    <div class="relative inline-block text-left">
+      <button
+        id="profile-menu-button"
+        type="button"
+        class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      >
+        <svg
+          class="h-5 w-5 text-gray-400"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+
+      <div
+        id="profile-dropdown-menu"
+        class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0"
+        role="menu"
+        aria-orientation="vertical"
+        aria-labelledby="profile-menu-button"
+      >
+        <div class="py-1" role="none">
+          <a href="/AI-Essay-Checker.html" class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors px-4" data-i18n="aiEssayChecker">🤖 AI Essay Checker</a>
+          <a href="/public/quiz_dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-i18n="quizDashboard">📝 Quiz Dashboard</a>
+          <a href="/public/profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-i18n="yourProfile">Your Profile</a>
+          <a href="/public/settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-i18n="settings">Settings</a>
+          <hr class="my-1 border-gray-100" />
+          <button id="logoutButton" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-i18n="signOut">🚪 Sign out</button>
         </div>
-      </header>
+      </div>
+    </div>
+  </div>
+</header>
 
       <nav
         class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-gray-200 rounded-xl p-3 shadow-md"
@@ -707,7 +649,7 @@
 
       <footer class="text-center text-sm text-gray-500 py-6 mt-4">
         <p data-i18n="copyright">
-          © <span id="currentYear"></span> SmartStudentAct
+          © <span id="currentYear"></span> SmartStudentAct 2025
         </p>
       </footer>
     </div>

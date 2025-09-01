@@ -38,27 +38,45 @@
 </head>
 <body class="min-h-screen">
 
- 
   <header class="bg-white text-gray-800 p-4 flex justify-between items-center shadow-lg rounded-b-3xl">
     <button id="menu-btn" class="p-2 text-2xl text-blue-600 focus:outline-none" aria-label="Open navigation menu"><i class="fas fa-bars"></i></button>
     <span data-i18n="nav_title" class="text-xl font-bold flex-1 text-center">📘 SmartStudentAct</span>
     <button id="logout-btn" class="bg-red-500 py-2 px-4 rounded-full font-bold shadow-md text-white hover:bg-red-600 transition-colors"><span data-i18n="logout">Logout</span></button>
   </header>
 
- 
   <main class="p-4 sm:p-6 lg:p-8">
     <div class="max-w-4xl mx-auto">
+      
+      <!-- Profile Picture and Language Switcher -->
+      <div class="flex flex-col sm:flex-row items-center justify-between mb-8">
+        <div class="flex flex-col items-center sm:items-start mb-4 sm:mb-0">
+          <img id="profile-preview" src="./images/default-avatar.png" class="w-24 h-24 rounded-full shadow-lg mb-2 transform transition-transform duration-300 hover:scale-110" />
+          <form id="profile-form" class="flex items-center space-x-2">
+            <label for="profile-photo" class="bg-blue-500 text-white text-sm py-1 px-3 rounded-full cursor-pointer hover:bg-blue-600 transition-colors">
+              <i class="fas fa-camera"></i> <span data-i18n="change_photo">Change Photo</span>
+            </label>
+            <input type="file" id="profile-photo" name="profilePhoto" accept="image/*" class="hidden" />
+          </form>
+        </div>
+        
+        <div id="language-switcher" class="relative mt-4 sm:mt-0">
+          <select id="lang-select" class="px-3 py-2 bg-white border border-gray-300 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer text-sm">
+            <option value="en">EN - English</option>
+            <option value="fr">FR - Français</option>
+            <option value="es">ES - Español</option>
+            <option value="tr">TR - Türkçe</option>
+            <option value="ar">AR - العربية</option>
+            <option value="ru">RU - Русский</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+          </div>
+        </div>
+      </div>
 
       <h1 data-i18n="welcome_heading" class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mt-8 mb-4">Welcome to SmartStudentAct</h1>
       <p data-i18n="welcome_text" class="text-lg text-center text-gray-600 mb-8">Your learning & financial companion</p>
-
-      <form id="profile-form" class="mb-4">
-  <input type="file" id="profile-photo" name="profilePhoto" accept="image/*" />
-  <button type="submit">Upload</button>
-</form>
-<img id="profile-preview" src="/default-avatar.png" class="w-24 h-24 rounded-full" />
-
-     
+      
       <section class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300">
         <h2 data-i18n="assignments_title" class="text-2xl font-semibold mb-4 text-gray-800 flex items-center">📚 Assignments</h2>
         <button id="add-assignment-btn" data-i18n="add_assignment_btn" class="bg-green-500 text-white py-3 px-6 rounded-full font-bold w-full mb-4 shadow-lg hover:bg-green-600 transition-colors">+ Add Assignment</button>
@@ -85,18 +103,22 @@
         <div id="budget-loading" class="text-center mt-4 loading-spinner"><i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i></div>
       </section>
 
-
       <section class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300">
         <h2 data-i18n="weekly_goal_title" class="text-2xl font-semibold mb-4 text-gray-800 flex items-center">🎯 Weekly Goal</h2>
         <div class="space-y-4">
           <input id="goal-input" type="text" data-i18n-placeholder="goal_placeholder" placeholder="Your weekly goal" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base"/>
+          <input id="goal-target-date" type="date" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base"/>
+          <select id="goal-type" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base">
+            <option value="academic">Academic</option>
+            <option value="personal">Personal</option>
+            <option value="extracurricular">Extracurricular</option>
+          </select>
           <p id="goal-error" class="text-red-500 text-sm hidden"></p>
           <button id="save-goal-btn" data-i18n="save_goal_btn" class="bg-blue-500 text-white py-3 px-6 rounded-full font-bold w-full shadow-lg hover:bg-blue-600 transition-colors">Save Goal</button>
-          <p id="saved-goal-text" class="text-green-600 font-bold text-center mt-2 hidden"></p>
+          <ul id="saved-goals-list" class="text-green-600 font-bold text-center mt-2"></ul>
         </div>
       </section>
 
- 
       <section class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300">
         <div class="flex items-center justify-between mb-4">
           <h2 data-i18n="ai_insights_title" class="text-2xl font-semibold text-gray-800 flex items-center">🤖 AI Insights</h2>
@@ -113,14 +135,12 @@
         </div>
       </section>
 
-      
       <section id="rewards" class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300">
         <h2 data-i18n="rewards_title" class="text-2xl font-semibold mb-4 text-gray-800 flex items-center">🏆 Rewards</h2>
         <div id="rewards-list" class="space-y-4"><p data-i18n="no_rewards" class="italic text-gray-500 text-center">No rewards yet. Keep up the great work!</p></div>
         <div class="text-center mt-4 loading-spinner"><i class="fas fa-spinner fa-spin text-3xl text-gray-500"></i></div>
       </section>
 
- 
       <section class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300">
         <h2 data-i18n="analytics_title" class="text-2xl font-semibold mb-4 text-gray-800 flex items-center">📊 Analytics</h2>
         <div class="w-full h-64"><canvas id="analytics-chart"></canvas></div>
@@ -128,12 +148,10 @@
     </div>
   </main>
 
- 
   <footer class="text-center text-gray-500 text-sm mt-8 mb-4">
     <span data-i18n="footer_text">&copy; 2025 SmartStudentAct – Empowering Students Globally.</span>
   </footer>
 
- 
   <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.1)] py-2 px-4 rounded-t-3xl z-40">
     <div class="flex justify-around items-center h-full">
       <a href="./students.html" class="tab-link flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-500 transition-colors" data-tab="dashboard">
@@ -157,116 +175,132 @@
     </div>
   </nav>
 
- 
   <div id="add-assignment-modal" class="modal-overlay">
     <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 modal-content relative">
       <button class="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl" onclick="closeModal('add-assignment-modal')">&times;</button>
       <h3 class="text-xl font-bold mb-4" data-i18n="add_assignment_modal_title">Add Assignment</h3>
       <input type="text" placeholder="Assignment Name" id="assignment-name" class="w-full mb-3 px-4 py-2 border rounded-xl focus:outline-none"/>
       <textarea placeholder="Description" id="assignment-desc" class="w-full mb-3 px-4 py-2 border rounded-xl focus:outline-none"></textarea>
-      <button class="bg-green-500 text-white py-2 px-6 rounded-full w-full font-bold hover:bg-green-600" onclick="saveAssignment()">Save Assignment</button>
+      <button id="save-assignment-btn" class="bg-green-500 text-white py-2 px-6 rounded-full w-full font-bold hover:bg-green-600">Save Assignment</button>
     </div>
   </div>
 
-  
   <div id="budget-modal" class="modal-overlay">
     <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 modal-content relative">
       <button class="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl" onclick="closeModal('budget-modal')">&times;</button>
       <h3 class="text-xl font-bold mb-4" data-i18n="add_budget_modal_title">Add Budget</h3>
       <input type="text" placeholder="Expense Name" id="expense-name" class="w-full mb-3 px-4 py-2 border rounded-xl focus:outline-none"/>
       <input type="number" placeholder="Amount" id="expense-amount" class="w-full mb-3 px-4 py-2 border rounded-xl focus:outline-none"/>
-      <button class="bg-green-500 text-white py-2 px-6 rounded-full w-full font-bold hover:bg-green-600" onclick="saveBudget()">Save Expense</button>
+      <input type="date" id="expense-date" class="w-full mb-3 px-4 py-2 border rounded-xl focus:outline-none"/>
+      <select id="expense-category" class="w-full mb-3 px-4 py-2 border rounded-xl focus:outline-none">
+        <option value="necessity">Necessity</option>
+        <option value="entertainment">Entertainment</option>
+        <option value="education">Education</option>
+        <option value="other">Other</option>
+      </select>
+      <button id="save-budget-btn" class="bg-green-500 text-white py-2 px-6 rounded-full w-full font-bold hover:bg-green-600">Save Expense</button>
     </div>
   </div>
 
-  
   <div id="menu-modal" class="modal-overlay">
-      <div id="menu-content" class="bg-white h-full w-64 p-6 shadow-2xl transition-transform duration-300 ease-in-out transform -translate-x-full">
-          <button id="close-menu-btn" class="text-gray-500 text-2xl absolute top-4 right-4">&times;</button>
-          <h2 class="text-xl font-bold mb-6">Menu</h2>
-          <nav>
-              <ul class="space-y-4">
-                  <li><a href="./students.html" class="text-blue-600 font-semibold hover:underline">Dashboard</a></li>
-                  <li><a href="./financial.html" class="text-blue-600 font-semibold hover:underline">Financial</a></li>
-                  <li><a href="./settings.html" class="hover:underline">Settings</a></li>
-                  <li><a href="./rewards.html" class="hover:underline">Rewards</a></li>
-                  <li><button id="menu-logout-btn" class="text-red-500 font-semibold hover:underline">Logout</button></li>
-              </ul>
-          </nav>
-      </div>
+    <div id="menu-content" class="bg-white h-full w-64 p-6 shadow-2xl transition-transform duration-300 ease-in-out transform -translate-x-full">
+      <button id="close-menu-btn" class="text-gray-500 text-2xl absolute top-4 right-4">&times;</button>
+      <h2 class="text-xl font-bold mb-6">Menu</h2>
+      <nav>
+        <ul class="space-y-4">
+          <li><a href="./students.html" class="text-blue-600 font-semibold hover:underline">Dashboard</a></li>
+          <li><a href="./financial.html" class="text-blue-600 font-semibold hover:underline">Financial</a></li>
+          <li><a href="./settings.html" class="hover:underline">Settings</a></li>
+          <li><a href="./rewards.html" class="hover:underline">Rewards</a></li>
+          <li><button id="menu-logout-btn" class="text-red-500 font-semibold hover:underline">Logout</button></li>
+        </ul>
+      </nav>
+    </div>
   </div>
 
   <!-- TOAST CONTAINER -->
   <div id="toast-container"></div>
   
-  <!-- LANGUAGE SWITCHER -->
-  <div id="language-switcher" class="flex justify-center my-4 relative">
-    <select id="lang-select" class="px-3 py-2 bg-white border border-gray-300 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer text-sm">
-      <option value="en">EN - English</option>
-      <option value="fr">FR - Français</option>
-      <option value="es">ES - Español</option>
-      <option value="tr">TR - Türkçe</option>
-      <option value="ar">AR - العربية</option>
-      <option value="ru">RU - Русский</option>
-    </select>
-    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-      <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-    </div>
-  </div>
-
-  <!-- TRANSLATION SCRIPT -->
   <script src="translate.js"></script>
 
 <script>
 const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // 1. Language
   let currentLang = "en";
   const dashboardName = "students";
-  translatePage(dashboardName, currentLang);
-  document.getElementById("lang-select").addEventListener("change", (e) => {
-    currentLang = e.target.value;
+  if (typeof translatePage === "function") {
     translatePage(dashboardName, currentLang);
-  });
+    const langSelect = document.getElementById("lang-select");
+    if (langSelect) {
+      langSelect.addEventListener("change", (e) => {
+        currentLang = e.target.value;
+        translatePage(dashboardName, currentLang);
+      });
+    }
+  }
 
-  // 2. DOM Elements
   const DOMElements = {
-    logoutBtn: document.getElementById('logout-btn'),
-    menuLogoutBtn: document.getElementById('menu-logout-btn'),
-    closeMenuBtn: document.getElementById('close-menu-btn'),
-    menuContent: document.getElementById('menu-content'),
-    saveGoalBtn: document.getElementById('save-goal-btn'),
-    goalInput: document.getElementById('goal-input'),
-    savedGoalText: document.getElementById('saved-goal-text'),
-    assignmentsList: document.getElementById('assignments-list'),
-    budgetList: document.getElementById('budget-list'),
-    insightsContent: document.getElementById('insights-content'),
-    insightsPlaceholder: document.getElementById('insights-placeholder'),
-    generateInsightsBtn: document.getElementById('generate-insights-btn'),
-    chartCanvas: document.getElementById('analytics-chart'),
-    profileForm: document.getElementById('profile-form'),
-    profilePic: document.getElementById('profile-pic'),
+    logoutBtn: document.getElementById("logout-btn"),
+    menuLogoutBtn: document.getElementById("menu-logout-btn"),
+    menuBtn: document.getElementById("menu-btn"),
+    closeMenuBtn: document.getElementById("close-menu-btn"),
+    menuContent: document.getElementById("menu-content"),
+    addAssignmentBtn: document.getElementById("add-assignment-btn"),
+    addBudgetBtn: document.getElementById("add-budget-btn"),
+    saveAssignmentBtn: document.getElementById("save-assignment-btn"),
+    saveBudgetBtn: document.getElementById("save-budget-btn"),
+    saveGoalBtn: document.getElementById("save-goal-btn"),
+    goalInput: document.getElementById("goal-input"),
+    savedGoalsList: document.getElementById("saved-goals-list"),
+    assignmentsList: document.getElementById("assignments-list"),
+    budgetList: document.getElementById("budget-list"),
+    insightsContent: document.getElementById("insights-content"),
+    insightsPlaceholder: document.getElementById("insights-placeholder"),
+    generateInsightsBtn: document.getElementById("generate-insights-btn"),
+    profileForm: document.getElementById("profile-form"),
+    profilePhotoInput: document.getElementById("profile-photo"),
+    profilePreview: document.getElementById("profile-preview"),
+    addAssignmentModal: document.getElementById("add-assignment-modal"),
+    budgetModal: document.getElementById("budget-modal"),
+    menuModal: document.getElementById("menu-modal"),
+    chartCanvas: document.getElementById("analytics-chart"),
   };
 
   // 3. Helpers
-  function openModal(id) { document.getElementById(id).classList.add('active'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+  function openModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.add("active");
+  }
+  function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove("active");
+  }
+
+ 
+  window.openModal = openModal;
+  window.closeModal = closeModal;
 
   function showToast(message, type = "info") {
     const container = document.getElementById("toast-container");
+    if (!container) return;
     const toast = document.createElement("div");
-    const colors = { success:"bg-green-500", error:"bg-red-500", info:"bg-blue-500", warning:"bg-yellow-500" };
+    const colors = {
+      success: "bg-green-500",
+      error: "bg-red-500",
+      info: "bg-blue-500",
+      warning: "bg-yellow-500",
+    };
     toast.className = `toast ${colors[type] || colors.info} text-white px-4 py-2 rounded-full shadow-lg`;
     toast.innerText = message;
     container.appendChild(toast);
     setTimeout(() => toast.remove(), 4000);
   }
 
-  async function fetchWithAuth(endpoint, options={}) {
+  async function fetchWithAuth(endpoint, options = {}) {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
-      credentials: "include"
+      credentials: "include",
     });
     if (!res.ok) throw new Error((await res.json()).message || "Request failed");
     return res.json();
@@ -278,64 +312,132 @@ document.addEventListener("DOMContentLoaded", async () => {
       return true;
     } catch {
       showToast("Please login first.", "error");
-      setTimeout(()=>window.location.href="/login.html",1500);
+      setTimeout(() => (window.location.href = "/login.html"), 1500);
       return false;
     }
   }
 
-  // 4. Handlers
   async function handleSaveAssignment() {
-    const name = document.getElementById('assignment-name').value.trim();
-    const desc = document.getElementById('assignment-desc').value.trim();
-    if (!name) return showToast("Enter assignment name","warning");
+    const name = document.getElementById("assignment-name").value.trim();
+    const desc = document.getElementById("assignment-desc").value.trim();
+    if (!name) return showToast("Enter assignment name", "warning");
 
     try {
       await fetchWithAuth("/student/submissions", {
-        method:"POST", headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ title:name, description:desc })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: name, description: desc }),
       });
-      showToast("Assignment submitted!","success");
+      showToast("Assignment submitted!", "success");
       closeModal("add-assignment-modal");
       fetchAssignments();
-    } catch(e){ showToast(e.message,"error"); }
+    } catch (e) {
+      showToast(e.message, "error");
+    }
   }
 
   async function handleSaveBudget() {
-    const name = document.getElementById('expense-name').value.trim();
-    const amount = document.getElementById('expense-amount').value.trim();
-    if (!name || !amount || isNaN(amount)) return showToast("Enter valid budget","warning");
+    const description = document.getElementById("expense-name").value.trim();
+    const amount = parseFloat(
+      document.getElementById("expense-amount").value.trim()
+    );
+    const date = document.getElementById("expense-date").value;
+    const category = document.getElementById("expense-category").value;
+
+    if (!description || isNaN(amount) || !date)
+      return showToast("Enter all budget fields", "warning");
 
     try {
       await fetchWithAuth("/add-entry", {
-        method:"POST", headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ description:name, amount:parseFloat(amount) })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description, amount, date, category }),
       });
-      showToast("Budget entry saved!","success");
+      showToast("Budget entry saved!", "success");
       closeModal("budget-modal");
       fetchBudget();
-    } catch(e){ showToast(e.message,"error"); }
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  }
+
+  async function fetchBudget() {
+    try {
+      const entries = await fetchWithAuth("/entries");
+      DOMElements.budgetList.innerHTML = entries.length
+        ? entries
+            .map(
+              (e) =>
+                `<li class="p-2 border-b">${e.description}: $${e.amount} (${
+                  e.category || "N/A"
+                }, ${new Date(e.date).toLocaleDateString()})</li>`
+            )
+            .join("")
+        : "<li>No budget entries</li>";
+    } catch (e) {
+      showToast(e.message, "error");
+    }
   }
 
   async function handleSaveGoal() {
-    const goalText = DOMElements.goalInput.value.trim();
-    if (!goalText) return showToast("Please enter a goal","warning");
+    const description = DOMElements.goalInput.value.trim();
+    const target_date = document.getElementById("goal-target-date").value;
+    const type = document.getElementById("goal-type").value;
+    if (!description || !target_date)
+      return showToast("Enter all goal fields", "warning");
 
     try {
       await fetchWithAuth("/goals", {
-        method:"POST", headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ description:goalText, type:"academic" })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description,
+          target_date,
+          type,
+          progress: 0,
+        }),
       });
-      showToast("Goal saved 🎯","success");
+      showToast("Goal saved 🎯", "success");
+      DOMElements.goalInput.value = "";
+      document.getElementById("goal-target-date").value = "";
       fetchGoal();
-    } catch(e){ showToast(e.message,"error"); }
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  }
+
+  async function fetchGoal() {
+    try {
+      const goals = await fetchWithAuth("/goals");
+      const listEl = document.getElementById("saved-goals-list");
+      if (!goals.length) {
+        listEl.innerHTML = "<li>No goals yet.</li>";
+      } else {
+        listEl.innerHTML = goals
+          .map(
+            (g) =>
+              `<li>${g.description} (${g.type}) - ${g.progress}% complete, due ${new Date(
+                g.target_date
+              ).toLocaleDateString()}</li>`
+          )
+          .join("");
+      }
+    } catch (e) {
+      showToast(e.message, "error");
+    }
   }
 
   async function handleLogout() {
     try {
-      await fetch(`${API_BASE_URL}/users/logout`,{ method:"POST", credentials:"include" });
-      showToast("Logged out","info");
-      setTimeout(()=>window.location.href="/login.html",1000);
-    } catch { showToast("Logout failed","error"); }
+      await fetch(`${API_BASE_URL}/users/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      showToast("Logged out", "info");
+      setTimeout(() => (window.location.href = "/login.html"), 1000);
+    } catch {
+      showToast("Logout failed", "error");
+    }
   }
 
   async function handleProfileUpload(e) {
@@ -344,15 +446,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-        method:"POST",
+        method: "POST",
         body: formData,
-        credentials: "include"
+        credentials: "include",
       });
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.message || "Upload failed");
-      DOMElements.profilePic.src = data.imageUrl;
-      showToast("Profile updated!","success");
-    } catch(e){ showToast(e.message,"error"); }
+
+      DOMElements.profilePreview.src =
+        data.imageUrl || "./images/default-avatar.png";
+      showToast("Profile updated!", "success");
+    } catch (e) {
+      DOMElements.profilePreview.src = "./images/default-avatar.png";
+      showToast(e.message, "error");
+    }
   }
 
   async function handleGenerateInsights() {
@@ -360,50 +468,135 @@ document.addEventListener("DOMContentLoaded", async () => {
       const advice = await fetchWithAuth("/advice");
       DOMElements.insightsPlaceholder.classList.add("hidden");
       DOMElements.insightsContent.classList.remove("hidden");
-      DOMElements.insightsContent.innerText = advice.message || "No advice received.";
-    } catch(e){ showToast(e.message,"error"); }
+      DOMElements.insightsContent.innerText =
+        advice.message || "No advice received.";
+    } catch (e) {
+      showToast(e.message, "error");
+    }
   }
 
   // 5. Fetch + Render
-  async function fetchAssignments(){
+  async function fetchAssignments() {
     try {
       const assignments = await fetchWithAuth("/student/assignments");
-      DOMElements.assignmentsList.innerHTML = assignments.map(a =>
-        `<li class="p-2 border-b">${a.title} - ${a.description || ""}</li>`
-      ).join("") || "<li>No assignments</li>";
-    } catch(e){ showToast(e.message,"error"); }
+      DOMElements.assignmentsList.innerHTML =
+        assignments.map(
+          (a) =>
+            `<li class="p-2 border-b">${a.title} - ${
+              a.description || ""
+            }</li>`
+        ).join("") ||
+        `<p data-i18n="no_assignments" class="italic text-gray-500 text-center">No assignments added yet.</p>`;
+    } catch (e) {
+      showToast(e.message, "error");
+    }
   }
 
-  async function fetchBudget(){
+  async function fetchQuizzes() {
     try {
-      const entries = await fetchWithAuth("/entries");
-      DOMElements.budgetList.innerHTML = entries.map(e =>
-        `<li class="p-2 border-b">${e.description}: $${e.amount}</li>`
-      ).join("") || "<li>No budget entries</li>";
-    } catch(e){ showToast(e.message,"error"); }
+      const quizzes = await fetchWithAuth("/student/quizzes");
+      const quizzesList = document.getElementById("quizzes-list");
+      quizzesList.innerHTML = quizzes.length
+        ? quizzes
+            .map(
+              (q) =>
+                `<li class="p-2 border-b">${q.title} - Due: ${new Date(
+                  q.dueDate
+                ).toLocaleDateString()}</li>`
+            )
+            .join("")
+        : `<p data-i18n="no_quizzes" class="italic text-gray-500 text-center">No quizzes assigned yet.</p>`;
+    } catch (e) {
+      showToast(e.message, "error");
+    }
   }
 
-  async function fetchGoal(){
-    try {
-      const goals = await fetchWithAuth("/goals");
-      DOMElements.savedGoalText.innerText = goals.length ? goals[0].description : "No goals yet.";
-    } catch(e){ showToast(e.message,"error"); }
+  function renderChart() {
+    if (!DOMElements.chartCanvas) return;
+    const ctx = DOMElements.chartCanvas.getContext("2d");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: ["Assignments", "Quizzes", "Budget"],
+        datasets: [
+          {
+            label: "Activity",
+            data: [12, 19, 3], 
+            backgroundColor: ["#3b82f6", "#8b5cf6", "#ef4444"],
+            borderRadius: 10,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
   }
 
-  // 6. Init
+ 
   if (await checkAuthentication()) {
-    fetchAssignments(); fetchBudget(); fetchGoal();
+    fetchAssignments();
+    fetchBudget();
+    fetchGoal();
+    fetchQuizzes();
+    renderChart();
   }
 
-  DOMElements.saveGoalBtn.addEventListener("click", handleSaveGoal);
-  DOMElements.generateInsightsBtn.addEventListener("click", handleGenerateInsights);
-  DOMElements.logoutBtn.addEventListener("click", handleLogout);
-  DOMElements.menuLogoutBtn.addEventListener("click", handleLogout);
-  DOMElements.profileForm.addEventListener("submit", handleProfileUpload);
 
-  window.saveAssignment = handleSaveAssignment;
-  window.saveBudget = handleSaveBudget;
+  if (DOMElements.menuBtn) {
+    DOMElements.menuBtn.addEventListener("click", () => {
+      DOMElements.menuModal.classList.add("active");
+      DOMElements.menuContent.style.transform = "translateX(0)";
+    });
+  }
+  if (DOMElements.closeMenuBtn) {
+    DOMElements.closeMenuBtn.addEventListener("click", () => {
+      DOMElements.menuContent.style.transform = "translateX(-100%)";
+      setTimeout(() => DOMElements.menuModal.classList.remove("active"), 300);
+    });
+  }
+  if (DOMElements.addAssignmentBtn)
+    DOMElements.addAssignmentBtn.addEventListener("click", () =>
+      openModal("add-assignment-modal")
+    );
+  if (DOMElements.addBudgetBtn)
+    DOMElements.addBudgetBtn.addEventListener("click", () =>
+      openModal("budget-modal")
+    );
+  if (DOMElements.saveAssignmentBtn)
+    DOMElements.saveAssignmentBtn.addEventListener("click", handleSaveAssignment);
+  if (DOMElements.saveBudgetBtn)
+    DOMElements.saveBudgetBtn.addEventListener("click", handleSaveBudget);
+  if (DOMElements.saveGoalBtn)
+    DOMElements.saveGoalBtn.addEventListener("click", handleSaveGoal);
+  if (DOMElements.generateInsightsBtn)
+    DOMElements.generateInsightsBtn.addEventListener("click", handleGenerateInsights);
+  if (DOMElements.logoutBtn)
+    DOMElements.logoutBtn.addEventListener("click", handleLogout);
+  if (DOMElements.menuLogoutBtn)
+    DOMElements.menuLogoutBtn.addEventListener("click", handleLogout);
+  if (DOMElements.profilePhotoInput)
+    DOMElements.profilePhotoInput.addEventListener("change", handleProfileUpload);
 });
+
+
+document
+  .getElementById("profile-photo")
+  ?.addEventListener("change", function (event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById("profile-preview").src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 </script>
-  </body>
+</body>
 </html>

@@ -1474,7 +1474,7 @@ protectedRouter.post(
   }
 );
 
-// 📌 Get teachers in student's school
+
 protectedRouter.get(
   "/student/teachers/my-school",
   authenticateJWT,
@@ -1529,7 +1529,7 @@ protectedRouter.get(
   }
 );
 
-// 📌 Submit quiz answers
+
 protectedRouter.post(
   "/student/quizzes/:assignmentId/submit",
   authenticateJWT,
@@ -1865,22 +1865,20 @@ const checkUserCountryAndRole = async (req, res, next) => {
   }
 };
 
+
 protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   const { occupation, school } = req.user;
   const userCountry = req.fullUser.country;
 
   try {
-    const price = await paymentController.getUserPrice(
-      userCountry,
-      occupation,
-      school
-    );
+    const price = await paymentController.getUserPrice(userCountry, occupation, school);
     res.json(price);
   } catch (err) {
     logger.error("Error getting user price:", err);
     res.status(500).json({ error: "Failed to retrieve pricing information." });
   }
 });
+
 
 protectedRouter.post(
   "/payment/initiate",
@@ -1892,11 +1890,7 @@ protectedRouter.post(
     const userCountry = req.fullUser.country;
 
     try {
-      const priceInfo = await paymentController.getUserPrice(
-        userCountry,
-        occupation,
-        school
-      );
+      const priceInfo = await paymentController.getUserPrice(userCountry, occupation, school);
       const amount = priceInfo.localPrice;
       const currency = priceInfo.currency;
 
@@ -1904,26 +1898,18 @@ protectedRouter.post(
         return res.status(400).json({ error: "Invalid payment amount." });
       }
 
+      logger.info(`User ${email} is initiating payment via ${gateway} for amount ${amount} ${currency}`);
+
       let paymentData;
       switch (gateway) {
         case "flutterwave":
-          paymentData = await paymentController.initFlutterwavePayment(
-            email,
-            amount,
-            currency
-          );
+          paymentData = await paymentController.initFlutterwavePayment(email, amount, currency);
           break;
         case "paystack":
-          paymentData = await paymentController.initPaystackPayment(
-            email,
-            amount,
-            currency
-          );
+          paymentData = await paymentController.initPaystackPayment(email, amount, currency);
           break;
         default:
-          return res
-            .status(400)
-            .json({ error: "Unsupported payment gateway." });
+          return res.status(400).json({ error: "Unsupported payment gateway." });
       }
 
       res.json({
@@ -1937,37 +1923,60 @@ protectedRouter.post(
   }
 );
 
+
 protectedRouter.post("/trial/start", authenticateJWT, async (req, res) => {
   const userId = req.user.id;
+
   try {
     const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found." });
-    }
+    if (!user) return res.status(404).json({ error: "User not found." });
 
     if (user.is_on_trial || user.has_used_trial) {
-      return res
-        .status(400)
-        .json({ error: "Trial has already been used or is currently active." });
+      return res.status(400).json({ error: "Trial has already been used or is currently active." });
     }
 
+    const now = new Date();
+    const trialDurationDays = 30;
+    const trialEndsAt = new Date(now.getTime() + trialDurationDays * 24 * 60 * 60 * 1000);
+
     user.is_on_trial = true;
-    user.trial_starts_at = new Date();
+    user.trial_starts_at = now;
+    user.trial_ends_at = trialEndsAt;
     user.has_used_trial = true;
+
     await user.save();
 
-    agenda.schedule("in 30 days", "end-trial", { userId: user._id });
+    agenda.schedule(`${trialDurationDays} days`, "end-trial", { userId: user._id });
 
-    logger.info("Free trial started for user:", userId);
+    logger.info(`Free trial started for user ${userId}. Ends at ${trialEndsAt.toISOString()}`);
+
     res.json({
-      message: "Free trial started successfully. It will end in 30 days.",
+      message: `Free trial started successfully. It will end on ${trialEndsAt.toISOString()}`,
+      trial_ends_at: trialEndsAt,
     });
   } catch (err) {
     logger.error("Error starting free trial:", err);
     res.status(500).json({ error: "Failed to start free trial." });
   }
 });
+
+
+protectedRouter.get("/user/status", authenticateJWT, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: "User not found." });
+
+    res.json({
+      is_on_trial: user.is_on_trial,
+      subscription_active: user.subscription_active || false,
+      trial_ends_at: user.trial_ends_at || null,
+    });
+  } catch (err) {
+    logger.error("Error fetching user status:", err);
+    res.status(500).json({ error: "Failed to fetch user status." });
+  }
+});
+
 
 protectedRouter.use("/rewards", advancedGoalsRouter);
 protectedRouter.use("/budget", budgetRouter);

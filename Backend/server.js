@@ -156,7 +156,7 @@ async function startApp() {
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
 
-      // ─── Self-Ping Keep Alive ───
+
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         setInterval(async () => {
           try {
