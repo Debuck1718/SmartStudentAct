@@ -1,10 +1,20 @@
 const jwt = require("jsonwebtoken");
 const logger = require("../utils/logger");
+const User = require("../models/User");
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key";
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "your-super-secret-refresh-key";
+// JWT secrets must be loaded from environment variables.
+// The app will crash on startup if these are not set.
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+
+// Check if secrets are defined
+if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
+  throw new Error("JWT_SECRET and JWT_REFRESH_SECRET must be set in the environment variables.");
+}
 
 const isProd = process.env.NODE_ENV === "production";
+const ACCESS_TOKEN_EXPIRY = "15m";
+const REFRESH_TOKEN_EXPIRY = "7d";
 
 // --- Public Routes ---
 const PUBLIC_ROUTES = [
@@ -14,70 +24,83 @@ const PUBLIC_ROUTES = [
   "/users/refresh",
   "/auth/forgot-password",
   "/auth/reset-password",
+  "/contact",
 ];
 
 const isPublicRoute = (url) => {
   const cleanUrl = url.split("?")[0];
-  return PUBLIC_ROUTES.some(
-    (route) => cleanUrl === route || cleanUrl === route.replace("/api", "")
-  );
+  return PUBLIC_ROUTES.some((route) => cleanUrl.startsWith(route));
 };
 
-// --- Token Helpers ---
 function generateAccessToken(user) {
   return jwt.sign(
     { id: user.id, role: user.role, email: user.email },
     JWT_SECRET,
-    { expiresIn: "15m" }
+    { expiresIn: ACCESS_TOKEN_EXPIRY }
   );
 }
 
-function setAccessTokenCookie(res, token) {
-  res.cookie("access_token", token, {
+function generateRefreshToken(user) {
+  return jwt.sign(
+    { id: user.id, role: user.role, email: user.email },
+    JWT_REFRESH_SECRET,
+    { expiresIn: REFRESH_TOKEN_EXPIRY }
+  );
+}
+
+function setAuthCookies(res, accessToken, refreshToken) {
+  const cookieOptions = {
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? "None" : "Lax",
-    domain: isProd ? ".smartstudentact.com" : undefined,
-    maxAge: 15 * 60 * 1000, 
+    sameSite: "None",
+  };
+
+  res.cookie("access_token", accessToken, {
+    ...cookieOptions,
+    maxAge: 15 * 60 * 1000, // 15 minutes
+  });
+
+  res.cookie("refresh_token", refreshToken, {
+    ...cookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 }
 
-
+// Middleware to authenticate JWT token from cookie or header.
 const authenticateJWT = (req, res, next) => {
   if (isPublicRoute(req.originalUrl)) {
     return next();
   }
 
   let token = req.cookies?.access_token;
-
   if (!token && req.headers.authorization) {
     token = req.headers.authorization.split(" ")[1];
   }
 
   if (!token) {
-    logger.warn("JWT missing for route:", req.originalUrl);
+    logger.warn(`Authentication token missing for route: ${req.originalUrl}`);
     return res.status(401).json({
       status: false,
       message: "Authentication token missing.",
     });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, JWT_SECRET, async (err, decoded) => {
     if (err) {
-     
       if (err.name === "TokenExpiredError") {
         const refreshToken = req.cookies?.refresh_token;
+
         if (!refreshToken) {
-          logger.warn("Access token expired, no refresh token found");
+          logger.warn("Access token expired, no refresh token found.");
           return res.status(401).json({
             status: false,
             message: "Session expired. Please login again.",
           });
         }
 
-        return jwt.verify(refreshToken, JWT_REFRESH_SECRET, (refreshErr, refreshDecoded) => {
+        return jwt.verify(refreshToken, JWT_REFRESH_SECRET, async (refreshErr, refreshDecoded) => {
           if (refreshErr) {
-            logger.error("Refresh token invalid/expired:", refreshErr.message);
+            logger.error(`Refresh token invalid/expired: ${refreshErr.message}`);
             return res.status(403).json({
               status: false,
               message: "Refresh token expired or invalid. Please login again.",
@@ -90,47 +113,55 @@ const authenticateJWT = (req, res, next) => {
             email: refreshDecoded.email,
           });
 
-          setAccessTokenCookie(res, newAccessToken);
+          // Check if the refresh token is still valid in the database
+          const user = await User.findById(refreshDecoded.id);
+          if (!user || user.refreshToken !== refreshToken) {
+            logger.warn(`Refresh token mismatch for user ${refreshDecoded.id}.`);
+            return res.status(403).json({
+              status: false,
+              message: "Invalid session. Please login again.",
+            });
+          }
+
+          res.cookie("access_token", newAccessToken, {
+            httpOnly: true,
+            secure: isProd,
+            sameSite: "None",
+            maxAge: 15 * 60 * 1000,
+          });
 
           req.userId = refreshDecoded.id;
           req.userRole = refreshDecoded.role;
           req.email = refreshDecoded.email;
           req.user = refreshDecoded;
 
-          logger.info("New access token issued via refresh token");
+          logger.info("New access token issued via refresh token.");
           return next();
         });
       }
 
-     --
-      logger.error("JWT verification failed:", err.message);
+      logger.error(`JWT verification failed: ${err.message}`);
       return res.status(403).json({
         status: false,
-        message: "Token expired or invalid.",
+        message: "Invalid token.",
       });
     }
 
-   
-    req.userId = decoded.id || decoded.userId;
+    req.userId = decoded.id;
     req.userRole = decoded.role;
     req.email = decoded.email;
     req.user = decoded;
-
     next();
   });
 };
 
-// --- Role Guard ---
+// Middleware to check for required admin-level roles.
 const requireAdmin = (req, res, next) => {
-  if (
-    req.userRole !== "admin" &&
-    req.userRole !== "overseer" &&
-    req.userRole !== "global_overseer"
-  ) {
+  const adminRoles = ["admin", "overseer", "global_overseer"];
+  if (!req.userRole || !adminRoles.includes(req.userRole)) {
     return res.status(403).json({
       status: false,
-      message:
-        "Sorry, you are not authorised to view this resource. Contact your administrator.",
+      message: "Sorry, you are not authorised to view this resource. Contact your administrator.",
     });
   }
   next();
@@ -140,5 +171,6 @@ module.exports = {
   authenticateJWT,
   requireAdmin,
   generateAccessToken,
-  setAccessTokenCookie,
+  generateRefreshToken,
+  setAuthCookies,
 };

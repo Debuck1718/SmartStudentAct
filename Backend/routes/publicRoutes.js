@@ -1,13 +1,11 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
 const Joi = require("joi");
 const crypto = require("crypto");
-const { v4: uuidv4 } = require("uuid");
 const User = require("../models/User");
 const logger = require("../utils/logger");
-
+const { generateAccessToken, generateRefreshToken, setAuthCookies } = require("../utils/auth");
 
 const {
   sendOTPEmail,
@@ -16,14 +14,35 @@ const {
   sendContactEmail,
 } = require("../utils/email");
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key";
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "your-refresh-secret-key";
-const NODE_ENV = process.env.NODE_ENV || "development";
-const isProd = NODE_ENV === "production";
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
+const IS_PROD = process.env.NODE_ENV === "production";
+const BCRYPT_SALT_ROUNDS = 10;
+const PASSWORD_RESET_EXPIRY = 3600000; // 1 hour
 
 module.exports = (eventBus) => {
   const publicRouter = express.Router();
 
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50,
+    message: "Too many login attempts from this IP, please try again after 15 minutes.",
+  });
+
+  const generalLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 1000,
+    message: "Too many requests from this IP, please try again after an hour.",
+  });
+
+  const redirectPaths = {
+    global_overseer: "/global_overseer.html",
+    overseer: "/overseer.html",
+    admin: "/admins.html",
+    teacher: "/teachers.html",
+    student: "/students.html",
+    payment: "/payment.html",
+    default: "/login.html",
+  };
 
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
@@ -52,7 +71,10 @@ module.exports = (eventBus) => {
 
   const loginSchema = Joi.object({
     email: Joi.string().email().required(),
-    password: Joi.string().required(),
+    password: Joi.string()
+      .min(8)
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+      .required(),
   });
 
   const forgotPasswordSchema = Joi.object({
@@ -61,7 +83,10 @@ module.exports = (eventBus) => {
 
   const resetPasswordSchema = Joi.object({
     token: Joi.string().required(),
-    newPassword: Joi.string().min(8).required(),
+    newPassword: Joi.string()
+      .min(8)
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+      .required(),
   });
 
   const contactSchema = Joi.object({
@@ -73,6 +98,7 @@ module.exports = (eventBus) => {
   const validate = (schema) => (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
     if (error) {
+      logger.error("Validation failed", { errors: error.details });
       return res.status(400).json({
         message: "Validation failed",
         errors: error.details.map((d) => d.message),
@@ -81,11 +107,113 @@ module.exports = (eventBus) => {
     next();
   };
 
+  // --- Signup OTP ---
+  publicRouter.post(
+    "/users/signup-otp",
+    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+    validate(signupOtpSchema),
+    async (req, res) => {
+      try {
+        const { firstname, lastname, email, phone, password, occupation, schoolName, schoolCountry, educationLevel, grade } = req.body;
+
+        const existingUser = await User.findOne({ email });
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+        if (existingUser) {
+          const otpToken = jwt.sign({ email, code }, JWT_SECRET, { expiresIn: "10m" });
+          await sendOTPEmail(email, firstname, code);
+          return res.json({ status: "success", message: "OTP sent to existing user.", otpToken });
+        }
+
+        const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+        const temporaryUserId = crypto.randomUUID();
+        const otpToken = jwt.sign({ temporaryUserId, firstname, lastname, email, phone, passwordHash, occupation, schoolName, schoolCountry, educationLevel, grade, code }, JWT_SECRET, { expiresIn: "10m" });
+
+        await sendOTPEmail(email, firstname, code);
+        res.status(200).json({ status: "success", message: "OTP sent. Please verify to complete signup.", otpToken });
+      } catch (err) {
+        logger.error("❌ Signup-OTP error:", err);
+        res.status(500).json({ message: "Signup failed." });
+      }
+    }
+  );
+
+  // --- Verify OTP and auto-start trial ---
+  publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
+    const { code, email, password, otpToken } = req.body;
+    try {
+      const decoded = jwt.verify(otpToken, JWT_SECRET);
+
+      if (decoded.email !== email || decoded.code !== code) {
+        return res.status(400).json({ message: "Invalid email or OTP." });
+      }
+
+      let user = await User.findOne({ email });
+
+      if (user) {
+        const isMatch = user.password ? await bcrypt.compare(password, user.password) : false;
+        if (!isMatch) {
+          user.password = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+          await user.save();
+        }
+
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        return res.status(200).json({ status: "success", message: "User verified.", redirectUrl: getRedirectUrl(user) });
+      } else {
+        const now = new Date();
+        const trialDurationDays = 30;
+        const trialEndsAt = new Date(now.getTime() + trialDurationDays * 24 * 60 * 60 * 1000);
+
+        const newUser = new User({
+          _id: decoded.temporaryUserId,
+          firstname: decoded.firstname,
+          lastname: decoded.lastname,
+          email: decoded.email,
+          phone: decoded.phone,
+          password: decoded.passwordHash,
+          verified: true,
+          role: decoded.occupation,
+          occupation: decoded.occupation,
+          educationLevel: decoded.educationLevel,
+          grade: decoded.grade,
+          schoolName: decoded.schoolName,
+          schoolCountry: decoded.schoolCountry,
+          is_on_trial: true,
+          has_used_trial: true,
+          trial_starts_at: now,
+          trial_ends_at: trialEndsAt
+        });
+
+        await newUser.save();
+
+        const accessToken = generateAccessToken(newUser);
+        const refreshToken = generateRefreshToken(newUser);
+        newUser.refreshToken = refreshToken;
+        await newUser.save();
+
+        setAuthCookies(res, accessToken, refreshToken);
+
+        sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
+
+        return res.status(201).json({ status: "success", message: "User created & verified.", redirectUrl: getRedirectUrl(newUser) });
+      }
+    } catch (err) {
+      logger.error("❌ Verify-OTP error:", err);
+      if (err.name === "TokenExpiredError") return res.status(400).json({ message: "OTP expired." });
+      return res.status(500).json({ message: "OTP verification failed." });
+    }
+  });
+
   // --- Login ---
-  publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
+  publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
     try {
       const { email, password } = req.body;
       const user = await User.findOne({ email }).select("+password");
+
       if (!user || !(await user.comparePassword(password))) {
         return res.status(401).json({ status: false, message: "Invalid credentials." });
       }
@@ -141,40 +269,41 @@ module.exports = (eventBus) => {
         redirectUrl,
       });
     } catch (err) {
-      console.error("Login error:", err);
+      logger.error("❌ Login error:", err);
       return res.status(500).json({ status: false, message: "Server error" });
     }
   });
 
   function getRedirectUrl(user, hasAccess) {
     const { role } = user;
-
-    if (role === "global_overseer") return "/global_overseer.html";
-    if (role === "overseer") return "/overseer.html";
-
-    if (["admin", "teacher", "student"].includes(role)) {
-      return hasAccess ? `/${role}s.html` : "/payment.html";
+    if (redirectPaths[role]) {
+      return hasAccess ? redirectPaths[role] : redirectPaths.payment;
     }
-
-    return "/login.html";
+    return redirectPaths.default;
   }
-
 
   publicRouter.post("/users/logout", async (req, res) => {
     try {
       const refreshToken = req.cookies.refresh_token;
       if (refreshToken) await User.updateOne({ refreshToken }, { $unset: { refreshToken: "" } });
+      const cookieOptions = {
+        httpOnly: true,
+        secure: IS_PROD,
+        sameSite: "None",
+        domain: IS_PROD ? ".smartstudentact.com" : undefined,
+      };
 
-      res.clearCookie("access_token", { httpOnly: true, secure: true, sameSite: "None", domain: ".smartstudentact.com" });
-      res.clearCookie("refresh_token", { httpOnly: true, secure: true, sameSite: "None", domain: ".smartstudentact.com" });
+      res.clearCookie("access_token", cookieOptions);
+      res.clearCookie("refresh_token", cookieOptions);
       res.json({ message: "Logged out successfully." });
     } catch (err) {
+      logger.error("❌ Logout error:", err);
       res.status(500).json({ error: "Server error." });
     }
   });
 
- 
-  publicRouter.post("/auth/forgot-password", validate(forgotPasswordSchema), async (req, res) => {
+
+  publicRouter.post("/auth/forgot-password", generalLimiter, validate(forgotPasswordSchema), async (req, res) => {
     const { email } = req.body;
     try {
       const user = await User.findOne({ email });
@@ -182,7 +311,7 @@ module.exports = (eventBus) => {
 
       const token = crypto.randomBytes(32).toString("hex");
       user.reset_password_token = token;
-      user.reset_password_expires = Date.now() + 3600000;
+      user.reset_password_expires = Date.now() + PASSWORD_RESET_EXPIRY;
       await user.save();
 
       const resetLink = `${req.protocol}://${req.get("host")}/reset-password.html?token=${token}`;
@@ -196,13 +325,13 @@ module.exports = (eventBus) => {
     }
   });
 
-  publicRouter.post("/auth/reset-password", validate(resetPasswordSchema), async (req, res) => {
+  publicRouter.post("/auth/reset-password", generalLimiter, validate(resetPasswordSchema), async (req, res) => {
     const { token, newPassword } = req.body;
     try {
       const user = await User.findOne({ reset_password_token: token, reset_password_expires: { $gt: Date.now() } });
       if (!user) return res.status(400).json({ message: "Password reset token is invalid or expired." });
 
-      user.password = await bcrypt.hash(newPassword, 10);
+      user.password = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
       user.reset_password_token = undefined;
       user.reset_password_expires = undefined;
       await user.save();
@@ -215,15 +344,15 @@ module.exports = (eventBus) => {
   });
 
 
-  publicRouter.post("/contact", validate(contactSchema), async (req, res) => {
+  publicRouter.post("/contact", generalLimiter, validate(contactSchema), async (req, res) => {
     const { name, email, message } = req.body;
     try {
       await sendContactEmail(
-        "evansbuckman1@gmail.com",
+        CONTACT_EMAIL,
         `New Contact Form Message from ${name}`,
         `<p><strong>Name:</strong> ${name}</p>
-         <p><strong>Email:</strong> ${email}</p>
-         <p><strong>Message:</strong><br>${message}</p>`
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong><br>${message}</p>`
       );
       res.status(200).json({ message: "Your message has been sent successfully." });
     } catch (err) {
@@ -234,4 +363,3 @@ module.exports = (eventBus) => {
 
   return publicRouter;
 };
-
