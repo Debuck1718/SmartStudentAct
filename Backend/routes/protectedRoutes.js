@@ -1865,16 +1865,18 @@ const checkUserCountryAndRole = async (req, res, next) => {
   }
 };
 
-
 protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   try {
-    const user = req.fullUser; // pass full user to pricing service
-    if (!user) {
-      return res.status(400).json({ error: "User data not available." });
+    const user = req.fullUser || req.user; 
+    if (!user || !user.email) {
+      return res.status(400).json({ error: "User information missing." });
     }
 
-    const { occupation, school } = req.user; 
-    const price = await paymentController.getUserPrice(user, occupation, school);
+    const userRole = user.occupation || user.role || 'student';
+    const schoolName = user.schoolName || '';
+
+    
+    const price = await paymentController.getUserPrice(user, userRole, schoolName);
 
     res.json(price);
   } catch (err) {
@@ -1884,22 +1886,23 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
 });
 
 
-
 protectedRouter.post(
   "/payment/initiate",
   validate(paymentSchema),
   checkUserCountryAndRole,
   async (req, res) => {
     try {
-      const { gateway } = req.body;
+      const { gateway, paymentMethod, phoneNumber } = req.body;
 
-      const { email, occupation, schoolName, schoolCountry } = req.fullUser;
+      const user = req.fullUser || req.user;
+      if (!user || !user.email) {
+        return res.status(400).json({ error: "User information missing." });
+      }
 
-      const priceInfo = await paymentController.getUserPrice(
-        schoolCountry,
-        occupation,
-        schoolName
-      );
+      const schoolName = user.schoolName || '';
+      const userRole = user.occupation || user.role || 'student';
+
+      const priceInfo = await paymentController.getUserPrice(user, userRole, schoolName);
 
       const amount = priceInfo.localPrice;
       const currency = priceInfo.currency;
@@ -1909,16 +1912,27 @@ protectedRouter.post(
       }
 
       logger.info(
-        `User ${email} is initiating payment via ${gateway} for amount ${amount} ${currency}`
+        `User ${user.email} is initiating payment via ${gateway || paymentMethod} for amount ${amount} ${currency}`
       );
 
       let paymentData;
-      switch (gateway) {
+      const selectedGateway = gateway || paymentMethod || 'paystack';
+      switch (selectedGateway) {
         case "flutterwave":
-          paymentData = await paymentController.initFlutterwavePayment(email, amount, currency);
+          paymentData = await paymentController.initFlutterwavePayment({
+            email: user.email,
+            amount,
+            currency,
+            phoneNumber
+          });
           break;
         case "paystack":
-          paymentData = await paymentController.initPaystackPayment(email, amount, currency);
+          paymentData = await paymentController.initPaystackPayment({
+            email: user.email,
+            amount,
+            currency,
+            phoneNumber
+          });
           break;
         default:
           return res.status(400).json({ error: "Unsupported payment gateway." });
