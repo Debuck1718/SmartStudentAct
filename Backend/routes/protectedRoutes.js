@@ -1867,16 +1867,16 @@ const checkUserCountryAndRole = async (req, res, next) => {
 
 protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   try {
-    const user = req.fullUser || req.user; 
+    const user = req.fullUser || req.user;
     if (!user || !user.email) {
       return res.status(400).json({ error: "User information missing." });
     }
 
-    const userRole = user.occupation || user.role || 'student';
-    const schoolName = user.schoolName || '';
+    const userRole = user.occupation || user.role || "student";
+    const schoolName = user.schoolName || "";
+    const schoolCountry = user.schoolCountry || "";
 
-    
-    const price = await paymentController.getUserPrice(user, userRole, schoolName);
+    const price = await paymentController.getUserPrice(user, userRole, schoolName, schoolCountry);
 
     res.json(price);
   } catch (err) {
@@ -1884,7 +1884,6 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
     res.status(500).json({ error: "Failed to retrieve pricing information." });
   }
 });
-
 
 protectedRouter.post(
   "/payment/initiate",
@@ -1899,10 +1898,11 @@ protectedRouter.post(
         return res.status(400).json({ error: "User information missing." });
       }
 
-      const schoolName = user.schoolName || '';
-      const userRole = user.occupation || user.role || 'student';
+      const schoolName = user.schoolName || "";
+      const schoolCountry = user.schoolCountry || "";
+      const userRole = user.occupation || user.role || "student";
 
-      const priceInfo = await paymentController.getUserPrice(user, userRole, schoolName);
+      const priceInfo = await paymentController.getUserPrice(user, userRole, schoolName, schoolCountry);
 
       const amount = priceInfo.localPrice;
       const currency = priceInfo.currency;
@@ -1916,14 +1916,14 @@ protectedRouter.post(
       );
 
       let paymentData;
-      const selectedGateway = gateway || paymentMethod || 'paystack';
+      const selectedGateway = gateway || paymentMethod || "paystack";
       switch (selectedGateway) {
         case "flutterwave":
           paymentData = await paymentController.initFlutterwavePayment({
             email: user.email,
             amount,
             currency,
-            phoneNumber
+            phoneNumber,
           });
           break;
         case "paystack":
@@ -1931,7 +1931,7 @@ protectedRouter.post(
             email: user.email,
             amount,
             currency,
-            phoneNumber
+            phoneNumber,
           });
           break;
         default:
@@ -1948,6 +1948,7 @@ protectedRouter.post(
     }
   }
 );
+
 
 
 

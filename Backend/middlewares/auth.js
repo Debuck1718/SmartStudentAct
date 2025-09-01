@@ -2,12 +2,10 @@ const jwt = require("jsonwebtoken");
 const logger = require("../utils/logger");
 const User = require("../models/User");
 
-// JWT secrets must be loaded from environment variables.
-// The app will crash on startup if these are not set.
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
-// Check if secrets are defined
+
 if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
   throw new Error("JWT_SECRET and JWT_REFRESH_SECRET must be set in the environment variables.");
 }
@@ -16,7 +14,7 @@ const isProd = process.env.NODE_ENV === "production";
 const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY = "7d";
 
-// --- Public Routes ---
+
 const PUBLIC_ROUTES = [
   "/users/login",
   "/users/signup",
@@ -57,16 +55,16 @@ function setAuthCookies(res, accessToken, refreshToken) {
 
   res.cookie("access_token", accessToken, {
     ...cookieOptions,
-    maxAge: 15 * 60 * 1000, // 15 minutes
+    maxAge: 15 * 60 * 1000, 
   });
 
   res.cookie("refresh_token", refreshToken, {
     ...cookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000, 
   });
 }
 
-// Middleware to authenticate JWT token from cookie or header.
+
 const authenticateJWT = (req, res, next) => {
   if (isPublicRoute(req.originalUrl)) {
     return next();
@@ -113,7 +111,6 @@ const authenticateJWT = (req, res, next) => {
             email: refreshDecoded.email,
           });
 
-          // Check if the refresh token is still valid in the database
           const user = await User.findById(refreshDecoded.id);
           if (!user || user.refreshToken !== refreshToken) {
             logger.warn(`Refresh token mismatch for user ${refreshDecoded.id}.`);
@@ -155,7 +152,7 @@ const authenticateJWT = (req, res, next) => {
   });
 };
 
-// Middleware to check for required admin-level roles.
+
 const requireAdmin = (req, res, next) => {
   const adminRoles = ["admin", "overseer", "global_overseer"];
   if (!req.userRole || !adminRoles.includes(req.userRole)) {

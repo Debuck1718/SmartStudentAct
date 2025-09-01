@@ -25,17 +25,17 @@ const pricingData = {
   default: { student: 1, teacher: 3, admin: 3 },
   tier3_4: { student: 5, teacher: 10, admin: 10 },
   regional: {
-    ZA: { student: 2, teacher: 5, teacher_free: true },
-    ZM: { student: 2, teacher: 5, teacher_free: true },
-    TN: { student: 2, teacher: 5, teacher_free: true },
-    LY: { student: 2, teacher: 5, teacher_free: true },
-    MA: { student: 3, teacher: 6, teacher_free: true },
+    ZA: { student: 2, teacher: 5, admin: 7, teacher_free: true },
+    ZM: { student: 2, teacher: 5, admin: 7, teacher_free: true },
+    TN: { student: 2, teacher: 5, admin: 7, teacher_free: true },
+    LY: { student: 2, teacher: 5, admin: 7, teacher_free: true },
+    MA: { student: 3, teacher: 6, admin: 10, teacher_free: true },
   },
 };
 
 // Normalize country from schoolCountry or fallback to user.country
-function normalizeCountry(user) {
-  let code = user?.schoolCountry || user?.country;
+function normalizeCountry(user, schoolCountry) {
+  let code = schoolCountry || user?.schoolCountry || user?.country;
   if (!code) return null;
 
   code = code.toString().trim().toUpperCase();
@@ -52,50 +52,57 @@ function normalizeCountry(user) {
   return NAME_TO_CODE[code] || code;
 }
 
-async function getUserPrice(user, role, schoolName) {
-    if (!user) throw new Error("User data missing.");
+async function getUserPrice(user, role, schoolName, schoolCountry) {
+  if (!user) throw new Error("User data missing.");
 
-    if (['overseer', 'global_overseer'].includes(role)) {
-        return { usdPrice: 0, localPrice: 0, currency: 'USD' };
+  if (['overseer', 'global_overseer'].includes(role)) {
+    return { usdPrice: 0, localPrice: 0, currency: 'USD' };
+  }
+
+  let usdPrice = pricingData.default[role] || 1; // fallback
+  let tier = 1;
+
+  const countryCode = normalizeCountry(user, schoolCountry);
+  if (!countryCode) {
+    console.warn("User country not found, defaulting to USD.");
+  }
+
+  // Fetch school tier if schoolName is provided
+  try {
+    if (schoolName) {
+      const school = await School.findOne({ name: new RegExp(`^${schoolName}$`, 'i') });
+      if (school && school.tier) tier = school.tier;
     }
+  } catch (err) {
+    console.error("Error fetching school data:", err);
+  }
 
-    let usdPrice = pricingData.default[role] || 1; // default fallback
-    let tier = 1;
+  if (tier === 3 || tier === 4) {
+    // Use tier 3/4 specific prices
+    usdPrice = pricingData.tier3_4[role] ?? usdPrice;
+  } else if (countryCode === 'GH') {
+    // Ghanaian defaults for non-tier3/4
+    if (role === 'student') usdPrice = 15;
+    else if (role === 'admin') usdPrice = 70;
+    else if (role === 'teacher') usdPrice = 50; // example teacher price
+  } else if (pricingData.regional[countryCode]?.[role] != null) {
+    usdPrice = pricingData.regional[countryCode][role];
+  }
 
-    const countryCode = normalizeCountry(user);
-    if (!countryCode) {
-        console.warn("User country not found, defaulting to USD.");
-    }
+  if (role === 'teacher' && pricingData.regional[countryCode]?.teacher_free) {
+    usdPrice = 0;
+  }
 
-    try {
-        if (schoolName) {
-            const school = await School.findOne({ name: new RegExp(`^${schoolName}$`, 'i') });
-            if (school && school.tier) tier = school.tier;
-        }
-    } catch (err) {
-        console.error("Error fetching school data:", err);
-    }
+  const currency = COUNTRY_CURRENCY_MAP[countryCode] || 'USD';
+  const rate = await getRate(currency).catch(() => null);
 
-    if (tier === 3 || tier === 4) {
-        usdPrice = pricingData.tier3_4[role] ?? usdPrice;
-    } else if (pricingData.regional[countryCode]?.[role] != null) {
-        usdPrice = pricingData.regional[countryCode][role];
-    }
+  const localPrice = (usdPrice != null && rate != null) ? (usdPrice * rate).toFixed(2) : usdPrice ?? 0;
 
-    if (role === 'teacher' && pricingData.regional[countryCode]?.teacher_free) {
-        usdPrice = 0;
-    }
-
-    const currency = COUNTRY_CURRENCY_MAP[countryCode] || 'USD';
-    const rate = await getRate(currency).catch(() => null); // fallback to null if API fails
-
-    const localPrice = (usdPrice != null && rate != null) ? (usdPrice * rate).toFixed(2) : usdPrice ?? 0;
-
-    return {
-        usdPrice: usdPrice ?? 0,
-        localPrice: parseFloat(localPrice) || 0,
-        currency: currency || 'USD'
-    };
+  return {
+    usdPrice: usdPrice ?? 0,
+    localPrice: parseFloat(localPrice) || 0,
+    currency: currency || 'USD'
+  };
 }
 
 module.exports = { getUserPrice };
