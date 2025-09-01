@@ -1885,12 +1885,17 @@ protectedRouter.post(
   validate(paymentSchema),
   checkUserCountryAndRole,
   async (req, res) => {
-    const { gateway } = req.body;
-    const { email, occupation, school } = req.user;
-    const userCountry = req.fullUser.country;
-
     try {
-      const priceInfo = await paymentController.getUserPrice(userCountry, occupation, school);
+      const { gateway } = req.body;
+
+      const { email, occupation, schoolName, schoolCountry } = req.fullUser;
+
+      const priceInfo = await paymentController.getUserPrice(
+        schoolCountry,
+        occupation,
+        schoolName
+      );
+
       const amount = priceInfo.localPrice;
       const currency = priceInfo.currency;
 
@@ -1898,7 +1903,9 @@ protectedRouter.post(
         return res.status(400).json({ error: "Invalid payment amount." });
       }
 
-      logger.info(`User ${email} is initiating payment via ${gateway} for amount ${amount} ${currency}`);
+      logger.info(
+        `User ${email} is initiating payment via ${gateway} for amount ${amount} ${currency}`
+      );
 
       let paymentData;
       switch (gateway) {
@@ -1922,6 +1929,7 @@ protectedRouter.post(
     }
   }
 );
+
 
 
 protectedRouter.post("/trial/start", authenticateJWT, async (req, res) => {
