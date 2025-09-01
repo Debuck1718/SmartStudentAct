@@ -3,17 +3,19 @@
 const School = require('../models/School');
 
 const addSchool = async (req, res) => {
-  // We get the data we want to add to the database from the request body.
-  const { name, country, tier } = req.body;
+  // Extract values from request body
+  const { name, schoolCountry, tier } = req.body;
 
-  if (!name || !country || !tier) {
-    return res.status(400).json({ error: 'Missing required fields: name, country, and tier.' });
+  if (!name || !schoolCountry || !tier) {
+    return res
+      .status(400)
+      .json({ error: 'Missing required fields: name, schoolCountry, and tier.' });
   }
 
   try {
     const newSchool = new School({
       name,
-      country,
+      schoolCountry,
       tier,
     });
 
