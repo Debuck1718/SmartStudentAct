@@ -1,4 +1,3 @@
-
 const School = require('../models/School');
 const { getRate } = require('../utils/currencyConverter');
 const logger = require('../utils/logger'); 
@@ -63,9 +62,7 @@ const COUNTRY_CURRENCY_MAP = {
     'ZA': 'ZAR', 
     'SZ': 'SZL', 
     'ZM': 'ZMW', 
-    'ZW': 'ZWD', 
-
-
+    'ZW': 'ZWD',
 };
 
 const pricingData = {
@@ -88,13 +85,40 @@ const pricingData = {
     },
 };
 
-async function getUserPrice(countryCode, role, schoolName) {
+
+function normalizeCountry(user) {
+    let code = user?.schoolCountry || user?.country;
+    if (!code) return null;
+
+  
+    code = code.toString().trim().toUpperCase();
+
+   
+    const NAME_TO_CODE = {
+        GHANA: 'GH',
+        NIGERIA: 'NG',
+        KENYA: 'KE',
+        SOUTH_AFRICA: 'ZA',
+        ZAMBIA: 'ZM',
+        TANZANIA: 'TZ',
+    };
+
+    return NAME_TO_CODE[code] || code;
+}
+
+async function getUserPrice(user, role, schoolName) {
     if (['overseer', 'global_overseer'].includes(role)) {
         return { usdPrice: 0, localPrice: 0, currency: 'USD' };
     }
 
     let usdPrice = 0;
     let tier = 1;
+
+    
+    const countryCode = normalizeCountry(user);
+    if (!countryCode) {
+        throw new Error("User country not found.");
+    }
 
     try {
         if (schoolName) {
@@ -109,13 +133,9 @@ async function getUserPrice(countryCode, role, schoolName) {
 
     if (tier === 3 || tier === 4) {
         usdPrice = pricingData.tier3_4[role];
-    } 
-
-    else if (pricingData.regional[countryCode]) {
+    } else if (pricingData.regional[countryCode]) {
         usdPrice = pricingData.regional[countryCode][role];
-    }
-
-    else {
+    } else {
         usdPrice = pricingData.default[role];
     }
 
@@ -123,7 +143,7 @@ async function getUserPrice(countryCode, role, schoolName) {
         usdPrice = pricingData.default.teacher;
     }
 
-
+    
     if (role === 'teacher' && pricingData.regional[countryCode] && pricingData.regional[countryCode].teacher_free) {
         usdPrice = 0;
     }
