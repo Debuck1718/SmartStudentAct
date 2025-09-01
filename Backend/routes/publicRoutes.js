@@ -24,39 +24,7 @@ const isProd = NODE_ENV === "production";
 module.exports = (eventBus) => {
   const publicRouter = express.Router();
 
-  // --- Token helpers ---
-  function generateAccessToken(user) {
-    return jwt.sign(
-      { id: user._id, role: user.role || user.occupation, email: user.email },
-      JWT_SECRET,
-      { expiresIn: "15m" }
-    );
-  }
 
-  function generateRefreshToken(user) {
-    return jwt.sign({ id: user._id }, JWT_REFRESH_SECRET, { expiresIn: "7d" });
-  }
-
-  function setAuthCookies(res, accessToken, refreshToken) {
-    const cookieOptions = {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "None" : "Lax",
-    };
-
-    res.cookie("access_token", accessToken, {
-      ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-
-    res.cookie("refresh_token", refreshToken, {
-      ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      domain: isProd ? ".smartstudentact.com" : undefined,
-    });
-  }
-
-  // --- Joi validation schemas ---
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
     email: Joi.string().email().required(),

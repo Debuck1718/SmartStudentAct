@@ -38,11 +38,11 @@ function setAccessTokenCookie(res, token) {
     secure: isProd,
     sameSite: isProd ? "None" : "Lax",
     domain: isProd ? ".smartstudentact.com" : undefined,
-    maxAge: 15 * 60 * 1000, // 15 minutes
+    maxAge: 15 * 60 * 1000, 
   });
 }
 
-// --- Middleware ---
+
 const authenticateJWT = (req, res, next) => {
   if (isPublicRoute(req.originalUrl)) {
     return next();
@@ -64,7 +64,7 @@ const authenticateJWT = (req, res, next) => {
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
-      // --- Token expired ---
+     
       if (err.name === "TokenExpiredError") {
         const refreshToken = req.cookies?.refresh_token;
         if (!refreshToken) {
@@ -84,7 +84,6 @@ const authenticateJWT = (req, res, next) => {
             });
           }
 
-          // issue new access token
           const newAccessToken = generateAccessToken({
             id: refreshDecoded.id,
             role: refreshDecoded.role,
@@ -103,7 +102,7 @@ const authenticateJWT = (req, res, next) => {
         });
       }
 
-      // --- Other JWT error ---
+     --
       logger.error("JWT verification failed:", err.message);
       return res.status(403).json({
         status: false,
@@ -111,7 +110,7 @@ const authenticateJWT = (req, res, next) => {
       });
     }
 
-    // --- Token OK ---
+   
     req.userId = decoded.id || decoded.userId;
     req.userRole = decoded.role;
     req.email = decoded.email;
