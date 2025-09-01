@@ -36,21 +36,27 @@ module.exports = (eventBus) => {
   }
 
   function setAuthCookies(res, accessToken, refreshToken) {
-    res.cookie("access_token", accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "None" : "Lax",
-      maxAge: 15 * 60 * 1000,
-      domain: ".smartstudentact.com"
-    });
-    res.cookie("refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "None" : "Lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      domain: ".smartstudentact.com"
-    });
-  }
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "None" : "Lax",
+  };
+
+  // --- Access Token ---
+  res.cookie("access_token", accessToken, {
+    ...cookieOptions,
+    maxAge: 15 * 60 * 1000, // 15 minutes
+    domain: isProd ? ".smartstudentact.com" : undefined, // <-- only use domain in prod
+  });
+
+  // --- Refresh Token ---
+  res.cookie("refresh_token", refreshToken, {
+    ...cookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    domain: isProd ? ".smartstudentact.com" : undefined,
+  });
+}
+
 
   // --- Joi validation schemas ---
   const signupOtpSchema = Joi.object({
