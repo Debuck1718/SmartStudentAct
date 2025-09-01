@@ -1591,7 +1591,7 @@ protectedRouter.post(
   }
 );
 
-// 📌 Get quiz result
+
 protectedRouter.get(
   "/student/quizzes/:assignmentId/result",
   authenticateJWT,

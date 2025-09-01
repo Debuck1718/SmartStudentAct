@@ -119,6 +119,10 @@ try {
   const publicRoutes = require("./routes/publicRoutes");
   app.use("/", publicRoutes(eventBus, agenda));
 
+  const webhookRoutes = require("./routes/webhookRoutes");
+  app.use("/api", webhookRoutes);
+
+
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", protectedRoutes);
 

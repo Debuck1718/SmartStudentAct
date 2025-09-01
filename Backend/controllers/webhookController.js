@@ -21,17 +21,19 @@ const processTransactionSuccess = async (userId, gateway, eventData) => {
     }
 
     const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        $set: {
-          subscriptionStatus: 'active',
-          is_on_trial: false, 
-          paymentGateway: gateway,
-          paymentDate: new Date(),
-        },
-      },
-      { new: true }
-    );
+  userId,
+  {
+    $set: {
+      subscriptionStatus: 'active',
+      is_on_trial: false,
+      paymentGateway: gateway,
+      paymentDate: new Date(),
+      nextBillingDate: eventData?.nextBillingDate || null,   // 👈 add this
+    },
+  },
+  { new: true }
+);
+
 
     console.log(`Subscription successfully activated for user: ${updatedUser._id}`);
 

@@ -213,43 +213,84 @@ module.exports = (eventBus) => {
   });
 
   // --- Login ---
-  publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email }).select("+password");
-      if (!user || !(await user.comparePassword(password))) return res.status(401).json({ status: false, message: "Invalid credentials." });
-
-      const accessToken = generateAccessToken(user);
-      const refreshToken = generateRefreshToken(user);
-      await User.findByIdAndUpdate(user._id, { refreshToken });
-
-      setAuthCookies(res, accessToken, refreshToken);
-      res.json({ status: true, message: "Login successful", user: { email: user.email, role: user.role, id: user._id }, redirectUrl: getRedirectUrl(user) });
-    } catch (err) {
-      console.error("Login error:", err);
-      return res.status(500).json({ status: false, message: "Server error" });
+publicRouter.post("/users/login", validate(loginSchema), async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email }).select("+password");
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ status: false, message: "Invalid credentials." });
     }
-  });
 
-  // --- Token refresh ---
-  publicRouter.post("/users/refresh", async (req, res) => {
-    try {
-      const refreshToken = req.cookies.refresh_token;
-      if (!refreshToken) return res.status(401).json({ error: "No refresh token." });
+    const now = new Date();
+    let subscriptionActive = false;
+    let trialActive = false;
 
-      const user = await User.findOne({ refreshToken });
-      if (!user) return res.status(403).json({ error: "Invalid refresh token." });
+    if (user.subscriptionStatus === "active" && user.paymentDate) {
+      let expiry = null;
 
-      jwt.verify(refreshToken, JWT_REFRESH_SECRET, (err) => {
-        if (err) return res.status(403).json({ error: "Expired refresh token." });
-        const newAccessToken = generateAccessToken(user);
-        setAuthCookies(res, newAccessToken, refreshToken);
-        res.json({ message: "Token refreshed." });
-      });
-    } catch (err) {
-      res.status(500).json({ error: "Server error." });
+      if (user.nextBillingDate) {
+        expiry = new Date(user.nextBillingDate);
+      } else {
+        expiry = new Date(user.paymentDate);
+        expiry.setMonth(expiry.getMonth() + 1); 
+      }
+
+      subscriptionActive = now < expiry;
+      if (!subscriptionActive) {
+        user.subscriptionStatus = "expired";
+        await user.save();
+      }
     }
-  });
+
+    if (user.is_on_trial && user.trial_ends_at) {
+      trialActive = now < new Date(user.trial_ends_at);
+      if (!trialActive) {
+        user.is_on_trial = false;
+        await user.save();
+      }
+    }
+
+    const hasAccess = subscriptionActive || trialActive;
+    const redirectUrl = getRedirectUrl(user, hasAccess);
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    await User.findByIdAndUpdate(user._id, { refreshToken });
+
+    setAuthCookies(res, accessToken, refreshToken);
+
+    res.json({
+      status: true,
+      message: "Login successful",
+      user: {
+        email: user.email,
+        role: user.role,
+        id: user._id,
+        subscriptionActive,
+        trialActive,
+      },
+      redirectUrl,
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ status: false, message: "Server error" });
+  }
+});
+
+
+function getRedirectUrl(user, hasAccess) {
+  const { role } = user;
+
+  if (role === "global_overseer") return "/global_overseer.html";
+  if (role === "overseer") return "/overseer.html";
+
+  if (["admin", "teacher", "student"].includes(role)) {
+    return hasAccess ? `/${role}s.html` : "/payment.html";
+  }
+
+  return "/login.html";
+}
+
 
   // --- Logout ---
   publicRouter.post("/users/logout", async (req, res) => {
@@ -265,7 +306,7 @@ module.exports = (eventBus) => {
     }
   });
 
-  // --- Forgot / Reset password ---
+ 
   publicRouter.post("/auth/forgot-password", validate(forgotPasswordSchema), async (req, res) => {
     const { email } = req.body;
     try {
@@ -306,7 +347,7 @@ module.exports = (eventBus) => {
     }
   });
 
-  // --- Contact ---
+
   publicRouter.post("/contact", validate(contactSchema), async (req, res) => {
     const { name, email, message } = req.body;
     try {
@@ -323,31 +364,6 @@ module.exports = (eventBus) => {
       res.status(500).json({ error: "Failed to send message." });
     }
   });
-
-  // --- Redirect helper ---
-  function getRedirectUrl(user) {
-    const { role, is_on_trial, trial_ends_at, subscription_status, payment_date } = user;
-    const now = new Date();
-
-    if (role === "global_overseer") return "/global_overseer.html";
-    if (role === "overseer") return "/overseer.html";
-
-    let subscriptionActive = false;
-    if (subscription_status === "active" && payment_date) {
-      const expiry = new Date(payment_date);
-      expiry.setMonth(expiry.getMonth() + 1);
-      subscriptionActive = now < expiry;
-    }
-
-    const trialActive = is_on_trial && trial_ends_at && now < new Date(trial_ends_at);
-
-    if (role === "admin" || role === "teacher" || role === "student") {
-      if (trialActive || subscriptionActive) return `/${role}s.html`;
-      return "/payment.html";
-    }
-
-    return "/login.html";
-  }
 
   return publicRouter;
 };
