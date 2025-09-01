@@ -5,7 +5,7 @@ const Joi = require("joi");
 const crypto = require("crypto");
 const User = require("../models/User");
 const logger = require("../utils/logger");
-const { generateAccessToken, generateRefreshToken, setAuthCookies } = require("../utils/auth");
+const { generateAccessToken, generateRefreshToken, setAuthCookies } = require("../middlewares/auth");
 
 const {
   sendOTPEmail,
