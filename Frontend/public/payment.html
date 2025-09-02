@@ -368,13 +368,15 @@ async function fetchPaymentDetails() {
 
   try {
     const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
-      method: "POST",
-      body: JSON.stringify({
-        gateway: "paystack",
-        email: paymentEmail,          
-        amount: finalAmount,          
-      }),
-    });
+  method: "POST",
+  body: JSON.stringify({
+    gateway: "paystack",
+    email: paymentEmail,
+    amount: finalAmount,
+    currency: finalCurrency,
+  }),
+});
+
 
     const paymentData = await initRes.json();
 
