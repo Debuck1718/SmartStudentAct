@@ -1892,7 +1892,7 @@ protectedRouter.post(
   checkUserCountryAndRole,
   async (req, res) => {
     try {
-      const { gateway, paymentMethod, phoneNumber } = req.body;
+      const { gateway, paymentMethod, phoneNumber = null } = req.body;
 
       const user = req.fullUser || req.user;
       if (!user || !user.email) {
