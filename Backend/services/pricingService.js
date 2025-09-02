@@ -1,4 +1,4 @@
-const School = require('../models/School');
+const School = require('../models/School'); 
 const { getRate } = require('../utils/currencyConverter');
 const logger = require('../utils/logger');
 
@@ -33,7 +33,13 @@ const pricingData = {
   },
 };
 
-// Normalize country from schoolCountry or fallback to user.country
+// 🔹 Local overrides: prices already in local currency
+const LOCAL_OVERRIDES = {
+  GH: { currency: 'GHS', student: 15, teacher: 50, admin: 70 },
+  // add more countries here later if needed...
+};
+
+// Normalize country
 function normalizeCountry(user, schoolCountry) {
   let code = schoolCountry || user?.schoolCountry || user?.country;
   if (!code) return null;
@@ -63,11 +69,20 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   let tier = 1;
 
   const countryCode = normalizeCountry(user, schoolCountry);
-  if (!countryCode) {
-    console.warn("User country not found, defaulting to USD.");
+
+  // 🔹 Check if this country has a local override
+  if (countryCode && LOCAL_OVERRIDES[countryCode]) {
+    const override = LOCAL_OVERRIDES[countryCode];
+    const localPrice = override[role] ?? usdPrice;
+
+    return {
+      usdPrice: localPrice, // keep same for reference
+      localPrice,
+      currency: override.currency,
+    };
   }
 
-  // Fetch school tier if schoolName is provided
+  // 🔹 School tier check
   try {
     if (schoolName) {
       const school = await School.findOne({ name: new RegExp(`^${schoolName}$`, 'i') });
@@ -77,15 +92,12 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     console.error("Error fetching school data:", err);
   }
 
+  // 🔹 Tier 3/4 pricing
   if (tier === 3 || tier === 4) {
-    // Use tier 3/4 specific prices
     usdPrice = pricingData.tier3_4[role] ?? usdPrice;
-  } else if (countryCode === 'GH') {
-    // Ghanaian defaults for non-tier3/4
-    if (role === 'student') usdPrice = 15;
-    else if (role === 'admin') usdPrice = 70;
-    else if (role === 'teacher') usdPrice = 50; // example teacher price
-  } else if (pricingData.regional[countryCode]?.[role] != null) {
+  } 
+  // 🔹 Regional pricing
+  else if (pricingData.regional[countryCode]?.[role] != null) {
     usdPrice = pricingData.regional[countryCode][role];
   }
 
@@ -93,10 +105,13 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     usdPrice = 0;
   }
 
+  // 🔹 Currency conversion
   const currency = COUNTRY_CURRENCY_MAP[countryCode] || 'USD';
   const rate = await getRate(currency).catch(() => null);
 
-  const localPrice = (usdPrice != null && rate != null) ? (usdPrice * rate).toFixed(2) : usdPrice ?? 0;
+  const localPrice = (usdPrice != null && rate != null)
+    ? (usdPrice * rate).toFixed(2)
+    : usdPrice ?? 0;
 
   return {
     usdPrice: usdPrice ?? 0,
@@ -106,3 +121,4 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
 }
 
 module.exports = { getUserPrice };
+
