@@ -1864,6 +1864,8 @@ const checkUserCountryAndRole = async (req, res, next) => {
 protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   try {
     const user = req.fullUser || req.user;
+    console.log("Pricing request user:", user);
+
     if (!user || !user.email) {
       return res.status(400).json({ error: "User information missing." });
     }
@@ -1873,10 +1875,11 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
     const schoolCountry = user.schoolCountry || "";
 
     const price = await paymentController.getUserPrice(user, userRole, schoolName, schoolCountry);
+    console.log("Price computed:", price);
 
     res.json(price);
   } catch (err) {
-    logger.error("Error getting user price:", err);
+    console.error("Error in /pricing route:", err);
     res.status(500).json({ error: "Failed to retrieve pricing information." });
   }
 });
