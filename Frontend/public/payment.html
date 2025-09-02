@@ -246,7 +246,7 @@
       const messageDiv = document.getElementById("message");
       const amountText = document.getElementById("amount-text");
       const languageSelector = document.getElementById("language-selector");
-      const phoneInput = document.getElementById("phoneNumber"); // ✅ grab phone input
+
 
       let finalAmount = 0;
       let finalCurrency = "";
@@ -363,57 +363,68 @@ async function fetchPaymentDetails() {
 
      
       async function initiatePayment() {
-        const lang = languageSelector.value;
-        showLoading(translations[lang].initiatingPayment);
+  const lang = languageSelector.value;
+  showLoading(translations[lang].initiatingPayment);
 
+  try {
+    const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
+      method: "POST",
+      body: JSON.stringify({
+        gateway: "paystack",
+        email: paymentEmail,          // 👈 pass email
+        amount: finalAmount,          // 👈 pass amount in normal units (backend converts if needed)
+        currency: finalCurrency,      // 👈 pass currency (e.g., "GHS")
+        phoneNumber: paymentPhone || "" // 👈 optional if you collect phone
+      }),
+    });
+
+    const paymentData = await initRes.json();
+
+    // If backend returns { error: ... }
+    if (paymentData.error) {
+      throw new Error(paymentData.error);
+    }
+
+    const amountInKobo = Math.round(finalAmount * 100);
+
+    const handler = PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: paymentEmail || paymentData?.email,
+      amount: amountInKobo,
+      currency: finalCurrency,
+      ref: paymentData?.reference || `PSK_${Date.now()}`,
+      callback: async function (response) {
+        messageDiv.innerHTML = `<p class="text-blue-600 font-semibold">${translations[lang].verifyingPayment}</p>`;
         try {
-          const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
+          await authFetch(`${API_BASE_URL}/payment/success`, {
             method: "POST",
             body: JSON.stringify({
               gateway: "paystack",
+              transaction_reference: response.reference,
             }),
           });
-
-          const paymentData = (await initRes.json()).data;
-          const amountInKobo = Math.round(finalAmount * 100);
-
-          const handler = PaystackPop.setup({
-            key: PAYSTACK_PUBLIC_KEY,
-            email: paymentEmail || paymentData?.email,
-            amount: amountInKobo,
-            currency: finalCurrency,
-            ref: paymentData?.reference || `PSK_${Date.now()}`,
-            callback: async function (response) {
-              messageDiv.innerHTML = `<p class="text-blue-600 font-semibold">${translations[lang].verifyingPayment}</p>`;
-              try {
-                await authFetch(`${API_BASE_URL}/payment/success`, {
-                  method: "POST",
-                  body: JSON.stringify({
-                    gateway: "paystack",
-                    transaction_reference: response.reference,
-                  }),
-                });
-                messageDiv.innerHTML = `<p class="text-green-600 font-semibold">${translations[lang].paymentSuccess}</p>`;
-                showAlert("✅", translations[lang].subscriptionActive);
-              } catch (e) {
-                messageDiv.innerHTML = `<p class="text-red-600">${translations[lang].error}: ${e.message}</p>`;
-                showAlert(translations[lang].verificationFailed, e.message);
-              }
-              hideLoading();
-            },
-            onClose: function () {
-              messageDiv.innerHTML = `<p class="text-red-600">${translations[lang].paymentCanceled}</p>`;
-              hideLoading();
-            },
-          });
-          handler.openIframe();
+          messageDiv.innerHTML = `<p class="text-green-600 font-semibold">${translations[lang].paymentSuccess}</p>`;
+          showAlert("✅", translations[lang].subscriptionActive);
         } catch (e) {
-          console.error(e);
           messageDiv.innerHTML = `<p class="text-red-600">${translations[lang].error}: ${e.message}</p>`;
-          showAlert(translations[lang].paymentError, e.message);
-          hideLoading();
+          showAlert(translations[lang].verificationFailed, e.message);
         }
-      }
+        hideLoading();
+      },
+      onClose: function () {
+        messageDiv.innerHTML = `<p class="text-red-600">${translations[lang].paymentCanceled}</p>`;
+        hideLoading();
+      },
+    });
+    handler.openIframe();
+  } catch (e) {
+    console.error(e);
+    messageDiv.innerHTML = `<p class="text-red-600">${translations[lang].error}: ${e.message}</p>`;
+    showAlert(translations[lang].paymentError, e.message);
+    hideLoading();
+  }
+}
+
 
       document.addEventListener("DOMContentLoaded", async () => {
         const userLang = navigator.language.split("-")[0];

@@ -191,23 +191,42 @@ const feedbackSchema = Joi.object({
   feedback_grade: Joi.number().min(0).max(100).optional(),
   feedback_comments: Joi.string().allow("", null),
 });
+
 const paymentSchema = Joi.object({
-  gateway: Joi.string().valid("flutterwave", "paystack").required(),
+  gateway: Joi.string()
+    .valid("flutterwave", "paystack")
+    .required(),
+
+  email: Joi.string()
+    .email()
+    .required(),
+
+  amount: Joi.number()
+    .positive()
+    .required(),
+
+  currency: Joi.string()
+    .uppercase()
+    .length(3) 
+    .required(),
 });
 
 const paymentSuccessSchema = Joi.object({
   gateway: Joi.string().valid("flutterwave", "paystack").required(),
   transaction_reference: Joi.string().required(),
 });
+
 const schoolSchema = Joi.object({
   name: Joi.string().min(2).required(),
   country: Joi.string().length(2).uppercase().required(),
   tier: Joi.number().integer().min(1).required(),
 });
+
 const assignRegionSchema = Joi.object({
   overseerEmail: Joi.string().email().required(),
   region: Joi.string().required(),
 });
+
 const academicCalendarSchema = Joi.object({
   schoolName: Joi.string().required(),
   academicYear: Joi.string().required(),
