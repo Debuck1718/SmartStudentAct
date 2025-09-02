@@ -1842,7 +1842,7 @@ protectedRouter.get(
 
 const checkUserCountryAndRole = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select("schoolCountry");
+    const user = await User.findById(req.user.id).select("schoolCountry email");
 
     if (!user || !user.schoolCountry) {
       return res.status(400).json({ error: "User school country not found." });
@@ -1850,12 +1850,9 @@ const checkUserCountryAndRole = async (req, res, next) => {
 
     const restrictedRoles = ["overseer", "global_overseer"];
     if (restrictedRoles.includes(req.user.occupation)) {
-      return res
-        .status(403)
-        .json({
-          error: "Forbidden: This role does not require this functionality.",
-        });
+      return res.status(403).json({ error: "Forbidden: This role does not require this functionality." });
     }
+
     req.fullUser = user;
     next();
   } catch (err) {
