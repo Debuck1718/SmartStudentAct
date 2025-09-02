@@ -193,7 +193,6 @@ const feedbackSchema = Joi.object({
 });
 const paymentSchema = Joi.object({
   gateway: Joi.string().valid("flutterwave", "paystack").required(),
-  phoneNumber: Joi.string().allow(null, "").optional(),
 });
 
 const paymentSuccessSchema = Joi.object({
@@ -1895,16 +1894,11 @@ protectedRouter.post(
   checkUserCountryAndRole,
   async (req, res) => {
     try {
-      let { gateway, paymentMethod, phoneNumber } = req.body;
+      const { gateway, paymentMethod } = req.body;
 
       const user = req.fullUser || req.user;
       if (!user || !user.email) {
         return res.status(400).json({ error: "User information missing." });
-      }
-
-      // ✅ Fallback: use user.phone if request phoneNumber is missing/empty
-      if (!phoneNumber || phoneNumber.trim() === "") {
-        phoneNumber = user.phone || user.phoneNumber || null;
       }
 
       const schoolName = user.schoolName || "";
@@ -1934,7 +1928,6 @@ protectedRouter.post(
             email: user.email,
             amount,
             currency,
-            phoneNumber,
           });
           break;
         case "paystack":
@@ -1942,7 +1935,6 @@ protectedRouter.post(
             email: user.email,
             amount,
             currency,
-            phoneNumber,
           });
           break;
         default:
@@ -1959,7 +1951,6 @@ protectedRouter.post(
     }
   }
 );
-
 
 
 
