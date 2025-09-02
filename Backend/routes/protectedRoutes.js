@@ -29,6 +29,7 @@ const schoolRouter = require("./schoolRoutes");
 const uploadRouter = require("./uploadRoutes");
 
 const paymentController = require("../controllers/paymentController");
+const { getUserPrice } = require('../services/pricingService');
 
 const smsApi = {};
 async function sendSMS(phone, message) {
@@ -1874,7 +1875,7 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
     const schoolName = user.schoolName || "";
     const schoolCountry = user.schoolCountry || "";
 
-    const price = await paymentController.getUserPrice(user, userRole, schoolName, schoolCountry);
+    const price = await getUserPrice(user, userRole, schoolName, schoolCountry); // use service directly
     console.log("Price computed:", price);
 
     res.json(price);
@@ -1884,6 +1885,7 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   }
 });
 
+// POST /payment/initiate
 protectedRouter.post(
   "/payment/initiate",
   validate(paymentSchema),
@@ -1901,7 +1903,8 @@ protectedRouter.post(
       const schoolCountry = user.schoolCountry || "";
       const userRole = user.occupation || user.role || "student";
 
-      const priceInfo = await paymentController.getUserPrice(user, userRole, schoolName, schoolCountry);
+      // fetch pricing from the service
+      const priceInfo = await getUserPrice(user, userRole, schoolName, schoolCountry);
 
       const amount = priceInfo.localPrice;
       const currency = priceInfo.currency;
@@ -1916,6 +1919,7 @@ protectedRouter.post(
 
       let paymentData;
       const selectedGateway = gateway || paymentMethod || "paystack";
+
       switch (selectedGateway) {
         case "flutterwave":
           paymentData = await paymentController.initFlutterwavePayment({
@@ -1947,7 +1951,6 @@ protectedRouter.post(
     }
   }
 );
-
 
 
 
