@@ -273,14 +273,12 @@ async function initiatePayment() {
   const lang = languageSelector.value;
   showLoading(translations[lang].initiatingPayment);
   try {
+    // only send gateway
     const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
       method: 'POST',
-      body: JSON.stringify({
-        gateway: 'paystack',   // ✅ only send this
-        amount: finalAmount,   // ✅ pass the amount
-        currency: finalCurrency // ✅ pass the currency
-      })
+      body: JSON.stringify({ gateway: 'paystack' })
     });
+
     const paymentData = (await initRes.json()).data;
     const amountInKobo = Math.round(finalAmount * 100);
 
@@ -321,13 +319,6 @@ async function initiatePayment() {
     hideLoading();
   }
 }
-
-
-payButton.addEventListener('click', initiatePayment);
-languageSelector.addEventListener('change', async e => {
-  translatePage(e.target.value);
-  await fetchPaymentDetails();
-});
 
 document.addEventListener('DOMContentLoaded', async () => {
   const userLang = navigator.language.split('-')[0];
