@@ -1841,28 +1841,27 @@ protectedRouter.get(
 );
 
 const checkUserCountryAndRole = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id).select("country");
+  try {
+    const user = await User.findById(req.user.id).select("schoolCountry");
 
-    if (!user || !user.country) {
-      return res.status(400).json({ error: "User country not found." });
-    }
+    if (!user || !user.schoolCountry) {
+      return res.status(400).json({ error: "User school country not found." });
+    }
 
-    const restrictedRoles = ["overseer", "global_overseer"];
-    if (restrictedRoles.includes(req.user.occupation)) {
-      return res
-        .status(403)
-        .json({
-          error: "Forbidden: This role does not require this functionality.",
-        });
-    }
-
-    req.fullUser = user;
-    next();
-  } catch (err) {
-    logger.error("Middleware error checking user country and role:", err);
-    res.status(500).json({ error: "An internal server error occurred." });
-  }
+    const restrictedRoles = ["overseer", "global_overseer"];
+    if (restrictedRoles.includes(req.user.occupation)) {
+      return res
+        .status(403)
+        .json({
+          error: "Forbidden: This role does not require this functionality.",
+        });
+    }
+    req.fullUser = user;
+    next();
+  } catch (err) {
+    logger.error("Middleware error checking user country and role:", err);
+    res.status(500).json({ error: "An internal server error occurred." });
+  }
 };
 
 protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
