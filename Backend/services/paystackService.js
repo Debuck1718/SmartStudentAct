@@ -1,29 +1,20 @@
 const axios = require("axios");
-const jwt = require("jsonwebtoken");
 const config = require("../config/paymentConfig");
 
-async function initPaystackPayment({ email, amount, currency, phoneNumber = null, token = null }) {
+async function initPaystackPayment({ email, amount, currency }) {
   try {
-    let payload = { email, amount, currency, phoneNumber };
-
-    // ✅ If token is provided, decode and override payload
-    if (token) {
-      const decoded = jwt.verify(token, config.jwtSecret);
-      payload = { ...payload, ...decoded };
-    }
-
-    const amountInKobo = Math.round(payload.amount * 100);
+    const amountInKobo = Math.round(amount * 100);
 
     console.log(
-      `Initiating Paystack payment for ${payload.email}, amount: ${amountInKobo} (${payload.currency}).`
+      `Initiating Paystack payment for ${email}, amount: ${amountInKobo} (${currency}).`
     );
 
     const response = await axios.post(
       "https://api.paystack.co/transaction/initialize",
       {
-        email: payload.email,
+        email,
         amount: amountInKobo,
-        currency: payload.currency,
+        currency,
       },
       {
         headers: {
