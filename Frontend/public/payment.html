@@ -326,7 +326,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   translatePage(languageSelector.value);
   await checkAuth();
   await fetchPaymentDetails();
+
+  payButton.addEventListener('click', initiatePayment);
 });
+
 </script>
 
 </body>
