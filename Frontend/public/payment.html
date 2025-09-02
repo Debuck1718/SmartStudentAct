@@ -275,7 +275,11 @@ async function initiatePayment() {
   try {
     const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
       method: 'POST',
-      body: JSON.stringify({ gateway: 'paystack', paymentMethod: 'paystack' })
+      body: JSON.stringify({
+        gateway: 'paystack',   // ✅ only send this
+        amount: finalAmount,   // ✅ pass the amount
+        currency: finalCurrency // ✅ pass the currency
+      })
     });
     const paymentData = (await initRes.json()).data;
     const amountInKobo = Math.round(finalAmount * 100);
@@ -291,7 +295,10 @@ async function initiatePayment() {
         try {
           await authFetch(`${API_BASE_URL}/payment/success`, {
             method: 'POST',
-            body: JSON.stringify({ gateway: 'paystack', transaction_reference: response.reference })
+            body: JSON.stringify({
+              gateway: 'paystack',
+              transaction_reference: response.reference
+            })
           });
           messageDiv.innerHTML = `<p class="text-green-600 font-semibold">${translations[lang].paymentSuccess}</p>`;
           showAlert("✅", translations[lang].subscriptionActive);
@@ -314,6 +321,7 @@ async function initiatePayment() {
     hideLoading();
   }
 }
+
 
 payButton.addEventListener('click', initiatePayment);
 languageSelector.addEventListener('change', async e => {
