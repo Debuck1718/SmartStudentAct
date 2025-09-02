@@ -186,13 +186,16 @@ const teacherAssignmentSchema = Joi.object({
     .default([]),
   assigned_to_schools: Joi.array().items(Joi.string()).default([]),
 }).unknown(true);
+
 const feedbackSchema = Joi.object({
   feedback_grade: Joi.number().min(0).max(100).optional(),
   feedback_comments: Joi.string().allow("", null),
 });
 const paymentSchema = Joi.object({
   gateway: Joi.string().valid("flutterwave", "paystack").required(),
+  phoneNumber: Joi.string().allow(null, "").optional(),
 });
+
 const paymentSuccessSchema = Joi.object({
   gateway: Joi.string().valid("flutterwave", "paystack").required(),
   transaction_reference: Joi.string().required(),
@@ -1892,11 +1895,16 @@ protectedRouter.post(
   checkUserCountryAndRole,
   async (req, res) => {
     try {
-      const { gateway, paymentMethod, phoneNumber = null } = req.body;
+      let { gateway, paymentMethod, phoneNumber } = req.body;
 
       const user = req.fullUser || req.user;
       if (!user || !user.email) {
         return res.status(400).json({ error: "User information missing." });
+      }
+
+      // ✅ Fallback: use user.phone if request phoneNumber is missing/empty
+      if (!phoneNumber || phoneNumber.trim() === "") {
+        phoneNumber = user.phone || user.phoneNumber || null;
       }
 
       const schoolName = user.schoolName || "";
@@ -1951,6 +1959,7 @@ protectedRouter.post(
     }
   }
 );
+
 
 
 
