@@ -195,6 +195,7 @@ function showLoading(text) {
 }
 
 function hideLoading() {
+  console.log("hideLoading → email:", paymentEmail, "amount:", finalAmount);
   payButton.disabled = !(finalAmount > 0 && paymentEmail);
   translatePage(languageSelector.value);
 }
@@ -215,12 +216,10 @@ async function authFetch(url, options = {}) {
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
     ...options
   });
-
   if (res.status === 401 || res.status === 403) {
     window.location.href = "/login.html";
     throw new Error("Unauthorized");
   }
-
   if (!res.ok) throw new Error(`HTTP error ${res.status}`);
   return res;
 }
@@ -229,7 +228,8 @@ async function checkAuth() {
   try {
     const res = await authFetch(`${API_BASE_URL}/auth/check`);
     const data = await res.json();
-    paymentEmail = data.email || '';
+    paymentEmail = data.email || data.user?.email || '';
+    console.log("Auth email resolved:", paymentEmail);
     return data;
   } catch (e) {
     console.error("Auth check failed:", e);
@@ -255,7 +255,8 @@ async function fetchPaymentDetails() {
     finalAmount = parseFloat(data.localPrice || 0);
     finalCurrency = data.currency || 'USD';
     amountText.textContent = finalAmount > 0 ? `${finalCurrency} ${finalAmount.toFixed(2)}` : 'N/A';
-    payButton.disabled = !(finalAmount > 0 && paymentEmail);
+
+    console.log("Pricing resolved:", { finalAmount, finalCurrency, email: paymentEmail });
     hideLoading();
     if (retryTimeout) clearTimeout(retryTimeout);
   } catch (e) {
@@ -331,5 +332,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 </body>
 </html>
+
 
 
