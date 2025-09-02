@@ -1,7 +1,7 @@
 const axios = require("axios");
 const config = require("../config/paymentConfig");
 
-async function initPaystackPayment({ email, amount, currency }) {
+async function initPaystackPayment({ email, amount, currency, phoneNumber }) {
   try {
     const amountInKobo = Math.round(amount * 100);
 
@@ -15,6 +15,8 @@ async function initPaystackPayment({ email, amount, currency }) {
         email,
         amount: amountInKobo,
         currency,
+        // Add the phone number to the request body
+        phone: phoneNumber,
       },
       {
         headers: {

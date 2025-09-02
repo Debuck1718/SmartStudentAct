@@ -14,7 +14,7 @@ async function initializePayment(req, res) {
     }
 
     const { paymentMethod, phoneNumber } = req.body;
-    const user = req.user; // populated by authentication middleware
+    const user = req.user; 
 
     if (!user || !user.email) {
       return res.status(400).json({ success: false, message: "User information missing." });
@@ -36,7 +36,7 @@ async function initializePayment(req, res) {
       return res.status(400).json({ success: false, message: "Invalid payment amount." });
     }
 
-    // Decide payment gateway
+ 
     const gateway = paymentMethod || 'paystack'; // default to paystack
     let paymentResponse;
 
