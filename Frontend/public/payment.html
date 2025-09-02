@@ -369,7 +369,6 @@
         const lang = languageSelector.value;
         showLoading(translations[lang].initiatingPayment);
 
-        // Get the phone number from the input field
         const phoneNumber = phoneNumberInput.value.trim();
 
         try {
@@ -377,7 +376,10 @@
             method: "POST",
             body: JSON.stringify({
               gateway: "paystack",
-              phoneNumber: phoneNumber, // Pass phone number from the input field
+              email: paymentEmail,
+              amount: finalAmount,
+              currency: finalCurrency,
+              phoneNumber: phoneNumber, 
             }),
           });
 
