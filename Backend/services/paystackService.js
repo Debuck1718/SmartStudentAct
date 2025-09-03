@@ -1,33 +1,37 @@
 const Paystack = require("@paystack/paystack-sdk").default;
 const config = require("../config/paymentConfig");
 
-// Initialize Paystack client
 const paystack = new Paystack(config.paystack.secretKey);
+
 
 async function initPaystackPayment({ email, amount, currency }) {
   try {
-    // Paystack requires smallest unit
+    if (!email || !amount || !currency) {
+      throw new Error("Missing required Paystack payment parameters.");
+    }
+
+  
     const amountInKobo = Math.round(amount * 100);
 
     console.log(
-      `Initiating Paystack payment for ${email}, amount: ${amountInKobo} (${currency}).`
+      `👉 Initiating Paystack payment | Email: ${email} | Amount: ${amountInKobo} | Currency: ${currency}`
     );
 
     const response = await paystack.transaction.initialize({
       email,
       amount: amountInKobo,
-      currency,
+      currency, 
     });
 
-    if (response?.status === true) {
+    if (response?.status === true && response?.data) {
       return response.data;
     } else {
-      console.error("Paystack API returned error:", response);
+      console.error("❌ Paystack API error:", response);
       throw new Error(response?.message || "Paystack initialization failed");
     }
   } catch (error) {
     console.error(
-      "Error initiating Paystack payment:",
+      "❌ Error initiating Paystack payment:",
       error.response?.data || error.message
     );
     throw error;
@@ -35,4 +39,5 @@ async function initPaystackPayment({ email, amount, currency }) {
 }
 
 module.exports = { initPaystackPayment };
+
 
