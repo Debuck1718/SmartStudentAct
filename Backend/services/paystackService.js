@@ -1,44 +1,36 @@
-const axios = require("axios");
+const { Paystack } = require("@paystack/paystack-sdk");
 const config = require("../config/paymentConfig");
+
+// Initialize Paystack client
+const paystack = new Paystack(config.paystack.secretKey);
 
 async function initPaystackPayment({ email, amount, currency }) {
   try {
+    // Paystack requires smallest currency unit → multiply by 100
     const amountInKobo = Math.round(amount * 100);
 
     console.log(
       `Initiating Paystack payment for ${email}, amount: ${amountInKobo} (${currency}).`
     );
 
-    const response = await axios.post(
-      "https://api.paystack.co/transaction/initialize",
-      {
-        email,
-        amount: amountInKobo,
-        currency,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${config.paystack.secretKey}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await paystack.transaction.initialize({
+      email,
+      amount: amountInKobo,
+      currency,
+    });
 
-    if (response.data && response.data.status === true) {
-      return response.data.data;
+    if (response?.status === true) {
+      return response.data; // ✅ payment data with authorization_url, access_code, reference
     } else {
-      console.error("Paystack API returned a non-success status:", response.data);
-      throw new Error(
-        response.data?.message || "Paystack initialization failed"
-      );
+      console.error("Paystack API returned error:", response);
+      throw new Error(response?.message || "Paystack initialization failed");
     }
   } catch (error) {
     console.error(
       "Error initiating Paystack payment:",
       error.response?.data || error.message
     );
-    // 🚨 Don't swallow — bubble up so your router returns the actual error
-    throw error;
+    throw error; // bubble up to route
   }
 }
 

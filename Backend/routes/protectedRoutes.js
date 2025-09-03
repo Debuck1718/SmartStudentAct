@@ -1910,7 +1910,6 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   }
 });
 
-// POST /payment/initiate
 protectedRouter.post(
   "/payment/initiate",
   validate(paymentSchema),
@@ -1947,19 +1946,37 @@ protectedRouter.post(
 
       switch (selectedGateway) {
         case "flutterwave":
-          paymentData = await paymentController.initFlutterwavePayment({
-            email: user.email,
-            amount,
-            currency,
-          });
+          try {
+            paymentData = await paymentController.initFlutterwavePayment({
+              email: user.email,
+              amount,
+              currency,
+            });
+          } catch (err) {
+            logger.error("Flutterwave error:", err.response?.data || err.message);
+            return res.status(400).json({
+              error: "Flutterwave error",
+              details: err.response?.data || err.message,
+            });
+          }
           break;
+
         case "paystack":
-          paymentData = await paymentController.initPaystackPayment({
-            email: user.email,
-            amount,
-            currency,
-          });
+          try {
+            paymentData = await paymentController.initPaystackPayment({
+              email: user.email,
+              amount,
+              currency,
+            });
+          } catch (err) {
+            logger.error("Paystack error:", err.response?.data || err.message);
+            return res.status(400).json({
+              error: "Paystack error",
+              details: err.response?.data || err.message,
+            });
+          }
           break;
+
         default:
           return res.status(400).json({ error: "Unsupported payment gateway." });
       }
@@ -1969,12 +1986,14 @@ protectedRouter.post(
         data: paymentData,
       });
     } catch (err) {
-      logger.error("Error initiating payment:", err);
-      res.status(500).json({ error: "Failed to initiate payment." });
+      logger.error("Unexpected error in /payment/initiate:", err);
+      res.status(500).json({
+        error: "Failed to initiate payment.",
+        details: err.message,
+      });
     }
   }
 );
-
 
 
 protectedRouter.post("/trial/start", authenticateJWT, async (req, res) => {
