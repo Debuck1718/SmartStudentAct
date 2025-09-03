@@ -4,103 +4,97 @@ const { initPaystackPayment } = require("../services/paystackService");
 const { initFlutterwavePayment } = require("../services/flutterwaveService");
 const { validatePaymentRequest } = require("../utils/validator");
 const { handleWebhook } = require("./webhookController");
+const logger = require("../utils/logger"); // make sure you have a logger util
 
 async function initializePayment(req, res) {
   try {
-    // ✅ Validate incoming request
+    // ✅ Validate request schema
     const { error } = validatePaymentRequest(req.body);
     if (error) {
-      return res
-        .status(400)
-        .json({ success: false, message: error.details[0].message });
+      return res.status(400).json({ success: false, message: error.details[0].message });
     }
 
-    const { paymentMethod } = req.body;
-    const user = req.user;
+    const { gateway, paymentMethod } = req.body;
+    const user = req.fullUser || req.user;
 
     if (!user || !user.email) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User information missing." });
+      return res.status(400).json({ success: false, message: "User information missing." });
     }
 
     const schoolName = user.schoolName || "";
+    const schoolCountry = user.schoolCountry || "";
     const userRole = user.occupation || user.role || "student";
 
-    // ✅ Get user pricing
-    const priceDetails = await getUserPrice(user, userRole, schoolName);
+    // ✅ Fetch pricing
+    const priceInfo = await getUserPrice(user, userRole, schoolName, schoolCountry);
 
-    if (
-      !priceDetails ||
-      typeof priceDetails.localPrice !== "number" ||
-      !priceDetails.currency
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Pricing not available for this user." });
+    if (!priceInfo || typeof priceInfo.localPrice !== "number" || !priceInfo.currency) {
+      return res.status(400).json({ success: false, message: "Pricing not available for this user." });
     }
 
-    const { localPrice: amount, currency } = priceDetails;
+    const amount = priceInfo.localPrice;
+    const currency = priceInfo.currency;
 
     if (amount <= 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid payment amount." });
+      return res.status(400).json({ success: false, message: "Invalid payment amount." });
     }
 
-    // ✅ Select gateway
-    const gateway = paymentMethod || "paystack";
-    let paymentResponse;
+    const selectedGateway = gateway || paymentMethod || "paystack";
+    let paymentData;
 
-    switch (gateway) {
-      case "paystack":
-        paymentResponse = await initPaystackPayment({
-          email: user.email,
-          amount,
-          currency,
-        });
+    logger.info(
+      `User ${user.email} is initiating payment via ${selectedGateway} for ${amount} ${currency}`
+    );
+
+    switch (selectedGateway) {
+      case "flutterwave":
+        try {
+          paymentData = await initFlutterwavePayment({ email: user.email, amount, currency });
+        } catch (err) {
+          logger.error("Flutterwave error:", err.response?.data || err.message);
+          return res.status(400).json({
+            success: false,
+            error: "Flutterwave error",
+            details: err.response?.data || err.message,
+          });
+        }
         break;
 
-      case "flutterwave":
-        paymentResponse = await initFlutterwavePayment({
-          email: user.email,
-          amount,
-          currency,
-        });
+      case "paystack":
+        try {
+          paymentData = await initPaystackPayment({ email: user.email, amount, currency });
+        } catch (err) {
+          logger.error("Paystack error:", err.response?.data || err.message);
+          return res.status(400).json({
+            success: false,
+            error: "Paystack error",
+            details: err.response?.data || err.message,
+          });
+        }
         break;
 
       default:
-        return res
-          .status(400)
-          .json({ success: false, message: "Unsupported payment gateway." });
-    }
-
-    if (!paymentResponse) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Failed to initialize payment." });
+        return res.status(400).json({ success: false, message: "Unsupported payment gateway." });
     }
 
     return res.json({
       success: true,
-      gateway,
-      paymentData: paymentResponse,
+      message: "Payment initiated successfully.",
+      gateway: selectedGateway,
+      data: paymentData,
     });
   } catch (err) {
-    console.error("Payment initialization error:", err);
-    return res.status(500).json({ success: false, error: err.message });
+    logger.error("Unexpected error in initializePayment:", err);
+    return res.status(500).json({ success: false, error: "Failed to initiate payment.", details: err.message });
   }
 }
 
 // ✅ Webhook handlers
-const handlePaystackWebhook = (req, res) =>
-  handleWebhook(req, res, "paystack");
-const handleFlutterwaveWebhook = (req, res) =>
-  handleWebhook(req, res, "flutterwave");
+const handlePaystackWebhook = (req, res) => handleWebhook(req, res, "paystack");
+const handleFlutterwaveWebhook = (req, res) => handleWebhook(req, res, "flutterwave");
 
 module.exports = {
   initializePayment,
   handlePaystackWebhook,
   handleFlutterwaveWebhook,
 };
-

@@ -1910,90 +1910,14 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   }
 });
 
+// routes/protected.js
 protectedRouter.post(
   "/payment/initiate",
   validate(paymentSchema),
   checkUserCountryAndRole,
-  async (req, res) => {
-    try {
-      const { gateway, paymentMethod } = req.body;
-
-      const user = req.fullUser || req.user;
-      if (!user || !user.email) {
-        return res.status(400).json({ error: "User information missing." });
-      }
-
-      const schoolName = user.schoolName || "";
-      const schoolCountry = user.schoolCountry || "";
-      const userRole = user.occupation || user.role || "student";
-
-      // fetch pricing from the service
-      const priceInfo = await getUserPrice(user, userRole, schoolName, schoolCountry);
-
-      const amount = priceInfo.localPrice;
-      const currency = priceInfo.currency;
-
-      if (amount <= 0) {
-        return res.status(400).json({ error: "Invalid payment amount." });
-      }
-
-      logger.info(
-        `User ${user.email} is initiating payment via ${gateway || paymentMethod} for amount ${amount} ${currency}`
-      );
-
-      let paymentData;
-      const selectedGateway = gateway || paymentMethod || "paystack";
-
-      switch (selectedGateway) {
-        case "flutterwave":
-          try {
-            paymentData = await paymentController.initFlutterwavePayment({
-              email: user.email,
-              amount,
-              currency,
-            });
-          } catch (err) {
-            logger.error("Flutterwave error:", err.response?.data || err.message);
-            return res.status(400).json({
-              error: "Flutterwave error",
-              details: err.response?.data || err.message,
-            });
-          }
-          break;
-
-        case "paystack":
-          try {
-            paymentData = await paymentController.initPaystackPayment({
-              email: user.email,
-              amount,
-              currency,
-            });
-          } catch (err) {
-            logger.error("Paystack error:", err.response?.data || err.message);
-            return res.status(400).json({
-              error: "Paystack error",
-              details: err.response?.data || err.message,
-            });
-          }
-          break;
-
-        default:
-          return res.status(400).json({ error: "Unsupported payment gateway." });
-      }
-
-      res.json({
-        message: "Payment initiated successfully.",
-        data: paymentData,
-      });
-    } catch (err) {
-      logger.error("Unexpected error in /payment/initiate:", err);
-      res.status(500).json({
-        error: "Failed to initiate payment.",
-        details: err.message,
-      });
-    }
-  }
+  paymentController.initializePayment
 );
+
 
 
 protectedRouter.post("/trial/start", authenticateJWT, async (req, res) => {
