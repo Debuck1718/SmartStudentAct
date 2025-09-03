@@ -34,6 +34,7 @@
   "dependencies": {
     "@getbrevo/brevo": "^3.0.1",
     "@google/generative-ai": "^0.24.1",
+    "@paystack/paystack-sdk": "^1.0.1",
     "agenda": "^5.0.0",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",

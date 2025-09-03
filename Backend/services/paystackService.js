@@ -28,14 +28,17 @@ async function initPaystackPayment({ email, amount, currency }) {
       return response.data.data;
     } else {
       console.error("Paystack API returned a non-success status:", response.data);
-      return null;
+      throw new Error(
+        response.data?.message || "Paystack initialization failed"
+      );
     }
   } catch (error) {
     console.error(
       "Error initiating Paystack payment:",
-      error.response ? error.response.data : error.message
+      error.response?.data || error.message
     );
-    return null;
+    // 🚨 Don't swallow — bubble up so your router returns the actual error
+    throw error;
   }
 }
 
