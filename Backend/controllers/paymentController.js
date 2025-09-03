@@ -4,21 +4,19 @@ const { initPaystackPayment } = require("../services/paystackService");
 const { initFlutterwavePayment } = require("../services/flutterwaveService");
 const { handleWebhook } = require("./webhookController");
 
+// controllers/paymentController.js
 async function initializePayment(req, res) {
   try {
     const { paymentMethod } = req.body;
     const user = req.user;
 
     if (!user || !user.email) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User information missing." });
+      return res.status(400).json({ success: false, message: "User information missing." });
     }
 
     const schoolName = user.schoolName || "";
     const userRole = user.occupation || user.role || "student";
 
-    // ✅ Get user pricing
     const priceDetails = await getUserPrice(
       user,
       userRole,
@@ -26,26 +24,29 @@ async function initializePayment(req, res) {
       user.schoolCountry || ""
     );
 
-    if (
-      !priceDetails ||
-      typeof priceDetails.localPrice !== "number" ||
-      !priceDetails.currency
-    ) {
+    if (!priceDetails || typeof priceDetails.localPrice !== "number" || !priceDetails.currency) {
       return res.status(400).json({
         success: false,
         message: "Pricing not available for this user.",
       });
     }
 
-    const { localPrice: amount, currency } = priceDetails;
+    let { localPrice: amount, currency } = priceDetails;
 
     if (amount <= 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid payment amount." });
+      return res.status(400).json({ success: false, message: "Invalid payment amount." });
     }
 
-    // ✅ Select gateway
+    
+    const SUPPORTED_PAYSTACK_CURRENCIES = ["NGN", "GHS", "USD", "ZAR", "KES"];
+
+    if (!SUPPORTED_PAYSTACK_CURRENCIES.includes(currency)) {
+      console.warn(`⚠️ Currency ${currency} not supported by Paystack, falling back to USD`);
+      currency = "USD";
+      amount = priceDetails.usdPrice; 
+    }
+
+
     const gateway = paymentMethod || "paystack";
     let paymentResponse;
 
@@ -67,15 +68,11 @@ async function initializePayment(req, res) {
         break;
 
       default:
-        return res
-          .status(400)
-          .json({ success: false, message: "Unsupported payment gateway." });
+        return res.status(400).json({ success: false, message: "Unsupported payment gateway." });
     }
 
     if (!paymentResponse) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Failed to initialize payment." });
+      return res.status(500).json({ success: false, message: "Failed to initialize payment." });
     }
 
     return res.json({
