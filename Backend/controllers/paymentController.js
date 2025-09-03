@@ -2,7 +2,6 @@
 const { getUserPrice } = require("../services/pricingService");
 const { initPaystackPayment } = require("../services/paystackService");
 const { initFlutterwavePayment } = require("../services/flutterwaveService");
-const { validatePaymentRequest } = require("../utils/validator");
 const { handleWebhook } = require("./webhookController");
 const logger = require("../utils/logger"); // make sure you have a logger util
 
