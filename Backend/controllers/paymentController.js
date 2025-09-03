@@ -32,20 +32,19 @@ async function initializePayment(req, res) {
     }
 
     let { localPrice: amount, currency } = priceDetails;
-    const uppercaseCurrency = currency.toUpperCase();
+currency = currency.toUpperCase(); // normalize once
 
-    if (amount <= 0) {
-      return res.status(400).json({ success: false, message: "Invalid payment amount." });
-    }
+if (amount <= 0) {
+  return res.status(400).json({ success: false, message: "Invalid payment amount." });
+}
 
-    
-    const SUPPORTED_PAYSTACK_CURRENCIES = ["NGN", "GHS", "USD", "ZAR", "KES"];
+const SUPPORTED_PAYSTACK_CURRENCIES = ["NGN", "GHS", "USD", "ZAR", "KES"];
 
-    if (!SUPPORTED_PAYSTACK_CURRENCIES.includes(currency)) {
-      console.warn(`⚠️ Currency ${currency} not supported by Paystack, falling back to USD`);
-      currency = "USD";
-      amount = priceDetails.usdPrice; 
-    }
+if (!SUPPORTED_PAYSTACK_CURRENCIES.includes(currency)) {
+  console.warn(`⚠️ Currency ${currency} not supported by Paystack, falling back to USD`);
+  currency = "USD";
+  amount = priceDetails.usdPrice;
+}
 
 
     const gateway = paymentMethod || "paystack";
