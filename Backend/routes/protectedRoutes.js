@@ -1951,7 +1951,6 @@ protectedRouter.post(
             email: user.email,
             amount,
             currency,
-            phoneNumber,
           });
           break;
         case "paystack":
@@ -1959,7 +1958,6 @@ protectedRouter.post(
             email: user.email,
             amount,
             currency,
-            phoneNumber,
           });
           break;
         default:

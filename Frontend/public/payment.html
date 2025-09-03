@@ -100,18 +100,6 @@
         </p>
       </div>
 
-      <div class="mt-4 text-left">
-        <label for="phoneNumberInput" class="block text-sm font-semibold text-gray-700">
-          Phone Number
-        </label>
-        <input
-          type="tel"
-          id="phoneNumberInput"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          placeholder="e.g., +233 24 123 4567"
-          required
-        />
-      </div>
 
       <button
         id="payButton"
@@ -259,7 +247,7 @@
       const messageDiv = document.getElementById("message");
       const amountText = document.getElementById("amount-text");
       const languageSelector = document.getElementById("language-selector");
-      const phoneNumberInput = document.getElementById("phoneNumberInput"); // New input element
+
 
       let finalAmount = 0;
       let finalCurrency = "";
@@ -274,7 +262,7 @@
       function hideLoading() {
         console.log("hideLoading → email:", paymentEmail, "amount:", finalAmount);
         // Check if the phone number input is valid before enabling the button
-        const isFormValid = finalAmount > 0 && paymentEmail && phoneNumberInput.value.trim() !== "";
+        const isFormValid = finalAmount > 0 && paymentEmail;
         payButton.disabled = !isFormValid;
         translatePage(languageSelector.value);
       }
@@ -369,8 +357,6 @@
         const lang = languageSelector.value;
         showLoading(translations[lang].initiatingPayment);
 
-        const phoneNumber = phoneNumberInput.value.trim();
-
         try {
           const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
             method: "POST",
@@ -378,8 +364,7 @@
               gateway: "paystack",
               email: paymentEmail,
               amount: finalAmount,
-              currency: finalCurrency,
-              phoneNumber: phoneNumber, 
+              currency: finalCurrency, 
             }),
           });
 
