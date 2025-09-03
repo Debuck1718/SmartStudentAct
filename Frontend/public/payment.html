@@ -380,8 +380,6 @@
             email: paymentEmail || paymentData?.email,
             amount: amountInKobo,
             currency: finalCurrency,
-            // Pass phone number to the Paystack setup object as well
-            phone: phoneNumber,
             ref: paymentData?.reference || `PSK_${Date.now()}`,
             callback: async function (response) {
               messageDiv.innerHTML = `<p class="text-blue-600 font-semibold">${translations[lang].verifyingPayment}</p>`;
