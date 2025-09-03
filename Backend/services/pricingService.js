@@ -22,8 +22,8 @@ const COUNTRY_CURRENCY_MAP = {
 };
 
 const pricingData = {
-  default: { student: 1, teacher: 3, admin: 3 },
-  tier3_4: { student: 5, teacher: 10, admin: 10 },
+  default: { student: 1, teacher: 3, admin: 3 },   // USD baseline
+  tier3_4: { student: 5, teacher: 10, admin: 10 }, // USD
   regional: {
     ZA: { student: 2, teacher: 5, admin: 7, teacher_free: true },
     ZM: { student: 2, teacher: 5, admin: 7, teacher_free: true },
@@ -33,10 +33,9 @@ const pricingData = {
   },
 };
 
-
 const LOCAL_OVERRIDES = {
   GH: { currency: 'GHS', student: 15, teacher: 50, admin: 70 },
-  // add more countries here later if needed...
+  // Add more overrides per country if needed
 };
 
 function normalizeCountry(user, schoolCountry) {
@@ -69,52 +68,58 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
 
   const countryCode = normalizeCountry(user, schoolCountry);
 
+  // ✅ Check for hard local override (e.g. Ghana)
   if (countryCode && LOCAL_OVERRIDES[countryCode]) {
     const override = LOCAL_OVERRIDES[countryCode];
     const localPrice = override[role] ?? usdPrice;
 
     return {
-      usdPrice: localPrice, 
-      localPrice,
-      currency: override.currency,
+      usdPrice,                     // keep USD baseline
+      localPrice,                   // enforce local fixed price
+      currency: override.currency,  // e.g. GHS
     };
   }
 
+  // ✅ School-based tier adjustment
   try {
     if (schoolName) {
       const school = await School.findOne({ name: new RegExp(`^${schoolName}$`, 'i') });
       if (school && school.tier) tier = school.tier;
     }
   } catch (err) {
-    console.error("Error fetching school data:", err);
+    logger.error("Error fetching school data:", err);
   }
 
+  // ✅ Apply tier/region adjustments
   if (tier === 3 || tier === 4) {
     usdPrice = pricingData.tier3_4[role] ?? usdPrice;
-  } 
-  
-  else if (pricingData.regional[countryCode]?.[role] != null) {
+  } else if (pricingData.regional[countryCode]?.[role] != null) {
     usdPrice = pricingData.regional[countryCode][role];
   }
 
+  // ✅ Teacher free rule
   if (role === 'teacher' && pricingData.regional[countryCode]?.teacher_free) {
     usdPrice = 0;
   }
 
-
+  // ✅ Currency handling
   const currency = COUNTRY_CURRENCY_MAP[countryCode] || 'USD';
-  const rate = await getRate(currency).catch(() => null);
 
-  const localPrice = (usdPrice != null && rate != null)
-    ? (usdPrice * rate).toFixed(2)
-    : usdPrice ?? 0;
+  let localPrice = usdPrice;
+  if (currency !== 'USD') {
+    const rate = await getRate(currency).catch(() => null);
+    if (rate != null) {
+      localPrice = (usdPrice * rate).toFixed(2);
+    }
+  }
 
   return {
     usdPrice: usdPrice ?? 0,
     localPrice: parseFloat(localPrice) || 0,
-    currency: currency || 'USD'
+    currency: currency || 'USD',
   };
 }
 
 module.exports = { getUserPrice };
+
 
