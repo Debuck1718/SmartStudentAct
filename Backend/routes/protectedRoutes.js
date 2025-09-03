@@ -1900,7 +1900,7 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
     const schoolName = user.schoolName || "";
     const schoolCountry = user.schoolCountry || "";
 
-    const price = await getUserPrice(user, userRole, schoolName, schoolCountry); // use service directly
+    const price = await getUserPrice(user, userRole, schoolName, schoolCountry); 
     console.log("Price computed:", price);
 
     res.json(price);

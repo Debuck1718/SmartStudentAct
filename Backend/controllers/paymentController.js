@@ -32,6 +32,7 @@ async function initializePayment(req, res) {
     }
 
     let { localPrice: amount, currency } = priceDetails;
+    const uppercaseCurrency = currency.toUpperCase();
 
     if (amount <= 0) {
       return res.status(400).json({ success: false, message: "Invalid payment amount." });
