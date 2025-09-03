@@ -363,17 +363,21 @@
         }),
       });
 
-      const paymentData = await initRes.json();
-      if (paymentData.error) throw new Error(paymentData.error);
+      const paymentResponse = await initRes.json();
+      console.log("Backend response for payment:", paymentResponse);
+
+      if (!paymentResponse.success || (paymentResponse.paymentData && !paymentResponse.paymentData.status)) {
+        throw new Error(paymentResponse.paymentData.message || paymentResponse.error || "Payment initialization failed");
+      }
 
       const amountInKobo = Math.round(finalAmount * 100);
 
       const handler = PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
-        email: paymentEmail || paymentData?.email,
+        email: paymentEmail || paymentResponse.paymentData.email,
         amount: amountInKobo,
         currency: finalCurrency,
-        ref: paymentData?.reference || `PSK_${Date.now()}`,
+        ref: paymentResponse.paymentData.reference || `PSK_${Date.now()}`,
         callback: async function (response) {
           messageDiv.innerHTML = `<p class="text-blue-600 font-semibold">${translations[lang].verifyingPayment}</p>`;
           try {

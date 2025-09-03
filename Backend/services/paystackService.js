@@ -10,22 +10,7 @@ async function initPaystackPayment({ email, amount, currency }) {
       throw new Error("Missing required Paystack payment parameters.");
     }
 
-    // Convert amount based on currency
-    let amountInSubunits;
-    switch (currency.toUpperCase()) {
-      case "GHS": // Ghana Cedis
-        amountInSubunits = Math.round(amount * 100); // pesewas
-        break;
-      case "NGN": // Nigerian Naira
-        amountInSubunits = Math.round(amount * 100); // kobo
-        break;
-      case "USD": // US Dollars
-        amountInSubunits = Math.round(amount * 100); // cents
-        break;
-      default:
-        throw new Error(`Unsupported currency: ${currency}`);
-    }
-
+    const amountInSubunits = Math.round(amount * 100)
     const response = await paystack.transaction.initialize({
       email,
       amount: amountInSubunits,
