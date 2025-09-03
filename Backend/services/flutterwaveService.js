@@ -2,7 +2,7 @@ const axios = require("axios");
 const crypto = require("crypto");
 const config = require("../config/paymentConfig");
 
-async function initFlutterwavePayment({ email, amount, currency, phoneNumber }) {
+async function initFlutterwavePayment({ email, amount, currency }) {
   try {
     const transactionReference = `TX-${crypto.randomUUID()}`;
 
@@ -18,8 +18,7 @@ async function initFlutterwavePayment({ email, amount, currency, phoneNumber }) 
         currency,
         redirect_url: config.flutterwave.redirectURL,
         customer: { 
-          email,
-          phone_number: phoneNumber, 
+          email, 
         },
       },
       {

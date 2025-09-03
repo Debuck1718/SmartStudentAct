@@ -13,7 +13,7 @@ async function initializePayment(req, res) {
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
 
-    const { paymentMethod, phoneNumber } = req.body;
+    const { paymentMethod } = req.body;
     const user = req.user; 
 
     if (!user || !user.email) {
@@ -37,13 +37,13 @@ async function initializePayment(req, res) {
     }
 
  
-    const gateway = paymentMethod || 'paystack'; // default to paystack
+    const gateway = paymentMethod || 'paystack'; 
     let paymentResponse;
 
     if (gateway === 'paystack') {
-      paymentResponse = await initPaystackPayment({ email: user.email, amount, currency, phoneNumber });
+      paymentResponse = await initPaystackPayment({ email: user.email, amount, currency });
     } else if (gateway === 'flutterwave') {
-      paymentResponse = await initFlutterwavePayment({ email: user.email, amount, currency, phoneNumber });
+      paymentResponse = await initFlutterwavePayment({ email: user.email, amount, currency });
     } else {
       return res.status(400).json({ success: false, message: 'Unsupported payment gateway.' });
     }
