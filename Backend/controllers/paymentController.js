@@ -43,8 +43,12 @@ const SUPPORTED_PAYSTACK_CURRENCIES = ["NGN", "GHS", "USD", "ZAR", "KES"];
 if (!SUPPORTED_PAYSTACK_CURRENCIES.includes(currency)) {
   console.warn(`⚠️ Currency ${currency} not supported by Paystack, falling back to USD`);
   currency = "USD";
-  amount = priceDetails.usdPrice;
+  amount = priceDetails.usdPrice; 
+} else {
+  
+  amount = priceDetails.localPrice;
 }
+
 
 
     const gateway = paymentMethod || "paystack";
