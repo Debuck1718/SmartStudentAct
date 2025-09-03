@@ -420,9 +420,6 @@
         await checkAuth();
         await fetchPaymentDetails();
 
-        // Add an event listener to the phone number input to update button state
-        phoneNumberInput.addEventListener("input", hideLoading);
-
         payButton.addEventListener("click", initiatePayment);
       });
     </script>
