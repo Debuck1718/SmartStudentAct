@@ -4,7 +4,7 @@ const { initPaystackPayment } = require("../services/paystackService");
 const { initFlutterwavePayment } = require("../services/flutterwaveService");
 const { handleWebhook } = require("./webhookController");
 
-// controllers/paymentController.js
+
 async function initializePayment(req, res) {
   try {
     const { paymentMethod } = req.body;
