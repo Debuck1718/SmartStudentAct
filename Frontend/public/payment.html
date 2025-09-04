@@ -313,30 +313,37 @@
       }
 
       async function initiatePayment() {
-        const lang = languageSelector.value;
-        showLoading(translations[lang].initiatingPayment);
+  const lang = languageSelector.value;
+  showLoading(translations[lang].initiatingPayment);
 
-        try {
-          const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
-            method: "POST",
-            body: JSON.stringify({ gateway: "paystack" }),
-          });
-          const paymentResponse = await initRes.json();
-          console.log("Backend response for payment:", paymentResponse);
+  try {
+    const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
+      method: "POST",
+      body: JSON.stringify({
+        gateway: "paystack",
+        email: paymentEmail,       
+        amount: finalAmount,       
+        currency: finalCurrency    
+      }),
+    });
 
-          if (!paymentResponse.success || !paymentResponse.paymentData?.status) {
-            throw new Error(paymentResponse.error || "Payment initialization failed");
-          }
+    const paymentResponse = await initRes.json();
+    console.log("Backend response for payment:", paymentResponse);
 
-          const checkoutUrl = paymentResponse.paymentData.data.authorization_url;
-          window.location.href = checkoutUrl;
-        } catch (e) {
-          console.error("initiatePayment error:", e);
-          messageDiv.innerHTML = `<p class="text-red-600">${translations[lang].error}: ${e.message}</p>`;
-          showAlert(translations[lang].paymentError, e.message);
-          hideLoading();
-        }
-      }
+    if (!paymentResponse.success || !paymentResponse.paymentData?.status) {
+      throw new Error(paymentResponse.error || "Payment initialization failed");
+    }
+
+    const checkoutUrl = paymentResponse.paymentData.data.authorization_url;
+    window.location.href = checkoutUrl;
+  } catch (e) {
+    console.error("initiatePayment error:", e);
+    messageDiv.innerHTML = `<p class="text-red-600">${translations[lang].error}: ${e.message}</p>`;
+    showAlert(translations[lang].paymentError, e.message);
+    hideLoading();
+  }
+}
+
 
       document.addEventListener("DOMContentLoaded", async () => {
         const userLang = navigator.language.split("-")[0];
