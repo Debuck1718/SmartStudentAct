@@ -1867,57 +1867,81 @@ protectedRouter.get(
 );
 
 const checkUserCountryAndRole = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id).select("schoolCountry email");
+  try {
+    const user = await User.findById(req.user.id).select("schoolCountry email occupation schoolName");
 
-    if (!user || !user.schoolCountry) {
-      return res.status(400).json({ error: "User school country not found." });
-    }
+    if (!user) {
+      return res.status(400).json({ error: "User not found." });
+    }
 
-    const restrictedRoles = ["overseer", "global_overseer"];
-    if (restrictedRoles.includes(req.user.occupation)) {
-      return res.status(403).json({ error: "Forbidden: This role does not require this functionality." });
-    }
+    // Default to Ghana if schoolCountry is missing
+    if (!user.schoolCountry) {
+      user.schoolCountry = "GH";
+    }
 
-    req.fullUser = user;
-    next();
-  } catch (err) {
-    logger.error("Middleware error checking user country and role:", err);
-    res.status(500).json({ error: "An internal server error occurred." });
-  }
-};
+    const restrictedRoles = ["overseer", "global_overseer"];
+    if (restrictedRoles.includes(user.occupation)) {
+      return res.status(403).json({ error: "Forbidden: This role does not require this functionality." });
+    }
+
+    req.fullUser = user;
+    next();
+  } catch (err) {
+    logger.error("Middleware error checking user country and role:", err);
+    res.status(500).json({ error: "An internal server error occurred." });
+  }
+}
 
 protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   try {
     const user = req.fullUser || req.user;
-    console.log("Pricing request user:", user);
 
-    if (!user || !user.email) {
-      return res.status(400).json({ error: "User information missing." });
-    }
+    console.log("Pricing request user:", user);
 
     const userRole = user.occupation || user.role || "student";
     const schoolName = user.schoolName || "";
-    const schoolCountry = user.schoolCountry || "";
+    const schoolCountry = user.schoolCountry || "GH"; // default GH
 
-    const price = await getUserPrice(user, userRole, schoolName, schoolCountry); 
+    const price = await getUserPrice(user, userRole, schoolName, schoolCountry);
+
+    if (!price || typeof price.ghsPrice !== "number") {
+      // fallback default price in GHS
+      const defaultPrice = 15;
+      return res.json({
+        ghsPrice: defaultPrice,
+        usdPrice: +(defaultPrice * 0.082).toFixed(2), // approximate USD conversion
+        localPrice: defaultPrice,
+        currency: "GHS",
+        displayPrice: defaultPrice,
+        displayCurrency: "GHS",
+        pricingType: "GH Base",
+      });
+    }
+
     console.log("Price computed:", price);
-
     res.json(price);
   } catch (err) {
     console.error("Error in /pricing route:", err);
-    res.status(500).json({ error: "Failed to retrieve pricing information." });
+    // fallback default price in GHS
+    const defaultPrice = 15;
+    res.json({
+      ghsPrice: defaultPrice,
+      usdPrice: +(defaultPrice * 0.082).toFixed(2), // approximate USD conversion
+      localPrice: defaultPrice,
+      currency: "GHS",
+      displayPrice: defaultPrice,
+      displayCurrency: "GHS",
+      pricingType: "GH Base",
+    });
   }
 });
 
-// routes/protected.js
+// POST payment initiation
 protectedRouter.post(
   "/payment/initiate",
-  validate(paymentSchema),
   checkUserCountryAndRole,
   paymentController.initializePayment
 );
-
 
 
 protectedRouter.post("/trial/start", authenticateJWT, async (req, res) => {
