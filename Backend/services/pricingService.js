@@ -8,7 +8,7 @@ const CACHE_TTL = 5 * 60 * 1000;
 const rateCache = new Map();
 const RATE_TTL = 10 * 60 * 1000;
 
-
+// --- Base prices in GHS ---
 const GHS_BASE = { student: 180, teacher: 204, admin: 241 };
 const GHS_TIER5 = { student: 241, teacher: 266, admin: 302 };
 
@@ -23,7 +23,6 @@ const pricingData = {
     MA: { student: 40, teacher: 90, admin: 150, teacher_free: true },
   },
 };
-
 
 const LOCAL_OVERRIDES = {
   GH: { currency: "GHS", student: 16, teacher: 52, admin: 73 },
@@ -62,7 +61,14 @@ function normalizeCountry(user, schoolCountry) {
   let code = schoolCountry || user?.schoolCountry || user?.country;
   if (!code) return null;
   code = code.toString().trim().toUpperCase();
-  const NAME_TO_CODE = { GHANA: "GH", NIGERIA: "NG", KENYA: "KE", SOUTH_AFRICA: "ZA", ZAMBIA: "ZM", TANZANIA: "TZ" };
+  const NAME_TO_CODE = {
+    GHANA: "GH",
+    NIGERIA: "NG",
+    KENYA: "KE",
+    SOUTH_AFRICA: "ZA",
+    ZAMBIA: "ZM",
+    TANZANIA: "TZ",
+  };
   return NAME_TO_CODE[code] || code;
 }
 
@@ -79,37 +85,39 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     return { ghsPrice: 0, usdPrice: 0, localPrice: 0, currency: "GHS", displayPrice: 0, displayCurrency: "USD" };
   }
 
-  let tier = (await getSchoolTier(schoolName)) || 1;
+  const tier = (await getSchoolTier(schoolName)) || 1;
   const countryCode = normalizeCountry(user, schoolCountry);
 
-  
+  // --- Start with GHS base price ---
   let ghsPrice = GHS_BASE[role] || 16;
 
-
+  // --- Tier adjustments ---
   if (tier === 5) ghsPrice = GHS_TIER5[role] ?? ghsPrice;
   else if (tier === 3 || tier === 4) ghsPrice = pricingData.tier3_4[role] ?? ghsPrice;
 
-  
+  // --- Regional overrides ---
   if (pricingData.regional[countryCode]?.[role] != null) {
     ghsPrice = pricingData.regional[countryCode][role];
     if (role === "teacher" && pricingData.regional[countryCode]?.teacher_free) ghsPrice = 0;
   }
 
-  
+  // --- Local overrides ---
   if (countryCode && LOCAL_OVERRIDES[countryCode]) {
     const override = LOCAL_OVERRIDES[countryCode];
     ghsPrice = override[role] ?? ghsPrice;
   }
 
- 
+  // --- Compute USD equivalent if needed ---
   const ghsToUsdRate = await getCachedRate("GHS", "USD");
   const usdPrice = +(ghsPrice * ghsToUsdRate).toFixed(2);
 
-  
-  let displayPrice = ghsPrice;
-  let displayCurrency = countryCode === "GH" ? "GHS" : "USD";
+  // --- Display price ---
+  const displayPrice = ghsPrice;
+  const displayCurrency = countryCode === "GH" ? "GHS" : "USD";
 
+  // --- Return all prices ---
   return { ghsPrice, usdPrice, localPrice: displayPrice, currency: displayCurrency, displayPrice, displayCurrency };
 }
 
 module.exports = { getUserPrice };
+
