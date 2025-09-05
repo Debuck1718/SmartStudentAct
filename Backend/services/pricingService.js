@@ -8,7 +8,7 @@ const CACHE_TTL = 5 * 60 * 1000;
 const rateCache = new Map();
 const RATE_TTL = 10 * 60 * 1000;
 
-// --- Prices now expressed in GHS ---
+
 const GHS_BASE = { student: 180, teacher: 204, admin: 241 };
 const GHS_TIER5 = { student: 241, teacher: 266, admin: 302 };
 
@@ -24,7 +24,7 @@ const pricingData = {
   },
 };
 
-// Local overrides in GHS
+
 const LOCAL_OVERRIDES = {
   GH: { currency: "GHS", student: 16, teacher: 52, admin: 73 },
 };
@@ -82,30 +82,30 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   let tier = (await getSchoolTier(schoolName)) || 1;
   const countryCode = normalizeCountry(user, schoolCountry);
 
-  // Start with base GHS price
-  let ghsPrice = GHS_BASE[role] || 15;
+  
+  let ghsPrice = GHS_BASE[role] || 16;
 
-  // Tier adjustments
+
   if (tier === 5) ghsPrice = GHS_TIER5[role] ?? ghsPrice;
   else if (tier === 3 || tier === 4) ghsPrice = pricingData.tier3_4[role] ?? ghsPrice;
 
-  // Regional overrides
+  
   if (pricingData.regional[countryCode]?.[role] != null) {
     ghsPrice = pricingData.regional[countryCode][role];
     if (role === "teacher" && pricingData.regional[countryCode]?.teacher_free) ghsPrice = 0;
   }
 
-  // Local overrides
+  
   if (countryCode && LOCAL_OVERRIDES[countryCode]) {
     const override = LOCAL_OVERRIDES[countryCode];
     ghsPrice = override[role] ?? ghsPrice;
   }
 
-  // Convert GHS → USD for Paystack
+ 
   const ghsToUsdRate = await getCachedRate("GHS", "USD");
   const usdPrice = +(ghsPrice * ghsToUsdRate).toFixed(2);
 
-  // Display price for user in local currency
+  
   let displayPrice = ghsPrice;
   let displayCurrency = countryCode === "GH" ? "GHS" : "USD";
 

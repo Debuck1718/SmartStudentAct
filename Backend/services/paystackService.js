@@ -12,7 +12,7 @@ async function initPaystackPayment({ email, amount, currency }) {
 
     const amountInSubunits = Math.round(amount * 100);
 
-    console.log("🔎 Sending to Paystack:", {
+    console.log(" Sending to Paystack:", {
       email,
       amount,
       amountInSubunits,
@@ -28,7 +28,7 @@ async function initPaystackPayment({ email, amount, currency }) {
 
     return response;
   } catch (error) {
-    console.error("❌ Error initiating Paystack payment:", error.message);
+    console.error(" Error initiating Paystack payment:", error.message);
     throw error;
   }
 }
