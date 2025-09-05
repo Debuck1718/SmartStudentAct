@@ -17,6 +17,7 @@ async function initializePayment(req, res) {
     const schoolName = user.schoolName || "";
     const schoolCountry = user.schoolCountry || "";
 
+    // 🔑 Get price details (must now include usdPrice from pricingService)
     const priceDetails = await getUserPrice(user, userRole, schoolName, schoolCountry);
 
     if (!priceDetails || typeof priceDetails.localPrice !== "number" || !priceDetails.currency) {
@@ -26,40 +27,41 @@ async function initializePayment(req, res) {
       });
     }
 
-   const { usdPrice, ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
+    const { usdPrice, ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
 
-if (localPrice <= 0) {
-  return res.status(400).json({ success: false, message: "Invalid payment amount." });
-}
+    if (localPrice <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid payment amount." });
+    }
 
-switch (gateway) {
-  case "paystack":
-    console.log("🚀 Initializing Paystack payment with:", {
-      email: user.email,
-      usdPrice,
-      currency: "USD",
-    });
+    // 🔑 Ensure gateway is defined
+    const gateway = paymentMethod || "paystack";
+    let paymentResponse;
 
-    paymentResponse = await initPaystackPayment({
-      email: user.email,
-      amount: usdPrice,   // always anchor to USD
-      currency: "USD",
-    });
-    break;
+    switch (gateway) {
+      case "paystack":
+        console.log("🚀 Initializing Paystack payment with:", {
+          email: user.email,
+          usdPrice,
+          currency: "USD",
+        });
 
-
+        paymentResponse = await initPaystackPayment({
+          email: user.email,
+          amount: usdPrice,   // ✅ always send USD anchor price
+          currency: "USD",
+        });
+        break;
 
       case "flutterwave":
         console.log("🚀 Initializing Flutterwave payment with:", {
           email: user.email,
-
           amount: localPrice,
           currency,
         });
 
         paymentResponse = await initFlutterwavePayment({
           email: user.email,
-          amount: localPrice,
+          amount: localPrice, // ✅ use localized currency amount
           currency,
         });
         break;
@@ -93,3 +95,4 @@ module.exports = {
   handlePaystackWebhook,
   handleFlutterwaveWebhook,
 };
+
