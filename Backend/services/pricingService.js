@@ -30,6 +30,9 @@ const REGIONAL_PRICING = {
 const NON_AFRICA_COUNTRIES_USD = ["US", "CA", "GB", "FR", "DE"];
 const NON_AFRICA_PRICES_USD = { student: 20, teacher: 35, admin: 40 }; // USD prices
 
+// Default non-African fallback in GHS if needed
+const GHS_BASE_DEFAULT = { student: 120, teacher: 195, admin: 220 };
+
 async function getCachedRate(from, to) {
   const key = `${from}_${to}`;
   const cached = rateCache.get(key);
@@ -119,9 +122,10 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     displayCurrency = "USD";
     pricingType = "Non-African USD";
   }
-  // --- Otherwise, throw error ---
+  // --- Non-African default fallback ---
   else {
-    throw new Error(`No pricing available for country code: ${countryCode}`);
+    ghsPrice = GHS_BASE_DEFAULT[role] ?? 120;
+    pricingType = "Non-African Base GHS";
   }
 
   if (!usdPrice) {
@@ -137,7 +141,6 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
 }
 
 module.exports = { getUserPrice };
-
 
 
 
