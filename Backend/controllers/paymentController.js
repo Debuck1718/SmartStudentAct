@@ -26,29 +26,27 @@ async function initializePayment(req, res) {
       });
     }
 
-    const { localPrice, ghsPrice, currency, displayPrice, displayCurrency } = priceDetails;
+   const { usdPrice, ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
 
-    if (localPrice <= 0) {
-      return res.status(400).json({ success: false, message: "Invalid payment amount." });
-    }
+if (localPrice <= 0) {
+  return res.status(400).json({ success: false, message: "Invalid payment amount." });
+}
 
-    const gateway = paymentMethod || "paystack";
-    let paymentResponse;
+switch (gateway) {
+  case "paystack":
+    console.log("🚀 Initializing Paystack payment with:", {
+      email: user.email,
+      usdPrice,
+      currency: "USD",
+    });
 
-    switch (gateway) {
-      case "paystack":
-  console.log("🚀 Initializing Paystack payment with:", {
-    email: user.email,
-    usdPrice, 
-    currency: "USD",
-  });
+    paymentResponse = await initPaystackPayment({
+      email: user.email,
+      amount: usdPrice,   // always anchor to USD
+      currency: "USD",
+    });
+    break;
 
-  paymentResponse = await initPaystackPayment({
-    email: user.email,
-    amount: usdPrice,   
-    currency: "USD",    
-  });
-  break;
 
 
       case "flutterwave":

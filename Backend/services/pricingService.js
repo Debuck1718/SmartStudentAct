@@ -165,12 +165,14 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   });
 
   return {
-    ghsPrice,            
-    localPrice: displayPrice, 
-    currency: displayCurrency,
-    displayPrice,
-    displayCurrency,
-  };
+  usdPrice,             // 🔑 include this
+  ghsPrice,             
+  localPrice: displayPrice, 
+  currency: displayCurrency,
+  displayPrice,
+  displayCurrency,
+};
+
 }
 
 module.exports = { getUserPrice };
