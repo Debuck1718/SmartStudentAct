@@ -8,30 +8,16 @@ const CACHE_TTL = 5 * 60 * 1000;
 const rateCache = new Map();
 const RATE_TTL = 10 * 60 * 1000;
 
-// --- GHS Tier Prices ---
-const GHS_TIER5 = { student: 241, teacher: 266, admin: 302 };
-const GHS_TIER3_4 = { student: 55, teacher: 75, admin: 110 };
-
 // --- Ghana local overrides ---
-const LOCAL_OVERRIDES = {
-  GH: { currency: "GHS", student: 15, teacher: 52, admin: 73 },
-};
+const GH_PRICES = { student: 15, teacher: 52, admin: 73 };
 
-// --- Regional African pricing ---
-const REGIONAL_PRICING = {
-  ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-  ZM: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-  TN: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-  LY: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-  MA: { student: 40, teacher: 90, admin: 150, teacher_free: true },
-};
+// --- Regional African countries (excluding Ghana) ---
+const AFRICA_COUNTRIES_USD = ["ZA", "ZM", "TN", "LY", "MA"];
+const AFRICA_PRICES_USD = { student: 30, teacher: 75, admin: 105 };
 
 // --- Non-African countries (USD pricing) ---
 const NON_AFRICA_COUNTRIES_USD = ["US", "CA", "GB", "FR", "DE"];
-const NON_AFRICA_PRICES_USD = { student: 20, teacher: 35, admin: 40 }; // USD prices
-
-// Default non-African fallback in GHS if needed
-const GHS_BASE_DEFAULT = { student: 120, teacher: 195, admin: 220 };
+const NON_AFRICA_PRICES_USD = { student: 20, teacher: 35, admin: 40 };
 
 async function getCachedRate(from, to) {
   const key = `${from}_${to}`;
@@ -91,43 +77,38 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   const tier = (await getSchoolTier(schoolName)) || 1;
   const countryCode = normalizeCountry(schoolCountry);
 
-  let ghsPrice;
+  let ghsPrice = 0;
   let usdPrice = 0;
   let pricingType;
   let displayCurrency = "GHS";
 
-  // --- Ghana pricing ---
+  // --- Ghana pricing (GHS base) ---
   if (countryCode === "GH") {
-    if (tier === 5) {
-      ghsPrice = GHS_TIER5[role] ?? LOCAL_OVERRIDES.GH[role];
-      pricingType = "GH Tier 5";
-    } else if (tier === 3 || tier === 4) {
-      ghsPrice = GHS_TIER3_4[role] ?? LOCAL_OVERRIDES.GH[role];
-      pricingType = "GH Tier 3/4";
-    } else {
-      ghsPrice = LOCAL_OVERRIDES.GH[role];
-      pricingType = "GH Base";
-    }
+    ghsPrice = GH_PRICES[role];
+    displayCurrency = "GHS";
+    pricingType = "GH Base";
   }
-  // --- Regional African overrides ---
-  else if (REGIONAL_PRICING[countryCode]?.[role] != null) {
-    ghsPrice = REGIONAL_PRICING[countryCode][role];
-    if (role === "teacher" && REGIONAL_PRICING[countryCode]?.teacher_free) ghsPrice = 0;
-    pricingType = "Regional Override";
+  // --- African countries in USD ---
+  else if (AFRICA_COUNTRIES_USD.includes(countryCode)) {
+    usdPrice = AFRICA_PRICES_USD[role];
+    const usdToGhsRate = await getCachedRate("USD", "GHS");
+    ghsPrice = +(usdPrice * usdToGhsRate).toFixed(2);
+    displayCurrency = "USD";
+    pricingType = "African USD";
   }
-  // --- Non-African countries (USD) ---
+  // --- Non-African countries in USD ---
   else if (NON_AFRICA_COUNTRIES_USD.includes(countryCode)) {
-    usdPrice = NON_AFRICA_PRICES_USD[role] ?? 20;
-    ghsPrice = +(usdPrice * (await getCachedRate("USD", "GHS"))).toFixed(2);
+    usdPrice = NON_AFRICA_PRICES_USD[role];
+    const usdToGhsRate = await getCachedRate("USD", "GHS");
+    ghsPrice = +(usdPrice * usdToGhsRate).toFixed(2);
     displayCurrency = "USD";
     pricingType = "Non-African USD";
   }
-  // --- Non-African default fallback ---
   else {
-    ghsPrice = GHS_BASE_DEFAULT[role] ?? 120;
-    pricingType = "Non-African Base GHS";
+    throw new Error(`No pricing available for country code: ${countryCode}`);
   }
 
+  // --- Convert GHS to USD if not already set ---
   if (!usdPrice) {
     const ghsToUsdRate = await getCachedRate("GHS", "USD");
     usdPrice = +(ghsPrice * ghsToUsdRate).toFixed(2);
@@ -141,6 +122,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
 }
 
 module.exports = { getUserPrice };
+
 
 
 
