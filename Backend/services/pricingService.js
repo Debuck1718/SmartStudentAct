@@ -1,10 +1,10 @@
+// services/pricingService.js
 const School = require("../models/School");
 const { getRate } = require("../utils/currencyConverter");
 const logger = require("../utils/logger");
 
 const schoolCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
-
 const rateCache = new Map();
 const RATE_TTL = 10 * 60 * 1000;
 
@@ -58,11 +58,10 @@ async function getSchoolTier(schoolName) {
   }
 }
 
-function normalizeCountry(user, schoolCountry) {
-  let code = schoolCountry || user?.schoolCountry || user?.country;
-  if (!code) return null;
-
-  code = code.toString().trim().toUpperCase();
+// --- Normalize schoolCountry only ---
+function normalizeCountry(schoolCountry) {
+  if (!schoolCountry) return null;
+  let code = schoolCountry.toString().trim().toUpperCase();
   const NAME_TO_CODE = {
     GHANA: "GH",
     NIGERIA: "NG",
@@ -71,7 +70,6 @@ function normalizeCountry(user, schoolCountry) {
     ZAMBIA: "ZM",
     TANZANIA: "TZ",
   };
-
   return NAME_TO_CODE[code] || code;
 }
 
@@ -85,28 +83,11 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   role = validateRole(role?.toLowerCase() || "student");
 
   if (["overseer", "global_overseer"].includes(role)) {
-    return {
-      ghsPrice: 0,
-      usdPrice: 0,
-      localPrice: 0,
-      currency: "GHS",
-      displayPrice: 0,
-      displayCurrency: "USD",
-      pricingType: "overseer",
-    };
+    return { ghsPrice: 0, usdPrice: 0, localPrice: 0, currency: "GHS", displayPrice: 0, displayCurrency: "USD", pricingType: "overseer" };
   }
 
   const tier = (await getSchoolTier(schoolName)) || 1;
-  const countryCode = normalizeCountry(user, schoolCountry);
-
-  // --- Debug log to trace issues ---
-  console.log("Pricing debug:", {
-    userCountry: user.country,
-    schoolCountry,
-    countryCode,
-    tier,
-    role,
-  });
+  const countryCode = normalizeCountry(schoolCountry);
 
   let ghsPrice;
   let pricingType;
@@ -123,13 +104,13 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
       ghsPrice = LOCAL_OVERRIDES.GH[role];
       pricingType = "GH Base";
     }
-  }
+  } 
   // --- Regional African overrides ---
   else if (REGIONAL_PRICING[countryCode]?.[role] != null) {
     ghsPrice = REGIONAL_PRICING[countryCode][role];
     if (role === "teacher" && REGIONAL_PRICING[countryCode]?.teacher_free) ghsPrice = 0;
     pricingType = "Regional Override";
-  }
+  } 
   // --- Non-African countries base price ---
   else {
     ghsPrice = GHS_BASE_NON_AFRICA[role] ?? 120;
@@ -142,16 +123,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   const displayPrice = ghsPrice;
   const displayCurrency = "GHS";
 
-  logger.info("Final price calculation", {
-    role,
-    ghsPrice,
-    usdPrice,
-    displayPrice,
-    displayCurrency,
-    countryCode,
-    tier,
-    pricingType,
-  });
+  logger.info("Final price calculation", { role, ghsPrice, usdPrice, displayPrice, displayCurrency, countryCode, tier, pricingType });
 
   return { ghsPrice, usdPrice, localPrice: displayPrice, currency: displayCurrency, displayPrice, displayCurrency, pricingType };
 }
