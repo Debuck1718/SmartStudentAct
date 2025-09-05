@@ -910,6 +910,48 @@ protectedRouter.get(
   }
 );
 
+async function autoSubmitOverdueQuizzes() {
+  try {
+   
+    const quizzes = await Quiz.find({ timeLimitMinutes: { $ne: null } });
+
+    const now = new Date();
+
+    for (const quiz of quizzes) {
+      for (const submission of quiz.submissions) {
+        if (submission.submitted_at) continue; 
+
+        const startedAt = submission.started_at;
+        const dueTime = new Date(startedAt.getTime() + quiz.timeLimitMinutes * 60000);
+
+        if (now >= dueTime) {
+          
+          let score = 0;
+          quiz.questions.forEach((q, index) => {
+            if (submission.answers[index] === q.correct) score++;
+          });
+
+          submission.score = score;
+          submission.submitted_at = now;
+          submission.auto_submitted = true;
+
+          await quiz.save();
+
+          eventBus.emit("quiz_auto_submitted", {
+            quizId: quiz._id,
+            studentId: submission.student_id,
+            score
+          });
+
+          logger.info(`Auto-submitted quiz ${quiz._id} for student ${submission.student_id}`);
+        }
+      }
+    }
+  } catch (err) {
+    logger.error('Error in autoSubmitOverdueQuizzes:', err);
+  }
+}
+
 protectedRouter.get(
   "/teacher/profile",
   authenticateJWT,
@@ -1151,95 +1193,79 @@ protectedRouter.get(
     }
   }
 );
-
 protectedRouter.post(
   "/teacher/quiz",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const { title, description, dueDate, questions, assignTo } = req.body;
+      const { title, description, dueDate, questions, assignTo, timeLimitMinutes } = req.body;
       const teacherId = req.user.id;
 
       if (!title || !questions || questions.length === 0) {
-        return res
-          .status(400)
-          .json({
-            message: "Quiz must have a title and at least one question.",
-          });
+        return res.status(400).json({
+          message: "Quiz must have a title and at least one question.",
+        });
       }
 
-      const quizAssignment = new Assignment({
-        created_by: teacherId,
+      const quiz = new Quiz({
+        teacher_id: teacherId,
         title,
         description,
         due_date: new Date(dueDate),
-        type: "quiz",
         questions,
+        timeLimitMinutes: timeLimitMinutes || null,
         assigned_to_users: assignTo?.users || [],
         assigned_to_grades: assignTo?.grades || [],
         assigned_to_schools: assignTo?.schools || [],
       });
 
-      await quizAssignment.save();
+      await quiz.save();
 
-      eventBus.emit("assignment_created", {
-        assignmentId: quizAssignment._id,
-        title: quizAssignment.title,
-        creatorId: teacherId,
+      eventBus.emit("quiz_created", {
+        quizId: quiz._id,
+        title: quiz.title,
+        teacherId,
       });
 
-      res
-        .status(201)
-        .json({
-          message: "Quiz created successfully!",
-          assignment: quizAssignment,
-        });
+      res.status(201).json({
+        message: "Quiz created successfully!",
+        quiz,
+      });
     } catch (error) {
-      logger.error("Error creating quiz assignment:", error);
+      logger.error("Error creating quiz:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
 
+// --------------------- GET QUIZ RESULTS ---------------------
 protectedRouter.get(
-  "/teacher/quiz/:assignmentId/results",
+  "/teacher/quiz/:quizId/results",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const { assignmentId } = req.params;
+      const { quizId } = req.params;
 
-      const assignment = await Assignment.findById(assignmentId).populate(
-        "questions"
-      );
+      const quiz = await Quiz.findById(quizId).populate("submissions.student_id", "firstname lastname email");
 
-      if (
-        !assignment ||
-        assignment.type !== "quiz" ||
-        assignment.created_by.toString() !== req.user.id
-      ) {
-        return res
-          .status(403)
-          .json({
-            message: "Not authorized to view results for this assignment.",
-          });
+      if (!quiz || quiz.teacher_id.toString() !== req.user.id) {
+        return res.status(403).json({
+          message: "Not authorized to view results for this quiz.",
+        });
       }
 
-      const submissions = await Submission.find({
-        assignment_id: assignmentId,
-      }).populate("user_id", "firstname lastname email");
-
-      const formattedResults = submissions.map((sub) => ({
-        student: `${sub.user_id.firstname} ${sub.user_id.lastname}`,
-        email: sub.user_id.email,
-        score: sub.score || null,
+      const formattedResults = quiz.submissions.map(sub => ({
+        student: `${sub.student_id.firstname} ${sub.student_id.lastname}`,
+        email: sub.student_id.email,
+        score: sub.score ?? null,
+        startedAt: sub.started_at,
         submittedAt: sub.submitted_at,
+        autoSubmitted: sub.auto_submitted
       }));
 
-      res
-        .status(200)
-        .json({ assignment: assignment.title, results: formattedResults });
+      res.status(200).json({ quiz: quiz.title, results: formattedResults });
     } catch (error) {
       logger.error("Error fetching quiz results:", error);
       res.status(500).json({ message: "Server error" });
@@ -1526,7 +1552,7 @@ protectedRouter.get(
   }
 );
 
-// 📌 Get quizzes
+
 protectedRouter.get(
   "/student/quizzes",
   authenticateJWT,
@@ -1534,18 +1560,29 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const student = await User.findById(req.user.id);
-      if (!student) {
-        return res.status(404).json({ message: "Student not found." });
-      }
+      if (!student) return res.status(404).json({ message: "Student not found." });
 
-      const quizzes = await Assignment.find({
-        type: "quiz",
+      const quizzes = await Quiz.find({
         $or: [
           { assigned_to_users: student.email },
           { assigned_to_grades: student.grade },
           { assigned_to_schools: student.schoolName },
         ],
-      }).populate("questions");
+      });
+
+      for (const quiz of quizzes) {
+        let submission = quiz.submissions.find(
+          sub => sub.student_id.toString() === student._id.toString()
+        );
+        if (!submission) {
+          quiz.submissions.push({
+            student_id: student._id,
+            answers: [],
+            started_at: new Date(),
+          });
+          await quiz.save();
+        }
+      }
 
       res.status(200).json({ quizzes });
     } catch (error) {
@@ -1557,58 +1594,59 @@ protectedRouter.get(
 
 
 protectedRouter.post(
-  "/student/quizzes/:assignmentId/submit",
+  "/student/quizzes/:quizId/submit",
   authenticateJWT,
   hasRole("student"),
   async (req, res) => {
     try {
-      const { assignmentId } = req.params;
-      const { answers } = req.body;
+      const { quizId } = req.params;
+      const { answers, finalize } = req.body; 
 
       const student = await User.findById(req.user.id);
-      if (!student) {
-        return res.status(404).json({ message: "Student not found." });
-      }
+      if (!student) return res.status(404).json({ message: "Student not found." });
 
-      const assignment = await Assignment.findById(assignmentId).populate(
-        "questions"
+      const quiz = await Quiz.findById(quizId);
+      if (!quiz) return res.status(404).json({ message: "Quiz not found." });
+
+      let submission = quiz.submissions.find(
+        sub => sub.student_id.toString() === student._id.toString()
       );
-      if (!assignment || assignment.type !== "quiz") {
-        return res.status(404).json({ message: "Quiz not found." });
-      }
-      let score = 0;
-      const results = assignment.questions.map((q) => {
-        const studentAnswer = answers[q._id] || null;
-        const isCorrect = studentAnswer === q.correct_option;
-        if (isCorrect) score++;
-        return {
-          questionId: q._id,
-          studentAnswer,
-          correct: isCorrect,
+
+      if (!submission) {
+        submission = {
+          student_id: student._id,
+          answers: [],
+          started_at: new Date(),
+          auto_submitted: false,
         };
-      });
+        quiz.submissions.push(submission);
+      }
 
-      const newSubmission = new Submission({
-        assignment_id: assignmentId,
-        user_id: student._id,
-        answers: results,
-        score,
-        submitted_at: new Date(),
-      });
+      submission.answers = answers;
 
-      await newSubmission.save();
+      if (finalize || (quiz.timeLimitMinutes && submission.started_at)) {
+        let score = 0;
+        quiz.questions.forEach((q, index) => {
+          if (answers[index] === q.correct) score++;
+        });
+        submission.score = score;
+        submission.submitted_at = new Date();
+        submission.auto_submitted = !!finalize ? false : submission.auto_submitted;
+      }
+
+      await quiz.save();
 
       eventBus.emit("quiz_submitted", {
-        assignmentId,
+        quizId,
         studentId: student._id,
-        score,
+        score: submission.score,
       });
 
       res.status(201).json({
-        message: "Quiz submitted successfully!",
-        score,
-        total: assignment.questions.length,
-        submission: newSubmission,
+        message: finalize ? "Quiz submitted successfully!" : "Answers auto-saved.",
+        score: submission.score || null,
+        total: quiz.questions.length,
+        submission,
       });
     } catch (error) {
       logger.error("Error submitting quiz:", error);
@@ -1619,33 +1657,23 @@ protectedRouter.post(
 
 
 protectedRouter.get(
-  "/student/quizzes/:assignmentId/result",
+  "/student/quizzes/:quizId/result",
   authenticateJWT,
   hasRole("student"),
   async (req, res) => {
     try {
-      const assignment = await Assignment.findById(req.params.assignmentId);
-      if (!assignment)
-        return res.status(404).json({ message: "Assignment not found" });
+      const quiz = await Quiz.findById(req.params.quizId).populate("submissions.student_id", "firstname lastname email");
+      if (!quiz) return res.status(404).json({ message: "Quiz not found." });
 
-      const submission = await Submission.findOne({
-        assignment_id: assignment._id,
-        user_id: req.user.id,
-      });
-
-      if (!submission) {
-        return res
-          .status(404)
-          .json({
-            message: "No submission found for this student and assignment.",
-          });
-      }
+      const submission = quiz.submissions.find(sub => sub.student_id._id.toString() === req.user.id);
+      if (!submission) return res.status(404).json({ message: "No submission found for this student." });
 
       res.status(200).json({
-        quizTitle: assignment.title,
+        quizTitle: quiz.title,
         submittedAt: submission.submitted_at,
         score: submission.score,
         answers: submission.answers,
+        autoSubmitted: submission.auto_submitted
       });
     } catch (error) {
       logger.error("Error fetching student quiz result:", error);
@@ -1654,30 +1682,6 @@ protectedRouter.get(
   }
 );
 
-protectedRouter.post(
-  "/upload/cloudinary",
-  cloudinaryUpload.single("image"),
-  (req, res) => {
-    try {
-      if (!req.file) {
-        return res
-          .status(400)
-          .json({ success: false, message: "No file was uploaded." });
-      }
-      res.status(200).json({
-        success: true,
-        message: "Image uploaded successfully!",
-        imageUrl: req.file.path,
-        publicId: req.file.filename,
-      });
-    } catch (error) {
-      console.error("❌ Cloudinary upload error:", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to upload image." });
-    }
-  }
-);
 
 protectedRouter.post(
   "/upload/local",
@@ -1874,7 +1878,7 @@ const checkUserCountryAndRole = async (req, res, next) => {
       return res.status(400).json({ error: "User not found." });
     }
 
-    // Default to Ghana if schoolCountry is missing
+    
     if (!user.schoolCountry) {
       user.schoolCountry = "GH";
     }
@@ -1900,16 +1904,16 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
 
     const userRole = user.occupation || user.role || "student";
     const schoolName = user.schoolName || "";
-    const schoolCountry = user.schoolCountry || "GH"; // default GH
+    const schoolCountry = user.schoolCountry || "GH"; 
 
     const price = await getUserPrice(user, userRole, schoolName, schoolCountry);
 
     if (!price || typeof price.ghsPrice !== "number") {
-      // fallback default price in GHS
+      
       const defaultPrice = 15;
       return res.json({
         ghsPrice: defaultPrice,
-        usdPrice: +(defaultPrice * 0.082).toFixed(2), // approximate USD conversion
+        usdPrice: +(defaultPrice * 0.082).toFixed(2), 
         localPrice: defaultPrice,
         currency: "GHS",
         displayPrice: defaultPrice,
@@ -1922,11 +1926,11 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
     res.json(price);
   } catch (err) {
     console.error("Error in /pricing route:", err);
-    // fallback default price in GHS
+ 
     const defaultPrice = 15;
     res.json({
       ghsPrice: defaultPrice,
-      usdPrice: +(defaultPrice * 0.082).toFixed(2), // approximate USD conversion
+      usdPrice: +(defaultPrice * 0.082).toFixed(2), 
       localPrice: defaultPrice,
       currency: "GHS",
       displayPrice: defaultPrice,
@@ -1936,7 +1940,7 @@ protectedRouter.get("/pricing", checkUserCountryAndRole, async (req, res) => {
   }
 });
 
-// POST payment initiation
+
 protectedRouter.post(
   "/payment/initiate",
   checkUserCountryAndRole,
@@ -1961,8 +1965,7 @@ protectedRouter.post("/trial/start", authenticateJWT, async (req, res) => {
 
     user.is_on_trial = true;
     user.trial_starts_at = now;
-    user.trial_ends_at = trialEndsAt;
-    user.has_used_trial = true;
+    user.trial_end_at = trialEndsAt;
 
     await user.save();
 

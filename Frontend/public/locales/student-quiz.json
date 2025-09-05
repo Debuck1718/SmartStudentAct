@@ -86,5 +86,30 @@
     "tr": "Quiz gönderilirken hata oluştu",
     "ar": "خطأ أثناء إرسال الاختبار",
     "ru": "Ошибка при отправке викторины"
+  },
+  "timeUpAutoSubmit": {
+    "en": "Time is up! Your quiz is being submitted automatically.",
+    "fr": "Le temps est écoulé ! Votre quiz est soumis automatiquement.",
+    "es": "¡Se acabó el tiempo! Tu cuestionario se enviará automáticamente.",
+    "tr": "Süre doldu! Quiziniz otomatik olarak gönderiliyor.",
+    "ar": "انتهى الوقت! يتم إرسال الاختبار تلقائيًا.",
+    "ru": "Время вышло! Ваш тест отправляется автоматически."
+  },
+  "autoSubmitError": {
+    "en": "Failed to auto-submit your quiz.",
+    "fr": "Échec de la soumission automatique de votre quiz.",
+    "es": "No se pudo enviar automáticamente el cuestionario.",
+    "tr": "Quiziniz otomatik olarak gönderilemedi.",
+    "ar": "فشل في إرسال الاختبار تلقائيًا.",
+    "ru": "Не удалось автоматически отправить викторину."
+  },
+  "autoSubmittedLabel": {
+    "en": "⏰ This quiz was auto-submitted due to time limit.",
+    "fr": "⏰ Ce quiz a été soumis automatiquement en raison de la limite de temps.",
+    "es": "⏰ Este cuestionario se envió automáticamente debido al límite de tiempo.",
+    "tr": "⏰ Bu quiz zaman sınırı nedeniyle otomatik gönderildi.",
+    "ar": "⏰ تم إرسال هذا الاختبار تلقائيًا بسبب انتهاء الوقت.",
+    "ru": "⏰ Этот тест был автоматически отправлен из-за ограничения времени."
   }
 }
+

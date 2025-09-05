@@ -6,23 +6,12 @@
   <title data-i18n="quizTitle">Student Quiz</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="./images/icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="./images/icon.png"
-    />
-    <link rel="manifest" href="/site.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
   <script src="https://kit.fontawesome.com/a2e0e9c6e2.js" crossorigin="anonymous"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8">
-
 
   <div class="w-full max-w-3xl flex justify-between items-center mb-6 px-4">
     <h1 class="text-2xl sm:text-3xl font-bold text-blue-600" data-i18n="quizTitle">📘 Quiz</h1>
@@ -38,7 +27,12 @@
 
   <div class="w-full max-w-3xl bg-white shadow-lg rounded-xl p-6">
     <h2 id="quiz-title" class="text-xl font-semibold mb-2 text-gray-800"></h2>
-    <p id="quiz-desc" class="text-gray-600 mb-6"></p>
+    <p id="quiz-desc" class="text-gray-600 mb-4"></p>
+
+    <!-- Timer -->
+    <div id="quiz-timer" class="text-red-600 font-bold text-lg mb-4 hidden">
+      ⏱ Time Remaining: <span id="time-remaining"></span>
+    </div>
 
     <!-- Quiz form -->
     <form id="quiz-form" class="space-y-6">
@@ -68,7 +62,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     const quizId = urlParams.get('quizId');
 
-    // Get student ID from token (or storage)
     let studentId = null;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -84,8 +77,11 @@
     const quizResult = document.getElementById('quiz-result');
     const scoreText = document.getElementById('score-text');
     const breakdownContainer = document.getElementById('answer-breakdown');
+    const quizTimer = document.getElementById('quiz-timer');
+    const timeRemainingSpan = document.getElementById('time-remaining');
 
-    // Fetch quiz details
+    let countdownInterval = null;
+
     const fetchQuiz = async () => {
       try {
         const res = await fetch(`${API_BASE}/student/quizzes/${quizId}`, {
@@ -100,16 +96,36 @@
       }
     };
 
+    const startCountdown = (minutes) => {
+      if (!minutes) return;
+      quizTimer.classList.remove('hidden');
+      let remainingSeconds = minutes * 60;
+
+      countdownInterval = setInterval(() => {
+        const mins = Math.floor(remainingSeconds / 60);
+        const secs = remainingSeconds % 60;
+        timeRemainingSpan.textContent = `${mins}m ${secs}s`;
+        remainingSeconds--;
+
+        if (remainingSeconds < 0) {
+          clearInterval(countdownInterval);
+          alert(getTranslation('timeUpAutoSubmit'));
+          autoSubmitQuiz();
+        }
+      }, 1000);
+    };
+
     const renderQuiz = (quiz) => {
       quizTitle.textContent = quiz.title;
       quizDesc.textContent = quiz.description || '';
 
-      questionsContainer.innerHTML = ""; // clear existing
+      if (quiz.timeLimitMinutes) startCountdown(quiz.timeLimitMinutes);
+
+      questionsContainer.innerHTML = "";
       quiz.questions.forEach((q, idx) => {
         const div = document.createElement('div');
         div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
         div.setAttribute("data-question", idx);
-
         div.innerHTML = `
           <p class="font-semibold mb-2">${idx+1}. ${q.question}</p>
           <div class="space-y-2">
@@ -127,8 +143,34 @@
       translateElements(questionsContainer);
     };
 
-    // Show results
+    const autoSubmitQuiz = async () => {
+      const answers = {};
+      document.querySelectorAll('[data-question]').forEach((div, idx) => {
+        const selected = quizForm.querySelector(`input[name=q${idx}]:checked`);
+        answers[idx] = selected ? selected.value : null;
+      });
+
+      try {
+        const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ answers, autoSubmit: true })
+        });
+
+        if (!res.ok) throw new Error('Auto-submit failed');
+        const result = await res.json();
+        showResults(result.quiz, result.submission);
+      } catch (err) {
+        console.error(err);
+        alert(getTranslation('autoSubmitError'));
+      }
+    };
+
     const showResults = (quiz, submission) => {
+      clearInterval(countdownInterval);
       quizForm.classList.add('hidden');
       quizResult.classList.remove('hidden');
       scoreText.textContent = `${getTranslation('youScored')} ${submission.score} / ${quiz.questions.length}`;
@@ -144,20 +186,20 @@
           <p class="font-semibold">${idx+1}. ${q.question}</p>
           <p><span data-i18n="yourAnswer">Your answer</span>: <span class="${correct ? 'text-green-600' : 'text-red-600'}">${studentAnswer}</span></p>
           <p><span data-i18n="correctAnswer">Correct answer</span>: <span class="font-bold text-green-700">${q.correct}</span></p>
+          <p>${submission.auto_submitted ? getTranslation('autoSubmittedLabel') : ''}</p>
         `;
         breakdownContainer.appendChild(div);
       });
       translateElements(breakdownContainer);
     };
 
-    // Submit quiz answers
     quizForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      clearInterval(countdownInterval);
 
       const answers = {};
       let allAnswered = true;
 
-      // Reset previous warnings
       document.querySelectorAll('[data-question]').forEach(div => {
         div.classList.remove('border', 'border-red-500');
         div.querySelector('.warning').classList.add('hidden');
@@ -183,18 +225,17 @@
       }
 
       try {
-        const res = await fetch(`${API_BASE}/student/quizzes/submit`, {
+        const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify({ quizId, studentId, answers })
+          body: JSON.stringify({ quizId, studentId, answers, autoSubmit: false })
         });
 
         if (!res.ok) throw new Error('Submit failed');
         const result = await res.json();
-
         showResults(result.quiz, result.submission);
       } catch (err) {
         alert(getTranslation('submittingError'));
@@ -206,24 +247,21 @@
       if (typeof translations !== 'undefined' && translations[key] && translations[key][currentLang]) {
         return translations[key][currentLang];
       }
-      return key; 
+      return key;
     }
 
-    // Language selector
     document.getElementById("language-select").addEventListener("change", (e) => {
       const lang = e.target.value;
       translatePage('student-quiz', lang);
-
-      // Handle RTL for Arabic
       document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";
     });
 
-    // Initial load
     document.addEventListener('DOMContentLoaded', () => {
-      translatePage('student-quiz', 'en'); 
+      translatePage('student-quiz', 'en');
       fetchQuiz();
     });
   </script>
 </body>
 </html>
+
 

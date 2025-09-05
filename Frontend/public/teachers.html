@@ -685,7 +685,7 @@
    <script>
   const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 
-  // --- Toast Notification ---
+  
   function showToast(message, type = "info") {
     const container = document.getElementById("toast-container") || createToastContainer();
     const toast = document.createElement("div");
@@ -709,18 +709,17 @@
     return container;
   }
 
-  // --- Authenticated Fetch ---
+  
   async function fetchAPI(endpoint, options = {}) {
     try {
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
-        credentials: "include", // send cookies
+        credentials: "include", 
         headers: {
           ...(options.headers || {}),
         },
       });
 
-      // Auto redirect on 401
       if (res.status === 401) {
         showToast("Session expired. Please log in again.", "warning");
         window.location.href = "/login.html";
@@ -735,7 +734,7 @@
     }
   }
 
-  // --- Auth Check ---
+  
   async function checkAuth() {
     const res = await fetchAPI("/auth/check");
     if (!res || !res.ok) {
@@ -743,7 +742,7 @@
     }
   }
 
-  // --- Logout ---
+
   async function logout() {
     const res = await fetchAPI("/users/logout", { method: "POST" });
     if (res && res.ok) {
@@ -752,7 +751,7 @@
     }
   }
 
-  // --- Fetch Teacher Profile ---
+
   async function fetchTeacherProfile() {
     const res = await fetchAPI("/teacher/profile");
     if (res && res.ok) {
@@ -761,7 +760,7 @@
     }
   }
 
-  // --- Fetch Students ---
+  
   async function fetchStudents() {
     const res = await fetchAPI("/teacher/students");
     if (res && res.ok) {
@@ -778,7 +777,7 @@
     }
   }
 
-  // --- Assignment Upload ---
+
   async function submitAssignment(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -795,7 +794,7 @@
     }
   }
 
-  // --- Submit Feedback ---
+
   async function submitFeedback(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -812,11 +811,11 @@
     }
   }
 
-  // --- Award Points ---
+  
   async function submitPoints(e) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target).entries());
-    const res = await fetchAPI("/teacher/points", {
+    const res = await fetchAPI("/rewards/teacher/points", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -830,7 +829,7 @@
     }
   }
 
-  // --- Save Term Dates ---
+  
   async function saveCalendar(e) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target).entries());
@@ -846,7 +845,7 @@
     }
   }
 
-  // --- Fetch Assigned Tasks ---
+
   async function fetchAssignedTasks() {
     const res = await fetchAPI("/teacher/assignments");
     if (res && res.ok) {
@@ -858,7 +857,6 @@
     }
   }
 
-  // --- Fetch Feedback ---
   async function fetchFeedback() {
     const res = await fetchAPI("/teacher/feedback");
     if (res && res.ok) {
@@ -870,7 +868,7 @@
     }
   }
 
-  // --- Fetch Overdue Tasks ---
+  
   async function fetchOverdueTasks() {
     const res = await fetchAPI("/teacher/overdue-tasks");
     if (res && res.ok) {
@@ -882,7 +880,7 @@
     }
   }
 
-  // --- Init ---
+ 
   async function init() {
     await checkAuth();
     await fetchTeacherProfile();
@@ -891,7 +889,7 @@
     await fetchFeedback();
     await fetchOverdueTasks();
 
-    // Hook forms
+    
     document.getElementById("assignment-form")?.addEventListener("submit", submitAssignment);
     document.getElementById("feedback-form")?.addEventListener("submit", submitFeedback);
     document.getElementById("points-form")?.addEventListener("submit", submitPoints);

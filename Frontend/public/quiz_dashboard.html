@@ -47,6 +47,8 @@
         <textarea id="quizDescription" data-i18n-placeholder="quizDescriptionPlaceholder" placeholder="Quiz Description" class="w-full border p-2 rounded"></textarea>
         <input type="date" id="quizDueDate" class="w-full border p-2 rounded" required>
 
+        <input type="number" id="quizTimeLimit" placeholder="Time Limit (minutes, optional)" min="1" class="w-full border p-2 rounded mb-2" data-i18n-placeholder="timeLimitPlaceholder">
+
         <div id="questionsContainer" class="space-y-6"></div>
 
         <button type="button" id="addQuestionBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700" data-i18n="addQuestion">
@@ -82,14 +84,14 @@
     let translations = {};
     let currentLang = 'en';
 
-    // Load translations JSON
+    
     async function loadTranslations() {
       const res = await fetch('quiz_dashboard.json');
       translations = await res.json();
       translatePage();
     }
 
-    // Translate all elements with data-i18n or data-i18n-placeholder
+   
     function translatePage() {
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -105,12 +107,12 @@
       });
     }
 
-    // Helper for dynamic alerts
+    
     function getTranslation(key) {
       return translations[key]?.[currentLang] || key;
     }
 
-    // Language selector change
+    
     document.getElementById('languageSelector').addEventListener('change', e => {
       currentLang = e.target.value;
       translatePage();
@@ -137,52 +139,58 @@
           <option value="D" data-i18n="optionD">Option D</option>
         </select>
       `;
-      translatePage(); // Apply translations
+      translatePage(); 
       questionsContainer.appendChild(qDiv);
     }
 
     addQuestionBtn.addEventListener('click', createQuestionBlock);
 
-    // Handle form submission
-    document.getElementById('quizForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const quizData = {
-        title: document.getElementById('quizTitle').value,
-        description: document.getElementById('quizDescription').value,
-        due_date: document.getElementById('quizDueDate').value,
-        questions: [],
-        assigned_to_users: document.getElementById('assignEmails').value.split(',').map(e => e.trim()).filter(e => e),
-        assigned_to_grades: document.getElementById('assignGrade').value ? [Number(document.getElementById('assignGrade').value)] : [],
-        assigned_to_schools: document.getElementById('assignSchool').value ? [document.getElementById('assignSchool').value] : []
-      };
+    
+document.getElementById('quizForm').addEventListener('submit', async e => {
+  e.preventDefault();
 
-      document.querySelectorAll('#questionsContainer > div').forEach(qDiv => {
-        const qText = qDiv.querySelector('input[name="questionText"]').value;
-        const options = [
-          qDiv.querySelector('input[name="option1"]').value,
-          qDiv.querySelector('input[name="option2"]').value,
-          qDiv.querySelector('input[name="option3"]').value,
-          qDiv.querySelector('input[name="option4"]').value,
-        ].filter(o => o);
-        const correct = qDiv.querySelector('select[name="correctAnswer"]').value;
-        quizData.questions.push({ question: qText, options, correct });
-      });
+  const timeLimitValue = document.getElementById('quizTimeLimit').value;
+  const timeLimitMinutes = timeLimitValue ? Number(timeLimitValue) : null;
 
-      try {
-        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: "include",
-          body: JSON.stringify(quizData)
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to save quiz");
-        alert(getTranslation('quizSuccessAlert'));
-        fetchQuizzes();
-      } catch (err) {
-        alert(getTranslation('quizSaveErrorAlert') + ": " + err.message);
-      }
+  const quizData = {
+    title: document.getElementById('quizTitle').value,
+    description: document.getElementById('quizDescription').value,
+    due_date: document.getElementById('quizDueDate').value,
+    timeLimitMinutes,  
+    questions: [],
+    assigned_to_users: document.getElementById('assignEmails').value.split(',').map(e => e.trim()).filter(e => e),
+    assigned_to_grades: document.getElementById('assignGrade').value ? [Number(document.getElementById('assignGrade').value)] : [],
+    assigned_to_schools: document.getElementById('assignSchool').value ? [document.getElementById('assignSchool').value] : []
+  };
+
+  document.querySelectorAll('#questionsContainer > div').forEach(qDiv => {
+    const qText = qDiv.querySelector('input[name="questionText"]').value;
+    const options = [
+      qDiv.querySelector('input[name="option1"]').value,
+      qDiv.querySelector('input[name="option2"]').value,
+      qDiv.querySelector('input[name="option3"]').value,
+      qDiv.querySelector('input[name="option4"]').value,
+    ].filter(o => o);
+    const correct = qDiv.querySelector('select[name="correctAnswer"]').value;
+    quizData.questions.push({ question: qText, options, correct });
+  });
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: "include",
+      body: JSON.stringify(quizData)
     });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save quiz");
+    alert(getTranslation('quizSuccessAlert'));
+    fetchQuizzes();
+  } catch (err) {
+    alert(getTranslation('quizSaveErrorAlert') + ": " + err.message);
+  }
+});
+
 
     async function fetchQuizzes() {
       quizList.innerHTML = `<li>${getTranslation('loading')}</li>`;

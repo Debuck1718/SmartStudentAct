@@ -47,7 +47,7 @@
   <main class="p-4 sm:p-6 lg:p-8">
     <div class="max-w-4xl mx-auto">
       
-      <!-- Profile Picture and Language Switcher -->
+      
       <div class="flex flex-col sm:flex-row items-center justify-between mb-8">
         <div class="flex flex-col items-center sm:items-start mb-4 sm:mb-0">
           <img id="profile-preview" src="./images/default-avatar.png" class="w-24 h-24 rounded-full shadow-lg mb-2 transform transition-transform duration-300 hover:scale-110" />
@@ -218,7 +218,7 @@
     </div>
   </div>
 
-  <!-- TOAST CONTAINER -->
+  
   <div id="toast-container"></div>
   
   <script src="translate.js"></script>
@@ -363,7 +363,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function fetchBudget() {
     try {
-      const entries = await fetchWithAuth("/entries");
+      const entries = await fetchWithAuth("/budget/entries");
       DOMElements.budgetList.innerHTML = entries.length
         ? entries
             .map(
@@ -387,7 +387,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return showToast("Enter all goal fields", "warning");
 
     try {
-      await fetchWithAuth("/goals", {
+      await fetchWithAuth("/rewards/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -408,7 +408,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function fetchGoal() {
     try {
-      const goals = await fetchWithAuth("/goals");
+      const goals = await fetchWithAuth("/rewards/goals");
       const listEl = document.getElementById("saved-goals-list");
       if (!goals.length) {
         listEl.innerHTML = "<li>No goals yet.</li>";
@@ -465,7 +465,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function handleGenerateInsights() {
     try {
-      const advice = await fetchWithAuth("/advice");
+      const advice = await fetchWithAuth("/rewards/advice");
       DOMElements.insightsPlaceholder.classList.add("hidden");
       DOMElements.insightsContent.classList.remove("hidden");
       DOMElements.insightsContent.innerText =
@@ -475,7 +475,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // 5. Fetch + Render
+  
   async function fetchAssignments() {
     try {
       const assignments = await fetchWithAuth("/student/assignments");
