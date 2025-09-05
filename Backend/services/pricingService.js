@@ -8,24 +8,27 @@ const CACHE_TTL = 5 * 60 * 1000;
 const rateCache = new Map();
 const RATE_TTL = 10 * 60 * 1000;
 
-// --- Base prices in GHS ---
-const GHS_BASE = { student: 180, teacher: 204, admin: 241 };
+
 const GHS_TIER5 = { student: 241, teacher: 266, admin: 302 };
 
-const pricingData = {
-  default: GHS_BASE,
-  tier3_4: { student: 55, teacher: 75, admin: 110 },
-  regional: {
-    ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-    ZM: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-    TN: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-    LY: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-    MA: { student: 40, teacher: 90, admin: 150, teacher_free: true },
-  },
+
+const GHS_TIER3_4 = { student: 55, teacher: 75, admin: 110 };
+
+
+const GHS_BASE_DEFAULT = { student: 15, teacher: 52, admin: 73 };
+
+
+const REGIONAL_PRICING = {
+  ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true },
+  ZM: { student: 30, teacher: 75, admin: 105, teacher_free: true },
+  TN: { student: 30, teacher: 75, admin: 105, teacher_free: true },
+  LY: { student: 30, teacher: 75, admin: 105, teacher_free: true },
+  MA: { student: 40, teacher: 90, admin: 150, teacher_free: true },
 };
 
+
 const LOCAL_OVERRIDES = {
-  GH: { currency: "GHS", student: 16, teacher: 52, admin: 73 },
+  GH: { currency: "GHS", student: 15, teacher: 52, admin: 73 },
 };
 
 async function getCachedRate(from, to) {
@@ -88,36 +91,47 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   const tier = (await getSchoolTier(schoolName)) || 1;
   const countryCode = normalizeCountry(user, schoolCountry);
 
-  // --- Start with GHS base price ---
-  let ghsPrice = GHS_BASE[role] || 16;
+ 
+  let ghsPrice = GHS_BASE_DEFAULT[role] ?? 15;
 
-  // --- Tier adjustments ---
-  if (tier === 5) ghsPrice = GHS_TIER5[role] ?? ghsPrice;
-  else if (tier === 3 || tier === 4) ghsPrice = pricingData.tier3_4[role] ?? ghsPrice;
-
-  // --- Regional overrides ---
-  if (pricingData.regional[countryCode]?.[role] != null) {
-    ghsPrice = pricingData.regional[countryCode][role];
-    if (role === "teacher" && pricingData.regional[countryCode]?.teacher_free) ghsPrice = 0;
+  if (countryCode === "GH" && (tier === 3 || tier === 4)) {
+    ghsPrice = GHS_TIER3_4[role] ?? ghsPrice;
   }
 
-  // --- Local overrides ---
-  if (countryCode && LOCAL_OVERRIDES[countryCode]) {
+ 
+  if (countryCode === "GH" && tier === 5) {
+    ghsPrice = GHS_TIER5[role] ?? ghsPrice;
+  }
+
+ 
+  if (REGIONAL_PRICING[countryCode]?.[role] != null) {
+    ghsPrice = REGIONAL_PRICING[countryCode][role];
+    if (role === "teacher" && REGIONAL_PRICING[countryCode]?.teacher_free) {
+      ghsPrice = 0;
+    }
+  }
+
+  
+  if (countryCode === "GH" && LOCAL_OVERRIDES[countryCode]) {
     const override = LOCAL_OVERRIDES[countryCode];
     ghsPrice = override[role] ?? ghsPrice;
   }
 
-  // --- Compute USD equivalent if needed ---
+ 
   const ghsToUsdRate = await getCachedRate("GHS", "USD");
   const usdPrice = +(ghsPrice * ghsToUsdRate).toFixed(2);
 
-  // --- Display price ---
+ 
   const displayPrice = ghsPrice;
-  const displayCurrency = countryCode === "GH" ? "GHS" : "USD";
+  const displayCurrency = "GHS";
 
-  // --- Return all prices ---
+
+  logger.info("Final price calculation", { role, ghsPrice, usdPrice, displayPrice, displayCurrency, countryCode, tier });
+
   return { ghsPrice, usdPrice, localPrice: displayPrice, currency: displayCurrency, displayPrice, displayCurrency };
 }
 
 module.exports = { getUserPrice };
+
+
 
