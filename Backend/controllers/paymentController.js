@@ -39,13 +39,13 @@ async function initializePayment(req, res) {
       case "paystack":
         console.log("🚀 Initializing Paystack payment with:", {
           email: user.email,
-          ghsPrice,
+          localPrice,
           forcedCurrency: "GHS",
         });
 
         paymentResponse = await initPaystackPayment({
           email: user.email,
-          amount: ghsPrice,   
+          amount: localPrice,   
           currency: "GHS",
         });
         break;
