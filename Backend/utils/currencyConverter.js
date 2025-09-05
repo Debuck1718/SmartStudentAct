@@ -1,44 +1,47 @@
-// Corrected currencyConverter.js
-const axios = require('axios');
-
+// utils/currencyConverter.js
+const axios = require("axios");
 const apiKey = process.env.EXCHANGE_RATE_API_KEY;
 
-let ratesCache = {
-  data: {},
-  timestamp: null,
-};
+let ratesCache = { data: {}, timestamp: null };
 
-async function getRate(toCurrency) {
-  if (!apiKey) {
-    console.error('EXCHANGE_RATE_API_KEY is not defined in environment variables.');
-    return null;
-  }
-  const oneHour = 60 * 60 * 1000;
-  
-  // ✅ FIX: Use the apiKey from process.env to build the URL
-  const url = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/USD`;
+async function getRate(fromCurrency = "USD", toCurrency = "GHS") {
+  if (!apiKey) {
+    console.error("❌ EXCHANGE_RATE_API_KEY is not defined in environment variables.");
+    return null;
+  }
 
-  if (ratesCache.timestamp && (Date.now() - ratesCache.timestamp) < oneHour) {
-    console.log(`Using cached currency rate for ${toCurrency}.`);
-    return ratesCache.data[toCurrency] || null;
-  }
+  const oneHour = 60 * 60 * 1000;
+  const cacheKey = `${fromCurrency}_${toCurrency}`;
 
-  console.log('Fetching new currency rates from API...');
-  try {
-    const response = await axios.get(url);
-    if (response.data.result === 'success') {
-      ratesCache.data = response.data.conversion_rates;
-      ratesCache.timestamp = Date.now();
-      
-      return ratesCache.data[toCurrency] || null;
-    } else {
-      console.error('API response for currency conversion was not successful:', response.data['error-type']);
-      return null;
-    }
-  } catch (error) {
-    console.error('Error fetching currency rates:', error.message);
-    return null;
-  }
+  if (
+    ratesCache.timestamp &&
+    (Date.now() - ratesCache.timestamp) < oneHour &&
+    ratesCache.data[cacheKey]
+  ) {
+    console.log(`✅ Using cached currency rate for ${fromCurrency} → ${toCurrency}`);
+    return ratesCache.data[cacheKey];
+  }
+
+  const url = `https://v6.exchangerate-api.com/v6/${apiKey}/pair/${fromCurrency}/${toCurrency}`;
+
+  try {
+    console.log(`🔄 Fetching new rate: ${fromCurrency} → ${toCurrency}`);
+    const response = await axios.get(url);
+
+    if (response.data.result === "success") {
+      const rate = response.data.conversion_rate;
+      ratesCache.data[cacheKey] = rate;
+      ratesCache.timestamp = Date.now();
+      return rate;
+    } else {
+      console.error("❌ Currency API error:", response.data["error-type"]);
+      return null;
+    }
+  } catch (error) {
+    console.error("❌ Error fetching currency rates:", error.message);
+    return null;
+  }
 }
 
 module.exports = { getRate };
+
