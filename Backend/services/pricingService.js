@@ -1,6 +1,6 @@
 // services/pricingService.js
 const School = require("../models/School");
-const { getRate } = require("../utils/currencyConverter");
+
 const logger = require("../utils/logger");
 
 const schoolCache = new Map();
