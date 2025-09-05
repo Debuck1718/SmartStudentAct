@@ -8,16 +8,16 @@ const CACHE_TTL = 5 * 60 * 1000;
 const rateCache = new Map();
 const RATE_TTL = 10 * 60 * 1000;
 
-
+// --- GHS Tier Prices ---
 const GHS_TIER5 = { student: 241, teacher: 266, admin: 302 };
-
-
 const GHS_TIER3_4 = { student: 55, teacher: 75, admin: 110 };
 
+// --- Ghana local overrides ---
+const LOCAL_OVERRIDES = {
+  GH: { currency: "GHS", student: 15, teacher: 52, admin: 73 },
+};
 
-const GHS_BASE_DEFAULT = { student: 15, teacher: 52, admin: 73 };
-
-
+// --- Regional pricing ---
 const REGIONAL_PRICING = {
   ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true },
   ZM: { student: 30, teacher: 75, admin: 105, teacher_free: true },
@@ -26,10 +26,8 @@ const REGIONAL_PRICING = {
   MA: { student: 40, teacher: 90, admin: 150, teacher_free: true },
 };
 
-
-const LOCAL_OVERRIDES = {
-  GH: { currency: "GHS", student: 15, teacher: 52, admin: 73 },
-};
+// --- Non-African base prices ---
+const GHS_BASE_NON_AFRICA = { student: 120, teacher: 195, admin: 220 };
 
 async function getCachedRate(from, to) {
   const key = `${from}_${to}`;
@@ -85,53 +83,53 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   role = validateRole(role?.toLowerCase() || "student");
 
   if (["overseer", "global_overseer"].includes(role)) {
-    return { ghsPrice: 0, usdPrice: 0, localPrice: 0, currency: "GHS", displayPrice: 0, displayCurrency: "USD" };
+    return { ghsPrice: 0, usdPrice: 0, localPrice: 0, currency: "GHS", displayPrice: 0, displayCurrency: "USD", pricingType: "overseer" };
   }
 
   const tier = (await getSchoolTier(schoolName)) || 1;
   const countryCode = normalizeCountry(user, schoolCountry);
 
- 
-  let ghsPrice = GHS_BASE_DEFAULT[role] ?? 15;
+  let ghsPrice;
+  let pricingType;
 
-  if (countryCode === "GH" && (tier === 3 || tier === 4)) {
-    ghsPrice = GHS_TIER3_4[role] ?? ghsPrice;
-  }
-
- 
-  if (countryCode === "GH" && tier === 5) {
-    ghsPrice = GHS_TIER5[role] ?? ghsPrice;
-  }
-
- 
-  if (REGIONAL_PRICING[countryCode]?.[role] != null) {
-    ghsPrice = REGIONAL_PRICING[countryCode][role];
-    if (role === "teacher" && REGIONAL_PRICING[countryCode]?.teacher_free) {
-      ghsPrice = 0;
+  // --- Ghana pricing ---
+  if (countryCode === "GH") {
+    if (tier === 5) {
+      ghsPrice = GHS_TIER5[role] ?? LOCAL_OVERRIDES.GH[role];
+      pricingType = "GH Tier 5";
+    } else if (tier === 3 || tier === 4) {
+      ghsPrice = GHS_TIER3_4[role] ?? LOCAL_OVERRIDES.GH[role];
+      pricingType = "GH Tier 3/4";
+    } else {
+      ghsPrice = LOCAL_OVERRIDES.GH[role];
+      pricingType = "GH Base";
     }
+  } 
+  // --- Regional African overrides ---
+  else if (REGIONAL_PRICING[countryCode]?.[role] != null) {
+    ghsPrice = REGIONAL_PRICING[countryCode][role];
+    if (role === "teacher" && REGIONAL_PRICING[countryCode]?.teacher_free) ghsPrice = 0;
+    pricingType = "Regional Override";
+  } 
+  // --- Non-African countries base price ---
+  else {
+    ghsPrice = GHS_BASE_NON_AFRICA[role] ?? 120;
+    pricingType = "Non-African Base";
   }
 
-  
-  if (countryCode === "GH" && LOCAL_OVERRIDES[countryCode]) {
-    const override = LOCAL_OVERRIDES[countryCode];
-    ghsPrice = override[role] ?? ghsPrice;
-  }
-
- 
   const ghsToUsdRate = await getCachedRate("GHS", "USD");
   const usdPrice = +(ghsPrice * ghsToUsdRate).toFixed(2);
 
- 
   const displayPrice = ghsPrice;
   const displayCurrency = "GHS";
 
+  logger.info("Final price calculation", { role, ghsPrice, usdPrice, displayPrice, displayCurrency, countryCode, tier, pricingType });
 
-  logger.info("Final price calculation", { role, ghsPrice, usdPrice, displayPrice, displayCurrency, countryCode, tier });
-
-  return { ghsPrice, usdPrice, localPrice: displayPrice, currency: displayCurrency, displayPrice, displayCurrency };
+  return { ghsPrice, usdPrice, localPrice: displayPrice, currency: displayCurrency, displayPrice, displayCurrency, pricingType };
 }
 
 module.exports = { getUserPrice };
+
 
 
 
