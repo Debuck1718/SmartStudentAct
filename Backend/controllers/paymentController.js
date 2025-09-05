@@ -37,18 +37,19 @@ async function initializePayment(req, res) {
 
     switch (gateway) {
       case "paystack":
-        console.log("🚀 Initializing Paystack payment with:", {
-          email: user.email,
-          amount: ghsPrice,
-          currency: "GHS",
-        });
+  console.log("🚀 Initializing Paystack payment with:", {
+    email: user.email,
+    usdPrice, 
+    currency: "USD",
+  });
 
-        paymentResponse = await initPaystackPayment({
-          email: user.email,
-          amount: ghsPrice,
-          currency: "GHS",
-        });
-        break;
+  paymentResponse = await initPaystackPayment({
+    email: user.email,
+    amount: usdPrice,   
+    currency: "USD",    
+  });
+  break;
+
 
       case "flutterwave":
         console.log("🚀 Initializing Flutterwave payment with:", {
