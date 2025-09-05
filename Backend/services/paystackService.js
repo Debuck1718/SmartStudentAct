@@ -3,26 +3,26 @@ const config = require("../config/paymentConfig");
 
 const paystack = new Paystack(config.paystack.secretKey);
 
-async function initPaystackPayment({ email, ghsAmount }) {
+async function initPaystackPayment({ email, amount, currency }) {
   try {
-    if (!email || !ghsAmount) {
+    if (!email || !amount || !currency) {
       throw new Error("Missing required Paystack payment parameters.");
     }
 
-    
-    const amountInSubunits = Math.round(ghsAmount * 100);
+    // Paystack expects amount in subunits (e.g., kobo for GHS)
+    const amountInSubunits = Math.round(amount * 100);
 
     console.log("🔎 Sending to Paystack:", {
       email,
-      ghsAmount,
+      amount,
       amountInSubunits,
-      currency: "GHS",
+      currency,
     });
 
     const response = await paystack.transaction.initialize({
       email,
       amount: amountInSubunits,
-      currency: "GHS", 
+      currency,
     });
 
     return response;
@@ -33,5 +33,6 @@ async function initPaystackPayment({ email, ghsAmount }) {
 }
 
 module.exports = { initPaystackPayment };
+
 
 

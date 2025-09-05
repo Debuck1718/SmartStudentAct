@@ -16,6 +16,7 @@ async function initializePayment(req, res) {
     const schoolName = user.schoolName || "";
     const schoolCountry = user.schoolCountry || "";
 
+    // Get computed price for the user
     const priceDetails = await getUserPrice(user, userRole, schoolName, schoolCountry);
 
     if (!priceDetails || typeof priceDetails.localPrice !== "number" || !priceDetails.currency) {
@@ -25,7 +26,7 @@ async function initializePayment(req, res) {
       });
     }
 
-    const { ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
+    const { ghsPrice, localPrice, currency, displayPrice, displayCurrency, pricingType } = priceDetails;
 
     if (localPrice <= 0) {
       return res.status(400).json({ success: false, message: "Invalid payment amount." });
@@ -38,13 +39,15 @@ async function initializePayment(req, res) {
       case "paystack":
         console.log("🚀 Initializing Paystack payment with:", {
           email: user.email,
-          ghsPrice,
-          currency: "GHS",
+          amount: localPrice,
+          currency,
+          pricingType,
         });
 
         paymentResponse = await initPaystackPayment({
           email: user.email,
-          ghsAmount: ghsPrice, 
+          amount: localPrice, // ✅ use computed local price
+          currency,           // ✅ use computed currency
         });
         break;
 
@@ -53,6 +56,7 @@ async function initializePayment(req, res) {
           email: user.email,
           amount: localPrice,
           currency,
+          pricingType,
         });
 
         paymentResponse = await initFlutterwavePayment({
@@ -76,6 +80,7 @@ async function initializePayment(req, res) {
       paymentData: paymentResponse,
       displayPrice,
       displayCurrency,
+      pricingType,
     });
   } catch (err) {
     console.error("❌ Payment initialization error:", err);
@@ -83,6 +88,7 @@ async function initializePayment(req, res) {
   }
 }
 
+// Webhook handlers
 const handlePaystackWebhook = (req, res) => handleWebhook(req, res, "paystack");
 const handleFlutterwaveWebhook = (req, res) => handleWebhook(req, res, "flutterwave");
 
@@ -91,5 +97,6 @@ module.exports = {
   handlePaystackWebhook,
   handleFlutterwaveWebhook,
 };
+
 
 
