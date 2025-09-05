@@ -193,27 +193,26 @@ const feedbackSchema = Joi.object({
 });
 
 const paymentSchema = Joi.object({
-  gateway: Joi.string()
-    .valid("flutterwave", "paystack")
-    .required(),
+  gateway: Joi.string()
+    .valid("flutterwave", "paystack")
+    .required(),
 
-  email: Joi.string()
-    .email()
-    .required(),
+  email: Joi.string()
+    .email()
+    .required(),
 
- 
-  amount: Joi.number()
-    .positive()
-    .required(), 
+  amount: Joi.number()
+    .positive()
+    .required(),
 
-  currency: Joi.string()
-    .uppercase()
-    .length(3)
-    .required(), 
+  currency: Joi.string()
+    .uppercase()
+    .length(3) 
+    .required(),
 
-  phoneNumber: Joi.string()
-    .allow(null, '')
-    .optional(),
+  phoneNumber: Joi.string()
+    .allow(null, '') 
+    .optional(),
 });
 
 const paymentSuccessSchema = Joi.object({
