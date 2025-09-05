@@ -27,13 +27,13 @@ async function initializePayment(req, res) {
       });
     }
 
-    const { usdPrice, ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
+    const { ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
 
     if (localPrice <= 0) {
       return res.status(400).json({ success: false, message: "Invalid payment amount." });
     }
 
-    // 🔑 Ensure gateway is defined
+
     const gateway = paymentMethod || "paystack";
     let paymentResponse;
 
@@ -41,14 +41,14 @@ async function initializePayment(req, res) {
       case "paystack":
         console.log("🚀 Initializing Paystack payment with:", {
           email: user.email,
-          usdPrice,
-          currency: "USD",
+          amount: ghsPrice,
+          currency: "GHS",
         });
 
         paymentResponse = await initPaystackPayment({
           email: user.email,
-          amount: usdPrice,   // ✅ always send USD anchor price
-          currency: "USD",
+          amount: ghsPrice, // ✅ FIX: Use ghsPrice for Paystack, as it's the required currency for GH
+          currency: "GHS",
         });
         break;
 
@@ -61,7 +61,7 @@ async function initializePayment(req, res) {
 
         paymentResponse = await initFlutterwavePayment({
           email: user.email,
-          amount: localPrice, // ✅ use localized currency amount
+          amount: localPrice, 
           currency,
         });
         break;
