@@ -14,7 +14,7 @@ const GHS_TIER5 = { student: 241, teacher: 266, admin: 302 };
 
 const pricingData = {
   default: GHS_BASE,
-  tier3_4: { student: 50, teacher: 75, admin: 110 },
+  tier3_4: { student: 55, teacher: 75, admin: 110 },
   regional: {
     ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true },
     ZM: { student: 30, teacher: 75, admin: 105, teacher_free: true },
@@ -26,7 +26,7 @@ const pricingData = {
 
 // Local overrides in GHS
 const LOCAL_OVERRIDES = {
-  GH: { currency: "GHS", student: 15, teacher: 50, admin: 70 },
+  GH: { currency: "GHS", student: 16, teacher: 52, admin: 73 },
 };
 
 async function getCachedRate(from, to) {
