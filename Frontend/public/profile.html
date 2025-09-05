@@ -41,7 +41,7 @@
 
 <body class="bg-gray-100 min-h-screen">
 
-  <!-- Top bar -->
+  
   <header class="bg-white shadow">
     <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
       <button type="button" id="back-btn"
@@ -49,7 +49,7 @@
         onclick="history.back()"
         data-i18n="backButton">← Back</button>
 
-      <!-- Language dropdown -->
+     
       <div class="flex items-center gap-2">
         <label for="lang" class="text-sm text-gray-600">🌐</label>
         <select id="lang" class="border rounded-lg px-2 py-1 text-sm">
@@ -64,7 +64,7 @@
     </div>
   </header>
 
-  <!-- Loading overlay -->
+  
   <div id="loading" class="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-40">
     <div class="flex flex-col items-center">
       <svg class="animate-spin h-10 w-10 text-blue-600" viewBox="0 0 24 24" fill="none">
@@ -81,7 +81,7 @@
 
     <form id="profile-form" class="bg-white rounded-2xl shadow p-6 md:p-8 space-y-8">
 
-      <!-- Avatar -->
+     
       <section class="flex flex-col items-center gap-3">
         <img id="avatar" src="https://placehold.co/128x128/e5e7eb/111?text=👤"
              alt="Profile Picture" class="w-28 h-28 rounded-full border-4 border-white shadow object-cover"/>
@@ -93,7 +93,7 @@
         </div>
       </section>
 
-      <!-- Personal info -->
+      
       <section class="space-y-4">
         <h2 class="text-xl font-semibold text-blue-800 border-b pb-2" data-i18n="personalInfoSection">Personal Information</h2>
 
@@ -133,7 +133,7 @@
         </div>
       </section>
 
-      <!-- Student section -->
+      
       <section id="student-section" class="space-y-4 hidden">
         <h3 class="text-lg font-semibold text-gray-800" data-i18n="academicDetailsSection">Academic Details</h3>
 
@@ -180,7 +180,7 @@
         </div>
       </section>
 
-      <!-- Teacher section -->
+    
       <section id="teacher-section" class="space-y-4 hidden">
         <h3 class="text-lg font-semibold text-gray-800" data-i18n="professionalDetailsSection">Professional Details</h3>
         <div class="grid md:grid-cols-2 gap-4">
@@ -197,7 +197,6 @@
         </div>
       </section>
 
-      <!-- Admin section -->
       <section id="admin-section" class="space-y-4 hidden">
         <h3 class="text-lg font-semibold text-gray-800" data-i18n="adminSchoolDetailsSection">Admin School Details</h3>
         <div>
@@ -207,7 +206,6 @@
         </div>
       </section>
 
-      <!-- Save -->
       <div class="pt-2">
         <button id="save" type="submit"
                 class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
@@ -228,13 +226,13 @@
   <script>
     const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 
-    // Global-ish state
+
     let currentLang = localStorage.getItem("lang") || "en";
     let userData = {};
     let saving = false;
     let uploading = false;
 
-    // --- Helpers ---
+
     const $ = (id) => document.getElementById(id);
     const stripColon = (s) => (typeof s === "string" ? s.replace(/[:：]\s*$/, "") : String(s));
     const getT = (key) => {
@@ -244,7 +242,7 @@
           if (typeof val === "string") return val;
         }
       } catch {}
-      return key; // safe fallback
+      return key; 
     };
     const toast = (msg, type = "success") => {
       const box = $("toast");
@@ -263,11 +261,10 @@
       $("save").classList.toggle("cursor-not-allowed", saving);
       $("save").disabled = saving;
       $("save").querySelector("span").textContent = on ? getT("saving") : getT("saveChangesButton");
-      // disable inputs while saving/uploading
       document.querySelectorAll(".input, #change-pic, #lang").forEach(el => el.disabled = saving || uploading);
     };
 
-    // --- Render visibility by occupation / edu level ---
+   
     const renderSections = () => {
       const occ = userData.occupation || "";
       const edu = userData.educationLevel || "";
@@ -280,7 +277,7 @@
       $("university-fields").classList.toggle("hidden", !(occ === "student" && edu === "university"));
     };
 
-    // --- Validation ---
+    
     function showFieldError(id, msg) {
       const el = $(id);
       const err = $(`${id}-error`);
@@ -300,7 +297,7 @@
     function validateAll() {
       let ok = true;
 
-      // first/last name
+      
       if (!($("firstName").value || "").trim()) {
         ok = showFieldError("firstName", stripColon(getT("firstNameLabel")) + getT("required")) && ok;
       } else showFieldError("firstName", "");
@@ -309,7 +306,7 @@
         ok = showFieldError("lastName", stripColon(getT("lastNameLabel")) + getT("required")) && ok;
       } else showFieldError("lastName", "");
 
-      // phone
+     
       const phoneVal = ($("phone").value || "").trim();
       if (!phoneVal) {
         ok = showFieldError("phone", getT("phoneRequired")) && ok;
@@ -317,7 +314,7 @@
         ok = showFieldError("phone", getT("invalidPhone")) && ok;
       } else showFieldError("phone", "");
 
-      // occupation-specific
+      
       const occ = userData.occupation;
       const edu = $("educationLevel").value;
 
@@ -355,7 +352,7 @@
       return ok;
     }
 
-    // --- Data I/O ---
+    
     async function loadProfile() {
       try {
         const res = await fetch(`${API_BASE_URL}/profile`, { credentials: "include" });
@@ -363,7 +360,7 @@
         const data = await res.json();
         userData = data || {};
 
-        // Fill fields (guard against undefined)
+       
         $("avatar").src = userData.profile_picture_url || "https://placehold.co/128x128/e5e7eb/111?text=👤";
         ["firstName","lastName","email","phone","occupation","educationLevel","grade","schoolName",
          "university","uniLevel","program","teacherSchool","teacherGrade","adminSchool"].forEach(k=>{
@@ -390,7 +387,6 @@
         firstName: $("firstName").value.trim(),
         lastName: $("lastName").value.trim(),
         phone: $("phone").value.trim(),
-        // email & occupation are readonly
         educationLevel: $("educationLevel").value || null,
         grade: $("grade")?.value?.trim() || null,
         schoolName: $("schoolName")?.value?.trim() || null,
@@ -452,9 +448,9 @@
       }
     }
 
-    // --- Events / Init ---
+    
     document.addEventListener("DOMContentLoaded", () => {
-      // Language init
+      
       $("lang").value = currentLang;
       setDir();
       if (typeof translatePage === "function") {
@@ -466,21 +462,21 @@
         localStorage.setItem("lang", currentLang);
         setDir();
         if (typeof translatePage === "function") translatePage("profile", currentLang);
-        // Also re-run translations for any dynamically created content if needed:
+        
         if (typeof translateElements === "function") translateElements(document.body);
       });
 
-      // Form listeners
+     
       $("profile-form").addEventListener("submit", saveProfile);
       document.body.addEventListener("input", (e) => {
         const id = e.target?.id;
         if (!id) return;
-        // keep local state in sync for section toggles
+        
         userData[id] = e.target.value;
         if (id === "educationLevel") renderSections();
       });
 
-      // Avatar
+     
       $("change-pic").addEventListener("click", () => $("avatar-input").click());
       $("avatar-input").addEventListener("change", (e) => {
         const file = e.target.files?.[0];
@@ -488,7 +484,7 @@
           const reader = new FileReader();
           reader.onload = (ev) => { $("avatar").src = ev.target.result; };
           reader.readAsDataURL(file);
-          uploadAvatar(file); // async upload
+          uploadAvatar(file); 
         }
       });
 
