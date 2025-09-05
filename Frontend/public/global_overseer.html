@@ -131,10 +131,9 @@
 </div>
 
 <script>
-const API_BASE_URL = "https://smartstudentact.onrender.com/api";
+const API_BASE_URL = "https://api.smartstudentact.com/api";
 let filesData = [];
 
-// DOM Elements
 const dashboardCards = document.getElementById("dashboard-cards");
 const filesTableBody = document.getElementById("files-table-body");
 const usersTableBody = document.getElementById("users-table-body");
@@ -143,7 +142,7 @@ const userSearch = document.getElementById("user-search");
 const fileSearch = document.getElementById("file-search");
 const fileFilter = document.getElementById("file-filter");
 
-// Modals
+
 const assignRegionModal = document.getElementById("assign-region-modal");
 const openAssignRegionBtn = document.getElementById("open-assign-region");
 const assignRegionClose = document.getElementById("assign-region-close");
@@ -170,7 +169,7 @@ const confirmMessage = document.getElementById("confirm-message");
 const confirmConfirmBtn = document.getElementById("confirm-confirm");
 const confirmCancelBtn = document.getElementById("confirm-cancel");
 
-// Helpers
+
 function showAlert(title, message) {
     alertTitle.textContent = title;
     alertMessage.textContent = message;
@@ -198,13 +197,13 @@ async function fetchWithAuth(endpoint, options={}) {
     return res.json();
 }
 
-// Authentication
+
 async function checkAuth() {
     try { await fetchWithAuth("/auth/check"); return true; }
     catch { window.location.href="/login.html"; return false; }
 }
 
-// Dashboard
+
 async function loadDashboard() {
     showLoading();
     try {
@@ -226,7 +225,7 @@ function renderDashboard(data) {
     });
 }
 
-// Users
+
 async function loadUsers(query="") {
     usersTableBody.innerHTML='<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
     try {
@@ -250,7 +249,7 @@ function renderUsers(users) {
     });
 }
 
-// Files
+
 async function loadFiles() {
     filesTableBody.innerHTML='<tr><td colspan="4" class="text-center py-4">Loading files...</td></tr>';
     try { const data=await fetchWithAuth("/global-overseer/all-files"); filesData=data.files||[]; renderFiles(); }
@@ -273,7 +272,7 @@ function renderFiles() {
     });
 }
 
-// Event Listeners
+
 logoutBtn.addEventListener("click",async()=>{ try{ await fetch(`${API_BASE_URL}/users/logout`,{method:"POST",credentials:"include"}); window.location.href="/login.html"; }catch(err){console.error(err);} });
 openAssignRegionBtn.addEventListener("click",()=>assignRegionModal.classList.remove("hidden"));
 assignRegionClose.addEventListener("click",()=>assignRegionModal.classList.add("hidden"));

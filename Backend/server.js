@@ -1,4 +1,4 @@
-// server.js – SmartStudent Backend Startup (JWT-Only Edition)
+
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -10,7 +10,7 @@ const EventEmitter = require("events");
 const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
 const http = require("http");
-const fetch = require("node-fetch"); 
+const fetch = require("node-fetch");
 
 const eventBus = new EventEmitter();
 
@@ -35,7 +35,7 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
 const app = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", 1); 
 
 app.use(morgan("dev"));
 app.use(helmet());
@@ -43,32 +43,29 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:4000",
+  "https://smartstudentact.com",
+  "https://www.smartstudentact.com",
+  "https://api.smartstudentact.com", 
+];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        "http://localhost:3000",
-        "http://localhost:4000",
-        "https://smartstudentact.com",
-        /.*\.smartstudentact\.com$/,
-        /.*\.onrender\.com$/,
-      ];
-      if (
-        !origin ||
-        allowedOrigins.some((pattern) =>
-          typeof pattern === "string" ? pattern === origin : pattern.test(origin)
-        )
-      ) {
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
       }
+      return callback(new Error("Not allowed by CORS"));
     },
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "Set-Cookie"],
+    credentials: true, 
+    allowedHeaders: ["Content-Type", "Authorization"],
     exposedHeaders: ["Set-Cookie"],
   })
 );
+
 
 try {
   cloudinary.config({
@@ -82,6 +79,7 @@ try {
   process.exit(1);
 }
 
+
 async function connectMongo() {
   try {
     console.log(`📡 Connecting to MongoDB...`);
@@ -92,6 +90,7 @@ async function connectMongo() {
     throw err;
   }
 }
+
 
 let agenda;
 async function startAgenda() {
@@ -112,16 +111,13 @@ async function startAgenda() {
   }
 }
 
-// ───────────────────────────────────────────────
-// 6️⃣ Routes
-// ───────────────────────────────────────────────
+
 try {
   const publicRoutes = require("./routes/publicRoutes");
   app.use("/", publicRoutes(eventBus, agenda));
 
   const webhookRoutes = require("./routes/webhookRoutes");
   app.use("/api", webhookRoutes);
-
 
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", protectedRoutes);
@@ -135,6 +131,7 @@ try {
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
+
 
 app.use((err, req, res, next) => {
   if (NODE_ENV === "development") {
@@ -150,6 +147,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+
 const server = http.createServer(app);
 
 async function startApp() {
@@ -160,7 +158,6 @@ async function startApp() {
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
 
-
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         setInterval(async () => {
           try {
@@ -169,7 +166,7 @@ async function startApp() {
           } catch (err) {
             console.error("⚠️ Self-ping failed:", err.message);
           }
-        }, 5 * 60 * 1000); 
+        }, 5 * 60 * 1000);
       }
     });
   } catch (err) {
@@ -179,3 +176,4 @@ async function startApp() {
 }
 
 startApp();
+

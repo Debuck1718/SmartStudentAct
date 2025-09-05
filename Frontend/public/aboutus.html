@@ -37,7 +37,7 @@
       rel="stylesheet"
     />
     <style>
-      /* Add a subtle hover effect to the feature cards */
+
       .feature-card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
       }
@@ -45,7 +45,7 @@
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
       }
-      /* Style for a more modern select dropdown */
+      
       .language-select {
         padding: 8px;
         border-radius: 8px;
@@ -64,7 +64,6 @@
   </head>
   <body class="bg-gray-50 text-gray-800 font-sans">
     <script>
-      // Create an object to hold your translation data
       const translations = {
         en: {
           nav_title: "SmartStudentAct",
@@ -528,7 +527,7 @@
         },
       };
 
-      // Function to translate the page based on the language key
+      
       function translatePage(lang) {
         const elements = document.querySelectorAll("[data-i18n]");
         elements.forEach((element) => {
@@ -540,19 +539,18 @@
         document.documentElement.lang = lang;
       }
 
-      // Event listener for the new language dropdown
       document.addEventListener("DOMContentLoaded", () => {
         const langSelect = document.getElementById("lang-select");
         langSelect.addEventListener("change", (event) => {
           const selectedLang = event.target.value;
           translatePage(selectedLang);
         });
-        // Set initial language on page load
+        
         translatePage(langSelect.value);
       });
     </script>
     <div class="relative min-h-screen">
-      <!-- Navigation Bar -->
+      
       <header class="bg-white shadow-sm sticky top-0 z-50">
         <nav
           class="container mx-auto px-6 py-4 flex items-center justify-between"
@@ -576,7 +574,7 @@
               >About</a
             >
             <div class="language-switcher flex items-center space-x-2">
-              <!-- Language dropdown -->
+             
               <select id="lang-select" class="language-select">
                 <option value="en">English</option>
                 <option value="fr">Français</option>
@@ -591,7 +589,7 @@
       </header>
 
       <main>
-        <!-- Hero Section -->
+        
         <section
           class="py-16 md:py-24 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center"
         >
@@ -613,7 +611,6 @@
           </div>
         </section>
 
-        <!-- Vision Section -->
         <section class="py-16 md:py-24">
           <div class="container mx-auto px-6 max-w-4xl">
             <h2
@@ -635,11 +632,11 @@
           </div>
         </section>
 
-        <!-- Features Section -->
+        
         <section class="py-16 md:py-24 bg-gray-100">
           <div class="container mx-auto px-6">
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <!-- For Teachers -->
+              
               <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
                 <h3
                   class="text-2xl font-bold mb-4"
@@ -660,7 +657,7 @@
                   <li data-i18n="teachers_list_4">Track progress over time</li>
                 </ul>
               </div>
-              <!-- For Students -->
+              
               <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
                 <h3
                   class="text-2xl font-bold mb-4"
@@ -687,7 +684,7 @@
                   </li>
                 </ul>
               </div>
-              <!-- Rewards & Growth -->
+             
               <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
                 <h3
                   class="text-2xl font-bold mb-4"
@@ -710,7 +707,7 @@
                   </li>
                 </ul>
               </div>
-              <!-- AI Essay Checker -->
+              
               <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
                 <h3 class="text-2xl font-bold mb-4" data-i18n="ai_heading">
                   AI Essay Checker
@@ -730,7 +727,7 @@
                   </li>
                 </ul>
               </div>
-              <!-- Real-Time Notifications -->
+              
               <div class="bg-white p-8 rounded-xl shadow-lg feature-card">
                 <h3
                   class="text-2xl font-bold mb-4"
@@ -761,7 +758,7 @@
           </div>
         </section>
 
-        <!-- Rewards & Badges Showcase -->
+       
         <section class="py-16 md:py-24">
           <div class="container mx-auto px-6">
             <h2
@@ -841,7 +838,6 @@
           </div>
         </section>
 
-        <!-- Comprehensive Approach Section -->
         <section class="py-16 md:py-24 bg-gray-100 text-center">
           <div class="container mx-auto px-6 max-w-4xl">
             <h2
@@ -894,7 +890,7 @@
           </div>
         </section>
       </main>
-      <!-- Footer -->
+
       <footer class="bg-gray-800 text-white py-6">
         <div class="container mx-auto px-6 text-center">
           <p data-i18n="footer_text">

@@ -670,8 +670,8 @@ const otpInput = document.getElementById("otpInput");
 const messageAlertBox = document.getElementById("messageAlertBox");
 const messageAlertText = document.getElementById("messageAlertText");
 
-const API_REQUEST_OTP = "https://smartstudentact.onrender.com/users/signup-otp";
-const API_VERIFY_OTP = "https://smartstudentact.onrender.com/users/verify-otp";
+const API_REQUEST_OTP = "https://api.smartstudentact.com/users/signup-otp";
+const API_VERIFY_OTP = "https://api.smartstudentact.com/users/verify-otp";
 
 let userData = {};
 let isSubmitting = false;
@@ -824,7 +824,7 @@ async function requestOTP(event) {
     const result = await res.json();
     if (!res.ok) throw new Error(result.message || "Failed to send OTP");
 
-    userData.otpToken = result.otpToken; // store OTP token
+    userData.otpToken = result.otpToken; 
     alert("✅ OTP sent to your email. Please check and verify.");
     otpSection.classList.remove("hidden");
     signupFormSection.classList.add("hidden");
@@ -863,7 +863,7 @@ async function verifyOTP(event) {
 requestOtpButton.addEventListener("click", requestOTP);
 verifyOtpButton.addEventListener("click", verifyOTP);
 
-// --- Terms modal ---
+
 openTermsLink.addEventListener("click", e => {
   e.preventDefault();
   termsModal.classList.remove("hidden");
@@ -880,7 +880,7 @@ termsModal.addEventListener("click", e => {
   }
 });
 
-// --- Populate grade options dynamically ---
+
 function populateGradeOptions() {
   gradeSelect.innerHTML = '<option value="">Select Grade</option>';
   const level = educationLevelSelect.value;

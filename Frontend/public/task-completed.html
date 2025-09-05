@@ -46,7 +46,7 @@
     </main>
 
     <script>
-        // Translation and task data
+     
         const tasksData = {
             "en": [
                 { "titleKey": "mathHomework", "date": "2025-07-20" },
@@ -177,11 +177,11 @@
             pageTitle.textContent = translations[lang]['completedTasksTitle'] || translations['en']['completedTasksTitle'];
         }
 
-        // Initial render
+        
         let currentLang = 'en';
         renderTasks(currentLang);
 
-        // Language change
+       
         langSelect.addEventListener('change', e => {
             currentLang = e.target.value;
             renderTasks(currentLang);

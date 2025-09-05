@@ -75,7 +75,7 @@
         </form>
       </div>
 
-      <!-- Password Section -->
+     
       <div class="bg-white rounded-xl shadow p-6">
         <h2 class="text-lg font-semibold mb-4" data-i18n="changePassword">🔒 Change Password</h2>
         <form id="password-form" class="space-y-4">
@@ -99,7 +99,7 @@
       </div>
     </div>
 
-    <!-- Back Button -->
+    
     <div class="mt-6 text-center">
       <button
         onclick="goBackToDashboard()"
@@ -108,7 +108,7 @@
     </div>
   </main>
 
-  <!-- Modal -->
+ 
   <div id="modal" class="fixed inset-0 hidden flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-lg shadow-lg p-6 w-80">
       <h2 id="modal-title" class="text-lg font-bold mb-2"></h2>
@@ -117,7 +117,7 @@
     </div>
   </div>
 
-  <!-- Loading Overlay -->
+ 
   <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-75 hidden flex items-center justify-center z-50">
     <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
   </div>
@@ -127,17 +127,17 @@
     document.addEventListener("DOMContentLoaded", () => {
       const langSelect = document.getElementById("language-select");
 
-      // Load default language
+      
       const defaultLang = "en";
       translatePage("settings", defaultLang);
 
-      // Handle language change
+   
       langSelect.addEventListener("change", (e) => {
         const selectedLang = e.target.value;
         translatePage("settings", selectedLang);
       });
 
-      // Fetch profile data after translations
+    
       fetchUserProfile();
     });
   </script>

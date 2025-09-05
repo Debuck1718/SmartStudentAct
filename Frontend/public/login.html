@@ -64,7 +64,7 @@
   </div>
 
 <script>
-const API_BASE_URL = "https://smartstudentact.onrender.com";
+const API_BASE_URL = "https://api.smartstudentact.com";
 
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
@@ -76,7 +76,7 @@ const langSelect = document.getElementById("language-select");
 let showPassword = false;
 let currentLang = "en";
 
-// --- Language translations ---
+
 const translations = {
   en: {
     loginTitle: "SmartStudentAct Login",
@@ -235,7 +235,7 @@ async function handleLogin() {
       return;
     }
 
-    // --- Handle trial message ---
+    
     if (data.user.trialActive && !data.user.subscriptionActive && data.user.trial_end_at) {
       const trialEnd = new Date(data.user.trial_end_at).toLocaleDateString();
       showBanner(`${translations[currentLang].trialActive} ${trialEnd}`, "success");
@@ -243,7 +243,7 @@ async function handleLogin() {
       showBanner(translations[currentLang].loginSuccess, "success");
     }
 
-    // --- Redirect ---
+   
     if(data.redirectUrl) {
       setTimeout(() => window.location.href = data.redirectUrl, 1200);
     } else {

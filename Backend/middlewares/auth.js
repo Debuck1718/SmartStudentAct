@@ -5,7 +5,6 @@ const User = require("../models/User");
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
-
 if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
   throw new Error("JWT_SECRET and JWT_REFRESH_SECRET must be set in the environment variables.");
 }
@@ -13,7 +12,6 @@ if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
 const isProd = process.env.NODE_ENV === "production";
 const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY = "7d";
-
 
 const PUBLIC_ROUTES = [
   "/users/login",
@@ -49,8 +47,10 @@ function generateRefreshToken(user) {
 function setAuthCookies(res, accessToken, refreshToken) {
   const cookieOptions = {
     httpOnly: true,
-    secure: isProd,
-    sameSite: "None",
+    secure: isProd,                
+    sameSite: "None",              
+    domain: ".smartstudentact.com",
+    path: "/",                     
   };
 
   res.cookie("access_token", accessToken, {
@@ -63,7 +63,6 @@ function setAuthCookies(res, accessToken, refreshToken) {
     maxAge: 7 * 24 * 60 * 60 * 1000, 
   });
 }
-
 
 const authenticateJWT = (req, res, next) => {
   if (isPublicRoute(req.originalUrl)) {
@@ -124,7 +123,9 @@ const authenticateJWT = (req, res, next) => {
             httpOnly: true,
             secure: isProd,
             sameSite: "None",
-            maxAge: 15 * 60 * 1000,
+            domain: ".smartstudentact.com",
+            path: "/",
+            maxAge: 15 * 60 * 1000, 
           });
 
           req.userId = refreshDecoded.id;
@@ -152,7 +153,6 @@ const authenticateJWT = (req, res, next) => {
   });
 };
 
-
 const requireAdmin = (req, res, next) => {
   const adminRoles = ["admin", "overseer", "global_overseer"];
   if (!req.userRole || !adminRoles.includes(req.userRole)) {
@@ -171,3 +171,4 @@ module.exports = {
   generateRefreshToken,
   setAuthCookies,
 };
+
