@@ -85,3 +85,12 @@ async function initializePayment(req, res) {
   }
 }
 
+const handlePaystackWebhook = (req, res) => handleWebhook(req, res, "paystack");
+const handleFlutterwaveWebhook = (req, res) => handleWebhook(req, res, "flutterwave");
+
+module.exports = {
+  initializePayment,
+  handlePaystackWebhook,
+  handleFlutterwaveWebhook,
+};
+
