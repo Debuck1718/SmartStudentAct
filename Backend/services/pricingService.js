@@ -15,9 +15,9 @@ const USD_TIER5 = { student: 17, teacher: 22, admin: 25 };
 
 const pricingData = {
   default: USD_BASE,
-  tier3_4: { student: 5.1, teacher: 9, admin: 10.1 }, // USD equivalents
+  tier3_4: { student: 5.1, teacher: 9, admin: 10.1 },
   regional: {
-    ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true }, 
+    ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true },
     ZM: { student: 30, teacher: 75, admin: 105, teacher_free: true },
     TN: { student: 30, teacher: 75, admin: 105, teacher_free: true },
     LY: { student: 30, teacher: 75, admin: 105, teacher_free: true },
@@ -25,13 +25,13 @@ const pricingData = {
   },
 };
 
-// --- Local Overrides (expressed in USD equivalents, not raw GHS) ---
+// --- Local Overrides (expressed in USD equivalents) ---
 const LOCAL_OVERRIDES = {
-  GH: { 
+  GH: {
     currency: "GHS",
-    student: 1.25, 
-    teacher: 4.8, 
-    admin: 6.7,   
+    student: 1.25,
+    teacher: 4.8,
+    admin: 6.7,
   },
 };
 
@@ -95,6 +95,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
 
   if (["overseer", "global_overseer"].includes(role)) {
     return {
+      usdPrice: 0,
       ghsPrice: 0,
       localPrice: 0,
       currency: "GHS",
@@ -116,7 +117,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     usdPrice = pricingData.tier3_4[role] ?? usdPrice;
   }
 
-  // --- Regional pricing overrides ---
+  // --- Regional overrides ---
   if (pricingData.regional[countryCode]?.[role] != null) {
     usdPrice = pricingData.regional[countryCode][role];
     if (role === "teacher" && pricingData.regional[countryCode]?.teacher_free) {
@@ -165,16 +166,16 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   });
 
   return {
-  usdPrice,             // 🔑 include this
-  ghsPrice,             
-  localPrice: displayPrice, 
-  currency: displayCurrency,
-  displayPrice,
-  displayCurrency,
-};
-
+    usdPrice,       // ✅ now included
+    ghsPrice,
+    localPrice: displayPrice,
+    currency: displayCurrency,
+    displayPrice,
+    displayCurrency,
+  };
 }
 
 module.exports = { getUserPrice };
+
 
 
