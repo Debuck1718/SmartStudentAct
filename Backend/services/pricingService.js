@@ -1,71 +1,3 @@
-// services/pricingService.js
-const School = require("../models/School");
-const { getRate } = require("../utils/currencyConverter");
-const logger = require("../utils/logger");
-
-const schoolCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000;
-const rateCache = new Map();
-const RATE_TTL = 10 * 60 * 1000;
-
-// --- Ghana local overrides ---
-const GH_PRICES = { student: 15, teacher: 52, admin: 73 };
-
-// --- Regional African countries (excluding Ghana) ---
-const AFRICA_COUNTRIES_USD = ["ZA", "ZM", "TN", "LY", "MA"];
-const AFRICA_PRICES_USD = { student: 30, teacher: 75, admin: 105 };
-
-// --- Non-African countries (USD pricing) ---
-const NON_AFRICA_COUNTRIES_USD = ["US", "CA", "GB", "FR", "DE"];
-const NON_AFRICA_PRICES_USD = { student: 20, teacher: 35, admin: 40 };
-
-async function getCachedRate(from, to) {
-  const key = `${from}_${to}`;
-  const cached = rateCache.get(key);
-  if (cached && Date.now() - cached.timestamp < RATE_TTL) return cached.value;
-
-  const rate = await getRate(from, to);
-  rateCache.set(key, { value: rate, timestamp: Date.now() });
-  return rate;
-}
-
-async function getSchoolTier(schoolName) {
-  if (!schoolName) return null;
-  const key = schoolName.toLowerCase();
-  const cached = schoolCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) return cached.tier;
-
-  try {
-    const school = await School.findOne({ name: new RegExp(`^${schoolName}$`, "i") });
-    const tier = school?.tier || null;
-    schoolCache.set(key, { tier, timestamp: Date.now() });
-    return tier;
-  } catch (err) {
-    logger.error("Error fetching school tier:", err);
-    return null;
-  }
-}
-
-// --- Normalize schoolCountry only ---
-function normalizeCountry(schoolCountry) {
-  if (!schoolCountry) return null;
-  let code = schoolCountry.toString().trim().toUpperCase();
-  const NAME_TO_CODE = {
-    GHANA: "GH",
-    NIGERIA: "NG",
-    KENYA: "KE",
-    SOUTH_AFRICA: "ZA",
-    ZAMBIA: "ZM",
-    TANZANIA: "TZ",
-  };
-  return NAME_TO_CODE[code] || code;
-}
-
-function validateRole(role) {
-  const valid = ["student", "teacher", "admin"];
-  return valid.includes(role) ? role : "student";
-}
-
 async function getUserPrice(user, role, schoolName, schoolCountry) {
   if (!user) throw new Error("User data missing");
   role = validateRole(role?.toLowerCase() || "student");
@@ -129,9 +61,6 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
 
   return { ghsPrice, usdPrice, localPrice: displayPrice, currency: displayCurrency, displayPrice, displayCurrency, pricingType };
 }
-
-
-module.exports = { getUserPrice };
 
 
 
