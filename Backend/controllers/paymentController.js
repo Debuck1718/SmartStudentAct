@@ -39,13 +39,13 @@ async function initializePayment(req, res) {
       case "paystack":
         console.log("🚀 Initializing Paystack payment with:", {
           email: user.email,
-          localPrice,
-          forcedCurrency: "GHS",
+          amount: ghsPrice,
+          currency: "GHS",
         });
 
         paymentResponse = await initPaystackPayment({
           email: user.email,
-          amount: localPrice,   
+          amount: ghsPrice,
           currency: "GHS",
         });
         break;
@@ -53,13 +53,14 @@ async function initializePayment(req, res) {
       case "flutterwave":
         console.log("🚀 Initializing Flutterwave payment with:", {
           email: user.email,
-          localPrice,
+
+          amount: localPrice,
           currency,
         });
 
         paymentResponse = await initFlutterwavePayment({
           email: user.email,
-          amount: localPrice, 
+          amount: localPrice,
           currency,
         });
         break;
