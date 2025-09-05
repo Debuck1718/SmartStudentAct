@@ -9,13 +9,13 @@ const CACHE_TTL = 5 * 60 * 1000;
 const rateCache = new Map();
 const RATE_TTL = 10 * 60 * 1000;
 
+// --- USD ANCHOR PRICES ---
 const USD_BASE = { student: 10, teacher: 15, admin: 20 };
 const USD_TIER5 = { student: 17, teacher: 22, admin: 25 };
 
-
 const pricingData = {
   default: USD_BASE,
-  tier3_4: { student: 5.1, teacher: 9, admin: 10.1 }, 
+  tier3_4: { student: 5.1, teacher: 9, admin: 10.1 }, // USD equivalents
   regional: {
     ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true }, 
     ZM: { student: 30, teacher: 75, admin: 105, teacher_free: true },
@@ -25,9 +25,14 @@ const pricingData = {
   },
 };
 
-
+// --- Local Overrides (expressed in USD equivalents, not raw GHS) ---
 const LOCAL_OVERRIDES = {
-  GH: { currency: "GHS", student: 1.2, teacher: 4.8, admin: 7 },
+  GH: { 
+    currency: "GHS",
+    student: 1.79, // ≈ 15 GHS at ~8.39 rate
+    teacher: 5.96, // ≈ 50 GHS
+    admin: 8.35,   // ≈ 70 GHS
+  },
 };
 
 async function getCachedRate(from, to) {
@@ -88,7 +93,6 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   if (!user) throw new Error("User data missing");
   role = validateRole(role?.toLowerCase() || "student");
 
- 
   if (["overseer", "global_overseer"].includes(role)) {
     return {
       ghsPrice: 0,
@@ -102,17 +106,17 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   let tier = (await getSchoolTier(schoolName)) || 1;
   const countryCode = normalizeCountry(user, schoolCountry);
 
-
+  // --- Start with base USD price ---
   let usdPrice = USD_BASE[role] || 10;
 
- 
+  // --- Tier adjustments ---
   if (tier === 5) {
     usdPrice = USD_TIER5[role] ?? usdPrice;
   } else if (tier === 3 || tier === 4) {
     usdPrice = pricingData.tier3_4[role] ?? usdPrice;
   }
 
-  
+  // --- Regional pricing overrides ---
   if (pricingData.regional[countryCode]?.[role] != null) {
     usdPrice = pricingData.regional[countryCode][role];
     if (role === "teacher" && pricingData.regional[countryCode]?.teacher_free) {
@@ -120,17 +124,17 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     }
   }
 
-  
+  // --- Local overrides (expressed in USD equivalent) ---
   if (countryCode && LOCAL_OVERRIDES[countryCode]) {
     const override = LOCAL_OVERRIDES[countryCode];
     usdPrice = override[role] ?? usdPrice;
   }
 
-  
+  // --- Always compute GHS for Paystack ---
   const usdToGhsRate = await getCachedRate("USD", "GHS");
   const ghsPrice = +(usdPrice * usdToGhsRate).toFixed(2);
 
-  
+  // --- Display handling ---
   let displayPrice = usdPrice;
   let displayCurrency = "USD";
 
@@ -148,8 +152,20 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     }
   }
 
+  // --- Debug log ---
+  logger.info("Final price calculation", {
+    role,
+    usdPrice,
+    usdToGhsRate,
+    ghsPrice,
+    displayPrice,
+    displayCurrency,
+    countryCode,
+    tier,
+  });
+
   return {
-    ghsPrice, 
+    ghsPrice,            
     localPrice: displayPrice, 
     currency: displayCurrency,
     displayPrice,
@@ -158,4 +174,5 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
 }
 
 module.exports = { getUserPrice };
+
 
