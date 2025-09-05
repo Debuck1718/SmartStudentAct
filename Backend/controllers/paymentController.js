@@ -16,16 +16,16 @@ async function initializePayment(req, res) {
     const schoolName = user.schoolName || "";
     const schoolCountry = user.schoolCountry || "";
 
-    // ✅ Get computed price for the user
+    // --- Get computed price ---
     const priceDetails = await getUserPrice(user, userRole, schoolName, schoolCountry);
 
-    if (!priceDetails || typeof priceDetails.localPrice !== "number" || !priceDetails.currency) {
+    if (!priceDetails || typeof priceDetails.ghsPrice !== "number" || !priceDetails.currency) {
       return res.status(400).json({ success: false, message: "Pricing not available for this user." });
     }
 
-    const { ghsPrice, localPrice, currency, displayPrice, displayCurrency, pricingType } = priceDetails;
+    const { ghsPrice, usdPrice, currency, displayPrice, displayCurrency, pricingType } = priceDetails;
 
-    if (localPrice <= 0) {
+    if (ghsPrice <= 0) {
       return res.status(400).json({ success: false, message: "Invalid payment amount." });
     }
 
@@ -36,34 +36,38 @@ async function initializePayment(req, res) {
       case "paystack":
         console.log("🚀 Initializing Paystack payment with:", {
           email: user.email,
-          ghsAmount: ghsPrice,   // ✅ Use correct GH price
-          currency,               // ✅ "GHS"
+          ghsAmount: ghsPrice,
+          currency,
           pricingType,
         });
 
         paymentResponse = await initPaystackPayment({
           email: user.email,
-          ghsAmount: ghsPrice,   // ✅ Always use ghsPrice from pricing service
+          ghsAmount: ghsPrice, // ✅ Always use computed ghsPrice
         });
         break;
 
       case "flutterwave":
         console.log("🚀 Initializing Flutterwave payment with:", {
           email: user.email,
-          amount: localPrice,
+          amount: ghsPrice,
           currency,
           pricingType,
         });
 
         paymentResponse = await initFlutterwavePayment({
           email: user.email,
-          amount: localPrice,
+          amount: ghsPrice, // ✅ Use computed ghsPrice
           currency,
         });
         break;
 
       default:
         return res.status(400).json({ success: false, message: "Unsupported payment gateway." });
+    }
+
+    if (!paymentResponse) {
+      return res.status(500).json({ success: false, message: "Failed to initialize payment." });
     }
 
     return res.json({
@@ -80,6 +84,7 @@ async function initializePayment(req, res) {
   }
 }
 
+// --- Webhook handlers ---
 const handlePaystackWebhook = (req, res) => handleWebhook(req, res, "paystack");
 const handleFlutterwaveWebhook = (req, res) => handleWebhook(req, res, "flutterwave");
 
