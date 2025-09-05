@@ -3,21 +3,23 @@ const School = require('../models/School');
 const { getRate } = require('../utils/currencyConverter');
 const logger = require('../utils/logger');
 
-
 const schoolCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
 
-
 const rateCache = new Map();
-const RATE_TTL = 10 * 60 * 1000; 
+const RATE_TTL = 10 * 60 * 1000;
 
-async function getCachedRate(currency) {
-  const cached = rateCache.get(currency);
+
+async function getCachedRate(fromCurrency, toCurrency) {
+  const cacheKey = `${fromCurrency}_${toCurrency}`;
+  const cached = rateCache.get(cacheKey);
+
   if (cached && Date.now() - cached.timestamp < RATE_TTL) {
     return cached.value;
   }
-  const rate = await getRate(currency);
-  rateCache.set(currency, { value: rate, timestamp: Date.now() });
+
+  const rate = await getRate(fromCurrency, toCurrency);
+  rateCache.set(cacheKey, { value: rate, timestamp: Date.now() });
   return rate;
 }
 
@@ -62,7 +64,7 @@ const OUTSIDE_AFRICA_TIER5 = { student: 17, teacher: 22, admin: 25 };
 
 const pricingData = {
   default: AFRICA_BASE,
-  tier3_4: { student: 75, teacher: 150, admin: 150 },
+  tier3_4: { student: 70, teacher: 130, admin: 150 },
   regional: {
     ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true },
     ZM: { student: 30, teacher: 75, admin: 105, teacher_free: true },
@@ -103,7 +105,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
 
   role = validateRole(role?.toLowerCase() || "student");
 
- 
+  
   if (['overseer', 'global_overseer'].includes(role)) {
     return {
       ghsPrice: 0,
@@ -120,22 +122,23 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   const countryCode = normalizeCountry(user, schoolCountry);
   const isAfrica = countryCode && COUNTRY_CURRENCY_MAP[countryCode];
 
-
+  
   if (!isAfrica) {
     tier = (await getSchoolTier(schoolName)) || tier;
+
     const usdPrice =
       tier === 5
         ? OUTSIDE_AFRICA_TIER5[role] ?? OUTSIDE_AFRICA_BASE[role]
         : OUTSIDE_AFRICA_BASE[role];
 
-    const rate = await getCachedRate("GHS");
+    const rate = await getCachedRate("USD", "GHS"); 
     const ghsEquivalent = usdPrice * rate;
 
     return {
-      ghsPrice: parseFloat(ghsEquivalent.toFixed(2)),   
-      localPrice: parseFloat(ghsEquivalent.toFixed(2)), 
+      ghsPrice: parseFloat(ghsEquivalent.toFixed(2)),
+      localPrice: parseFloat(ghsEquivalent.toFixed(2)),
       currency: "GHS",
-      displayPrice: parseFloat(usdPrice.toFixed(2)),    
+      displayPrice: parseFloat(usdPrice.toFixed(2)),
       displayCurrency: "USD",
     };
   }
@@ -153,6 +156,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     };
   }
 
+ 
   tier = (await getSchoolTier(schoolName)) || tier;
 
   if (pricingData.regional[countryCode]?.[role] != null) {
@@ -168,8 +172,9 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   const currency = COUNTRY_CURRENCY_MAP[countryCode] || 'GHS';
   let localPrice = ghsPrice;
 
+
   if (currency !== 'GHS') {
-    const rate = await getCachedRate(currency);
+    const rate = await getCachedRate("GHS", currency);
     localPrice = ghsPrice * rate;
   }
 
@@ -177,10 +182,9 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     ghsPrice: parseFloat(ghsPrice.toFixed(2)),
     localPrice: parseFloat(localPrice.toFixed(2)),
     currency,
-    displayPrice: parseFloat(localPrice.toFixed(2)), 
+    displayPrice: parseFloat(localPrice.toFixed(2)),
     displayCurrency: currency,
   };
 }
 
 module.exports = { getUserPrice };
-

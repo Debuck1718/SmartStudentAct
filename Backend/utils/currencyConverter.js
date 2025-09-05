@@ -5,6 +5,12 @@ const apiKey = process.env.EXCHANGE_RATE_API_KEY;
 let ratesCache = { data: {}, timestamp: null };
 
 async function getRate(fromCurrency = "USD", toCurrency = "GHS") {
+  // ✅ Avoid unnecessary conversions
+  if (fromCurrency.toUpperCase() === toCurrency.toUpperCase()) {
+    console.log(`⚡ Skipping conversion: ${fromCurrency} → ${toCurrency} is the same.`);
+    return 1;
+  }
+
   if (!apiKey) {
     console.error("❌ EXCHANGE_RATE_API_KEY is not defined in environment variables.");
     return null;
@@ -44,4 +50,5 @@ async function getRate(fromCurrency = "USD", toCurrency = "GHS") {
 }
 
 module.exports = { getRate };
+
 
