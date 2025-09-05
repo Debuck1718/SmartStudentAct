@@ -208,7 +208,7 @@ module.exports = (eventBus) => {
     }
   });
 
-// --- Login ---
+
 publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -222,7 +222,7 @@ publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (re
     let subscriptionActive = false;
     let trialActive = false;
 
-    // --- Check subscription ---
+  
     if (user.subscription_status === "active" && user.payment_date) {
       let expiry = null;
 
@@ -241,9 +241,9 @@ publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (re
       }
     }
 
-    // --- Check trial ---
-    if (user.is_on_trial && user.trial_ends_at) {
-      trialActive = now < new Date(user.trial_ends_at);
+
+    if (user.is_on_trial && user.trial_end_date) {
+      trialActive = now < new Date(user.trial_end_date);
 
       if (!trialActive) {
         user.is_on_trial = false;
@@ -251,16 +251,16 @@ publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (re
       }
     }
 
-    // --- Determine access ---
+  
     const hasAccess = subscriptionActive || trialActive;
 
-    // --- Generate tokens ---
+    
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
     await User.findByIdAndUpdate(user._id, { refreshToken });
     setAuthCookies(res, accessToken, refreshToken);
 
-    // --- Determine redirect URL ---
+
     const redirectUrl = getRedirectUrl(user, hasAccess);
 
     res.json({
@@ -281,18 +281,18 @@ publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (re
   }
 });
 
-// --- Helper function for redirect ---
+
 function getRedirectUrl(user, hasAccess) {
   const { role } = user;
 
-  // Roles that bypass trial/subscription
+ 
   const bypassRoles = ["global_overseer", "overseer"];
 
   if (bypassRoles.includes(role)) {
     return redirectPaths[role] || redirectPaths.default;
   }
 
-  // Regular users: check access
+ 
   if (redirectPaths[role]) {
     return hasAccess ? redirectPaths[role] : redirectPaths.payment;
   }

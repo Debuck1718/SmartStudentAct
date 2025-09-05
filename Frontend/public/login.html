@@ -19,7 +19,7 @@
 
   <div class="w-full max-w-md bg-white shadow-md rounded-2xl p-8">
 
-    <!-- Language Selection -->
+   
     <div class="mb-4 text-right">
       <select id="language-select" class="border border-gray-300 rounded-md p-2 text-sm">
         <option value="en">English</option>
@@ -178,7 +178,7 @@ const translations = {
   }
 };
 
-// --- Update UI texts based on language ---
+
 function applyTranslations(lang) {
   currentLang = lang;
   document.querySelectorAll("[data-i18n]").forEach(el => {
@@ -191,18 +191,18 @@ function applyTranslations(lang) {
   });
 }
 
-// --- Initial language setup ---
+
 applyTranslations(currentLang);
 langSelect.addEventListener("change", e => applyTranslations(e.target.value));
 
-// --- Password toggle ---
+
 passwordToggle.addEventListener("click", () => {
   showPassword = !showPassword;
   passwordInput.type = showPassword ? "text" : "password";
   passwordToggle.textContent = translations[currentLang].show;
 });
 
-// --- Banner helper ---
+
 function showBanner(message, type='error') {
   bannerEl.textContent = message;
   bannerEl.classList.remove("hidden","bg-red-100","text-red-700","bg-green-100","text-green-700","bg-gray-100","text-gray-700");
@@ -212,7 +212,7 @@ function showBanner(message, type='error') {
   bannerEl.classList.remove("hidden");
 }
 
-// --- Handle login ---
+
 async function handleLogin() {
   const email = emailInput.value.trim().toLowerCase();
   const password = passwordInput.value;
