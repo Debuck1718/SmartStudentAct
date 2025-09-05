@@ -1,4 +1,4 @@
-// controllers/paymentController.js
+// Corrected controllers/paymentController.js
 const { getUserPrice } = require("../services/pricingService");
 const { initPaystackPayment } = require("../services/paystackService");
 const { initFlutterwavePayment } = require("../services/flutterwaveService");
@@ -17,7 +17,6 @@ async function initializePayment(req, res) {
     const schoolName = user.schoolName || "";
     const schoolCountry = user.schoolCountry || "";
 
-    // 🔑 Get price details (must now include usdPrice from pricingService)
     const priceDetails = await getUserPrice(user, userRole, schoolName, schoolCountry);
 
     if (!priceDetails || typeof priceDetails.localPrice !== "number" || !priceDetails.currency) {
@@ -27,12 +26,11 @@ async function initializePayment(req, res) {
       });
     }
 
-    const { ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
+    const { usdPrice, ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
 
     if (localPrice <= 0) {
       return res.status(400).json({ success: false, message: "Invalid payment amount." });
     }
-
 
     const gateway = paymentMethod || "paystack";
     let paymentResponse;
@@ -41,14 +39,14 @@ async function initializePayment(req, res) {
       case "paystack":
         console.log("🚀 Initializing Paystack payment with:", {
           email: user.email,
-          amount: ghsPrice,
-          currency: "GHS",
+          amount: usdPrice, // ✅ FIX: Use USD price here
+          currency: "USD", // ✅ FIX: Set currency to USD
         });
 
         paymentResponse = await initPaystackPayment({
           email: user.email,
-          amount: ghsPrice, // ✅ FIX: Use ghsPrice for Paystack, as it's the required currency for GH
-          currency: "GHS",
+          amount: usdPrice, // ✅ FIX: Use USD price here
+          currency: "USD", // ✅ FIX: Set currency to USD
         });
         break;
 
@@ -61,7 +59,7 @@ async function initializePayment(req, res) {
 
         paymentResponse = await initFlutterwavePayment({
           email: user.email,
-          amount: localPrice, 
+          amount: localPrice,
           currency,
         });
         break;
@@ -86,13 +84,4 @@ async function initializePayment(req, res) {
     return res.status(500).json({ success: false, error: err.message });
   }
 }
-
-const handlePaystackWebhook = (req, res) => handleWebhook(req, res, "paystack");
-const handleFlutterwaveWebhook = (req, res) => handleWebhook(req, res, "flutterwave");
-
-module.exports = {
-  initializePayment,
-  handlePaystackWebhook,
-  handleFlutterwaveWebhook,
-};
 

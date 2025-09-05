@@ -17,11 +17,11 @@ const pricingData = {
   default: USD_BASE,
   tier3_4: { student: 5.1, teacher: 9, admin: 10.1 },
   regional: {
-    ZA: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-    ZM: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-    TN: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-    LY: { student: 30, teacher: 75, admin: 105, teacher_free: true },
-    MA: { student: 45, teacher: 90, admin: 150, teacher_free: true },
+    ZA: { student: 3, teacher: 7, admin: 10, teacher_free: true },
+    ZM: { student: 3, teacher: 7, admin: 10, teacher_free: true },
+    TN: { student: 3, teacher: 7, admin: 10, teacher_free: true },
+    LY: { student: 3, teacher: 7, admin: 10, teacher_free: true },
+    MA: { student: 4, teacher: 9, admin: 15, teacher_free: true },
   },
 };
 
