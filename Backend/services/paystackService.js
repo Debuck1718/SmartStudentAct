@@ -10,29 +10,29 @@ async function initPaystackPayment({ email, amount, currency }) {
       throw new Error("Missing required Paystack payment parameters.");
     }
 
+    
     const amountInSubunits = Math.round(amount * 100);
 
     console.log("🔎 Sending to Paystack:", {
       email,
       amount,
       amountInSubunits,
-      forcedCurrency: currency,
+      forcedCurrency: "GHS", 
     });
 
     const response = await paystack.transaction.initialize({
       email,
       amount: amountInSubunits,
-      currency,
+      currency: "GHS", 
     });
 
-    return response.data;
-  } catch (err) {
-    console.error("❌ Paystack init error:", err.message);
-    return null;
+    return response;
+  } catch (error) {
+    console.error("❌ Error initiating Paystack payment:", error.message);
+    throw error;
   }
 }
 
 module.exports = { initPaystackPayment };
-
 
 
