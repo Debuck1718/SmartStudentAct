@@ -75,7 +75,17 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   }
 
   const tier = (await getSchoolTier(schoolName)) || 1;
+
+  // Ensure schoolCountry is present
+  if (!schoolCountry) {
+    logger.warn("School country missing for user, defaulting to GH");
+    schoolCountry = "GH";
+  }
+
   const countryCode = normalizeCountry(schoolCountry);
+  if (!countryCode) {
+    throw new Error(`No pricing available for country code: ${schoolCountry}`);
+  }
 
   let ghsPrice = 0;
   let usdPrice = 0;
@@ -108,7 +118,6 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     throw new Error(`No pricing available for country code: ${countryCode}`);
   }
 
-  // --- Convert GHS to USD if not already set ---
   if (!usdPrice) {
     const ghsToUsdRate = await getCachedRate("GHS", "USD");
     usdPrice = +(ghsPrice * ghsToUsdRate).toFixed(2);
@@ -120,6 +129,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
 
   return { ghsPrice, usdPrice, localPrice: displayPrice, currency: displayCurrency, displayPrice, displayCurrency, pricingType };
 }
+
 
 module.exports = { getUserPrice };
 
