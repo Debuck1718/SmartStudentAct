@@ -203,12 +203,12 @@ const paymentSchema = Joi.object({
 
   amount: Joi.number()
     .positive()
-    .required(),
+    ,
 
   currency: Joi.string()
     .uppercase()
     .length(3) 
-    .required(),
+   ,
 
   phoneNumber: Joi.string()
     .allow(null, '') 

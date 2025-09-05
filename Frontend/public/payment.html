@@ -35,7 +35,6 @@
     </style>
   </head>
   <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-    <!-- Language Selector -->
     <div class="absolute top-4 right-4 z-20">
       <select
         id="language-selector"
@@ -50,7 +49,6 @@
       </select>
     </div>
 
-    <!-- Alert Modal -->
     <div id="alert-modal" class="modal">
       <div class="modal-content shadow-lg">
         <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
@@ -65,7 +63,6 @@
       </div>
     </div>
 
-    <!-- Payment Card -->
     <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-gray-200">
       <svg
         class="w-16 h-16 mx-auto text-yellow-500"
@@ -87,7 +84,6 @@
         Your trial period has expired. Please upgrade to continue enjoying all features.
       </p>
 
-      <!-- Price -->
       <div id="payment-details" class="mt-6 p-4 bg-blue-50 rounded-xl">
         <p class="text-sm text-blue-800 font-semibold" data-i18n="subscriptionFee">
           Subscription Fee
@@ -95,7 +91,6 @@
         <p id="amount-text" class="text-2xl font-bold text-blue-900 mt-1">Loading...</p>
       </div>
 
-      <!-- Pay button -->
       <button
         id="payButton"
         class="w-full mt-6 py-3 px-6 rounded-full bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -109,128 +104,128 @@
     </div>
 
     <script>
-       const translations = {
-    en: {
-      pageTitle: "Upgrade Your Account",
-      trialEndedTitle: "Trial Ended",
-      trialEndedMessage:
-        "Your trial period has expired. Please upgrade to continue enjoying all features.",
-      subscriptionFee: "Subscription Fee",
-      payButton: "Proceed to Payment",
-      loadingPrice: "Loading price...",
-      initiatingPayment: "Initiating payment...",
-      verifyingPayment: "Verifying payment...",
-      paymentSuccess: "Payment successful!",
-      subscriptionActive: "Your subscription is now active.",
-      paymentCanceled: "Payment canceled.",
-      paymentError: "Payment error",
-      verificationFailed: "Payment verification failed",
-      error: "Error",
-      networkError: "Network error. Please try again.",
-      okButton: "OK",
-      phoneNumberLabel: "Phone Number",
-    },
-    fr: {
-      pageTitle: "Mettez à niveau votre compte",
-      trialEndedTitle: "Essai terminé",
-      trialEndedMessage:
-        "Votre période d'essai est terminée. Veuillez passer à la version payante pour continuer.",
-      subscriptionFee: "Frais d'abonnement",
-      payButton: "Procéder au paiement",
-      loadingPrice: "Chargement du prix...",
-      initiatingPayment: "Initialisation du paiement...",
-      verifyingPayment: "Vérification du paiement...",
-      paymentSuccess: "Paiement réussi !",
-      subscriptionActive: "Votre abonnement est maintenant actif.",
-      paymentCanceled: "Paiement annulé.",
-      paymentError: "Erreur de paiement",
-      verificationFailed: "Échec de la vérification du paiement",
-      error: "Erreur",
-      networkError: "Erreur réseau. Veuillez réessayer.",
-      okButton: "OK",
-      phoneNumberLabel: "Numéro de téléphone",
-    },
-    es: {
-      pageTitle: "Actualiza tu cuenta",
-      trialEndedTitle: "Prueba finalizada",
-      trialEndedMessage:
-        "Tu período de prueba ha terminado. Por favor, actualiza para seguir disfrutando de todas las funciones.",
-      subscriptionFee: "Tarifa de suscripción",
-      payButton: "Proceder al pago",
-      loadingPrice: "Cargando precio...",
-      initiatingPayment: "Iniciando pago...",
-      verifyingPayment: "Verificando pago...",
-      paymentSuccess: "¡Pago exitoso!",
-      subscriptionActive: "Tu suscripción ahora está activa.",
-      paymentCanceled: "Pago cancelado.",
-      paymentError: "Error de pago",
-      verificationFailed: "Falló la verificación del pago",
-      error: "Error",
-      networkError: "Error de red. Inténtalo de nuevo.",
-      okButton: "OK",
-      phoneNumberLabel: "Número de teléfono",
-    },
-    tr: {
-      pageTitle: "Hesabınızı Yükseltin",
-      trialEndedTitle: "Deneme Süresi Sona Erdi",
-      trialEndedMessage:
-        "Deneme süreniz sona erdi. Tüm özellikleri kullanmaya devam etmek için yükseltin.",
-      subscriptionFee: "Abonelik Ücreti",
-      payButton: "Ödemeye Devam Et",
-      loadingPrice: "Fiyat yükleniyor...",
-      initiatingPayment: "Ödeme başlatılıyor...",
-      verifyingPayment: "Ödeme doğrulanıyor...",
-      paymentSuccess: "Ödeme başarılı!",
-      subscriptionActive: "Aboneliğiniz artık aktif.",
-      paymentCanceled: "Ödeme iptal edildi.",
-      paymentError: "Ödeme hatası",
-      verificationFailed: "Ödeme doğrulaması başarısız",
-      error: "Hata",
-      networkError: "Ağ hatası. Lütfen tekrar deneyin.",
-      okButton: "Tamam",
-      phoneNumberLabel: "Telefon numarası",
-    },
-    ar: {
-      pageTitle: "قم بترقية حسابك",
-      trialEndedTitle: "انتهت الفترة التجريبية",
-      trialEndedMessage:
-        "انتهت فترة التجربة الخاصة بك. يرجى الترقية للاستمرار في استخدام جميع الميزات.",
-      subscriptionFee: "رسوم الاشتراك",
-      payButton: "المتابعة للدفع",
-      loadingPrice: "جاري تحميل السعر...",
-      initiatingPayment: "جاري بدء الدفع...",
-      verifyingPayment: "جاري التحقق من الدفع...",
-      paymentSuccess: "تم الدفع بنجاح!",
-      subscriptionActive: "اشتراكك الآن مفعل.",
-      paymentCanceled: "تم إلغاء الدفع.",
-      paymentError: "خطأ في الدفع",
-      verificationFailed: "فشل التحقق من الدفع",
-      error: "خطأ",
-      networkError: "خطأ في الشبكة. حاول مرة أخرى.",
-      okButton: "حسناً",
-      phoneNumberLabel: "رقم الهاتف",
-    },
-    ru: {
-      pageTitle: "Обновите свой аккаунт",
-      trialEndedTitle: "Пробный период завершен",
-      trialEndedMessage:
-        "Ваш пробный период закончился. Пожалуйста, обновите аккаунт, чтобы продолжить пользоваться всеми функциями.",
-      subscriptionFee: "Стоимость подписки",
-      payButton: "Перейти к оплате",
-      loadingPrice: "Загрузка цены...",
-      initiatingPayment: "Инициализация оплаты...",
-      verifyingPayment: "Проверка оплаты...",
-      paymentSuccess: "Оплата прошла успешно!",
-      subscriptionActive: "Ваша подписка активирована.",
-      paymentCanceled: "Оплата отменена.",
-      paymentError: "Ошибка оплаты",
-      verificationFailed: "Не удалось проверить оплату",
-      error: "Ошибка",
-      networkError: "Ошибка сети. Пожалуйста, попробуйте снова.",
-      okButton: "ОК",
-      phoneNumberLabel: "Номер телефона",
-    },
-  };
+      const translations = {
+        en: {
+          pageTitle: "Upgrade Your Account",
+          trialEndedTitle: "Trial Ended",
+          trialEndedMessage:
+            "Your trial period has expired. Please upgrade to continue enjoying all features.",
+          subscriptionFee: "Subscription Fee",
+          payButton: "Proceed to Payment",
+          loadingPrice: "Loading price...",
+          initiatingPayment: "Initiating payment...",
+          verifyingPayment: "Verifying payment...",
+          paymentSuccess: "Payment successful!",
+          subscriptionActive: "Your subscription is now active.",
+          paymentCanceled: "Payment canceled.",
+          paymentError: "Payment error",
+          verificationFailed: "Payment verification failed",
+          error: "Error",
+          networkError: "Network error. Please try again.",
+          okButton: "OK",
+          phoneNumberLabel: "Phone Number",
+        },
+        fr: {
+          pageTitle: "Mettez à niveau votre compte",
+          trialEndedTitle: "Essai terminé",
+          trialEndedMessage:
+            "Votre période d'essai est terminée. Veuillez passer à la version payante pour continuer.",
+          subscriptionFee: "Frais d'abonnement",
+          payButton: "Procéder au paiement",
+          loadingPrice: "Chargement du prix...",
+          initiatingPayment: "Initialisation du paiement...",
+          verifyingPayment: "Vérification du paiement...",
+          paymentSuccess: "Paiement réussi !",
+          subscriptionActive: "Votre abonnement est maintenant actif.",
+          paymentCanceled: "Paiement annulé.",
+          paymentError: "Erreur de paiement",
+          verificationFailed: "Échec de la vérification du paiement",
+          error: "Erreur",
+          networkError: "Erreur réseau. Veuillez réessayer.",
+          okButton: "OK",
+          phoneNumberLabel: "Numéro de téléphone",
+        },
+        es: {
+          pageTitle: "Actualiza tu cuenta",
+          trialEndedTitle: "Prueba finalizada",
+          trialEndedMessage:
+            "Tu período de prueba ha terminado. Por favor, actualiza para seguir disfrutando de todas las funciones.",
+          subscriptionFee: "Tarifa de suscripción",
+          payButton: "Proceder al pago",
+          loadingPrice: "Cargando precio...",
+          initiatingPayment: "Iniciando pago...",
+          verifyingPayment: "Verificando pago...",
+          paymentSuccess: "¡Pago exitoso!",
+          subscriptionActive: "Tu suscripción ahora está activa.",
+          paymentCanceled: "Pago cancelado.",
+          paymentError: "Error de pago",
+          verificationFailed: "Falló la verificación del pago",
+          error: "Error",
+          networkError: "Error de red. Inténtalo de nuevo.",
+          okButton: "OK",
+          phoneNumberLabel: "Número de teléfono",
+        },
+        tr: {
+          pageTitle: "Hesabınızı Yükseltin",
+          trialEndedTitle: "Deneme Süresi Sona Erdi",
+          trialEndedMessage:
+            "Deneme süreniz sona erdi. Tüm özellikleri kullanmaya devam etmek için yükseltin.",
+          subscriptionFee: "Abonelik Ücreti",
+          payButton: "Ödemeye Devam Et",
+          loadingPrice: "Fiyat yükleniyor...",
+          initiatingPayment: "Ödeme başlatılıyor...",
+          verifyingPayment: "Ödeme doğrulanıyor...",
+          paymentSuccess: "Ödeme başarılı!",
+          subscriptionActive: "Aboneliğiniz artık aktif.",
+          paymentCanceled: "Ödeme iptal edildi.",
+          paymentError: "Ödeme hatası",
+          verificationFailed: "Ödeme doğrulaması başarısız",
+          error: "Hata",
+          networkError: "Ağ hatası. Lütfen tekrar deneyin.",
+          okButton: "Tamam",
+          phoneNumberLabel: "Telefon numarası",
+        },
+        ar: {
+          pageTitle: "قم بترقية حسابك",
+          trialEndedTitle: "انتهت الفترة التجريبية",
+          trialEndedMessage:
+            "انتهت فترة التجربة الخاصة بك. يرجى الترقية للاستمرار في استخدام جميع الميزات.",
+          subscriptionFee: "رسوم الاشتراك",
+          payButton: "المتابعة للدفع",
+          loadingPrice: "جاري تحميل السعر...",
+          initiatingPayment: "جاري بدء الدفع...",
+          verifyingPayment: "جاري التحقق من الدفع...",
+          paymentSuccess: "تم الدفع بنجاح!",
+          subscriptionActive: "اشتراكك الآن مفعل.",
+          paymentCanceled: "تم إلغاء الدفع.",
+          paymentError: "خطأ في الدفع",
+          verificationFailed: "فشل التحقق من الدفع",
+          error: "خطأ",
+          networkError: "خطأ في الشبكة. حاول مرة أخرى.",
+          okButton: "حسناً",
+          phoneNumberLabel: "رقم الهاتف",
+        },
+        ru: {
+          pageTitle: "Обновите свой аккаунт",
+          trialEndedTitle: "Пробный период завершен",
+          trialEndedMessage:
+            "Ваш пробный период закончился. Пожалуйста, обновите аккаунт, чтобы продолжить пользоваться всеми функциями.",
+          subscriptionFee: "Стоимость подписки",
+          payButton: "Перейти к оплате",
+          loadingPrice: "Загрузка цены...",
+          initiatingPayment: "Инициализация оплаты...",
+          verifyingPayment: "Проверка оплаты...",
+          paymentSuccess: "Оплата прошла успешно!",
+          subscriptionActive: "Ваша подписка активирована.",
+          paymentCanceled: "Оплата отменена.",
+          paymentError: "Ошибка оплаты",
+          verificationFailed: "Не удалось проверить оплату",
+          error: "Ошибка",
+          networkError: "Ошибка сети. Пожалуйста, попробуйте снова.",
+          okButton: "ОК",
+          phoneNumberLabel: "Номер телефона",
+        },
+      };
       const API_BASE_URL = "https://smartstudentact.onrender.com/api";
 
       const payButton = document.getElementById("payButton");
@@ -313,37 +308,36 @@
       }
 
       async function initiatePayment() {
-  const lang = languageSelector.value;
-  showLoading(translations[lang].initiatingPayment);
+        const lang = languageSelector.value;
+        showLoading(translations[lang].initiatingPayment);
 
-  try {
-    const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
-      method: "POST",
-      body: JSON.stringify({
-        gateway: "paystack",
-        email: paymentEmail,       
-        amount: finalAmount,       
-        currency: finalCurrency    
-      }),
-    });
+        try {
+          // ✅ FIX: Remove the amount from the request body.
+          // The backend should calculate and use its own trusted price.
+          const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
+            method: "POST",
+            body: JSON.stringify({
+              gateway: "paystack",
+              email: paymentEmail,
+            }),
+          });
 
-    const paymentResponse = await initRes.json();
-    console.log("Backend response for payment:", paymentResponse);
+          const paymentResponse = await initRes.json();
+          console.log("Backend response for payment:", paymentResponse);
 
-    if (!paymentResponse.success || !paymentResponse.paymentData?.status) {
-      throw new Error(paymentResponse.error || "Payment initialization failed");
-    }
+          if (!paymentResponse.success || !paymentResponse.paymentData?.status) {
+            throw new Error(paymentResponse.error || "Payment initialization failed");
+          }
 
-    const checkoutUrl = paymentResponse.paymentData.data.authorization_url;
-    window.location.href = checkoutUrl;
-  } catch (e) {
-    console.error("initiatePayment error:", e);
-    messageDiv.innerHTML = `<p class="text-red-600">${translations[lang].error}: ${e.message}</p>`;
-    showAlert(translations[lang].paymentError, e.message);
-    hideLoading();
-  }
-}
-
+          const checkoutUrl = paymentResponse.paymentData.data.authorization_url;
+          window.location.href = checkoutUrl;
+        } catch (e) {
+          console.error("initiatePayment error:", e);
+          messageDiv.innerHTML = `<p class="text-red-600">${translations[lang].error}: ${e.message}</p>`;
+          showAlert(translations[lang].paymentError, e.message);
+          hideLoading();
+        }
+      }
 
       document.addEventListener("DOMContentLoaded", async () => {
         const userLang = navigator.language.split("-")[0];
