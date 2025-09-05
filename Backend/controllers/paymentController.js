@@ -45,7 +45,7 @@ async function initializePayment(req, res) {
 
         paymentResponse = await initPaystackPayment({
           email: user.email,
-          amount: ghsPrice,   // ✅ Always use Ghanaian base price
+          amount: ghsPrice,   
           currency: "GHS",
         });
         break;
@@ -59,7 +59,7 @@ async function initializePayment(req, res) {
 
         paymentResponse = await initFlutterwavePayment({
           email: user.email,
-          amount: localPrice, // ✅ Use local currency pricing
+          amount: localPrice, 
           currency,
         });
         break;
