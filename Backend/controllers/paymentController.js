@@ -1,4 +1,3 @@
-// Corrected controllers/paymentController.js
 const { getUserPrice } = require("../services/pricingService");
 const { initPaystackPayment } = require("../services/paystackService");
 const { initFlutterwavePayment } = require("../services/flutterwaveService");
@@ -26,7 +25,7 @@ async function initializePayment(req, res) {
       });
     }
 
-    const { usdPrice, ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
+    const { ghsPrice, localPrice, currency, displayPrice, displayCurrency } = priceDetails;
 
     if (localPrice <= 0) {
       return res.status(400).json({ success: false, message: "Invalid payment amount." });
@@ -39,14 +38,13 @@ async function initializePayment(req, res) {
       case "paystack":
         console.log("🚀 Initializing Paystack payment with:", {
           email: user.email,
-          amount: usdPrice, // ✅ FIX: Use USD price here
-          currency: "USD", // ✅ FIX: Set currency to USD
+          ghsPrice,
+          currency: "GHS",
         });
 
         paymentResponse = await initPaystackPayment({
           email: user.email,
-          amount: usdPrice, // ✅ FIX: Use USD price here
-          currency: "USD", // ✅ FIX: Set currency to USD
+          ghsAmount: ghsPrice, 
         });
         break;
 
@@ -93,4 +91,5 @@ module.exports = {
   handlePaystackWebhook,
   handleFlutterwaveWebhook,
 };
+
 
