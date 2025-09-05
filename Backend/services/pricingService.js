@@ -29,9 +29,9 @@ const pricingData = {
 const LOCAL_OVERRIDES = {
   GH: { 
     currency: "GHS",
-    student: 1.79, // ≈ 15 GHS at ~8.39 rate
-    teacher: 5.96, // ≈ 50 GHS
-    admin: 8.35,   // ≈ 70 GHS
+    student: 1.25, 
+    teacher: 4.8, 
+    admin: 6.7,   
   },
 };
 
@@ -107,7 +107,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   const countryCode = normalizeCountry(user, schoolCountry);
 
   // --- Start with base USD price ---
-  let usdPrice = USD_BASE[role] || 10;
+  let usdPrice = USD_BASE[role] || 1.25;
 
   // --- Tier adjustments ---
   if (tier === 5) {
