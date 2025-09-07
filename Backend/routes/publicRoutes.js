@@ -48,7 +48,7 @@ module.exports = (eventBus) => {
     default: "/login.html",
   };
 
-  // --- Signup OTP schema ---
+ 
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
     email: Joi.string().email().required(),
@@ -113,7 +113,7 @@ module.exports = (eventBus) => {
     next();
   };
 
-  // --- Signup OTP route ---
+  
   publicRouter.post(
     "/users/signup-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -140,14 +140,13 @@ module.exports = (eventBus) => {
         const existingUser = await User.findOne({ email });
         const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // --- If user exists, send OTP ---
+       
         if (existingUser) {
           const otpToken = jwt.sign({ email, code }, JWT_SECRET, { expiresIn: "10m" });
           await sendOTPEmail(email, firstname, code);
           return res.json({ status: "success", message: "OTP sent to existing user.", otpToken });
         }
 
-        // --- Hash password ---
         const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
         const temporaryUserId = crypto.randomUUID();
 
@@ -187,77 +186,95 @@ module.exports = (eventBus) => {
     }
   );
 
-  // --- Verify OTP route ---
-  publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
-    const { code, email, password, otpToken } = req.body;
-    try {
-      const decoded = jwt.verify(otpToken, JWT_SECRET);
 
-      if (decoded.email !== email || decoded.code !== code) {
-        return res.status(400).json({ message: "Invalid email or OTP." });
-      }
+publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
+  const { code, email, password, otpToken } = req.body;
 
-      let user = await User.findOne({ email });
+  try {
+   
+    const decoded = jwt.verify(otpToken, JWT_SECRET);
+    logger.info("Decoded OTP payload:", decoded);
 
-      if (user) {
-        const isMatch = user.password ? await bcrypt.compare(password, user.password) : false;
-        if (!isMatch) {
-          user.password = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-          await user.save();
-        }
-
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-        user.refreshToken = refreshToken;
-        await user.save();
-
-        return res.status(200).json({ status: "success", message: "User verified.", redirectUrl: getRedirectUrl(user, true) });
-      } else {
-        const now = new Date();
-        const trialDurationDays = 30;
-        const trialEndAt = new Date(now.getTime() + trialDurationDays * 24 * 60 * 60 * 1000);
-
-        const newUser = new User({
-          _id: decoded.temporaryUserId,
-          firstname: decoded.firstname,
-          lastname: decoded.lastname,
-          email: decoded.email,
-          phone: decoded.phone,
-          password: decoded.passwordHash,
-          verified: true,
-          role: decoded.occupation,
-          occupation: decoded.occupation,
-          educationLevel: decoded.educationLevel,
-          grade: decoded.grade,
-          schoolName: decoded.schoolName,
-          schoolCountry: decoded.schoolCountry,
-          teacherGrade: decoded.teacherGrade,
-          teacherSubject: decoded.teacherSubject,
-          is_on_trial: true,
-          trial_start_at: now,
-          trial_end_at: trialEndAt,
-          subscription_status: "inactive",
-        });
-
-        await newUser.save();
-
-        const accessToken = generateAccessToken(newUser);
-        const refreshToken = generateRefreshToken(newUser);
-        newUser.refreshToken = refreshToken;
-        await newUser.save();
-
-        setAuthCookies(res, accessToken, refreshToken);
-
-        sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
-
-        return res.status(201).json({ status: "success", message: "User created & verified.", redirectUrl: getRedirectUrl(newUser, true) });
-      }
-    } catch (err) {
-      logger.error("❌ Verify-OTP error:", err);
-      if (err.name === "TokenExpiredError") return res.status(400).json({ message: "OTP expired." });
-      return res.status(500).json({ message: "OTP verification failed." });
+    
+    if (decoded.email !== email || decoded.code !== code) {
+      return res.status(400).json({ message: "Invalid email or OTP." });
     }
-  });
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      const isMatch = user.password ? await bcrypt.compare(password, user.password) : false;
+      if (!isMatch) {
+        user.password = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+        await user.save();
+      }
+
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+      user.refreshToken = refreshToken;
+      await user.save();
+
+      return res.status(200).json({
+        status: "success",
+        message: "User verified.",
+        redirectUrl: getRedirectUrl(user, true),
+      });
+    } else {
+   
+      const now = new Date();
+      const trialDurationDays = 30;
+      const trialEndAt = new Date(now.getTime() + trialDurationDays * 24 * 60 * 60 * 1000);
+
+      const newUser = new User({
+        _id: decoded.temporaryUserId,
+        firstname: decoded.firstname || "",
+        lastname: decoded.lastname || "",
+        email: decoded.email,
+        phone: decoded.phone || "",
+        password: decoded.passwordHash, 
+        verified: true,
+        role: decoded.occupation || "student",
+        occupation: decoded.occupation || "student",
+        educationLevel: decoded.educationLevel || "",
+        grade: decoded.grade || "",
+        schoolName: decoded.schoolName || "",
+        schoolCountry: decoded.schoolCountry || "",
+        teacherGrade: decoded.teacherGrade || "",
+        teacherSubject: decoded.teacherSubject || "",
+        is_on_trial: true,
+        trial_start_at: now,
+        trial_end_at: trialEndAt,
+        subscription_status: "inactive",
+      });
+
+      await newUser.save();
+
+      const accessToken = generateAccessToken(newUser);
+      const refreshToken = generateRefreshToken(newUser);
+      newUser.refreshToken = refreshToken;
+      await newUser.save();
+
+      setAuthCookies(res, accessToken, refreshToken);
+
+      sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
+
+      return res.status(201).json({
+        status: "success",
+        message: "User created & verified.",
+        redirectUrl: getRedirectUrl(newUser, true),
+      });
+    }
+  } catch (err) {
+    logger.error("❌ Verify-OTP error:", err);
+
+    if (err.name === "TokenExpiredError") {
+      return res.status(400).json({ message: "OTP expired." });
+    }
+
+    return res.status(500).json({ message: "OTP verification failed." });
+  }
+});
+
 
 
 publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
