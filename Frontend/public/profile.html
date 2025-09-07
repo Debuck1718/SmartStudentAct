@@ -73,7 +73,7 @@
         </div>
       </section>
 
-      
+      <!-- Personal Information -->
       <section class="space-y-4">
         <h2 class="text-xl font-semibold text-blue-700 border-b pb-2" data-i18n="personalInfoSection">Personal Information</h2>
         <div class="grid md:grid-cols-2 gap-6">
@@ -100,23 +100,20 @@
         </div>
       </section>
 
-    
+      <!-- Role specific sections -->
       <section id="student-section" class="space-y-4 hidden">
         <h3 data-i18n="academicDetailsSection" class="text-lg font-semibold text-gray-800 border-b pb-2">Academic Details</h3>
-      
       </section>
 
       <section id="teacher-section" class="space-y-4 hidden">
         <h3 data-i18n="professionalDetailsSection" class="text-lg font-semibold text-gray-800 border-b pb-2">Professional Details</h3>
-       
       </section>
 
       <section id="admin-section" class="space-y-4 hidden">
         <h3 data-i18n="adminSchoolDetailsSection" class="text-lg font-semibold text-gray-800 border-b pb-2">Admin School Details</h3>
-
       </section>
 
-      
+      <!-- Save -->
       <div class="pt-2">
         <button id="save" type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
           <span data-i18n="saveChangesButton">Save Profile Changes</span>
@@ -130,7 +127,7 @@
     </form>
   </main>
 
-  
+  <!-- Toast -->
   <div id="toast" class="message-box"></div>
 
   <script>
@@ -146,12 +143,12 @@
       setTimeout(() => box.classList.remove("show"), 2600);
     };
 
+    // Load Profile
     async function loadProfile() {
       try {
         const res = await fetch(`${API_BASE_URL}/profile`, { credentials: "include" });
         if (!res.ok) throw new Error("Failed to fetch profile");
-        const data = await res.json();
-        userData = data;
+        userData = await res.json();
 
         $("avatar").src = userData.profile_picture_url || "https://placehold.co/128x128/e5e7eb/111?text=👤";
         $("profile-name").textContent = `${userData.firstname || ""} ${userData.lastname || ""}`;
@@ -170,12 +167,67 @@
       }
     }
 
+    // Save Profile
+    $("profile-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("spinner").classList.remove("hidden");
+
+      const payload = {
+        firstname: $("firstname").value.trim(),
+        lastname: $("lastname").value.trim(),
+        phone: $("phone").value.trim(),
+      };
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error("Failed to update profile");
+        toast("Profile updated successfully!", "success");
+        loadProfile();
+      } catch (err) {
+        console.error(err);
+        toast("Error saving profile", "error");
+      } finally {
+        $("spinner").classList.add("hidden");
+      }
+    });
+
+    // Avatar Upload
+    $("change-pic").addEventListener("click", () => $("avatar-input").click());
+    $("avatar-input").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        toast("Profile picture updated!", "success");
+        loadProfile();
+      } catch (err) {
+        console.error(err);
+        toast("Error uploading picture", "error");
+      }
+    });
+
     function toggleSections(role) {
       $("student-section").classList.toggle("hidden", role !== "student");
       $("teacher-section").classList.toggle("hidden", role !== "teacher");
       $("admin-section").classList.toggle("hidden", role !== "admin");
     }
 
+    // Init
     document.addEventListener("DOMContentLoaded", () => {
       $("lang").value = currentLang;
       if(typeof translatePage === "function") translatePage("profile", currentLang);
@@ -189,4 +241,5 @@
   </script>
 </body>
 </html>
+
 

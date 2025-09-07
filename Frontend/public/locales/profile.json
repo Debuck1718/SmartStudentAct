@@ -48,44 +48,44 @@
     "ru": "Личная информация"
   },
   "firstNameLabel": {
-    "en": "First Name:",
-    "fr": "Prénom :",
-    "es": "Nombre:",
-    "tr": "Ad:",
-    "ar": "الاسم الأول:",
-    "ru": "Имя:"
+    "en": "First Name",
+    "fr": "Prénom",
+    "es": "Nombre",
+    "tr": "Ad",
+    "ar": "الاسم الأول",
+    "ru": "Имя"
   },
   "lastNameLabel": {
-    "en": "Last Name:",
-    "fr": "Nom :",
-    "es": "Apellido:",
-    "tr": "Soyad:",
-    "ar": "اسم العائلة:",
-    "ru": "Фамилия:"
+    "en": "Last Name",
+    "fr": "Nom",
+    "es": "Apellido",
+    "tr": "Soyad",
+    "ar": "اسم العائلة",
+    "ru": "Фамилия"
   },
   "emailLabel": {
-    "en": "Email:",
-    "fr": "E-mail :",
-    "es": "Correo electrónico:",
-    "tr": "E-posta:",
-    "ar": "البريد الإلكتروني:",
-    "ru": "Эл. почта:"
+    "en": "Email",
+    "fr": "E-mail",
+    "es": "Correo electrónico",
+    "tr": "E-posta",
+    "ar": "البريد الإلكتروني",
+    "ru": "Эл. почта"
   },
   "phoneLabel": {
-    "en": "Phone:",
-    "fr": "Téléphone :",
-    "es": "Teléfono:",
-    "tr": "Telefon:",
-    "ar": "الهاتف:",
-    "ru": "Телефон:"
+    "en": "Phone",
+    "fr": "Téléphone",
+    "es": "Teléfono",
+    "tr": "Telefon",
+    "ar": "الهاتف",
+    "ru": "Телефон"
   },
   "occupationLabel": {
-    "en": "Occupation:",
-    "fr": "Profession :",
-    "es": "Ocupación:",
-    "tr": "Meslek:",
-    "ar": "المهنة:",
-    "ru": "Профессия:"
+    "en": "Occupation",
+    "fr": "Profession",
+    "es": "Ocupación",
+    "tr": "Meslek",
+    "ar": "المهنة",
+    "ru": "Профессия"
   },
   "academicDetailsSection": {
     "en": "Academic Details",
@@ -96,12 +96,12 @@
     "ru": "Академические данные"
   },
   "educationLevelLabel": {
-    "en": "Education Level:",
-    "fr": "Niveau d'éducation :",
-    "es": "Nivel educativo:",
-    "tr": "Eğitim Seviyesi:",
-    "ar": "المستوى التعليمي:",
-    "ru": "Уровень образования:"
+    "en": "Education Level",
+    "fr": "Niveau d'éducation",
+    "es": "Nivel educativo",
+    "tr": "Eğitim Seviyesi",
+    "ar": "المستوى التعليمي",
+    "ru": "Уровень образования"
   },
   "selectEducationLevel": {
     "en": "Select Education Level",
@@ -136,44 +136,20 @@
     "ru": "Университет"
   },
   "gradeLabel": {
-    "en": "Grade:",
-    "fr": "Classe :",
-    "es": "Grado:",
-    "tr": "Sınıf:",
-    "ar": "الصف:",
-    "ru": "Класс:"
+    "en": "Grade",
+    "fr": "Classe",
+    "es": "Grado",
+    "tr": "Sınıf",
+    "ar": "الصف",
+    "ru": "Класс"
   },
   "schoolNameLabel": {
-    "en": "School Name:",
-    "fr": "Nom de l'école :",
-    "es": "Nombre de la escuela:",
-    "tr": "Okul Adı:",
-    "ar": "اسم المدرسة:",
-    "ru": "Название школы:"
-  },
-  "universityLabel": {
-    "en": "University:",
-    "fr": "Université :",
-    "es": "Universidad:",
-    "tr": "Üniversite:",
-    "ar": "الجامعة:",
-    "ru": "Университет:"
-  },
-  "levelLabel": {
-    "en": "Level:",
-    "fr": "Niveau :",
-    "es": "Nivel:",
-    "tr": "Seviye:",
-    "ar": "المستوى:",
-    "ru": "Уровень:"
-  },
-  "programLabel": {
-    "en": "Program:",
-    "fr": "Programme :",
-    "es": "Programa:",
-    "tr": "Program:",
-    "ar": "البرنامج:",
-    "ru": "Программа:"
+    "en": "School Name",
+    "fr": "Nom de l'école",
+    "es": "Nombre de la escuela",
+    "tr": "Okul Adı",
+    "ar": "اسم المدرسة",
+    "ru": "Название школы"
   },
   "professionalDetailsSection": {
     "en": "Professional Details",
@@ -184,20 +160,20 @@
     "ru": "Профессиональные данные"
   },
   "teacherSchoolLabel": {
-    "en": "School:",
-    "fr": "École :",
-    "es": "Escuela:",
-    "tr": "Okul:",
-    "ar": "المدرسة:",
-    "ru": "Школа:"
+    "en": "School",
+    "fr": "École",
+    "es": "Escuela",
+    "tr": "Okul",
+    "ar": "المدرسة",
+    "ru": "Школа"
   },
   "gradeTaughtLabel": {
-    "en": "Grade Taught:",
-    "fr": "Classe enseignée :",
-    "es": "Grado enseñado:",
-    "tr": "Öğretilen Sınıf:",
-    "ar": "الصف المُدرّس:",
-    "ru": "Преподаваемый класс:"
+    "en": "Grade Taught",
+    "fr": "Classe enseignée",
+    "es": "Grado enseñado",
+    "tr": "Öğretilen Sınıf",
+    "ar": "الصف المُدرّس",
+    "ru": "Преподаваемый класс"
   },
   "adminSchoolDetailsSection": {
     "en": "Admin School Details",
@@ -208,12 +184,12 @@
     "ru": "Данные школы (админ)"
   },
   "assignedSchoolLabel": {
-    "en": "Assigned School:",
-    "fr": "École assignée :",
-    "es": "Escuela asignada:",
-    "tr": "Atanan Okul:",
-    "ar": "المدرسة المخصصة:",
-    "ru": "Назначенная школа:"
+    "en": "Assigned School",
+    "fr": "École assignée",
+    "es": "Escuela asignada",
+    "tr": "Atanan Okul",
+    "ar": "المدرسة المخصصة",
+    "ru": "Назначенная школа"
   },
   "saveChangesButton": {
     "en": "Save Profile Changes",
@@ -318,45 +294,5 @@
     "tr": "Profil alınamadı.",
     "ar": "تعذر جلب الملف الشخصي.",
     "ru": "Не удалось получить профиль."
-  },
-  "required": {
-    "en": " is required.",
-    "fr": " est requis.",
-    "es": " es obligatorio.",
-    "tr": " gerekli.",
-    "ar": " مطلوب.",
-    "ru": " обязательно."
-  },
-  "phoneRequired": {
-    "en": "Phone number is required.",
-    "fr": "Le numéro de téléphone est requis.",
-    "es": "El número de teléfono es obligatorio.",
-    "tr": "Telefon numarası gerekli.",
-    "ar": "رقم الهاتف مطلوب.",
-    "ru": "Требуется номер телефона."
-  },
-  "invalidPhone": {
-    "en": "Invalid phone number format.",
-    "fr": "Format de numéro invalide.",
-    "es": "Formato de número inválido.",
-    "tr": "Geçersiz telefon numarası biçimi.",
-    "ar": "صيغة رقم الهاتف غير صالحة.",
-    "ru": "Неверный формат номера телефона."
-  },
-  "educationLevelRequired": {
-    "en": "Education Level is required.",
-    "fr": "Le niveau d'éducation est requis.",
-    "es": "El nivel educativo es obligatorio.",
-    "tr": "Eğitim seviyesi gerekli.",
-    "ar": "المستوى التعليمي مطلوب.",
-    "ru": "Требуется уровень образования."
-  },
-  "schoolNameRequired": {
-    "en": "School name is required.",
-    "fr": "Le nom de l'école est requis.",
-    "es": "El nombre de la escuela es obligatorio.",
-    "tr": "Okul adı gerekli.",
-    "ar": "اسم المدرسة مطلوب.",
-    "ru": "Требуется название школы."
   }
 }
