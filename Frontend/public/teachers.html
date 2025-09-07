@@ -1,912 +1,639 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title data-i18n="dashboardTitle">Teacher Dashboard</title>
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"
-    ></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
-
-      gtag("config", "G-EWMR745QHX");
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag("js", new Date());
+        gtag("config", "G-EWMR745QHX");
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-      body {
-        font-family: "Inter", sans-serif;
-      }
-
-      #messageModal,
-      #promptModal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4);
-        justify-content: center;
-        align-items: center;
-      }
-      .modal-content {
-        background-color: #fefefe;
-        padding: 24px;
-        border-radius: 12px;
-        border: 1px solid #888;
-        width: 90%;
-        max-width: 400px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      }
-      .close-button {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-      }
-      .close-button:hover,
-      .close-button:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-      }
-      .prompt-input {
-        width: 100%;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-      }
-      .prompt-buttons {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-      }
-
-      .custom-file-input::-webkit-file-upload-button {
-        visibility: hidden;
-      }
-      .custom-file-input::before {
-        content: "📎 Pick Document/File";
-        display: inline-block;
-        background-color: #1abc9c;
-        color: #fff;
-        font-weight: bold;
-        font-size: 16px;
-        padding: 12px;
-        border-radius: 8px;
-        outline: none;
-        white-space: nowrap;
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-      .custom-file-input:hover::before {
-        background-color: #16a085;
-      }
-      .custom-file-input:active::before {
-        background-color: #1abc9c;
-        box-shadow: none;
-      }
-
-      /* Custom loading spinner */
-      .spinner {
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        border-top: 4px solid #fff;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        animation: spin 1s linear infinite;
-      }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
+        body {
+            font-family: "Inter", sans-serif;
         }
-        100% {
-          transform: rotate(360deg);
+
+        #messageModal,
+        #promptModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
         }
-      }
 
-      /* Profile Dropdown Custom Styling */
-      .dropdown-menu {
-        transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
-        transform: translateY(-5px);
-      }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-      .dropdown-menu.visible {
-        opacity: 1;
-        transform: translateY(0);
-      }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .prompt-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .custom-file-input::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+
+        .custom-file-input::before {
+            content: "📎 Pick Document/File";
+            display: inline-block;
+            background-color: #1abc9c;
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            outline: none;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-file-input:hover::before {
+            background-color: #16a085;
+        }
+
+        .custom-file-input:active::before {
+            background-color: #1abc9c;
+            box-shadow: none;
+        }
+
+        /* Custom loading spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Profile Dropdown Custom Styling */
+        .dropdown-menu {
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            transform: translateY(-5px);
+        }
+
+        .dropdown-menu.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
-  </head>
-  <body class="bg-gray-100 min-h-screen font-sans antialiased">
-    <div
-      id="loadingOverlay"
-      class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]"
-    >
-      <div class="text-center p-6 bg-white rounded-xl shadow-lg">
-        <div
-          class="spinner mx-auto mb-4 border-blue-500 border-t-blue-500"
-        ></div>
-        <p class="text-lg text-gray-700 font-medium" data-i18n="loadingMessage">
-          Loading teacher dashboard...
-        </p>
-      </div>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans antialiased">
+    <div id="loadingOverlay" class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]">
+        <div class="text-center p-6 bg-white rounded-xl shadow-lg">
+            <div class="spinner mx-auto mb-4 border-blue-500 border-t-blue-500"></div>
+            <p class="text-lg text-gray-700 font-medium" data-i18n="loadingMessage">
+                Loading teacher dashboard...
+            </p>
+        </div>
     </div>
 
     <div id="messageModal" class="flex">
-      <div class="modal-content">
-        <span class="close-button" onclick="closeMessageModal()">&times;</span>
-        <h2 id="modalTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
-        <p id="modalMessage" class="text-gray-700"></p>
-        <div class="flex justify-end mt-4">
-          <button
-            onclick="closeMessageModal()"
-            class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors"
-            data-i18n="ok"
-          >
-            OK
-          </button>
+        <div class="modal-content">
+            <span class="close-button" onclick="closeMessageModal()">&times;</span>
+            <h2 id="modalTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
+            <p id="modalMessage" class="text-gray-700"></p>
+            <div class="flex justify-end mt-4">
+                <button onclick="closeMessageModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors" data-i18n="ok">
+                    OK
+                </button>
+            </div>
         </div>
-      </div>
     </div>
 
     <div id="promptModal" class="flex">
-      <div class="modal-content">
-        <h2 id="promptTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
-        <p id="promptMessage" class="text-gray-700 mb-4"></p>
-        <textarea
-          id="promptInput"
-          class="w-full h-32 p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          data-i18n-placeholder="promptTextPlaceholder"
-          placeholder="Type your message here..."
-        ></textarea>
-        <div class="prompt-buttons">
-          <button
-            id="cancelPromptBtn"
-            class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition-colors"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="okPromptBtn"
-            class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors"
-            data-i18n="send"
-          >
-            Send
-          </button>
+        <div class="modal-content">
+            <h2 id="promptTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
+            <p id="promptMessage" class="text-gray-700 mb-4"></p>
+            <textarea id="promptInput" class="w-full h-32 p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" data-i18n-placeholder="promptTextPlaceholder" placeholder="Type your message here..."></textarea>
+            <div class="prompt-buttons">
+                <button id="cancelPromptBtn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition-colors" data-i18n="cancel">
+                    Cancel
+                </button>
+                <button id="okPromptBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors" data-i18n="send">
+                    Send
+                </button>
+            </div>
         </div>
-      </div>
     </div>
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      <header
-        class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200"
-      >
-        <h1
-          class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0"
-          data-i18n="dashboardTitle"
-        >
-          📚 Teacher Dashboard
-        </h1>
+        <header class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0" data-i18n="dashboardTitle">
+                📚 Teacher Dashboard
+            </h1>
 
-        <div class="flex items-center space-x-6">
-          <div class="relative inline-block text-left">
-            <select
-              id="language-select"
-              class="rounded-full px-4 py-2 bg-white text-gray-700 font-medium border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
-            >
-              <option value="en">EN</option>
-              <option value="fr">FR</option>
-              <option value="es">ES</option>
-              <option value="tr">TR</option>
-              <option value="ar">AR</option>
-              <option value="ru">RU</option>
-            </select>
-          </div>
+            <div class="flex items-center space-x-6">
+                <div class="relative inline-block text-left">
+                    <select id="language-select" class="rounded-full px-4 py-2 bg-white text-gray-700 font-medium border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                        <option value="en">EN</option>
+                        <option value="fr">FR</option>
+                        <option value="es">ES</option>
+                        <option value="tr">TR</option>
+                        <option value="ar">AR</option>
+                        <option value="ru">RU</option>
+                    </select>
+                </div>
 
-          <div class="flex items-center space-x-3">
-            <img
-              id="profileAvatar"
-              src="./images/default-avatar.png"
-              alt="Profile Avatar"
-              class="h-10 w-10 rounded-full object-cover border border-gray-300"
-            />
-            <span
-              id="profilePreviewName"
-              class="hidden sm:inline font-medium text-gray-700"
-            >
-              Teacher
-            </span>
-          </div>
-
-          <div class="relative inline-block text-left">
-            <button
-              id="profile-menu-button"
-              type="button"
-              class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <svg
-                class="h-5 w-5 text-gray-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
-
-            <div
-              id="profile-dropdown-menu"
-              class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0"
-              role="menu"
-              aria-orientation="vertical"
-              aria-labelledby="profile-menu-button"
-            >
-              <div class="py-1" role="none">
-                <a
-                  href="/AI-Essay-Checker.html"
-                  class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors px-4"
-                  data-i18n="aiEssayChecker"
-                  >🤖 AI Essay Checker</a
-                >
-                <a
-                  href="/public/quiz_dashboard.html"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  data-i18n="quizDashboard"
-                  >📝 Quiz Dashboard</a
-                >
-                <a
-                  href="/public/profile.html"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  data-i18n="yourProfile"
-                  >Your Profile</a
-                >
-                <a
-                  href="/public/settings.html"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  data-i18n="settings"
-                  >Settings</a
-                >
-                <hr class="my-1 border-gray-100" />
-                <button
-                  id="logoutButton"
-                  class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  data-i18n="signOut"
-                >
-                  🚪 Sign out
+                <div class="relative inline-block text-left">
+                    <button id="profile-menu-button" type="button" class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <img id="profileAvatar" src="./images/default-avatar.png" alt="Profile Avatar" class="h-10 w-10 rounded-full object-cover border border-gray-300" />
+                        <span id="profilePreviewName" class="hidden sm:inline font-medium text-gray-700">Teacher</span>
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div id="profile-dropdown-menu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu opacity-0" role="menu" aria-orientation="vertical" aria-labelledby="profile-menu-button">
+                        <div class="py-1" role="none">
+                            <a href="/AI-Essay-Checker.html" class="block py-4 text-lg text-gray-700 font-medium border-b border-gray-100 hover:bg-gray-50 transition-colors px-4" data-i18n="aiEssayChecker">🤖 AI Essay Checker</a>
+                            <a href="/public/quiz_dashboard.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-i18n="quizDashboard">📝 Quiz Dashboard</a>
+                            <a href="/public/profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-i18n="yourProfile">Your Profile</a>
+                            <a href="/public/settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-i18n="settings">Settings</a>
+                            <hr class="my-1 border-gray-100" />
+                            <button id="logoutButton" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-i18n="signOut">
+                                🚪 Sign out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <nav class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md">
+            <a href="/my-students.html" class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors duration-200" data-i18n="myClass">
+                👨‍🎓 My Class
+            </a>
+            <a href="/completed-assignment.html" class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors duration-200" data-i18n="completedTasks">
+                ✅ Completed Tasks
+            </a>
+            <a href="/quiz_dashboard.html" class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg shadow-sm hover:bg-purple-700 transition-colors duration-200" data-i18n="quizDashboard">
+                📝 Quiz Dashboard
+            </a>
+            <a href="/AI Essay Checker.html" class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors duration-200" data-i18n="aiChecker">
+                🤖 AI Checker
+            </a>
+        </nav>
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <section id="studentsSection" class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentsInClass">
+                    🎓 Students in Your Class
+                </h2>
+                <div id="studentsList" class="divide-y divide-gray-200 text-gray-700"></div>
+            </section>
+            <section class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
+                    ✏️ Create and Send Assignment
+                </h2>
+                <label for="student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student:</label>
+                <div id="studentSelectContainer" class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                    <select id="student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+                </div>
+                <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle">Assignment Title:</label>
+                <input type="text" id="assignmentTitle" class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" data-i18n-placeholder="assignmentPlaceholder" placeholder="e.g., History Essay on World War II" maxlength="100" />
+                <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2" data-i18n="dueDate">Due Date:</label>
+                <input type="datetime-local" id="assignmentDueDate" class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails">Assignment Details (max 1000 words or attach file):</label>
+                <textarea id="assignmentText" class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" data-i18n-placeholder="assignmentTextPlaceholder" placeholder="Type your assignment here..." maxlength="5000"></textarea>
+                <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4" data-i18n="wordCount">
+                    Word count: 0
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+                    <label for="assignmentFile" class="custom-file-input cursor-pointer text-base" data-i18n="pickDocument">
+                        <input type="file" id="assignmentFile" class="hidden" />
+                    </label>
+                    <div id="fileStatus" class="flex items-center gap-2">
+                        <span id="fileName" class="text-gray-700 text-sm italic" data-i18n="noFileSelected">No file selected.</span>
+                        <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold" data-i18n="clear">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+                <button id="sendAssignmentButton" class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors transform hover:scale-105" disabled data-i18n="sendAssignment">
+                    Send Assignment
                 </button>
-              </div>
+            </section>
+            <section class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="addPointsTitle">
+                    ➕ Add Student Points
+                </h2>
+                <label for="points-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student:</label>
+                <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                    <select id="points-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+                </div>
+                <label for="pointsInput" class="block text-gray-700 font-bold mb-2" data-i18n="pointsToAdd">Points to Add:</label>
+                <input type="number" id="pointsInput" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" data-i18n-placeholder="pointsPlaceholder" placeholder="e.g., 10" min="1" />
+                <label for="reasonText" class="block text-gray-700 font-bold mb-2" data-i18n="reasonOptional">Reason (Optional):</label>
+                <textarea id="reasonText" class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y" data-i18n-placeholder="reasonPlaceholder" placeholder="e.g., Great participation in class discussion."></textarea>
+                <button id="addPointsButton" class="w-full py-4 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition-colors transform hover:scale-105" data-i18n="addPointsButton">
+                    Add Points
+                </button>
+            </section>
+            <section class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="overdueTasks">
+                    📌 Overdue Tasks
+                </h2>
+                <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
+            </section>
+            <section class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="assignedTasks">
+                    📝 Assigned Tasks & Feedback
+                </h2>
+                <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
+            </section>
+            <section class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentFeedback">
+                    💬 Student Feedback Overview
+                </h2>
+                <div id="feedbackList" class="divide-y divide-gray-200"></div>
+            </section>
+            <section class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="academicCalendar">
+                    📅 Academic Calendar
+                </h2>
+                <input type="date" id="termStart" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" data-i18n-placeholder="termStart" placeholder="Start of Term (YYYY-MM-DD)" />
+                <input type="date" id="termEnd" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" data-i18n-placeholder="termEnd" placeholder="End of Term (YYYY-MM-DD)" />
+                <button id="saveCalendarButton" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition-colors transform hover:scale-105" data-i18n="saveCalendar">
+                    Save Calendar
+                </button>
+                <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
+            </section>
+        </main>
+        <div id="contactModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+            <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+                <h2 class="text-xl font-bold mb-4" data-i18n="contactUs">
+                    📩 Contact Us
+                </h2>
+                <form id="contactForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium" data-i18n="yourName">Your Name</label>
+                        <input type="text" id="contactName" required class="w-full border rounded p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium" data-i18n="yourEmail">Your Email</label>
+                        <input type="email" id="contactEmail" required class="w-full border rounded p-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium" data-i18n="message">Message</label>
+                        <textarea id="contactMessage" rows="4" required class="w-full border rounded p-2"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" id="closeContact" class="bg-gray-200 px-4 py-2 rounded" data-i18n="cancel">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded" data-i18n="send">
+                            Send
+                        </button>
+                    </div>
+                </form>
             </div>
-          </div>
         </div>
-      </header>
-      <nav
-        class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md"
-      >
-        <a
-          href="/public/my-students.html"
-          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors duration-200"
-          data-i18n="myClass"
-        >
-          👨‍🎓 My Class
-        </a>
-        <a
-          href="/public/completed-assignment.html"
-          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors duration-200"
-          data-i18n="completedTasks"
-        >
-          ✅ Completed Tasks
-        </a>
-        <a
-          href="/public/quiz_dashboard.html"
-          class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg shadow-sm hover:bg-purple-700 transition-colors duration-200"
-          data-i18n="quizDashboard"
-        >
-          📝 Quiz Dashboard
-        </a>
-        <a
-          href="/public/AI Essay Checker.html"
-          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors duration-200"
-          data-i18n="aiChecker"
-        >
-          🤖 AI Checker
-        </a>
-      </nav>
-      <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <section
-          id="studentsSection"
-          class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300"
-        >
-          <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
-            data-i18n="studentsInClass"
-          >
-            🎓 Students in Your Class
-          </h2>
-          <div
-            id="studentsList"
-            class="divide-y divide-gray-200 text-gray-700"
-          ></div>
-        </section>
-        <section
-          class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300"
-        >
-          <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
-            data-i18n="createAssignment"
-          >
-            ✏️ Create and Send Assignment
-          </h2>
-
-          <label
-            for="student-select"
-            class="block text-gray-700 font-bold mb-2"
-            data-i18n="selectStudent"
-            >Select Student:</label
-          >
-          <div
-            id="studentSelectContainer"
-            class="border border-gray-300 rounded-lg overflow-hidden mb-4"
-          >
-            <select
-              id="student-select"
-              class="w-full p-3 bg-white text-gray-800 focus:outline-none"
-            ></select>
-          </div>
-
-          <label
-            for="assignmentTitle"
-            class="block text-gray-700 font-bold mb-2"
-            data-i18n="assignmentTitle"
-            >Assignment Title:</label
-          >
-          <input
-            type="text"
-            id="assignmentTitle"
-            class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            data-i18n-placeholder="assignmentPlaceholder"
-            placeholder="e.g., History Essay on World War II"
-            maxlength="100"
-          />
-
-          <label
-            for="assignmentDueDate"
-            class="block text-gray-700 font-bold mb-2"
-            data-i18n="dueDate"
-            >Due Date:</label
-          >
-          <input
-            type="datetime-local"
-            id="assignmentDueDate"
-            class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-
-          <label
-            for="assignmentText"
-            class="block text-gray-700 font-bold mb-2"
-            data-i18n="assignmentDetails"
-            >Assignment Details (max 1000 words or attach file):</label
-          >
-          <textarea
-            id="assignmentText"
-            class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-            data-i18n-placeholder="assignmentTextPlaceholder"
-            placeholder="Type your assignment here..."
-            maxlength="5000"
-          ></textarea>
-          <p
-            id="wordCountText"
-            class="text-sm text-gray-500 text-right mb-4"
-            data-i18n="wordCount"
-          >
-            Word count: 0
-          </p>
-
-          <div
-            class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4"
-          >
-            <label
-              for="assignmentFile"
-              class="custom-file-input cursor-pointer text-base"
-              data-i18n="pickDocument"
-            >
-              <input type="file" id="assignmentFile" class="hidden" />
-            </label>
-            <div id="fileStatus" class="flex items-center gap-2">
-              <span
-                id="fileName"
-                class="text-gray-700 text-sm italic"
-                data-i18n="noFileSelected"
-                >No file selected.</span
-              >
-              <button
-                id="clearFileButton"
-                class="text-red-500 hover:text-red-700 hidden text-sm font-semibold"
-                data-i18n="clear"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-
-          <button
-            id="sendAssignmentButton"
-            class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors transform hover:scale-105"
-            disabled
-            data-i18n="sendAssignment"
-          >
-            Send Assignment
-          </button>
-        </section>
-        <section
-          class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300"
-        >
-          <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
-            data-i18n="addPointsTitle"
-          >
-            ➕ Add Student Points
-          </h2>
-
-          <label
-            for="points-student-select"
-            class="block text-gray-700 font-bold mb-2"
-            data-i18n="selectStudent"
-            >Select Student:</label
-          >
-          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-            <select
-              id="points-student-select"
-              class="w-full p-3 bg-white text-gray-800 focus:outline-none"
-            ></select>
-          </div>
-
-          <label
-            for="pointsInput"
-            class="block text-gray-700 font-bold mb-2"
-            data-i18n="pointsToAdd"
-            >Points to Add:</label
-          >
-          <input
-            type="number"
-            id="pointsInput"
-            class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            data-i18n-placeholder="pointsPlaceholder"
-            placeholder="e.g., 10"
-            min="1"
-          />
-
-          <label
-            for="reasonText"
-            class="block text-gray-700 font-bold mb-2"
-            data-i18n="reasonOptional"
-            >Reason (Optional):</label
-          >
-          <textarea
-            id="reasonText"
-            class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y"
-            data-i18n-placeholder="reasonPlaceholder"
-            placeholder="e.g., Great participation in class discussion."
-          ></textarea>
-
-          <button
-            id="addPointsButton"
-            class="w-full py-4 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition-colors transform hover:scale-105"
-            data-i18n="addPointsButton"
-          >
-            Add Points
-          </button>
-        </section>
-        <section
-          class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300"
-        >
-          <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
-            data-i18n="overdueTasks"
-          >
-            📌 Overdue Tasks
-          </h2>
-          <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
-        </section>
-        <section
-          class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300"
-        >
-          <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
-            data-i18n="assignedTasks"
-          >
-            📝 Assigned Tasks & Feedback
-          </h2>
-          <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
-        </section>
-        <section
-          class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300"
-        >
-          <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
-            data-i18n="studentFeedback"
-          >
-            💬 Student Feedback Overview
-          </h2>
-          <div id="feedbackList" class="divide-y divide-gray-200"></div>
-        </section>
-        <section
-          class="bg-white rounded-xl p-6 shadow-lg transform hover:scale-[1.02] transition-transform duration-300"
-        >
-          <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
-            data-i18n="academicCalendar"
-          >
-            📅 Academic Calendar
-          </h2>
-          <input
-            type="date"
-            id="termStart"
-            class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            data-i18n-placeholder="termStart"
-            placeholder="Start of Term (YYYY-MM-DD)"
-          />
-          <input
-            type="date"
-            id="termEnd"
-            class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            data-i18n-placeholder="termEnd"
-            placeholder="End of Term (YYYY-MM-DD)"
-          />
-          <button
-            id="saveCalendarButton"
-            class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition-colors transform hover:scale-105"
-            data-i18n="saveCalendar"
-          >
-            Save Calendar
-          </button>
-          <p
-            id="calendarMsg"
-            class="text-center font-semibold mt-4 text-gray-700"
-          ></p>
-        </section>
-      </main>
-      <div
-        id="contactModal"
-        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center"
-      >
-        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-          <h2 class="text-xl font-bold mb-4" data-i18n="contactUs">
-            📩 Contact Us
-          </h2>
-          <form id="contactForm" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium" data-i18n="yourName"
-                >Your Name</label
-              >
-              <input
-                type="text"
-                id="contactName"
-                required
-                class="w-full border rounded p-2"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium" data-i18n="yourEmail"
-                >Your Email</label
-              >
-              <input
-                type="email"
-                id="contactEmail"
-                required
-                class="w-full border rounded p-2"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium" data-i18n="message"
-                >Message</label
-              >
-              <textarea
-                id="contactMessage"
-                rows="4"
-                required
-                class="w-full border rounded p-2"
-              ></textarea>
-            </div>
-            <div class="flex justify-end gap-2">
-              <button
-                type="button"
-                id="closeContact"
-                class="bg-gray-200 px-4 py-2 rounded"
-                data-i18n="cancel"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-blue-600 text-white px-4 py-2 rounded"
-                data-i18n="send"
-              >
-                Send
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-      <footer class="text-center text-sm text-gray-500 py-6 mt-4">
-        <p data-i18n="copyright">
-          © <span id="currentYear"></span> SmartStudentAct 2025
-        </p>
-      </footer>
+        <footer class="text-center text-sm text-gray-500 py-6 mt-4">
+            <p data-i18n="copyright">
+                © <span id="currentYear"></span> SmartStudentAct 2025
+            </p>
+        </footer>
     </div>
 
     <script src="translate.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const defaultLang = "en";
-        translatePage("teachers", defaultLang);
+        document.addEventListener("DOMContentLoaded", () => {
+            const defaultLang = "en";
+            translatePage("teachers", defaultLang);
 
-        const langSelect = document.getElementById("language-select");
-        langSelect.addEventListener("change", (e) => {
-          const lang = e.target.value;
-          translatePage("teachers", lang);
+            const langSelect = document.getElementById("language-select");
+            langSelect.addEventListener("change", (e) => {
+                const lang = e.target.value;
+                translatePage("teachers", lang);
+            });
+
+            // Profile Dropdown Functionality
+            const profileMenuButton = document.getElementById('profile-menu-button');
+            const profileMenuDropdown = document.getElementById('profile-dropdown-menu');
+            const logoutButton = document.getElementById('logoutButton');
+            
+            profileMenuButton.addEventListener('click', () => {
+                profileMenuDropdown.classList.toggle('hidden');
+            });
+
+            // Close the dropdown if the user clicks outside of it
+            window.addEventListener('click', (event) => {
+                if (!profileMenuButton.contains(event.target) && !profileMenuDropdown.contains(event.target)) {
+                    profileMenuDropdown.classList.add('hidden');
+                }
+            });
+
+            // Handle Logout API Call
+            logoutButton.addEventListener('click', async (event) => {
+                event.preventDefault(); // Prevent the default link behavior
+                try {
+                    const response = await fetch('/api/users/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    if (response.ok) {
+                        window.location.href = '/login.html';
+                    } else {
+                        console.error('Logout failed.');
+                        showToast('Could not log out. Please try again.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error during logout:', error);
+                    showToast('An error occurred. Please check your network connection.', 'error');
+                }
+            });
         });
-      });
     </script>
-
     <script>
-      const API_BASE_URL = "https://api.smartstudentact.com/api";
+        const API_BASE_URL = "https://api.smartstudentact.com/api";
 
-      function showToast(message, type = "info") {
-        const container =
-          document.getElementById("toast-container") || createToastContainer();
-        const toast = document.createElement("div");
-        const colors = {
-          success: "bg-green-500",
-          error: "bg-red-500",
-          info: "bg-blue-500",
-          warning: "bg-yellow-500",
-        };
-        toast.className = `p-3 my-2 text-white rounded shadow ${
-          colors[type] || colors.info
-        }`;
-        toast.innerText = message;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-      }
-
-      function createToastContainer() {
-        const container = document.createElement("div");
-        container.id = "toast-container";
-        container.className = "fixed top-4 right-4 z-50";
-        document.body.appendChild(container);
-        return container;
-      }
-
-      function hideLoadingOverlay() {
-        const overlay = document.getElementById("loadingOverlay");
-        if (overlay) overlay.style.display = "none";
-      }
-
-      async function fetchAPI(endpoint, options = {}) {
-        try {
-          const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
-            credentials: "include",
-            headers: { ...(options.headers || {}) },
-          });
-
-          if (res.status === 401) {
-            showToast("Session expired. Please log in again.", "warning");
-            window.location.href = "/login.html";
-            return null;
-          }
-
-          return res;
-        } catch (err) {
-          console.error("Fetch error:", err);
-          showToast("Network error, please try again.", "error");
-          return null;
+        function showToast(message, type = "info") {
+            const container =
+                document.getElementById("toast-container") || createToastContainer();
+            const toast = document.createElement("div");
+            const colors = {
+                success: "bg-green-500",
+                error: "bg-red-500",
+                info: "bg-blue-500",
+                warning: "bg-yellow-500",
+            };
+            toast.className = `p-3 my-2 text-white rounded shadow ${
+                colors[type] || colors.info
+            }`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
         }
-      }
 
-      async function checkAuth() {
-        const res = await fetchAPI("/auth/check");
-        if (!res || !res.ok) window.location.href = "/login.html";
-      }
-
-      async function fetchTeacherProfile() {
-        const res = await fetchAPI("/teacher/profile");
-        if (res && res.ok) {
-          const data = await res.json();
-          const nameEl = document.getElementById("profilePreviewName");
-          if (nameEl) nameEl.innerText = data.name || "Teacher";
+        function createToastContainer() {
+            const container = document.createElement("div");
+            container.id = "toast-container";
+            container.className = "fixed top-4 right-4 z-50";
+            document.body.appendChild(container);
+            return container;
         }
-      }
 
-      async function fetchStudents() {
-        const res = await fetchAPI("/teacher/students");
-        if (res && res.ok) {
-          const students = (await res.json()) || [];
-          const container = document.getElementById("studentsList");
-          if (container) {
-            container.innerHTML = students
-              .map(
-                (s) =>
-                  `<div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50 transition-colors">
-                    <span class="font-medium text-gray-800">${s.firstname} ${s.lastname}</span>
-                    <span class="text-sm font-semibold text-green-600">Points: ${s.points || 0}</span>
-                  </div>`
-              )
-              .join("");
-          }
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById("loadingOverlay");
+            if (overlay) overlay.style.display = "none";
         }
-      }
 
-      async function fetchAssignedTasks() {
-        const res = await fetchAPI("/teacher/assignments");
-        if (res && res.ok) {
-          const tasks = (await res.json()) || [];
-          const container = document.getElementById("assignedTasksList");
-          if (container) {
-            container.innerHTML = tasks.length
-              ? tasks
-                  .map(
-                    (t) =>
-                      `<div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50 transition-colors">
-                        <div class="flex-1">
-                          <h4 class="font-bold text-gray-800">${t.title}</h4>
-                          <p class="text-sm text-gray-500">Assigned to: ${t.studentName}</p>
-                        </div>
-                        <span class="text-sm text-gray-600 sm:ml-4 mt-2 sm:mt-0">Due: ${new Date(t.dueDate).toLocaleString()}</span>
-                      </div>`
-                  )
-                  .join("")
-              : `<div class="p-4 text-center text-gray-500">No assignments assigned 🎉</div>`;
-          }
+        async function fetchAPI(endpoint, options = {}) {
+            try {
+                const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    ...options,
+                    credentials: "include",
+                    headers: { ...(options.headers || {}) },
+                });
+
+                if (res.status === 401) {
+                    showToast("Session expired. Please log in again.", "warning");
+                    window.location.href = "/login.html";
+                    return null;
+                }
+
+                return res;
+            } catch (err) {
+                console.error("Fetch error:", err);
+                showToast("Network error, please try again.", "error");
+                return null;
+            }
         }
-      }
 
-      async function fetchFeedback() {
-        const res = await fetchAPI("/teacher/feedback");
-        if (res && res.ok) {
-          const feedbacks = (await res.json()) || [];
-          const container = document.getElementById("feedbackList");
-          if (container) {
-            container.innerHTML = feedbacks.length
-              ? feedbacks
-                  .map(
-                    (f) =>
-                      `<div class="p-4 flex items-start space-x-3 border-b last:border-b-0 hover:bg-gray-50 transition-colors">
-                        <i class="fas fa-comment-dots text-blue-500 mt-1"></i>
-                        <div class="flex-1">
-                          <p class="font-medium text-gray-800">${f.studentName}</p>
-                          <p class="text-sm text-gray-600">${f.comment}</p>
-                        </div>
-                      </div>`
-                  )
-                  .join("")
-              : `<div class="p-4 text-center text-gray-500">No feedback yet 🎉</div>`;
-          }
+        async function checkAuth() {
+            const res = await fetchAPI("/auth/check");
+            if (!res || !res.ok) window.location.href = "/login.html";
         }
-      }
 
-      async function fetchOverdueTasks() {
-        const res = await fetchAPI("/teacher/overdue-tasks");
-        if (res && res.ok) {
-          const overdue = (await res.json()) || [];
-          const container = document.getElementById("overdueTasksList");
-          if (container) {
-            container.innerHTML = overdue.length
-              ? overdue
-                  .map(
-                    (t) =>
-                      `<div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50 transition-colors">
-                        <div class="flex-1">
-                          <h4 class="font-bold text-red-600">${t.title}</h4>
-                          <p class="text-sm text-gray-500">Student: ${t.studentName}</p>
-                        </div>
-                        <span class="text-sm text-red-500 sm:ml-4 mt-2 sm:mt-0">Overdue since: ${new Date(t.dueDate).toLocaleString()}</span>
-                      </div>`
-                  )
-                  .join("")
-              : `<div class="p-4 text-center text-gray-500">No overdue tasks 🎉</div>`;
-          }
+        async function fetchTeacherProfile() {
+            const res = await fetchAPI("/teacher/profile");
+            if (res && res.ok) {
+                const data = await res.json();
+                const nameEl = document.getElementById("profilePreviewName");
+                if (nameEl) nameEl.innerText = data.name || "Teacher";
+            }
         }
-      }
 
-      async function submitFeedback(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const res = await fetchAPI("/teacher/feedback", {
-          method: "POST",
-          body: formData,
-        });
-        if (res && res.ok) {
-          showToast("Feedback submitted.", "success");
-          e.target.reset();
-          fetchFeedback();
-        } else {
-          showToast("Failed to submit feedback.", "error");
+        async function fetchStudents() {
+            const res = await fetchAPI("/teacher/students");
+            if (res && res.ok) {
+                const students = (await res.json()) || [];
+                const container = document.getElementById("studentsList");
+                if (container) {
+                    container.innerHTML = students
+                        .map(
+                            (s) =>
+                                `<div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50 transition-colors">
+                                    <span class="font-medium text-gray-800">${s.firstname} ${s.lastname}</span>
+                                    <span class="text-sm font-semibold text-green-600">Points: ${s.points || 0}</span>
+                                </div>`
+                        )
+                        .join("");
+                }
+            }
         }
-      }
 
-      async function submitPoints(e) {
-        e.preventDefault();
-        const data = Object.fromEntries(new FormData(e.target).entries());
-        const res = await fetchAPI("/rewards/teacher/points", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        if (res && res.ok) {
-          showToast("Points awarded.", "success");
-          e.target.reset();
-          fetchStudents();
-        } else {
-          showToast("Failed to award points.", "error");
+        async function fetchAssignedTasks() {
+            const res = await fetchAPI("/teacher/assignments");
+            if (res && res.ok) {
+                const tasks = (await res.json()) || [];
+                const container = document.getElementById("assignedTasksList");
+                if (container) {
+                    container.innerHTML = tasks.length
+                        ? tasks
+                              .map(
+                                  (t) =>
+                                      `<div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50 transition-colors">
+                                          <div class="flex-1">
+                                              <h4 class="font-bold text-gray-800">${t.title}</h4>
+                                              <p class="text-sm text-gray-500">Assigned to: ${t.studentName}</p>
+                                          </div>
+                                          <span class="text-sm text-gray-600 sm:ml-4 mt-2 sm:mt-0">Due: ${new Date(t.dueDate).toLocaleString()}</span>
+                                      </div>`
+                              )
+                              .join("")
+                        : `<div class="p-4 text-center text-gray-500">No assignments assigned 🎉</div>`;
+                }
+            }
         }
-      }
 
-      async function saveCalendar(e) {
-        e.preventDefault();
-        const data = Object.fromEntries(new FormData(e.target).entries());
-        const res = await fetchAPI("/teacher/calendar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        if (res && res.ok) showToast("Calendar updated.", "success");
-        else showToast("Failed to save calendar.", "error");
-      }
-
-      async function logout() {
-        const res = await fetchAPI("/users/logout", { method: "POST" });
-        if (res && res.ok) {
-          showToast("Logged out successfully.", "success");
-          window.location.href = "/login.html";
+        async function fetchFeedback() {
+            const res = await fetchAPI("/teacher/feedback");
+            if (res && res.ok) {
+                const feedbacks = (await res.json()) || [];
+                const container = document.getElementById("feedbackList");
+                if (container) {
+                    container.innerHTML = feedbacks.length
+                        ? feedbacks
+                              .map(
+                                  (f) =>
+                                      `<div class="p-4 flex items-start space-x-3 border-b last:border-b-0 hover:bg-gray-50 transition-colors">
+                                          <i class="fas fa-comment-dots text-blue-500 mt-1"></i>
+                                          <div class="flex-1">
+                                              <p class="font-medium text-gray-800">${f.studentName}</p>
+                                              <p class="text-sm text-gray-600">${f.comment}</p>
+                                          </div>
+                                      </div>`
+                              )
+                              .join("")
+                        : `<div class="p-4 text-center text-gray-500">No feedback yet 🎉</div>`;
+                }
+            }
         }
-      }
 
-      async function init() {
-        try {
-          await checkAuth();
-
-          await Promise.all([
-            fetchTeacherProfile(),
-            fetchStudents(),
-            fetchAssignedTasks(),
-            fetchFeedback(),
-            fetchOverdueTasks(),
-          ]);
-        } catch (err) {
-          console.error("Dashboard init error:", err);
-          showToast("Failed to load dashboard data.", "error");
-        } finally {
-          hideLoadingOverlay();
+        async function fetchOverdueTasks() {
+            const res = await fetchAPI("/teacher/overdue-tasks");
+            if (res && res.ok) {
+                const overdue = (await res.json()) || [];
+                const container = document.getElementById("overdueTasksList");
+                if (container) {
+                    container.innerHTML = overdue.length
+                        ? overdue
+                              .map(
+                                  (t) =>
+                                      `<div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50 transition-colors">
+                                          <div class="flex-1">
+                                              <h4 class="font-bold text-red-600">${t.title}</h4>
+                                              <p class="text-sm text-gray-500">Student: ${t.studentName}</p>
+                                          </div>
+                                          <span class="text-sm text-red-500 sm:ml-4 mt-2 sm:mt-0">Overdue since: ${new Date(t.dueDate).toLocaleString()}</span>
+                                      </div>`
+                              )
+                              .join("")
+                        : `<div class="p-4 text-center text-gray-500">No overdue tasks 🎉</div>`;
+                }
+            }
         }
-      }
 
-      init();
+        async function submitFeedback(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const res = await fetchAPI("/teacher/feedback", {
+                method: "POST",
+                body: formData,
+            });
+            if (res && res.ok) {
+                showToast("Feedback submitted.", "success");
+                e.target.reset();
+                fetchFeedback();
+            } else {
+                showToast("Failed to submit feedback.", "error");
+            }
+        }
+
+        async function submitPoints(e) {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target).entries());
+            const res = await fetchAPI("/rewards/teacher/points", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+            if (res && res.ok) {
+                showToast("Points awarded.", "success");
+                e.target.reset();
+                fetchStudents();
+            } else {
+                showToast("Failed to award points.", "error");
+            }
+        }
+
+        async function saveCalendar(e) {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target).entries());
+            const res = await fetchAPI("/teacher/calendar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+            if (res && res.ok) showToast("Calendar updated.", "success");
+            else showToast("Failed to save calendar.", "error");
+        }
+
+        async function logout() {
+            const res = await fetchAPI("/users/logout", { method: "POST" });
+            if (res && res.ok) {
+                showToast("Logged out successfully.", "success");
+                window.location.href = "/login.html";
+            }
+        }
+
+        async function init() {
+            try {
+                await checkAuth();
+
+                await Promise.all([
+                    fetchTeacherProfile(),
+                    fetchStudents(),
+                    fetchAssignedTasks(),
+                    fetchFeedback(),
+                    fetchOverdueTasks(),
+                ]);
+            } catch (err) {
+                console.error("Dashboard init error:", err);
+            }
+        }
     </script>
-  </body>
+</body>
 </html>
