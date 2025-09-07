@@ -5,23 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title data-i18n="pageTitle">My Profile</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Icons -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
-
   <script src="translate.js"></script>
   <style>
     body { font-family: "Inter", system-ui, sans-serif; }
-    .message-box {
-      position: fixed; bottom: 1rem; right: 1rem; z-index: 50;
-      padding: .75rem 1rem; border-radius: .75rem; color: #fff; font-weight: 500;
-      transform: translateX(120%); transition: transform .25s ease, opacity .25s;
-      box-shadow: 0 8px 20px rgba(0,0,0,.15);
-      opacity: 0;
-    }
+    .message-box { position: fixed; bottom: 1rem; right: 1rem; z-index: 50; padding: .75rem 1rem; border-radius: .75rem; color: #fff; font-weight: 500; transform: translateX(120%); transition: transform .25s ease, opacity .25s; box-shadow: 0 8px 20px rgba(0,0,0,.15); opacity: 0; }
     .message-box.show { transform: translateX(0); opacity: 1; }
     .message-box.success { background:#16a34a; }
     .message-box.error { background:#dc2626; }
@@ -29,15 +17,13 @@
     .input-error { border-color:#dc2626 !important; }
   </style>
 </head>
-
 <body class="bg-gray-100 min-h-screen">
 
   <!-- Header -->
   <header class="bg-white shadow">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <button type="button" id="back-btn"
-        class="text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1"
-        onclick="history.back()" data-i18n="backButton">← Back</button>
+      <button type="button" onclick="history.back()" data-i18n="backButton"
+        class="text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1">← Back</button>
 
       <div class="flex items-center gap-2">
         <label for="lang" class="text-sm text-gray-600">🌐</label>
@@ -58,8 +44,7 @@
     <div class="flex flex-col items-center">
       <svg class="animate-spin h-10 w-10 text-blue-600" viewBox="0 0 24 24" fill="none">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.38 0 0 5.38 0 12h4z"></path>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.38 0 0 5.38 0 12h4z"></path>
       </svg>
       <p class="mt-3 text-gray-600 font-medium" data-i18n="loadingText">Loading profile...</p>
     </div>
@@ -67,16 +52,15 @@
 
   <!-- Main -->
   <main class="max-w-6xl mx-auto p-4 md:p-8">
-    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6 rtl-flip" data-i18n="mainTitle">👤 My Profile</h1>
+    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6" data-i18n="mainTitle">👤 My Profile</h1>
 
     <form id="profile-form" class="bg-white rounded-2xl shadow-lg p-6 md:p-10 space-y-10">
 
-      <!-- Profile header card -->
+      <!-- Profile header -->
       <section class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10">
         <div class="relative">
-          <img id="avatar" src="https://placehold.co/128x128/e5e7eb/111?text=👤"
-               alt="Profile Picture"
-               class="w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white shadow-md object-cover"/>
+          <img id="avatar" src="https://placehold.co/128x128/e5e7eb/111?text=👤" alt="Profile Picture"
+            class="w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white shadow-md object-cover"/>
           <input id="avatar-input" type="file" accept="image/*" class="hidden"/>
           <button type="button" id="change-pic"
             class="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 shadow"
@@ -85,68 +69,60 @@
 
         <div class="text-center md:text-left">
           <h2 id="profile-name" class="text-2xl font-semibold text-gray-900">First Last</h2>
-          <p id="profile-role" class="text-gray-500 capitalize">student</p>
+          <p id="profile-role" class="text-gray-500 capitalize">role</p>
         </div>
       </section>
 
-      <!-- Personal Info -->
+      
       <section class="space-y-4">
         <h2 class="text-xl font-semibold text-blue-700 border-b pb-2" data-i18n="personalInfoSection">Personal Information</h2>
-
         <div class="grid md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium mb-1" data-i18n="firstNameLabel">First Name</label>
-            <input id="firstName" name="firstName" type="text" class="input w-full border rounded-lg px-3 py-2"/>
-            <p id="firstName-error" class="hidden text-sm text-red-600 mt-1"></p>
+            <label data-i18n="firstNameLabel" class="block text-sm font-medium mb-1">First Name</label>
+            <input id="firstname" name="firstname" type="text" class="input w-full border rounded-lg px-3 py-2"/>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1" data-i18n="lastNameLabel">Last Name</label>
-            <input id="lastName" name="lastName" type="text" class="input w-full border rounded-lg px-3 py-2"/>
-            <p id="lastName-error" class="hidden text-sm text-red-600 mt-1"></p>
+            <label data-i18n="lastNameLabel" class="block text-sm font-medium mb-1">Last Name</label>
+            <input id="lastname" name="lastname" type="text" class="input w-full border rounded-lg px-3 py-2"/>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1" data-i18n="emailLabel">Email</label>
-            <input id="email" name="email" type="email"
-                   class="input w-full border rounded-lg px-3 py-2 bg-gray-50" readonly disabled/>
+            <label data-i18n="emailLabel" class="block text-sm font-medium mb-1">Email</label>
+            <input id="email" name="email" type="email" class="input w-full border rounded-lg px-3 py-2 bg-gray-50" readonly disabled/>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1" data-i18n="phoneLabel">Phone</label>
+            <label data-i18n="phoneLabel" class="block text-sm font-medium mb-1">Phone</label>
             <input id="phone" name="phone" type="tel" class="input w-full border rounded-lg px-3 py-2"/>
-            <p id="phone-error" class="hidden text-sm text-red-600 mt-1"></p>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1" data-i18n="occupationLabel">Occupation</label>
-            <input id="occupation" name="occupation" type="text"
-                   class="input w-full border rounded-lg px-3 py-2 bg-gray-50" readonly disabled/>
+            <label data-i18n="occupationLabel" class="block text-sm font-medium mb-1">Occupation</label>
+            <input id="occupation" name="occupation" type="text" class="input w-full border rounded-lg px-3 py-2 bg-gray-50" readonly disabled/>
           </div>
         </div>
       </section>
 
-      <!-- Student, Teacher, Admin sections (unchanged structure but styled better) -->
+    
       <section id="student-section" class="space-y-4 hidden">
-        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2" data-i18n="academicDetailsSection">Academic Details</h3>
-        <!-- same fields as before -->
+        <h3 data-i18n="academicDetailsSection" class="text-lg font-semibold text-gray-800 border-b pb-2">Academic Details</h3>
+      
       </section>
 
       <section id="teacher-section" class="space-y-4 hidden">
-        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2" data-i18n="professionalDetailsSection">Professional Details</h3>
-        <!-- same fields as before -->
+        <h3 data-i18n="professionalDetailsSection" class="text-lg font-semibold text-gray-800 border-b pb-2">Professional Details</h3>
+       
       </section>
 
       <section id="admin-section" class="space-y-4 hidden">
-        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2" data-i18n="adminSchoolDetailsSection">Admin School Details</h3>
-        <!-- same fields as before -->
+        <h3 data-i18n="adminSchoolDetailsSection" class="text-lg font-semibold text-gray-800 border-b pb-2">Admin School Details</h3>
+
       </section>
 
-      <!-- Save button -->
+      
       <div class="pt-2">
-        <button id="save" type="submit"
-                class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition">
+        <button id="save" type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
           <span data-i18n="saveChangesButton">Save Profile Changes</span>
           <svg id="spinner" class="hidden animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.38 0 0 5.38 0 12h4z"></path>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.38 0 0 5.38 0 12h4z"></path>
           </svg>
         </button>
         <p class="text-center text-gray-400 text-sm mt-6" data-i18n="copyright">© 2025 SmartStudentAct</p>
@@ -154,277 +130,63 @@
     </form>
   </main>
 
-  <!-- Toast -->
-   <div id="toast" class="message-box"></div>
   
+  <div id="toast" class="message-box"></div>
+
   <script>
     const API_BASE_URL = "https://api.smartstudentact.com/api";
-
-
     let currentLang = localStorage.getItem("lang") || "en";
     let userData = {};
-    let saving = false;
-    let uploading = false;
-
 
     const $ = (id) => document.getElementById(id);
-    const stripColon = (s) => (typeof s === "string" ? s.replace(/[:：]\s*$/, "") : String(s));
-    const getT = (key) => {
-      try {
-        if (typeof translations !== "undefined" && translations[key]) {
-          const val = translations[key][currentLang] || translations[key]["en"];
-          if (typeof val === "string") return val;
-        }
-      } catch {}
-      return key; 
-    };
     const toast = (msg, type = "success") => {
       const box = $("toast");
       box.textContent = msg;
       box.className = `message-box ${type} show`;
       setTimeout(() => box.classList.remove("show"), 2600);
     };
-    const setDir = () => {
-      document.documentElement.lang = currentLang;
-      document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
-    };
-    const toggleSpinner = (on) => {
-      saving = !!on;
-      $("spinner").classList.toggle("hidden", !saving);
-      $("save").classList.toggle("opacity-70", saving);
-      $("save").classList.toggle("cursor-not-allowed", saving);
-      $("save").disabled = saving;
-      $("save").querySelector("span").textContent = on ? getT("saving") : getT("saveChangesButton");
-      document.querySelectorAll(".input, #change-pic, #lang").forEach(el => el.disabled = saving || uploading);
-    };
 
-   
-    const renderSections = () => {
-      const occ = userData.occupation || "";
-      const edu = userData.educationLevel || "";
-
-      $("student-section").classList.toggle("hidden", occ !== "student");
-      $("teacher-section").classList.toggle("hidden", occ !== "teacher");
-      $("admin-section").classList.toggle("hidden", occ !== "admin");
-
-      $("school-fields").classList.toggle("hidden", !(occ === "student" && (edu === "junior" || edu === "high")));
-      $("university-fields").classList.toggle("hidden", !(occ === "student" && edu === "university"));
-    };
-
-    
-    function showFieldError(id, msg) {
-      const el = $(id);
-      const err = $(`${id}-error`);
-      if (!err) return true;
-      if (msg) {
-        err.textContent = msg;
-        err.classList.remove("hidden");
-        el && el.classList.add("input-error");
-        return false;
-      } else {
-        err.classList.add("hidden");
-        el && el.classList.remove("input-error");
-        return true;
-      }
-    }
-    
-
-    function validateAll() {
-      let ok = true;
-
-      
-      if (!($("firstName").value || "").trim()) {
-        ok = showFieldError("firstName", stripColon(getT("firstNameLabel")) + getT("required")) && ok;
-      } else showFieldError("firstName", "");
-
-      if (!($("lastName").value || "").trim()) {
-        ok = showFieldError("lastName", stripColon(getT("lastNameLabel")) + getT("required")) && ok;
-      } else showFieldError("lastName", "");
-
-     
-      const phoneVal = ($("phone").value || "").trim();
-      if (!phoneVal) {
-        ok = showFieldError("phone", getT("phoneRequired")) && ok;
-      } else if (!/^\+?[0-9]{7,15}$/.test(phoneVal)) {
-        ok = showFieldError("phone", getT("invalidPhone")) && ok;
-      } else showFieldError("phone", "");
-
-      
-      const occ = userData.occupation;
-      const edu = $("educationLevel").value;
-
-      if (occ === "student") {
-        if (!edu) {
-          ok = showFieldError("educationLevel", getT("educationLevelRequired")) && ok;
-        } else showFieldError("educationLevel", "");
-
-        if (edu === "junior" || edu === "high") {
-          if (!($("grade").value || "").trim()) {
-            ok = showFieldError("grade", stripColon(getT("gradeLabel")) + getT("required")) && ok;
-          } else showFieldError("grade", "");
-          if (!($("schoolName").value || "").trim()) {
-            ok = showFieldError("schoolName", getT("schoolNameRequired")) && ok;
-          } else showFieldError("schoolName", "");
-        } else if (edu === "university") {
-          ["university","uniLevel","program"].forEach(fid=>{
-            if (!($(fid).value || "").trim()) {
-              ok = showFieldError(fid, stripColon(getT(fid + "Label")) + getT("required")) && ok;
-            } else showFieldError(fid, "");
-          });
-        }
-      } else if (occ === "teacher") {
-        ["teacherSchool","teacherGrade"].forEach(fid=>{
-          if (!($(fid).value || "").trim()) {
-            ok = showFieldError(fid, stripColon(getT(fid + "Label")) + getT("required")) && ok;
-          } else showFieldError(fid, "");
-        });
-      } else if (occ === "admin") {
-        if (!($("adminSchool").value || "").trim()) {
-          ok = showFieldError("adminSchool", getT("schoolNameRequired")) && ok;
-        } else showFieldError("adminSchool", "");
-      }
-
-      return ok;
-    }
-
-    
     async function loadProfile() {
       try {
         const res = await fetch(`${API_BASE_URL}/profile`, { credentials: "include" });
-        if (!res.ok) throw new Error(getT("loadFailed"));
+        if (!res.ok) throw new Error("Failed to fetch profile");
         const data = await res.json();
-        userData = data || {};
+        userData = data;
 
-       
         $("avatar").src = userData.profile_picture_url || "https://placehold.co/128x128/e5e7eb/111?text=👤";
-        ["firstName","lastName","email","phone","occupation","educationLevel","grade","schoolName",
-         "university","uniLevel","program","teacherSchool","teacherGrade","adminSchool"].forEach(k=>{
-          if ($(k) && typeof userData[k] !== "undefined") $(k).value = userData[k] ?? "";
+        $("profile-name").textContent = `${userData.firstname || ""} ${userData.lastname || ""}`;
+        $("profile-role").textContent = userData.occupation || "";
+
+        ["firstname","lastname","email","phone","occupation"].forEach(k => {
+          if($(k)) $(k).value = userData[k] ?? "";
         });
 
-        renderSections();
-      } catch (e) {
-        console.error(e);
-        toast(getT("couldNotFetch"), "error");
+        toggleSections(userData.occupation);
+      } catch (err) {
+        console.error(err);
+        toast("Could not fetch profile", "error");
       } finally {
         $("loading").classList.add("hidden");
       }
     }
 
-    async function saveProfile(e) {
-      e.preventDefault();
-      if (!validateAll()) {
-        toast(getT("fixErrors"), "error");
-        return;
-      }
-
-      const payload = {
-        firstName: $("firstName").value.trim(),
-        lastName: $("lastName").value.trim(),
-        phone: $("phone").value.trim(),
-        educationLevel: $("educationLevel").value || null,
-        grade: $("grade")?.value?.trim() || null,
-        schoolName: $("schoolName")?.value?.trim() || null,
-        university: $("university")?.value?.trim() || null,
-        uniLevel: $("uniLevel")?.value?.trim() || null,
-        program: $("program")?.value?.trim() || null,
-        teacherSchool: $("teacherSchool")?.value?.trim() || null,
-        teacherGrade: $("teacherGrade")?.value?.trim() || null,
-        adminSchool: $("adminSchool")?.value?.trim() || null,
-      };
-
-      toggleSpinner(true);
-      try {
-        const res = await fetch(`${API_BASE_URL}/profile`, {
-          method: "PATCH",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json().catch(()=> ({}));
-        if (!res.ok) throw new Error(data?.message || getT("updateFailed"));
-
-        userData = { ...userData, ...payload };
-        toast(getT("profileUpdatedSuccess"), "success");
-      } catch (err) {
-        console.error(err);
-        toast(getT("couldNotSave"), "error");
-      } finally {
-        toggleSpinner(false);
-      }
+    function toggleSections(role) {
+      $("student-section").classList.toggle("hidden", role !== "student");
+      $("teacher-section").classList.toggle("hidden", role !== "teacher");
+      $("admin-section").classList.toggle("hidden", role !== "admin");
     }
 
-    async function uploadAvatar(file) {
-      if (!file) { toast(getT("noFileSelected"), "error"); return; }
-      uploading = true; toggleSpinner(false);
-      toast(getT("uploadingPhoto"), "success");
-
-      try {
-        const form = new FormData();
-        form.append("profilePhoto", file);
-
-        const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-          method: "POST",
-          credentials: "include",
-          body: form
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || getT("uploadFailed"));
-
-        $("avatar").src = data.photoUrl || $("avatar").src;
-        userData.profile_picture_url = data.photoUrl || userData.profile_picture_url;
-        toast(getT("photoUploadedSuccess"), "success");
-      } catch (e) {
-        console.error(e);
-        toast(getT("uploadFailed"), "error");
-      } finally {
-        uploading = false; toggleSpinner(false);
-      }
-    }
-
-    
     document.addEventListener("DOMContentLoaded", () => {
-      
       $("lang").value = currentLang;
-      setDir();
-      if (typeof translatePage === "function") {
-        translatePage("profile", currentLang);
-      }
-
+      if(typeof translatePage === "function") translatePage("profile", currentLang);
       $("lang").addEventListener("change", (e) => {
         currentLang = e.target.value;
         localStorage.setItem("lang", currentLang);
-        setDir();
-        if (typeof translatePage === "function") translatePage("profile", currentLang);
-        
-        if (typeof translateElements === "function") translateElements(document.body);
+        if(typeof translatePage === "function") translatePage("profile", currentLang);
       });
-
-     
-      $("profile-form").addEventListener("submit", saveProfile);
-      document.body.addEventListener("input", (e) => {
-        const id = e.target?.id;
-        if (!id) return;
-        
-        userData[id] = e.target.value;
-        if (id === "educationLevel") renderSections();
-      });
-
-     
-      $("change-pic").addEventListener("click", () => $("avatar-input").click());
-      $("avatar-input").addEventListener("change", (e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (ev) => { $("avatar").src = ev.target.result; };
-          reader.readAsDataURL(file);
-          uploadAvatar(file); 
-        }
-      });
-
       loadProfile();
     });
   </script>
 </body>
 </html>
+
