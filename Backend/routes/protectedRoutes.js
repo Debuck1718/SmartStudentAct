@@ -1481,6 +1481,7 @@ protectedRouter.get(
     }
   }
 );
+
 protectedRouter.get("/auth/check", authenticateJWT, (req, res) => {
   res.json({
     status: true,
