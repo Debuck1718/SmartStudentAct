@@ -14,6 +14,7 @@
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8">
 
   <div class="w-full max-w-3xl flex flex-col items-center mb-6 px-4">
+    <!-- Header -->
     <div class="w-full flex justify-between items-center mb-6">
       <h1 class="text-2xl sm:text-3xl font-bold text-blue-600" data-i18n="quizTitle">📘 Quiz</h1>
       <select id="language-select" class="border rounded-lg px-2 py-1">
@@ -26,17 +27,19 @@
       </select>
     </div>
 
+    <!-- Quiz Content -->
     <div id="main-content" class="w-full bg-white shadow-lg rounded-xl p-6 hidden">
       <h2 id="quiz-title" class="text-xl font-semibold mb-2 text-gray-800"></h2>
       <p id="quiz-desc" class="text-gray-600 mb-4"></p>
 
+      <!-- Timer -->
       <div id="quiz-timer" class="text-red-600 font-bold text-lg mb-4 hidden">
         ⏱ <span data-i18n="timeRemaining">Time Remaining</span>: <span id="time-remaining"></span>
       </div>
 
+      <!-- Quiz Form -->
       <form id="quiz-form" class="space-y-6">
         <div id="questions-container" class="space-y-6"></div>
-
         <button type="submit" id="submit-button"
           class="w-full bg-blue-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-600 transition-colors"
           data-i18n="submitQuiz">
@@ -44,6 +47,7 @@
         </button>
       </form>
 
+      <!-- Results -->
       <div id="quiz-result" class="mt-6 hidden text-center">
         <h3 class="text-2xl font-bold text-green-600 mb-2" data-i18n="quizSubmitted">✅ Quiz Submitted</h3>
         <p id="score-text" class="text-lg text-gray-800 mb-4"></p>
@@ -51,6 +55,7 @@
       </div>
     </div>
 
+    <!-- Loading -->
     <div id="loading-spinner" class="flex flex-col items-center justify-center min-h-[300px]">
       <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
       <p class="mt-4 text-gray-500" data-i18n="loadingQuiz">Loading quiz...</p>
@@ -63,7 +68,6 @@
     const API_BASE = 'https://api.smartstudentact.com/api';
     const urlParams = new URLSearchParams(window.location.search);
     const quizId = urlParams.get('quizId');
-    const token = localStorage.getItem('token');
 
     const mainContent = document.getElementById('main-content');
     const loadingSpinner = document.getElementById('loading-spinner');
@@ -92,21 +96,20 @@
     };
 
     const fetchQuiz = async () => {
-    try {
+      try {
         const res = await fetch(`${API_BASE}/student/quizzes/${quizId}`, {
-            method: 'GET',
-            credentials: 'include' 
+          method: 'GET',
+          credentials: 'include'
         });
-        if (!res.ok) {
-            throw new Error('Failed to load quiz. Please check your network connection and login status.');
-        }
+        if (!res.ok) throw new Error('Failed to load quiz.');
         const data = await res.json();
         renderQuiz(data.quiz);
-    } catch (err) {
+        hideLoading();
+      } catch (err) {
         questionsContainer.innerHTML = `<p class="text-red-500">${err.message}</p>`;
         console.error(err);
-    }
-};
+      }
+    };
 
     const startCountdown = (minutes) => {
       if (!minutes) return;
@@ -166,10 +169,8 @@
       try {
         const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            credentials: 'include'
-          },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ answers, autoSubmit: true })
         });
 
@@ -243,10 +244,8 @@
       try {
         const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            credentials: 'include'
-          },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ answers, autoSubmit: false })
         });
 
@@ -279,5 +278,7 @@
   </script>
 </body>
 </html>
+
+
 
 

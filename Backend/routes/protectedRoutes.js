@@ -363,63 +363,97 @@ protectedRouter.patch(
 protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
   const userId = req.userId;
   try {
-    const user = await User.findById(userId).select("-password"); 
+    const user = await User.findById(userId).select(
+      "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade teacherGrade teacherSubject profile_picture_url"
+    );
+
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-    res.status(200).json(user);
+
+    res.status(200).json({
+      firstname: user.firstname,
+      lastname: user.lastname,
+      email: user.email,
+      phone: user.phone,
+      occupation: user.occupation,
+      schoolName: user.schoolName,
+      schoolCountry: user.schoolCountry,
+      educationLevel: user.educationLevel,
+      grade: user.grade,
+      teacherGrade: user.teacherGrade,
+      teacherSubject: user.teacherSubject,
+      profile_picture_url: user.profile_picture_url,
+    });
   } catch (error) {
     logger.error("Error fetching user profile:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
 
+
 protectedRouter.patch(
-  '/profile',
+  "/profile",
   authenticateJWT,
   validate(settingsSchema),
   async (req, res) => {
-  
     const userId = req.userId || req.body.userId;
     const updateData = req.body;
 
     if (!userId) {
-        return res.status(401).json({ message: 'Authentication failed. User ID not found.' });
+      return res
+        .status(401)
+        .json({ message: "Authentication failed. User ID not found." });
     }
 
     try {
       const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
         new: true,
         runValidators: true,
-      }).select('-password');
+      }).select(
+        "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade teacherGrade teacherSubject profile_picture_url"
+      );
 
       if (!updatedUser) {
         logger.warn(`User with ID ${userId} not found during profile update.`);
-        return res.status(404).json({ message: 'User not found.' });
+        return res.status(404).json({ message: "User not found." });
       }
 
       res.status(200).json({
-        message: 'Profile updated successfully.',
-        updatedFields: updateData,
-        user: updatedUser,
+        message: "Profile updated successfully.",
+        user: {
+          firstname: updatedUser.firstname,
+          lastname: updatedUser.lastname,
+          email: updatedUser.email,
+          phone: updatedUser.phone,
+          occupation: updatedUser.occupation,
+          schoolName: updatedUser.schoolName,
+          schoolCountry: updatedUser.schoolCountry,
+          educationLevel: updatedUser.educationLevel,
+          grade: updatedUser.grade,
+          teacherGrade: updatedUser.teacherGrade,
+          teacherSubject: updatedUser.teacherSubject,
+          profile_picture_url: updatedUser.profile_picture_url,
+        },
       });
     } catch (error) {
-      if (error.name === 'ValidationError') {
-        const messages = Object.values(error.errors).map(val => val.message);
+      if (error.name === "ValidationError") {
+        const messages = Object.values(error.errors).map((val) => val.message);
         return res
           .status(400)
-          .json({ message: 'Validation failed', errors: messages });
+          .json({ message: "Validation failed", errors: messages });
       }
       if (error.code === 11000) {
         return res
           .status(409)
-          .json({ message: 'A user with this data already exists.' });
+          .json({ message: "A user with this data already exists." });
       }
-      logger.error('Error updating user profile:', error);
-      res.status(500).json({ message: 'Server error', error: error.message });
+      logger.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
     }
   }
 );
+
 
 
 protectedRouter.post(
@@ -1239,7 +1273,7 @@ protectedRouter.post(
   }
 );
 
-// --------------------- GET QUIZ RESULTS ---------------------
+
 protectedRouter.get(
   "/teacher/quiz/:quizId/results",
   authenticateJWT,
@@ -1765,6 +1799,35 @@ protectedRouter.get(
       });
     } catch (error) {
       logger.error("Error fetching student quiz result:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.get(
+  "/student/quizzes/:quizId",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
+    try {
+      const student = await User.findById(req.user.id);
+      if (!student) return res.status(404).json({ message: "Student not found." });
+
+      const quiz = await Quiz.findById(req.params.quizId);
+      if (!quiz) return res.status(404).json({ message: "Quiz not found." });
+
+      const allowed =
+        quiz.assigned_to_users.includes(student.email) ||
+        quiz.assigned_to_grades.includes(student.grade) ||
+        quiz.assigned_to_schools.includes(student.schoolName);
+
+      if (!allowed) {
+        return res.status(403).json({ message: "Not authorized for this quiz." });
+      }
+
+      res.status(200).json({ quiz });
+    } catch (error) {
+      logger.error("Error fetching quiz:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
