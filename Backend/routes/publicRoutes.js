@@ -195,7 +195,6 @@ publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, re
     const decoded = jwt.verify(otpToken, JWT_SECRET);
     logger.info("Decoded OTP payload:", decoded);
 
-    
     if (decoded.email !== email || decoded.code !== code) {
       return res.status(400).json({ message: "Invalid email or OTP." });
     }
@@ -220,34 +219,46 @@ publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, re
         redirectUrl: getRedirectUrl(user, true),
       });
     } else {
-   
       const now = new Date();
       const trialDurationDays = 30;
       const trialEndAt = new Date(now.getTime() + trialDurationDays * 24 * 60 * 60 * 1000);
 
-      const newUser = new User({
+      
+      const occupation = decoded.occupation || "student";
+      const educationLevel = decoded.educationLevel || "high";
+
+      const newUserData = {
         _id: decoded.temporaryUserId,
-        firstname: decoded.firstname || "",
-        lastname: decoded.lastname || "",
+        firstname: decoded.firstname || "User",
+        lastname: decoded.lastname || "Unknown",
         email: decoded.email,
         phone: decoded.phone || "",
         password: decoded.passwordHash, 
         verified: true,
-        role: decoded.occupation || "student",
-        occupation: decoded.occupation || "student",
-        educationLevel: decoded.educationLevel || "",
-        grade: decoded.grade || "",
-        schoolName: decoded.schoolName || "",
-        schoolCountry: decoded.schoolCountry || "",
-        teacherGrade: decoded.teacherGrade || "",
-        teacherSubject: decoded.teacherSubject || "",
+        role: occupation,
+        occupation,
+        educationLevel,
+        grade: occupation === "student" ? (decoded.grade || 1) : undefined,
+        schoolName: decoded.schoolName || "Unknown School",
+        schoolCountry: decoded.schoolCountry || "GH",
+        teacherGrade: occupation === "teacher" ? (decoded.teacherGrade || []) : undefined,
+        teacherSubject: occupation === "teacher" ? (decoded.teacherSubject || "") : undefined,
+        payment_gateway: "", 
+        payment_date: new Date(), 
         is_on_trial: true,
         trial_start_at: now,
         trial_end_at: trialEndAt,
         subscription_status: "inactive",
-      });
+      };
 
-      await newUser.save();
+      const newUser = new User(newUserData);
+
+      try {
+        await newUser.save();
+      } catch (saveErr) {
+        logger.error("User creation validation failed:", saveErr.errors);
+        return res.status(400).json({ message: "User creation failed.", details: saveErr.errors });
+      }
 
       const accessToken = generateAccessToken(newUser);
       const refreshToken = generateRefreshToken(newUser);
@@ -266,11 +277,9 @@ publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, re
     }
   } catch (err) {
     logger.error("❌ Verify-OTP error:", err);
-
     if (err.name === "TokenExpiredError") {
       return res.status(400).json({ message: "OTP expired." });
     }
-
     return res.status(500).json({ message: "OTP verification failed." });
   }
 });
