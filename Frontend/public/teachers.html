@@ -220,7 +220,6 @@
   </h1>
 
   <div class="flex items-center space-x-6">
-    <!-- 🌍 Language Switcher -->
     <div class="relative inline-block text-left">
       <button
         type="button"
@@ -269,7 +268,6 @@
       </span>
     </div>
 
-    <!-- ▼ Profile Dropdown -->
     <div class="relative inline-block text-left">
       <button
         id="profile-menu-button"
@@ -658,7 +656,7 @@
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const defaultLang = "en";
-        translatePage("teacher-dashboard", defaultLang);
+        translatePage("teachers", defaultLang);
         document
           .getElementById("language-menu-button")
           .addEventListener("click", () => {
@@ -673,7 +671,7 @@
             link.addEventListener("click", (e) => {
               e.preventDefault();
               const lang = e.target.getAttribute("data-lang");
-              translatePage("teacher-dashboard", lang);
+              translatePage("teachers", lang);
               document
                 .getElementById("language-dropdown-menu")
                 .classList.add("hidden", "opacity-0");
