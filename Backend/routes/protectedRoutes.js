@@ -1457,6 +1457,7 @@ protectedRouter.get("/auth/check", authenticateJWT, (req, res) => {
 });
 
 
+
 protectedRouter.get(
   "/student/assignments",
   authenticateJWT,
@@ -1467,11 +1468,13 @@ protectedRouter.get(
       if (!student) {
         return res.status(404).json({ message: "Student not found." });
       }
+
       const assignments = await Assignment.find({
         $or: [
           { assigned_to_users: student.email },
           { assigned_to_grades: student.grade },
           { assigned_to_schools: student.schoolName },
+          { created_by: student._id }, 
         ],
       });
 
@@ -1482,6 +1485,90 @@ protectedRouter.get(
     }
   }
 );
+
+
+protectedRouter.post(
+  "/student/assignments",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
+    try {
+      const { title, description, dueDate, dueTime } = req.body;
+      const student = await User.findById(req.user.id);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found." });
+      }
+
+      if (!title || !dueDate || !dueTime) {
+        return res.status(400).json({ message: "Title, dueDate and dueTime are required." });
+      }
+
+      const dueDateTime = new Date(`${dueDate}T${dueTime}`);
+
+      const newAssignment = new Assignment({
+        title,
+        description,
+        due_date: dueDateTime,
+        created_by: student._id,
+        assigned_to_users: [student.email], 
+      });
+
+      await newAssignment.save();
+
+      eventBus.emit("assignment_created", {
+        assignmentId: newAssignment._id,
+        title: newAssignment.title,
+        creatorId: student._id,
+      });
+
+      res.status(201).json({
+        message: "Assignment created successfully.",
+        assignment: newAssignment,
+      });
+    } catch (error) {
+      logger.error("Error creating student assignment:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+
+protectedRouter.post(
+  "/student/reminders",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
+    try {
+      const { assignmentId } = req.body;
+      if (!assignmentId) {
+        return res.status(400).json({ message: "assignmentId is required." });
+      }
+
+      const assignment = await Assignment.findById(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found." });
+      }
+
+      const reminderHours = [24, 6, 2];
+      reminderHours.forEach(async (hoursBefore) => {
+        const remindTime = new Date(assignment.due_date);
+        remindTime.setHours(remindTime.getHours() - hoursBefore);
+        if (remindTime > new Date()) {
+          await req.app.locals.agenda.schedule(remindTime, "assignment_reminder", {
+            assignmentId,
+            hoursBefore,
+          });
+        }
+      });
+
+      res.status(200).json({ message: "Reminders scheduled successfully." });
+    } catch (error) {
+      logger.error("Error scheduling reminders:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 
 protectedRouter.post(
   "/student/submissions",
@@ -1569,6 +1656,7 @@ protectedRouter.get(
           { assigned_to_schools: student.schoolName },
         ],
       });
+
 
       for (const quiz of quizzes) {
         let submission = quiz.submissions.find(
