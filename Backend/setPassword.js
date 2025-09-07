@@ -1,31 +1,33 @@
 require('dotenv').config();
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const User = require("./models/User");
-
-const BCRYPT_SALT_ROUNDS = 10;
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const User = require('./models/User');
 
 async function setPassword(email, newPassword) {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(process.env.MONGODB_URI);
+  console.log("Connected to DB");
 
-    const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-      console.log(`User with email ${email} not found`);
-      return;
-    }
+  const user = await User.findOne({ email }).select('+password');
+  if (!user) return console.log('❌ User not found');
 
-    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
-    user.password = hashedPassword;
-    await user.save();
+  // Hash the password once
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  console.log("Hashed password:", hashedPassword);
 
-    console.log(`✅ Password updated for ${email}`);
-    process.exit(0);
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
+  // Set hashed password safely without double-hashing
+  user.setRawHashedPassword(hashedPassword);
+  await user.save();
+
+  console.log(`✅ Password updated for ${email}`);
+
+  
+  const match = await user.comparePassword(newPassword);
+  console.log('Password match after saving?', match);
+
+  process.exit(0);
 }
 
 setPassword("afedziesylvanus@gmail.com", "Afedzie123%");
+
+
 

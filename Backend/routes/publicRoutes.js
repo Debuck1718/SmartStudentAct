@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const rateLimit = require("express-rate-limit");
 const Joi = require("joi");
 const crypto = require("crypto");
-const jwt = require("jsonwebtoken"); // Added missing import
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const logger = require("../utils/logger");
 const {
@@ -21,9 +21,8 @@ const {
 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
 const IS_PROD = process.env.NODE_ENV === "production";
-const BCRYPT_SALT_ROUNDS = 10;
-const PASSWORD_RESET_EXPIRY = 3600000; // 1 hour
 const JWT_SECRET = process.env.JWT_SECRET;
+const PASSWORD_RESET_EXPIRY = 3600000; 
 
 if (!JWT_SECRET)
   throw new Error("JWT_SECRET is not defined in environment variables.");
@@ -70,14 +69,8 @@ module.exports = (eventBus) => {
       .required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
     occupation: Joi.string().valid("student", "teacher").required(),
-
-    schoolName: Joi.string()
-      .required()
-      .messages({ "any.required": "School name is required." }),
-    schoolCountry: Joi.string()
-      .required()
-      .messages({ "any.required": "School country is required." }),
-
+    schoolName: Joi.string().required(),
+    schoolCountry: Joi.string().required(),
     educationLevel: Joi.string().when("occupation", {
       is: "student",
       then: Joi.required(),
@@ -88,7 +81,6 @@ module.exports = (eventBus) => {
       then: Joi.required(),
       otherwise: Joi.allow(""),
     }),
-
     teacherGrade: Joi.string().when("occupation", {
       is: "teacher",
       then: Joi.required(),
@@ -119,6 +111,7 @@ module.exports = (eventBus) => {
   const forgotPasswordSchema = Joi.object({
     email: Joi.string().email().required(),
   });
+
   const resetPasswordSchema = Joi.object({
     token: Joi.string().required(),
     newPassword: Joi.string()
@@ -126,6 +119,7 @@ module.exports = (eventBus) => {
       .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
       .required(),
   });
+
   const contactSchema = Joi.object({
     name: Joi.string().min(2).max(100).required(),
     email: Joi.string().email().required(),
@@ -143,6 +137,7 @@ module.exports = (eventBus) => {
     }
     next();
   };
+
 
   publicRouter.post(
     "/users/signup-otp",
@@ -168,30 +163,14 @@ module.exports = (eventBus) => {
         logger.info("Signup OTP request payload:", req.body);
 
         const existingUser = await User.findOne({ email });
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-        if (existingUser) {
-          const otpToken = jwt.sign({ email, code }, JWT_SECRET, {
-            expiresIn: "10m",
-          });
-          await sendOTPEmail(email, firstname, code);
-          return res.json({
-            status: "success",
-            message: "OTP sent to existing user.",
-            otpToken,
-          });
-        }
-
-        const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-        const temporaryUserId = crypto.randomUUID();
-
-        const otpPayload = {
-          temporaryUserId,
+        const otpTokenPayload = {
+          temporaryUserId: crypto.randomUUID(),
           firstname,
           lastname,
           email,
           phone,
-          passwordHash,
+          password, 
           occupation,
           schoolName,
           schoolCountry,
@@ -199,27 +178,19 @@ module.exports = (eventBus) => {
           grade,
           teacherGrade,
           teacherSubject,
-          code,
+          code: Math.floor(100000 + Math.random() * 900000).toString(),
         };
 
-        logger.info("OTP payload:", otpPayload);
+        const otpToken = jwt.sign(otpTokenPayload, JWT_SECRET, { expiresIn: "10m" });
+        await sendOTPEmail(email, firstname, otpTokenPayload.code);
 
-        const otpToken = jwt.sign(otpPayload, JWT_SECRET, { expiresIn: "10m" });
-
-        try {
-          await sendOTPEmail(email, firstname, code);
-        } catch (emailErr) {
-          logger.error("Failed to send OTP email:", emailErr);
-          return res.status(500).json({ message: "Failed to send OTP email." });
-        }
-
-        res
-          .status(200)
-          .json({
-            status: "success",
-            message: "OTP sent. Please verify to complete signup.",
-            otpToken,
-          });
+        return res.status(200).json({
+          status: "success",
+          message: existingUser
+            ? "OTP sent to existing user."
+            : "OTP sent. Please verify to complete signup.",
+          otpToken,
+        });
       } catch (err) {
         logger.error("❌ Signup-OTP error:", err);
         res.status(500).json({ message: "Signup failed." });
@@ -227,205 +198,172 @@ module.exports = (eventBus) => {
     }
   );
 
-publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
-  const { code, email, password, otpToken } = req.body;
+ 
+  publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
+    const { code, email, password, otpToken } = req.body;
 
-  try {
-    const decoded = jwt.verify(otpToken, JWT_SECRET);
-    logger.info("Decoded OTP payload:", decoded);
-
-    if (decoded.email !== email || decoded.code !== code) {
-      return res.status(400).json({ message: "Invalid email or OTP." });
-    }
-
-    let user = await User.findOne({ email });
-
-    if (user) {
-      if (!user.password || !(await bcrypt.compare(password, user.password))) {
-        user.password = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-        await user.save();
-        logger.info(`Password set/updated for existing user: ${email}`);
-      }
-
-      const accessToken = generateAccessToken(user);
-      const refreshToken = generateRefreshToken(user);
-      user.refreshToken = refreshToken;
-      await user.save();
-
-      return res.status(200).json({
-        status: "success",
-        message: "User verified.",
-        redirectUrl: getRedirectUrl(user, true),
-      });
-    } else {
-      
-      const now = new Date();
-      const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
-
-      const newUserData = {
-        _id: decoded.temporaryUserId,
-        firstname: decoded.firstname || "User",
-        lastname: decoded.lastname || "Unknown",
-        email: decoded.email,
-        phone: decoded.phone || "",
-        password: decoded.passwordHash 
-          ? decoded.passwordHash
-          : await bcrypt.hash(password, BCRYPT_SALT_ROUNDS),
-        verified: true,
-        role: decoded.occupation || "student",
-        occupation: decoded.occupation || "student",
-        educationLevel: decoded.educationLevel || "high",
-        grade: decoded.grade,
-        schoolName: decoded.schoolName || "Unknown School",
-        schoolCountry: decoded.schoolCountry || "GH",
-        teacherGrade: decoded.teacherGrade || [],
-        teacherSubject: decoded.teacherSubject || "",
-        is_on_trial: true,
-        trial_start_at: now,
-        trial_end_at: trialEndAt,
-        subscription_status: "inactive",
-      };
-
-      const newUser = new User(newUserData);
-      await newUser.save();
-
-      const accessToken = generateAccessToken(newUser);
-      const refreshToken = generateRefreshToken(newUser);
-      newUser.refreshToken = refreshToken;
-      await newUser.save();
-
-      setAuthCookies(res, accessToken, refreshToken);
-
-      sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
-
-      return res.status(201).json({
-        status: "success",
-        message: "User created & verified.",
-        redirectUrl: getRedirectUrl(newUser, true),
-      });
-    }
-  } catch (err) {
-    logger.error("❌ Verify-OTP error:", err);
-    if (err.name === "TokenExpiredError") {
-      return res.status(400).json({ message: "OTP expired." });
-    }
-    return res.status(500).json({ message: "OTP verification failed." });
-  }
-});
-
-
-publicRouter.post(
-  "/users/login",
-  loginLimiter,
-  validate(loginSchema),
-  async (req, res) => {
     try {
-      const email = req.body.email?.trim();
-      const password = req.body.password?.trim();
+      const decoded = jwt.verify(otpToken, JWT_SECRET);
+      logger.info("Decoded OTP payload:", decoded);
 
-      if (!email || !password) {
-        return res
-          .status(400)
-          .json({ status: false, message: "Email and password are required." });
+      if (decoded.email !== email || decoded.code !== code) {
+        return res.status(400).json({ message: "Invalid email or OTP." });
       }
 
-      const user = await User.findOne({ email }).select("+password");
+      let user = await User.findOne({ email }).select("+password");
 
-      if (!user) {
-        console.log(`Login failed: user not found for email ${email}`);
-        return res
-          .status(401)
-          .json({ status: false, message: "Invalid credentials." });
-      }
-
-      const match = await user.comparePassword(password);
-      console.log(`Login attempt for ${email}: password match = ${match}`);
-
-      if (!match) {
-        return res
-          .status(401)
-          .json({ status: false, message: "Invalid credentials." });
-      }
-
-      const now = new Date();
-      let subscriptionActive = false;
-      let trialActive = false;
-
-      if (user.subscription_status === "active" && user.payment_date) {
-        const expiry = user.nextBillingDate
-          ? new Date(user.nextBillingDate)
-          : new Date(user.payment_date);
-        if (!user.nextBillingDate) expiry.setMonth(expiry.getMonth() + 1);
-
-        subscriptionActive = now < expiry;
-
-        if (!subscriptionActive) {
-          user.subscription_status = "expired";
+      if (user) {
+        if (!user.password) {
+          user.password = password; 
           await user.save();
+          logger.info(`Password set for existing user: ${email}`);
         }
+
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        return res.status(200).json({
+          status: "success",
+          message: "User verified.",
+          redirectUrl: getRedirectUrl(user, true),
+        });
+      } else {
+        const now = new Date();
+        const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        const newUserData = {
+          _id: decoded.temporaryUserId,
+          firstname: decoded.firstname || "User",
+          lastname: decoded.lastname || "Unknown",
+          email: decoded.email,
+          phone: decoded.phone || "",
+          password, 
+          verified: true,
+          role: decoded.occupation || "student",
+          occupation: decoded.occupation || "student",
+          educationLevel: decoded.educationLevel || "high",
+          grade: decoded.grade,
+          schoolName: decoded.schoolName || "Unknown School",
+          schoolCountry: decoded.schoolCountry || "GH",
+          teacherGrade: decoded.teacherGrade || [],
+          teacherSubject: decoded.teacherSubject || "",
+          is_on_trial: true,
+          trial_start_at: now,
+          trial_end_at: trialEndAt,
+          subscription_status: "inactive",
+        };
+
+        const newUser = new User(newUserData);
+        await newUser.save();
+
+        const accessToken = generateAccessToken(newUser);
+        const refreshToken = generateRefreshToken(newUser);
+        newUser.refreshToken = refreshToken;
+        await newUser.save();
+
+        setAuthCookies(res, accessToken, refreshToken);
+        sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
+
+        return res.status(201).json({
+          status: "success",
+          message: "User created & verified.",
+          redirectUrl: getRedirectUrl(newUser, true),
+        });
       }
-
-      if (user.is_on_trial && user.trial_end_at) {
-        trialActive = now < new Date(user.trial_end_at);
-
-        if (!trialActive) {
-          user.is_on_trial = false;
-          await user.save();
-        }
-      }
-
-      const hasAccess = subscriptionActive || trialActive;
-
-      const accessToken = generateAccessToken(user);
-      const refreshToken = generateRefreshToken(user);
-      await User.findByIdAndUpdate(user._id, { refreshToken });
-      setAuthCookies(res, accessToken, refreshToken);
-
-      const redirectUrl = getRedirectUrl(user, hasAccess);
-
-      res.json({
-        status: true,
-        message: "Login successful",
-        user: {
-          email: user.email,
-          role: user.role,
-          id: user._id,
-          subscriptionActive,
-          trialActive,
-        },
-        redirectUrl,
-      });
     } catch (err) {
-      logger.error("❌ Login error:", err);
-      return res.status(500).json({ status: false, message: "Server error" });
+      logger.error("❌ Verify-OTP error:", err);
+      if (err.name === "TokenExpiredError") {
+        return res.status(400).json({ message: "OTP expired." });
+      }
+      return res.status(500).json({ message: "OTP verification failed." });
     }
+  });
+
+  publicRouter.post(
+    "/users/login",
+    loginLimiter,
+    validate(loginSchema),
+    async (req, res) => {
+      try {
+        const email = req.body.email?.trim().toLowerCase();
+        const password = req.body.password?.trim();
+
+        const user = await User.findOne({ email }).select("+password");
+        if (!user)
+          return res.status(401).json({ status: false, message: "Invalid credentials." });
+
+        const match = await user.comparePassword(password);
+        if (!match)
+          return res.status(401).json({ status: false, message: "Invalid credentials." });
+
+        const now = new Date();
+        let subscriptionActive = false;
+        let trialActive = false;
+
+        if (user.subscription_status === "active" && user.payment_date) {
+          const expiry = user.nextBillingDate
+            ? new Date(user.nextBillingDate)
+            : new Date(user.payment_date);
+          if (!user.nextBillingDate) expiry.setMonth(expiry.getMonth() + 1);
+          subscriptionActive = now < expiry;
+          if (!subscriptionActive) {
+            user.subscription_status = "expired";
+            await user.save();
+          }
+        }
+
+        if (user.is_on_trial && user.trial_end_at) {
+          trialActive = now < new Date(user.trial_end_at);
+          if (!trialActive) {
+            user.is_on_trial = false;
+            await user.save();
+          }
+        }
+
+        const hasAccess = subscriptionActive || trialActive;
+
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+        await User.findByIdAndUpdate(user._id, { refreshToken });
+        setAuthCookies(res, accessToken, refreshToken);
+
+        const redirectUrl = getRedirectUrl(user, hasAccess);
+
+        res.json({
+          status: true,
+          message: "Login successful",
+          user: {
+            email: user.email,
+            role: user.role,
+            id: user._id,
+            subscriptionActive,
+            trialActive,
+          },
+          redirectUrl,
+        });
+      } catch (err) {
+        logger.error("❌ Login error:", err);
+        return res.status(500).json({ status: false, message: "Server error" });
+      }
+    }
+  );
+
+  function getRedirectUrl(user, hasAccess) {
+    const { role } = user;
+    const bypassRoles = ["global_overseer", "overseer"];
+    if (bypassRoles.includes(role)) return redirectPaths[role] || redirectPaths.default;
+    if (redirectPaths[role]) return hasAccess ? redirectPaths[role] : redirectPaths.payment;
+    return redirectPaths.default;
   }
-);
-
-function getRedirectUrl(user, hasAccess) {
-  const { role } = user;
-  const bypassRoles = ["global_overseer", "overseer"];
-
-  if (bypassRoles.includes(role)) {
-    return redirectPaths[role] || redirectPaths.default;
-  }
-
-  if (redirectPaths[role]) {
-    return hasAccess ? redirectPaths[role] : redirectPaths.payment;
-  }
-
-  return redirectPaths.default;
-}
-
 
   publicRouter.post("/users/logout", async (req, res) => {
     try {
       const refreshToken = req.cookies.refresh_token;
       if (refreshToken)
-        await User.updateOne(
-          { refreshToken },
-          { $unset: { refreshToken: "" } }
-        );
+        await User.updateOne({ refreshToken }, { $unset: { refreshToken: "" } });
+
       const cookieOptions = {
         httpOnly: true,
         secure: IS_PROD,
@@ -447,15 +385,13 @@ function getRedirectUrl(user, hasAccess) {
     generalLimiter,
     validate(forgotPasswordSchema),
     async (req, res) => {
-      const { email } = req.body;
+      const email = req.body.email?.trim().toLowerCase();
       try {
         const user = await User.findOne({ email });
         if (!user)
-          return res
-            .status(200)
-            .json({
-              message: "If an account exists, a reset link has been sent.",
-            });
+          return res.status(200).json({
+            message: "If an account exists, a reset link has been sent.",
+          });
 
         const token = crypto.randomBytes(32).toString("hex");
         user.reset_password_token = token;
@@ -467,15 +403,10 @@ function getRedirectUrl(user, hasAccess) {
         )}/reset-password.html?token=${token}`;
         await sendResetEmail(user.email, resetLink);
 
-        eventBus.emit("password_reset_requested", {
-          userId: user._id,
-          email: user.email,
+        eventBus.emit("password_reset_requested", { userId: user._id, email: user.email });
+        res.status(200).json({
+          message: "If an account exists, a reset link has been sent.",
         });
-        res
-          .status(200)
-          .json({
-            message: "If an account exists, a reset link has been sent.",
-          });
       } catch (err) {
         logger.error("❌ Forgot password error:", err);
         res.status(500).json({ error: "Server error" });
@@ -499,7 +430,7 @@ function getRedirectUrl(user, hasAccess) {
             .status(400)
             .json({ message: "Password reset token is invalid or expired." });
 
-        user.password = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
+        user.password = newPassword; 
         user.reset_password_token = undefined;
         user.reset_password_expires = undefined;
         await user.save();
@@ -523,12 +454,10 @@ function getRedirectUrl(user, hasAccess) {
           CONTACT_EMAIL,
           `New Contact Form Message from ${name}`,
           `<p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Message:</strong><br>${message}</p>`
+           <p><strong>Email:</strong> ${email}</p>
+           <p><strong>Message:</strong><br>${message}</p>`
         );
-        res
-          .status(200)
-          .json({ message: "Your message has been sent successfully." });
+        res.status(200).json({ message: "Your message has been sent successfully." });
       } catch (err) {
         logger.error("❌ Contact form error:", err);
         res.status(500).json({ error: "Failed to send message." });
