@@ -355,22 +355,11 @@
         dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${msg}</div>`;
       }
 
-      async function fetchWithAuth(endpoint, options = {}) {
-        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-          ...options,
-          credentials: "include",
-        });
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || "Request failed");
-        }
-        return res.json();
-      }
 
       async function fetchWithAuth(endpoint, options = {}) {
         const res = await fetch(`${API_BASE_URL}${endpoint}`, {
           ...options,
-          credentials: "include", // send cookies
+          credentials: "include", 
           headers: {
             "Content-Type": "application/json",
             ...(options.headers || {}),
