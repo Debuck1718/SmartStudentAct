@@ -227,117 +227,92 @@ module.exports = (eventBus) => {
     }
   );
 
-  publicRouter.post(
-    "/users/verify-otp",
-    validate(verifyOtpSchema),
-    async (req, res) => {
-      const { code, email, password, otpToken } = req.body;
+publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
+  const { code, email, password, otpToken } = req.body;
 
-      try {
-        const decoded = jwt.verify(otpToken, JWT_SECRET);
-        logger.info("Decoded OTP payload:", decoded);
+  try {
+    const decoded = jwt.verify(otpToken, JWT_SECRET);
+    logger.info("Decoded OTP payload:", decoded);
 
-        if (decoded.email !== email || decoded.code !== code) {
-          return res.status(400).json({ message: "Invalid email or OTP." });
-        }
-
-        let user = await User.findOne({ email });
-
-        if (user) {
-          const isMatch = user.password
-            ? await bcrypt.compare(password, user.password)
-            : false;
-          if (!isMatch) {
-            user.password = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-            await user.save();
-          }
-
-          const accessToken = generateAccessToken(user);
-          const refreshToken = generateRefreshToken(user);
-          user.refreshToken = refreshToken;
-          await user.save();
-
-          return res.status(200).json({
-            status: "success",
-            message: "User verified.",
-            redirectUrl: getRedirectUrl(user, true),
-          });
-        } else {
-          const now = new Date();
-          const trialDurationDays = 30;
-          const trialEndAt = new Date(
-            now.getTime() + trialDurationDays * 24 * 60 * 60 * 1000
-          );
-
-          const occupation = decoded.occupation || "student";
-          const educationLevel = decoded.educationLevel || "high";
-
-          const newUserData = {
-            _id: decoded.temporaryUserId,
-            firstname: decoded.firstname || "User",
-            lastname: decoded.lastname || "Unknown",
-            email: decoded.email,
-            phone: decoded.phone || "",
-            password: decoded.passwordHash,
-            verified: true,
-            role: occupation,
-            occupation,
-            educationLevel,
-            grade: occupation === "student" ? decoded.grade || 1 : undefined,
-            schoolName: decoded.schoolName || "Unknown School",
-            schoolCountry: decoded.schoolCountry || "GH",
-            teacherGrade:
-              occupation === "teacher" ? decoded.teacherGrade || [] : undefined,
-            teacherSubject:
-              occupation === "teacher"
-                ? decoded.teacherSubject || ""
-                : undefined,
-            is_on_trial: true,
-            trial_start_at: now,
-            trial_end_at: trialEndAt,
-            subscription_status: "inactive",
-          };
-
-          const newUser = new User(newUserData);
-
-          try {
-            await newUser.save();
-          } catch (saveErr) {
-            logger.error("User creation validation failed:", saveErr.errors);
-            return res
-              .status(400)
-              .json({
-                message: "User creation failed.",
-                details: saveErr.errors,
-              });
-          }
-
-          const accessToken = generateAccessToken(newUser);
-          const refreshToken = generateRefreshToken(newUser);
-          newUser.refreshToken = refreshToken;
-          await newUser.save();
-
-          setAuthCookies(res, accessToken, refreshToken);
-
-          sendWelcomeEmail(newUser.email, newUser.firstname).catch(
-            logger.error
-          );
-
-          return res.status(201).json({
-            status: "success",
-            message: "User created & verified.",
-            redirectUrl: getRedirectUrl(newUser, true),
-          });
-        }
-      } catch (err) {
-        logger.error("❌ Verify-OTP error:", err);
-        if (err.name === "TokenExpiredError") {
-          return res.status(400).json({ message: "OTP expired." });
-        }
-        return res.status(500).json({ message: "OTP verification failed." });
-      }
+    if (decoded.email !== email || decoded.code !== code) {
+      return res.status(400).json({ message: "Invalid email or OTP." });
     }
-  );
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      if (!user.password || !(await bcrypt.compare(password, user.password))) {
+        user.password = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+        await user.save();
+        logger.info(`Password set/updated for existing user: ${email}`);
+      }
+
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+      user.refreshToken = refreshToken;
+      await user.save();
+
+      return res.status(200).json({
+        status: "success",
+        message: "User verified.",
+        redirectUrl: getRedirectUrl(user, true),
+      });
+    } else {
+      
+      const now = new Date();
+      const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+      const newUserData = {
+        _id: decoded.temporaryUserId,
+        firstname: decoded.firstname || "User",
+        lastname: decoded.lastname || "Unknown",
+        email: decoded.email,
+        phone: decoded.phone || "",
+        password: decoded.passwordHash 
+          ? decoded.passwordHash
+          : await bcrypt.hash(password, BCRYPT_SALT_ROUNDS),
+        verified: true,
+        role: decoded.occupation || "student",
+        occupation: decoded.occupation || "student",
+        educationLevel: decoded.educationLevel || "high",
+        grade: decoded.grade,
+        schoolName: decoded.schoolName || "Unknown School",
+        schoolCountry: decoded.schoolCountry || "GH",
+        teacherGrade: decoded.teacherGrade || [],
+        teacherSubject: decoded.teacherSubject || "",
+        is_on_trial: true,
+        trial_start_at: now,
+        trial_end_at: trialEndAt,
+        subscription_status: "inactive",
+      };
+
+      const newUser = new User(newUserData);
+      await newUser.save();
+
+      const accessToken = generateAccessToken(newUser);
+      const refreshToken = generateRefreshToken(newUser);
+      newUser.refreshToken = refreshToken;
+      await newUser.save();
+
+      setAuthCookies(res, accessToken, refreshToken);
+
+      sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
+
+      return res.status(201).json({
+        status: "success",
+        message: "User created & verified.",
+        redirectUrl: getRedirectUrl(newUser, true),
+      });
+    }
+  } catch (err) {
+    logger.error("❌ Verify-OTP error:", err);
+    if (err.name === "TokenExpiredError") {
+      return res.status(400).json({ message: "OTP expired." });
+    }
+    return res.status(500).json({ message: "OTP verification failed." });
+  }
+});
+
 
 publicRouter.post(
   "/users/login",
@@ -345,7 +320,6 @@ publicRouter.post(
   validate(loginSchema),
   async (req, res) => {
     try {
-      // Trim email and password to avoid whitespace issues
       const email = req.body.email?.trim();
       const password = req.body.password?.trim();
 
@@ -377,7 +351,6 @@ publicRouter.post(
       let subscriptionActive = false;
       let trialActive = false;
 
-      // --- Subscription check ---
       if (user.subscription_status === "active" && user.payment_date) {
         const expiry = user.nextBillingDate
           ? new Date(user.nextBillingDate)
@@ -392,7 +365,6 @@ publicRouter.post(
         }
       }
 
-      // --- Trial check ---
       if (user.is_on_trial && user.trial_end_at) {
         trialActive = now < new Date(user.trial_end_at);
 
@@ -404,13 +376,11 @@ publicRouter.post(
 
       const hasAccess = subscriptionActive || trialActive;
 
-      // --- Token generation ---
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
       await User.findByIdAndUpdate(user._id, { refreshToken });
       setAuthCookies(res, accessToken, refreshToken);
 
-      // --- Redirect URL ---
       const redirectUrl = getRedirectUrl(user, hasAccess);
 
       res.json({
@@ -436,12 +406,10 @@ function getRedirectUrl(user, hasAccess) {
   const { role } = user;
   const bypassRoles = ["global_overseer", "overseer"];
 
-  // --- Role bypass ---
   if (bypassRoles.includes(role)) {
     return redirectPaths[role] || redirectPaths.default;
   }
 
-  // --- Regular users ---
   if (redirectPaths[role]) {
     return hasAccess ? redirectPaths[role] : redirectPaths.payment;
   }
