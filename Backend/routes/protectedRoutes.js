@@ -1197,9 +1197,8 @@ protectedRouter.get(
     try {
       const teacher = await User.findById(req.user.id);
       if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
-        return res.status(400).json({
-          message: "Teacher school or grade information is missing.",
-        });
+        // Return empty array instead of 400 so frontend doesn't break
+        return res.status(200).json([]);
       }
 
       const { search } = req.query;
@@ -1221,13 +1220,14 @@ protectedRouter.get(
         "firstname lastname email grade imageUrl"
       );
 
-      res.status(200).json(students);
+      res.status(200).json(students || []);
     } catch (error) {
       logger.error("Error fetching students for teacher's class:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
+
 
 
 protectedRouter.post(
