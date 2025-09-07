@@ -45,22 +45,28 @@ module.exports = (eventBus) => {
   };
 
   const signupOtpSchema = Joi.object({
-    phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
-    email: Joi.string().email().required(),
-    firstname: Joi.string().min(2).max(50).required(),
-    lastname: Joi.string().min(2).max(50).required(),
-    password: Joi.string()
-      .min(8)
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-      .message("Password must be at least 8 characters, with one uppercase, one number, one special char.")
-      .required(),
-    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    occupation: Joi.string().valid("student", "teacher").required(),
-    schoolName: Joi.string().allow(""),
-    schoolCountry: Joi.string().allow(""),
-    educationLevel: Joi.string().allow(""),
-    grade: Joi.string().allow(""),
-  });
+  phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
+  email: Joi.string().email().required(),
+  firstname: Joi.string().min(2).max(50).required(),
+  lastname: Joi.string().min(2).max(50).required(),
+  password: Joi.string()
+    .min(8)
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+    .message("Password must be at least 8 characters, with one uppercase, one number, one special char.")
+    .required(),
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+  occupation: Joi.string().valid("student", "teacher").required(),
+  
+  schoolName: Joi.string().required().messages({ "any.required": "School name is required." }),
+  schoolCountry: Joi.string().required().messages({ "any.required": "School country is required." }),
+
+  educationLevel: Joi.string().when("occupation", { is: "student", then: Joi.required(), otherwise: Joi.allow("") }),
+  grade: Joi.string().when("occupation", { is: "student", then: Joi.required(), otherwise: Joi.allow("") }),
+
+  teacherGrade: Joi.string().when("occupation", { is: "teacher", then: Joi.required(), otherwise: Joi.allow("") }),
+  teacherSubject: Joi.string().when("occupation", { is: "teacher", then: Joi.required(), otherwise: Joi.allow("") }),
+});
+
 
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
