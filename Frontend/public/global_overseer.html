@@ -156,7 +156,6 @@
       </section>
     </div>
 
-    <!-- Modals (Assign Region, Request, Alert, Confirm) -->
     <div
       id="assign-region-modal"
       class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden"
@@ -367,7 +366,7 @@
         });
 
         if (res.status === 401) {
-          // Unauthorized → redirect to login
+          
           window.location.href = "/login.html";
           return;
         }
@@ -380,17 +379,25 @@
         return res.json();
       }
 
-      // --- Auth check ---
-      async function checkAuth() {
-        try {
-          const data = await fetchWithAuth("/auth/check");
-          return !!data;
-        } catch (err) {
-          console.error("Auth check failed:", err);
-          window.location.href = "/login.html";
-          return false;
-        }
-      }
+     async function fetchWithAuth(endpoint, options = {}) {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error((await res.json()).message || "Request failed");
+    return res.json();
+  }
+
+  async function checkAuthentication() {
+    try {
+      await fetchWithAuth("/auth/check");
+      return true;
+    } catch {
+      showToast("Please login first.", "error");
+      setTimeout(() => (window.location.href = "/login.html"), 1500);
+      return false;
+    }
+  }
 
       async function loadDashboard() {
         showLoading();
