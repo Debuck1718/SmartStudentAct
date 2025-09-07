@@ -1,256 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page_title">AI Essay Checker</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
     <style>
-      body {
-        font-family: "Inter", sans-serif;
-      }
-      .cta-button {
-        background-image: linear-gradient(to right, #4c51bf 0%, #667eea 100%);
-        transition: all 0.3s ease;
-      }
-      .cta-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.4);
-      }
-      .fade-in {
-        animation: fadeIn 0.5s ease-in-out forwards;
-      }
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Roboto', sans-serif;
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+        .cta-button {
+            background-color: #3b82f6;
+            transition: all 0.3s ease;
         }
-      }
-      .spinner {
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        border-top: 4px solid #fff;
-        border-radius: 50%;
-        width: 1.5rem;
-        height: 1.5rem;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
+        .cta-button:hover:not(:disabled) {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        100% {
-          transform: rotate(360deg);
+        .cta-button:active:not(:disabled) {
+            transform: translateY(0);
         }
-      }
-      .language-switcher button {
-        margin-right: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        color: white;
-        font-weight: 600;
-      }
-      .language-switcher button.active {
-        text-decoration: underline;
-        transform: scale(1.1);
-      }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+            .text-xl {
+                font-size: 1.25rem;
+            }
+        }
     </style>
-  </head>
-  <body
-    class="bg-gray-100 p-4 md:p-8 flex justify-center items-center min-h-screen"
-  >
-    <div class="language-switcher mb-6">
-      <select
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 md:p-8">
+
+<header class="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between mb-6 md:mb-10">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-4 md:mb-0" data-i18n="header">
+        AI Essay Checker ✍️
+    </h1>
+    <select
         id="language-dropdown"
         onchange="setLanguage(this.value)"
         class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-      >
+    >
         <option value="en">English</option>
         <option value="fr">Français</option>
         <option value="es">Español</option>
         <option value="tr">Türkçe</option>
         <option value="ar">العربية</option>
         <option value="ru">Русский</option>
-      </select>
-    </div>
+    </select>
+</header>
 
-    <div
-      class="w-full max-w-5xl app-container p-6 md:p-12 rounded-2xl shadow-2xl"
-    >
-      <h1
-        class="text-3xl font-bold text-center text-gray-800 mb-2 md:mb-4"
-        data-i18n="header"
-      >
-        AI Essay Checker ✍️
-      </h1>
-      <p class="text-center text-gray-500 mb-6 md:mb-8" data-i18n="description">
+<main class="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-6 md:p-10">
+    <p class="text-center text-gray-500 mb-6 md:mb-8" data-i18n="description">
         Get instant feedback on your essay's grammar, structure, and style.
-      </p>
+    </p>
 
-      <div
-        class="flex justify-between items-center text-sm font-medium text-gray-500 mb-4"
-      >
+    <div class="flex justify-between items-center text-sm font-medium text-gray-500 mb-4">
         <span id="word-count">0 words</span>
         <span id="word-limit" class="text-gray-400">/ 1000 words max</span>
-      </div>
-
-      <form id="essay-form" class="flex flex-col gap-4">
-        <textarea
-          id="essay-text"
-          class="w-full h-80 p-4 md:p-6 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          placeholder=""
-          required
-          data-i18n-placeholder="essay_placeholder"
-        ></textarea>
-
-        <button
-          type="submit"
-          id="submit-button"
-          class="w-full px-6 py-4 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 text-white cta-button flex items-center justify-center min-h-[50px] disabled:opacity-50 disabled:cursor-not-allowed"
-          data-i18n="submit_btn"
-        ></button>
-      </form>
-
-      <div id="status-message" class="mt-6 text-center hidden"></div>
-
-      <div id="feedback-container" class="mt-8 space-y-6 hidden">
-        <h2
-          class="text-2xl font-bold text-gray-800 mb-4"
-          data-i18n="feedback_header"
-        >
-          Feedback
-        </h2>
-        <div id="feedback-content" class="space-y-6"></div>
-        <button
-          id="copy-button"
-          class="mt-4 w-full py-3 px-6 text-base font-medium rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors shadow-md hidden"
-          data-i18n="copy_btn"
-        >
-          Copy Feedback to Clipboard
-        </button>
-      </div>
     </div>
 
-    <script>
-      const translations = {
+    <form id="essay-form" class="flex flex-col gap-4">
+        <textarea
+            id="essay-text"
+            class="w-full h-72 p-4 md:p-6 border border-gray-300 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            placeholder=""
+            required
+            data-i18n-placeholder="essay_placeholder"
+        ></textarea>
+        <button
+            type="submit"
+            id="submit-button"
+            class="w-full px-6 py-4 text-lg font-semibold rounded-xl shadow-lg transition text-white cta-button flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            data-i18n="submit_btn"
+        ></button>
+    </form>
+
+    <div id="status-message" class="mt-6 text-center hidden"></div>
+
+    <section id="feedback-container" class="mt-10 space-y-6 hidden">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4" data-i18n="feedback_header">
+            Feedback
+        </h2>
+        <div id="feedback-content" class="space-y-6"></div>
+        
+        <div id="citation-container" class="space-y-4 hidden fade-in mt-8">
+            <h3 class="text-xl font-semibold text-gray-700" data-i18n="citation_header">
+                AI Source Citation
+            </h3>
+            <div class="bg-gray-100 p-4 rounded-lg border border-gray-200 flex items-center justify-between">
+                <p id="citation-text" class="text-gray-600 text-sm italic pr-4"></p>
+                <div class="tooltip">
+                    <button id="copy-citation-button" class="text-gray-500 hover:text-gray-900 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5-.124m7.5 12.5H12a2.25 2.25 0 01-2.25-2.25V7.875A2.25 2.25 0 0112 5.625h3.75a2.25 2.25 0 012.25 2.25v3.375m0 0h-3.75m-3.75 0h.008v.008h-.008" />
+                        </svg>
+                    </button>
+                    <span class="tooltiptext">Copy</span>
+                </div>
+            </div>
+        </div>
+        
+        <button
+            id="copy-button"
+            class="mt-6 w-full py-3 px-6 text-base font-medium rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors shadow-md hidden"
+            data-i18n="copy_btn"
+        >
+            Copy Feedback to Clipboard
+        </button>
+    </section>
+</main>
+
+<script>
+    const translations = {
         en: {
-          page_title: "AI Essay Checker",
-          header: "AI Essay Checker ✍️",
-          description:
-            "Get instant feedback on your essay's grammar, structure, and style.",
-          essay_placeholder: "Paste your essay here... (1000 words max)",
-          submit_btn: "Get Feedback",
-          feedback_header: "Feedback",
-          copy_btn: "Copy Feedback to Clipboard",
-          processing: "Processing your essay...",
+            page_title: "AI Essay Checker",
+            header: "AI Essay Checker ✍️",
+            description: "Get instant feedback on your essay's grammar, structure, and style.",
+            essay_placeholder: "Paste your essay here... (1000 words max)",
+            submit_btn: "Get Feedback",
+            feedback_header: "Feedback",
+            citation_header: "AI Source Citation",
+            copy_btn: "Copy Feedback to Clipboard",
+            processing: "Processing your essay...",
         },
         fr: {
-          page_title: "Correcteur de Rédaction IA",
-          header: "Correcteur de Rédaction IA ✍️",
-          description:
-            "Obtenez des retours instantanés sur la grammaire, la structure et le style de votre essai.",
-          essay_placeholder: "Collez votre essai ici... (1000 mots max)",
-          submit_btn: "Obtenir des retours",
-          feedback_header: "Retour",
-          copy_btn: "Copier le retour",
-          processing: "Traitement de votre essai...",
+            page_title: "Correcteur de Rédaction IA",
+            header: "Correcteur de Rédaction IA ✍️",
+            description: "Obtenez des retours instantanés sur la grammaire, la structure et le style de votre essai.",
+            essay_placeholder: "Collez votre essai ici... (1000 mots max)",
+            submit_btn: "Obtenir des retours",
+            feedback_header: "Retour",
+            citation_header: "Citation de la Source IA",
+            copy_btn: "Copier le retour",
+            processing: "Traitement de votre essai...",
         },
         es: {
-          page_title: "Corrector de Ensayos IA",
-          header: "Corrector de Ensayos IA ✍️",
-          description:
-            "Obtén retroalimentación instantánea sobre la gramática, la estructura y el estilo de tu ensayo.",
-          essay_placeholder: "Pega tu ensayo aquí... (máx. 1000 palabras)",
-          submit_btn: "Obtener retroalimentación",
-          feedback_header: "Retroalimentación",
-          copy_btn: "Copiar retroalimentación",
-          processing: "Procesando tu ensayo...",
+            page_title: "Corrector de Ensayos IA",
+            header: "Corrector de Ensayos IA ✍️",
+            description: "Obtén retroalimentación instantánea sobre la gramática, la estructura y el estilo de tu ensayo.",
+            essay_placeholder: "Pega tu ensayo aquí... (máx. 1000 palabras)",
+            submit_btn: "Obtener retroalimentación",
+            feedback_header: "Retroalimentación",
+            citation_header: "Citación de la Fuente de IA",
+            copy_btn: "Copiar retroalimentación",
+            processing: "Procesando tu ensayo...",
         },
         tr: {
-          page_title: "Yapay Zeka Makale Kontrolü",
-          header: "Yapay Zeka Makale Kontrolü ✍️",
-          description:
-            "Makalelerinizin dil bilgisi, yapı ve üslubu hakkında anında geri bildirim alın.",
-          essay_placeholder:
-            "Makaleyi buraya yapıştırın... (maks. 1000 kelime)",
-          submit_btn: "Geri Bildirim Al",
-          feedback_header: "Geri Bildirim",
-          copy_btn: "Geri Bildirimi Kopyala",
-          processing: "Makaleni işliyoruz...",
+            page_title: "Yapay Zeka Makale Kontrolü",
+            header: "Yapay Zeka Makale Kontrolü ✍️",
+            description: "Makalelerinizin dil bilgisi, yapı ve üslubu hakkında anında geri bildirim alın.",
+            essay_placeholder: "Makaleyi buraya yapıştırın... (maks. 1000 kelime)",
+            submit_btn: "Geri Bildirim Al",
+            feedback_header: "Geri Bildirim",
+            citation_header: "Yapay Zeka Kaynak Atıfı",
+            copy_btn: "Geri Bildirimi Kopyala",
+            processing: "Makaleni işliyoruz...",
         },
         ar: {
-          page_title: "مدقق المقالات بالذكاء الاصطناعي",
-          header: "مدقق المقالات بالذكاء الاصطناعي ✍️",
-          description:
-            "احصل على ملاحظات فورية حول القواعد، الهيكل والأسلوب لمقالك.",
-          essay_placeholder: "ألصق مقالك هنا... (1000 كلمة كحد أقصى)",
-          submit_btn: "احصل على الملاحظات",
-          feedback_header: "التغذية الراجعة",
-          copy_btn: "نسخ الملاحظات",
-          processing: "جارٍ معالجة مقالك...",
+            page_title: "مدقق المقالات بالذكاء الاصطناعي",
+            header: "مدقق المقالات بالذكاء الاصطناعي ✍️",
+            description: "احصل على ملاحظات فورية حول القواعد، الهيكل والأسلوب لمقالك.",
+            essay_placeholder: "ألصق مقالك هنا... (1000 كلمة كحد أقصى)",
+            submit_btn: "احصل على الملاحظات",
+            feedback_header: "التغذية الراجعة",
+            citation_header: "اقتباس مصدر الذكاء الاصطناعي",
+            copy_btn: "نسخ الملاحظات",
+            processing: "جارٍ معالجة مقالك...",
         },
         ru: {
-          page_title: "Проверка эссе ИИ",
-          header: "Проверка эссе ИИ ✍️",
-          description:
-            "Получите мгновенные отзывы о грамматике, структуре и стиле вашего эссе.",
-          essay_placeholder: "Вставьте ваше эссе сюда... (макс. 1000 слов)",
-          submit_btn: "Получить отзыв",
-          feedback_header: "Обратная связь",
-          copy_btn: "Скопировать отзыв",
-          processing: "Обработка вашего эссе...",
+            page_title: "Проверка эссе ИИ",
+            header: "Проверка эссе ИИ ✍️",
+            description: "Получите мгновенные отзывы о грамматике, структуре и стиле вашего эссе.",
+            essay_placeholder: "Вставьте ваше эссе сюда... (макс. 1000 слов)",
+            submit_btn: "Получить отзыв",
+            feedback_header: "Обратная связь",
+            citation_header: "Цитата источника ИИ",
+            copy_btn: "Скопировать отзыв",
+            processing: "Обработка вашего эссе...",
         },
-      };
+    };
 
-      let currentLang = "en";
+    let currentLang = "en";
 
-      function setLanguage(lang) {
+    function setLanguage(lang) {
         currentLang = lang;
         document.querySelectorAll("[data-i18n]").forEach((el) => {
-          const key = el.getAttribute("data-i18n");
-          if (translations[lang][key]) el.textContent = translations[lang][key];
+            const key = el.getAttribute("data-i18n");
+            if (translations[lang] && translations[lang][key]) {
+                el.textContent = translations[lang][key];
+            }
         });
         document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
-          const key = el.getAttribute("data-i18n-placeholder");
-          if (translations[lang][key]) el.placeholder = translations[lang][key];
+            const key = el.getAttribute("data-i18n-placeholder");
+            if (translations[lang] && translations[lang][key]) {
+                el.placeholder = translations[lang][key];
+            }
         });
-
         const dropdown = document.getElementById("language-dropdown");
         if (dropdown) dropdown.value = lang;
         document.documentElement.lang = lang;
         document.body.dir = lang === "ar" ? "rtl" : "ltr";
-      }
+    }
 
-      const essayForm = document.getElementById("essay-form");
-      const essayTextarea = document.getElementById("essay-text");
-      const submitButton = document.getElementById("submit-button");
-      const statusMessageDiv = document.getElementById("status-message");
-      const feedbackContainer = document.getElementById("feedback-container");
-      const feedbackContentDiv = document.getElementById("feedback-content");
-      const copyButton = document.getElementById("copy-button");
-      const wordCountSpan = document.getElementById("word-count");
-      const wordLimitSpan = document.getElementById("word-limit");
+    const essayForm = document.getElementById("essay-form");
+    const essayTextarea = document.getElementById("essay-text");
+    const submitButton = document.getElementById("submit-button");
+    const statusMessageDiv = document.getElementById("status-message");
+    const feedbackContainer = document.getElementById("feedback-container");
+    const feedbackContentDiv = document.getElementById("feedback-content");
+    const copyButton = document.getElementById("copy-button");
+    const wordCountSpan = document.getElementById("word-count");
+    const wordLimitSpan = document.getElementById("word-limit");
+    const citationContainer = document.getElementById("citation-container");
+    const citationText = document.getElementById("citation-text");
+    const copyCitationButton = document.getElementById("copy-citation-button");
 
-      const MAX_WORDS = 1000;
-      const API_KEY = "";
+    const MAX_WORDS = 1000;
+    const API_KEY = "";
 
-      let isLoading = false;
-
-      function updateWordCount() {
+    function updateWordCount() {
         const text = essayTextarea.value;
         const words = text.split(/\s+/).filter((word) => word.length > 0);
         const count = words.length;
@@ -258,237 +272,211 @@
         wordCountSpan.textContent = `${count} words`;
 
         if (count > MAX_WORDS) {
-          wordCountSpan.classList.add("text-red-500");
-          wordLimitSpan.classList.add("text-red-500");
-          submitButton.disabled = true;
+            wordCountSpan.classList.add("text-red-500");
+            wordLimitSpan.classList.add("text-red-500");
+            submitButton.disabled = true;
         } else {
-          wordCountSpan.classList.remove("text-red-500");
-          wordLimitSpan.classList.remove("text-red-500");
-          submitButton.disabled = false;
+            wordCountSpan.classList.remove("text-red-500");
+            wordLimitSpan.classList.remove("text-red-500");
+            submitButton.disabled = false;
         }
-      }
+    }
 
-      essayTextarea.addEventListener("input", updateWordCount);
+    essayTextarea.addEventListener("input", updateWordCount);
 
-      function showStatus(message, type) {
+    function showStatus(message, type) {
         statusMessageDiv.textContent = message;
-        statusMessageDiv.classList.remove(
-          "hidden",
-          "text-red-500",
-          "text-blue-500"
-        );
-        statusMessageDiv.classList.add("p-3", "rounded-lg");
+        statusMessageDiv.classList.remove("hidden");
+        statusMessageDiv.className = `mt-6 text-center p-3 rounded-lg`;
+        
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<div class="spinner"></div>`;
 
-        if (type === "loading") {
-          statusMessageDiv.classList.add("text-blue-600", "animate-pulse");
-          submitButton.disabled = true;
-          submitButton.innerHTML = `<div class="spinner"></div>`;
-        } else if (type === "error") {
-          statusMessageDiv.classList.add("text-red-500");
-          submitButton.disabled = false;
-          submitButton.innerHTML = `Get Feedback`;
+        if (type === "error") {
+            statusMessageDiv.classList.add("text-red-500", "bg-red-50");
+            submitButton.disabled = false;
+            submitButton.textContent = translations[currentLang].submit_btn;
         } else if (type === "success") {
-          statusMessageDiv.classList.add("text-green-500");
-          submitButton.disabled = false;
-          submitButton.innerHTML = `Get Feedback`;
+            statusMessageDiv.classList.add("text-green-500", "bg-green-50");
+            submitButton.disabled = false;
+            submitButton.textContent = translations[currentLang].submit_btn;
         } else {
-          statusMessageDiv.classList.remove("p-3", "rounded-lg");
+            statusMessageDiv.classList.add("text-blue-500", "bg-blue-50");
         }
-      }
+    }
 
-      function renderFeedback(feedback) {
+    function renderFeedback(feedback) {
         feedbackContentDiv.innerHTML = "";
         feedbackContainer.classList.remove("hidden");
         copyButton.classList.remove("hidden");
+        citationContainer.classList.remove("hidden");
 
         const sections = [
-          {
-            key: "thesis_statement_feedback",
-            title: "Thesis Statement",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>`,
-          },
-          {
-            key: "structure_feedback",
-            title: "Structure & Flow",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>`,
-          },
-          {
-            key: "grammar_and_spelling_feedback",
-            title: "Grammar & Spelling",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2-7a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2V9a2 2 0 012-2h4a2 2 0 012 2z" /></svg>`,
-          },
-          {
-            key: "style_and_tone_feedback",
-            title: "Style & Tone",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.586a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>`,
-          },
-          {
-            key: "summary_and_next_steps",
-            title: "Summary & Next Steps",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>`,
-          },
+            { key: "thesis_statement_feedback", title: "Thesis Statement", icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>` },
+            { key: "structure_feedback", title: "Structure & Flow", icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>` },
+            { key: "grammar_and_spelling_feedback", title: "Grammar & Spelling", icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2-7a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2V9a2 2 0 012-2h4a2 2 0 012 2z" /></svg>` },
+            { key: "style_and_tone_feedback", title: "Style & Tone", icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.586a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>` },
+            { key: "summary_and_next_steps", title: "Summary & Next Steps", icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>` },
         ];
 
         sections.forEach((section) => {
-          const feedbackItems = feedback[section.key];
-          if (feedbackItems) {
-            const sectionDiv = document.createElement("div");
-            sectionDiv.className =
-              "bg-white p-6 rounded-xl border border-gray-200 shadow-lg fade-in";
-            sectionDiv.innerHTML = `<h3 class="flex items-center text-xl font-semibold text-gray-700 mb-4">${section.icon} ${section.title}</h3>`;
-
-            if (feedbackItems.length > 0) {
-              const ul = document.createElement("ul");
-              ul.className = "list-disc list-inside space-y-2 text-gray-600";
-              feedbackItems.forEach((item) => {
-                const li = document.createElement("li");
-                li.textContent = item;
-                ul.appendChild(li);
-              });
-              sectionDiv.appendChild(ul);
-            } else {
-              const p = document.createElement("p");
-              p.className = "text-gray-500 italic";
-              p.textContent = "No issues found. Excellent!";
-              sectionDiv.appendChild(p);
+            const feedbackItems = feedback[section.key];
+            if (feedbackItems) {
+                const sectionDiv = document.createElement("div");
+                sectionDiv.className = "bg-white p-6 rounded-xl border border-gray-200 shadow-lg fade-in";
+                sectionDiv.innerHTML = `<h3 class="flex items-center text-xl font-semibold text-gray-700 mb-4">${section.icon} ${translations[currentLang][`${section.key}_title`] || section.title}</h3>`;
+                
+                if (feedbackItems.length > 0) {
+                    const ul = document.createElement("ul");
+                    ul.className = "list-disc list-inside space-y-2 text-gray-600";
+                    feedbackItems.forEach((item) => {
+                        const li = document.createElement("li");
+                        li.textContent = item;
+                        ul.appendChild(li);
+                    });
+                    sectionDiv.appendChild(ul);
+                } else {
+                    const p = document.createElement("p");
+                    p.className = "text-gray-500 italic";
+                    p.textContent = "No issues found. Excellent!";
+                    sectionDiv.appendChild(p);
+                }
+                feedbackContentDiv.appendChild(sectionDiv);
             }
-            feedbackContentDiv.appendChild(sectionDiv);
-          }
         });
-      }
+        
+        const citation = getAICitation();
+        citationText.textContent = citation;
+    }
 
-      async function getEssayFeedback(essayText) {
+    function getAICitation() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = date.toLocaleString('default', { month: 'long' });
+        const day = date.getDate();
+        const accessDate = `${day} ${month} ${year}`;
+        const source = "Gemini API";
+        return `"${translations[currentLang].feedback_header}". ${source}, ${accessDate}, ${window.location.href}.`;
+    }
+
+    async function getEssayFeedback(essayText) {
         const prompt = `You are a helpful and detailed academic essay checker. Analyze the following essay and provide constructive feedback in a structured JSON format. The user's essay is:\n\n---\n${essayText}\n---\n\nProvide feedback for the following categories:\n1. thesis_statement_feedback: A clear evaluation of the thesis statement.\n2. structure_feedback: Comments on the essay's paragraph structure and logical flow.\n3. grammar_and_spelling_feedback: Identify any grammatical errors or typos. Do not just list corrections, but explain the rules or reasons.\n4. style_and_tone_feedback: Suggestions for improving the writing style and tone to be more academic or persuasive.\n5. summary_and_next_steps: A brief summary of the overall essay's strengths and a clear list of next steps for revision.\n\nYour response MUST be a single JSON object with the following schema:\n{\n  "thesis_statement_feedback": ["string"],\n  "structure_feedback": ["string"],\n  "grammar_and_spelling_feedback": ["string"],\n  "style_and_tone_feedback": ["string"],\n  "summary_and_next_steps": ["string"]\n}\n\nDo not include any other text or formatting outside of the JSON object.`;
 
         const payload = {
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT",
+                    properties: {
+                        thesis_statement_feedback: { type: "ARRAY", items: { type: "STRING" } },
+                        structure_feedback: { type: "ARRAY", items: { type: "STRING" } },
+                        grammar_and_spelling_feedback: { type: "ARRAY", items: { type: "STRING" } },
+                        style_and_tone_feedback: { type: "ARRAY", items: { type: "STRING" } },
+                        summary_and_next_steps: { type: "ARRAY", items: { type: "STRING" } },
+                    },
+                    propertyOrdering: ["thesis_statement_feedback", "structure_feedback", "grammar_and_spelling_feedback", "style_and_tone_feedback", "summary_and_next_steps"],
+                },
             },
-          ],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                thesis_statement_feedback: {
-                  type: "ARRAY",
-                  items: { type: "STRING" },
-                },
-                structure_feedback: {
-                  type: "ARRAY",
-                  items: { type: "STRING" },
-                },
-                grammar_and_spelling_feedback: {
-                  type: "ARRAY",
-                  items: { type: "STRING" },
-                },
-                style_and_tone_feedback: {
-                  type: "ARRAY",
-                  items: { type: "STRING" },
-                },
-                summary_and_next_steps: {
-                  type: "ARRAY",
-                  items: { type: "STRING" },
-                },
-              },
-              propertyOrdering: [
-                "thesis_statement_feedback",
-                "structure_feedback",
-                "grammar_and_spelling_feedback",
-                "style_and_tone_feedback",
-                "summary_and_next_steps",
-              ],
-            },
-          },
         };
 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
-
         let response;
         try {
-          response = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error.message || "API request failed.");
-          }
-
-          const result = await response.json();
-          const json = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!json) {
-            throw new Error("No valid JSON response from API.");
-          }
-          return JSON.parse(json);
+            response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error.message || "API request failed.");
+            }
+            const result = await response.json();
+            const json = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!json) {
+                throw new Error("No valid JSON response from API.");
+            }
+            return JSON.parse(json);
         } catch (error) {
-          console.error("API call failed:", error);
-          throw new Error(`API call failed: ${error.message}`);
+            console.error("API call failed:", error);
+            throw new Error(`API call failed: ${error.message}`);
         }
-      }
+    }
 
-      essayForm.addEventListener("submit", async (e) => {
+    essayForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-
         feedbackContainer.classList.add("hidden");
         copyButton.classList.add("hidden");
+        citationContainer.classList.add("hidden");
 
         const essayText = essayTextarea.value.trim();
         if (!essayText) {
-          showStatus("Please enter an essay to check.", "error");
-          return;
+            showStatus("Please enter an essay to check.", "error");
+            return;
         }
 
-        showStatus("Analyzing your essay...", "loading");
+        showStatus(translations[currentLang].processing, "loading");
 
         try {
-          const feedback = await getEssayFeedback(essayText);
-          renderFeedback(feedback);
-          showStatus("Feedback generated successfully!", "success");
+            const feedback = await getEssayFeedback(essayText);
+            renderFeedback(feedback);
+            showStatus(translations[currentLang].submit_btn, "success");
         } catch (error) {
-          console.error("An error occurred:", error);
-          showStatus(error.message, "error");
-        } finally {
+            console.error("An error occurred:", error);
+            showStatus(error.message, "error");
         }
-      });
+    });
 
-      copyButton.addEventListener("click", () => {
-        let feedbackText = "Essay Feedback:\n\n";
-        const feedbackSections = document.querySelectorAll(
-          "#feedback-content > div"
-        );
+    copyButton.addEventListener("click", () => {
+        let feedbackText = `${translations[currentLang].feedback_header}:\n\n`;
+        const feedbackSections = document.querySelectorAll("#feedback-content > div");
         feedbackSections.forEach((section) => {
-          const title = section.querySelector("h3").textContent.trim();
-          feedbackText += `--- ${title} ---\n`;
-          const listItems = section.querySelectorAll("li");
-          if (listItems.length > 0) {
-            listItems.forEach((item) => {
-              feedbackText += `- ${item.textContent.trim()}\n`;
-            });
-          } else {
-            feedbackText += `No issues found. Excellent!\n`;
-          }
-          feedbackText += "\n";
+            const title = section.querySelector("h3").textContent.trim();
+            feedbackText += `--- ${title} ---\n`;
+            const listItems = section.querySelectorAll("li");
+            if (listItems.length > 0) {
+                listItems.forEach((item) => {
+                    feedbackText += `- ${item.textContent.trim()}\n`;
+                });
+            } else {
+                feedbackText += "No issues found. Excellent!\n";
+            }
+            feedbackText += "\n";
         });
 
-        navigator.clipboard
-          .writeText(feedbackText)
-          .then(() => {
-            copyButton.textContent = "Copied!";
-            setTimeout(() => {
-              copyButton.textContent = "Copy Feedback to Clipboard";
-            }, 2000);
-          })
-          .catch((err) => {
-            console.error("Could not copy text: ", err);
-          });
-      });
+        navigator.clipboard.writeText(feedbackText)
+            .then(() => {
+                copyButton.textContent = "Copied!";
+                setTimeout(() => {
+                    copyButton.textContent = translations[currentLang].copy_btn;
+                }, 2000);
+            })
+            .catch((err) => {
+                console.error("Could not copy text: ", err);
+            });
+    });
 
-      updateWordCount();
-    </script>
-  </body>
+    copyCitationButton.addEventListener("click", () => {
+        const textToCopy = citationText.textContent;
+        navigator.clipboard.writeText(textToCopy)
+            .then(() => {
+               
+                copyCitationButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M19.968 1.83a.75.75 0 01.325.292 2.75 2.75 0 011.666 4.385l-10.297 12.355a2.75 2.75 0 01-4.385 1.666L2.308 16.711a.75.75 0 01.292-.325 2.75 2.75 0 014.385-1.666L17.7 2.015a.75.75 0 01.325-.292zM15 11.25a.75.75 0 011.5 0v3.75h3.75a.75.75 0 010 1.5h-3.75v3.75a.75.75 0 01-1.5 0v-3.75h-3.75a.75.75 0 010-1.5h3.75v-3.75z" clip-rule="evenodd" /></svg>`;
+                setTimeout(() => {
+                    copyCitationButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5-.124m7.5 12.5H12a2.25 2.25 0 01-2.25-2.25V7.875A2.25 2.25 0 0112 5.625h3.75a2.25 2.25 0 012.25 2.25v3.375m0 0h-3.75m-3.75 0h.008v.008h-.008" /></svg>`;
+                }, 2000);
+            })
+            .catch((err) => {
+                console.error("Could not copy text: ", err);
+            });
+    });
+
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        setLanguage('en');
+        updateWordCount();
+    });
+</script>
+</body>
 </html>

@@ -364,15 +364,32 @@ function handleAddTreat(event) {
 }
 
 
-async function fetchRewards(){
-    const studentId = window.localStorage.getItem('studentId');
-    const response = await fetch(`/api/rewards/${studentId}`, {method:'GET', headers:{'Content-Type':'application/json'}});
-    if(!response.ok){
-        const errorData = await response.json();
-        throw new Error(errorData.message || translations[languageSelector.value].errorFetching);
-    }
-    return response.json();
+async function fetchRewards() {
+  const studentId = window.localStorage.getItem('studentId');
+  if (!studentId) {
+    throw new Error("Student ID not found in localStorage.");
+  }
+
+  const response = await fetch(`/api/rewards/${studentId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include' 
+  });
+
+  if (!response.ok) {
+    let errorMessage = "Error fetching rewards.";
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || translations[languageSelector.value].errorFetching;
+    } catch (_) {}
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
 }
+
 
 
 async function initDashboard(){

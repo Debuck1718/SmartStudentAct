@@ -13,63 +13,60 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8">
 
-  <div class="w-full max-w-3xl flex justify-between items-center mb-6 px-4">
-    <h1 class="text-2xl sm:text-3xl font-bold text-blue-600" data-i18n="quizTitle">📘 Quiz</h1>
-    <select id="language-select" class="border rounded-lg px-2 py-1">
-      <option value="en">English</option>
-      <option value="fr">Français</option>
-      <option value="es">Español</option>
-      <option value="tr">Türkçe</option>
-      <option value="ar">العربية</option>
-      <option value="ru">Русский</option>
-    </select>
-  </div>
-
-  <div class="w-full max-w-3xl bg-white shadow-lg rounded-xl p-6">
-    <h2 id="quiz-title" class="text-xl font-semibold mb-2 text-gray-800"></h2>
-    <p id="quiz-desc" class="text-gray-600 mb-4"></p>
-
-    <!-- Timer -->
-    <div id="quiz-timer" class="text-red-600 font-bold text-lg mb-4 hidden">
-      ⏱ Time Remaining: <span id="time-remaining"></span>
+  <div class="w-full max-w-3xl flex flex-col items-center mb-6 px-4">
+    <div class="w-full flex justify-between items-center mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-blue-600" data-i18n="quizTitle">📘 Quiz</h1>
+      <select id="language-select" class="border rounded-lg px-2 py-1">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="tr">Türkçe</option>
+        <option value="ar">العربية</option>
+        <option value="ru">Русский</option>
+      </select>
     </div>
 
-    <!-- Quiz form -->
-    <form id="quiz-form" class="space-y-6">
-      <div id="questions-container" class="space-y-6"></div>
+    <div id="main-content" class="w-full bg-white shadow-lg rounded-xl p-6 hidden">
+      <h2 id="quiz-title" class="text-xl font-semibold mb-2 text-gray-800"></h2>
+      <p id="quiz-desc" class="text-gray-600 mb-4"></p>
 
-      <button type="submit" 
-        class="w-full bg-blue-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-600 transition-colors" 
-        data-i18n="submitQuiz">
-        Submit Quiz
-      </button>
-    </form>
+      <div id="quiz-timer" class="text-red-600 font-bold text-lg mb-4 hidden">
+        ⏱ <span data-i18n="timeRemaining">Time Remaining</span>: <span id="time-remaining"></span>
+      </div>
 
-    <!-- Quiz results -->
-    <div id="quiz-result" class="mt-6 hidden text-center">
-      <h3 class="text-2xl font-bold text-green-600 mb-2" data-i18n="quizSubmitted">✅ Quiz Submitted</h3>
-      <p id="score-text" class="text-lg text-gray-800 mb-4"></p>
-      <div id="answer-breakdown" class="space-y-4 text-left"></div>
+      <form id="quiz-form" class="space-y-6">
+        <div id="questions-container" class="space-y-6"></div>
+
+        <button type="submit" id="submit-button"
+          class="w-full bg-blue-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-600 transition-colors"
+          data-i18n="submitQuiz">
+          Submit Quiz
+        </button>
+      </form>
+
+      <div id="quiz-result" class="mt-6 hidden text-center">
+        <h3 class="text-2xl font-bold text-green-600 mb-2" data-i18n="quizSubmitted">✅ Quiz Submitted</h3>
+        <p id="score-text" class="text-lg text-gray-800 mb-4"></p>
+        <div id="answer-breakdown" class="space-y-4 text-left"></div>
+      </div>
+    </div>
+
+    <div id="loading-spinner" class="flex flex-col items-center justify-center min-h-[300px]">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+      <p class="mt-4 text-gray-500" data-i18n="loadingQuiz">Loading quiz...</p>
     </div>
   </div>
   
-  <!-- Translation system -->
   <script src="translate.js"></script>
 
   <script>
     const API_BASE = 'https://api.smartstudentact.com/api';
-    const token = localStorage.getItem('token');
     const urlParams = new URLSearchParams(window.location.search);
     const quizId = urlParams.get('quizId');
+    const token = localStorage.getItem('token');
 
-    let studentId = null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      studentId = payload.id;
-    } catch {
-      studentId = localStorage.getItem('studentId');
-    }
-
+    const mainContent = document.getElementById('main-content');
+    const loadingSpinner = document.getElementById('loading-spinner');
     const quizTitle = document.getElementById('quiz-title');
     const quizDesc = document.getElementById('quiz-desc');
     const questionsContainer = document.getElementById('questions-container');
@@ -79,22 +76,37 @@
     const breakdownContainer = document.getElementById('answer-breakdown');
     const quizTimer = document.getElementById('quiz-timer');
     const timeRemainingSpan = document.getElementById('time-remaining');
+    const submitButton = document.getElementById('submit-button');
+    const languageSelect = document.getElementById('language-select');
 
     let countdownInterval = null;
 
+    const showLoading = () => {
+      loadingSpinner.classList.remove('hidden');
+      mainContent.classList.add('hidden');
+    };
+
+    const hideLoading = () => {
+      loadingSpinner.classList.add('hidden');
+      mainContent.classList.remove('hidden');
+    };
+
     const fetchQuiz = async () => {
-      try {
+    try {
         const res = await fetch(`${API_BASE}/student/quizzes/${quizId}`, {
-          headers: { Authorization: `Bearer ${token}` }
+            method: 'GET',
+            credentials: 'include' 
         });
-        if (!res.ok) throw new Error(getTranslation('loadingError'));
+        if (!res.ok) {
+            throw new Error('Failed to load quiz. Please check your network connection and login status.');
+        }
         const data = await res.json();
         renderQuiz(data.quiz);
-      } catch (err) {
+    } catch (err) {
         questionsContainer.innerHTML = `<p class="text-red-500">${err.message}</p>`;
         console.error(err);
-      }
-    };
+    }
+};
 
     const startCountdown = (minutes) => {
       if (!minutes) return;
@@ -127,12 +139,12 @@
         div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
         div.setAttribute("data-question", idx);
         div.innerHTML = `
-          <p class="font-semibold mb-2">${idx+1}. ${q.question}</p>
+          <p class="font-semibold mb-2">${idx + 1}. ${q.question}</p>
           <div class="space-y-2">
-            ${q.options.map((opt,i) => `
-              <label class="flex items-center space-x-2">
-                <input type="radio" name="q${idx}" value="${opt}" class="text-blue-500">
-                <span>${opt}</span>
+            ${q.options.map((opt, i) => `
+              <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
+                <input type="radio" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4">
+                <span class="text-gray-700">${opt}</span>
               </label>
             `).join('')}
           </div>
@@ -144,6 +156,7 @@
     };
 
     const autoSubmitQuiz = async () => {
+      submitButton.disabled = true;
       const answers = {};
       document.querySelectorAll('[data-question]').forEach((div, idx) => {
         const selected = quizForm.querySelector(`input[name=q${idx}]:checked`);
@@ -155,7 +168,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
+            credentials: 'include'
           },
           body: JSON.stringify({ answers, autoSubmit: true })
         });
@@ -171,6 +184,7 @@
 
     const showResults = (quiz, submission) => {
       clearInterval(countdownInterval);
+      quizTimer.classList.add('hidden');
       quizForm.classList.add('hidden');
       quizResult.classList.remove('hidden');
       scoreText.textContent = `${getTranslation('youScored')} ${submission.score} / ${quiz.questions.length}`;
@@ -178,15 +192,15 @@
       breakdownContainer.innerHTML = '';
       quiz.questions.forEach((q, idx) => {
         const studentAnswer = submission.answers[idx] || getTranslation('noAnswer');
-        const correct = q.correct === studentAnswer;
+        const isCorrect = q.correct === studentAnswer;
 
         const div = document.createElement('div');
-        div.className = `p-3 rounded-lg ${correct ? 'bg-green-100' : 'bg-red-100'}`;
+        div.className = `p-3 rounded-lg transition-colors ${isCorrect ? 'bg-green-100' : 'bg-red-100'}`;
         div.innerHTML = `
-          <p class="font-semibold">${idx+1}. ${q.question}</p>
-          <p><span data-i18n="yourAnswer">Your answer</span>: <span class="${correct ? 'text-green-600' : 'text-red-600'}">${studentAnswer}</span></p>
-          <p><span data-i18n="correctAnswer">Correct answer</span>: <span class="font-bold text-green-700">${q.correct}</span></p>
-          <p>${submission.auto_submitted ? getTranslation('autoSubmittedLabel') : ''}</p>
+          <p class="font-semibold">${idx + 1}. ${q.question}</p>
+          <p class="mt-1"><span data-i18n="yourAnswer">Your answer</span>: <span class="${isCorrect ? 'text-green-600' : 'text-red-600'} font-medium">${studentAnswer}</span></p>
+          <p class="mt-1"><span data-i18n="correctAnswer">Correct answer</span>: <span class="font-bold text-green-700">${q.correct}</span></p>
+          ${isCorrect ? '' : `<p class="mt-2 text-red-500 text-sm font-semibold" data-i18n="incorrectAnswerFeedback">Your answer was incorrect.</p>`}
         `;
         breakdownContainer.appendChild(div);
       });
@@ -196,6 +210,7 @@
     quizForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       clearInterval(countdownInterval);
+      submitButton.disabled = true;
 
       const answers = {};
       let allAnswered = true;
@@ -221,6 +236,7 @@
 
       if (!allAnswered) {
         alert(getTranslation('answerAllQuestionsWarning'));
+        submitButton.disabled = false;
         return;
       }
 
@@ -229,9 +245,9 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
+            credentials: 'include'
           },
-          body: JSON.stringify({ quizId, studentId, answers, autoSubmit: false })
+          body: JSON.stringify({ answers, autoSubmit: false })
         });
 
         if (!res.ok) throw new Error('Submit failed');
@@ -250,7 +266,7 @@
       return key;
     }
 
-    document.getElementById("language-select").addEventListener("change", (e) => {
+    languageSelect.addEventListener("change", (e) => {
       const lang = e.target.value;
       translatePage('student-quiz', lang);
       document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";

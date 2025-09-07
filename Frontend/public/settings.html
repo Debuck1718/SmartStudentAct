@@ -3,144 +3,400 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title data-i18n="settingsTitle">⚙️ Settings</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="./images/icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="./images/icon.png"
-    />
-    <link rel="manifest" href="/site.webmanifest" />
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    rel="stylesheet"
-  />
+  <title data-i18n="pageTitle">⚙️ Account Settings</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-  <nav class="bg-white shadow-md p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold text-gray-800" data-i18n="settingsTitle">⚙️ Settings</h1>
-    
-    <select
-      id="language-select"
-      class="border border-gray-300 rounded-md p-2 text-sm"
-    >
-      <option value="en">English</option>
-      <option value="fr">Français</option>
-      <option value="es">Español</option>
-      <option value="tr">Türkçe</option>
-      <option value="ar">العربية</option>
-      <option value="ru">Русский</option>
-    </select>
-  </nav>
-
-  <!-- Main Content -->
-  <main class="flex-grow container mx-auto p-6">
-    <div class="grid md:grid-cols-2 gap-6">
-      <!-- Profile Section -->
-      <div class="bg-white rounded-xl shadow p-6">
-        <h2 class="text-lg font-semibold mb-4" data-i18n="profileInfo">👤 Profile Information</h2>
-        <form id="profile-form" class="space-y-4">
-          <div>
-            <label for="name" class="block font-medium" data-i18n="name">Name</label>
-            <input id="name" type="text" class="w-full border rounded p-2" required />
-          </div>
-          <div>
-            <label for="email" class="block font-medium" data-i18n="email">Email</label>
-            <input id="email" type="email" class="w-full border rounded p-2 bg-gray-100" disabled />
-          </div>
-          <div>
-            <label for="occupation" class="block font-medium" data-i18n="occupation">Occupation</label>
-            <input id="occupation" type="text" class="w-full border rounded p-2 bg-gray-100" disabled />
-          </div>
-          <div id="class-group-field" class="hidden">
-            <label for="classGroup" class="block font-medium" data-i18n="classGroup">Class Group</label>
-            <input id="classGroup" type="text" class="w-full border rounded p-2" />
-          </div>
-          <div id="subject-field" class="hidden">
-            <label for="subject" class="block font-medium" data-i18n="subject">Subject</label>
-            <input id="subject" type="text" class="w-full border rounded p-2" />
-          </div>
-          <button
-            type="submit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded p-2"
-            data-i18n="saveProfile">💾 Save Profile</button>
-        </form>
-      </div>
-
-     
-      <div class="bg-white rounded-xl shadow p-6">
-        <h2 class="text-lg font-semibold mb-4" data-i18n="changePassword">🔒 Change Password</h2>
-        <form id="password-form" class="space-y-4">
-          <div>
-            <label for="currentPassword" class="block font-medium" data-i18n="currentPassword">Current Password</label>
-            <input id="currentPassword" type="password" class="w-full border rounded p-2" required />
-          </div>
-          <div>
-            <label for="newPassword" class="block font-medium" data-i18n="newPassword">New Password</label>
-            <input id="newPassword" type="password" class="w-full border rounded p-2" required />
-          </div>
-          <div>
-            <label for="confirmPassword" class="block font-medium" data-i18n="confirmPassword">Confirm Password</label>
-            <input id="confirmPassword" type="password" class="w-full border rounded p-2" required />
-          </div>
-          <button
-            type="submit"
-            class="w-full bg-green-600 hover:bg-green-700 text-white rounded p-2"
-            data-i18n="updatePassword">🔑 Update Password</button>
-        </form>
-      </div>
-    </div>
-
-    
-    <div class="mt-6 text-center">
-      <button
-        onclick="goBackToDashboard()"
-        class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded"
-        data-i18n="back">⬅️ Back</button>
-    </div>
-  </main>
-
- 
-  <div id="modal" class="fixed inset-0 hidden flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-80">
-      <h2 id="modal-title" class="text-lg font-bold mb-2"></h2>
-      <p id="modal-message" class="mb-4"></p>
-      <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">OK</button>
-    </div>
-  </div>
-
- 
-  <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-75 hidden flex items-center justify-center z-50">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
-  </div>
-
-  <script src="translate.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const langSelect = document.getElementById("language-select");
+<body class="bg-gray-50 text-gray-900">
+  <div class="min-h-screen flex flex-col">
+    <div class="flex flex-1">
+      
+      <aside class="w-64 bg-white shadow-md p-6 space-y-6">
+        <h1 class="text-xl font-bold" data-i18n="mainTitle">⚙️ Account Settings</h1>
+        <nav class="flex flex-col space-y-3">
+          <button id="tab-profile" class="text-left py-2 px-3 rounded-lg hover:bg-gray-100 font-medium" data-i18n="profileSectionTitle">👤 Profile</button>
+          <button id="tab-security" class="text-left py-2 px-3 rounded-lg hover:bg-gray-100 font-medium" data-i18n="changePasswordSectionTitle">🔒 Security</button>
+          <button id="tab-preferences" class="text-left py-2 px-3 rounded-lg hover:bg-gray-100 font-medium" data-i18n="preferencesSectionTitle">🌐 Preferences</button>
+        </nav>
+      </aside>
 
       
-      const defaultLang = "en";
-      translatePage("settings", defaultLang);
+      <main class="flex-1 p-8 space-y-8">
+      
+        <section id="section-profile" class="space-y-6">
+          <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">👤 Profile Information</h2>
+            <form id="profile-form" class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">First Name</label>
+                  <input type="text" id="firstName" class="w-full border rounded-lg px-3 py-2" required />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Last Name</label>
+                  <input type="text" id="lastName" class="w-full border rounded-lg px-3 py-2" required />
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Email</label>
+                <input type="email" id="email" class="w-full border rounded-lg px-3 py-2" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Phone Number</label>
+                <input type="tel" id="phone" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Occupation</label>
+                <input type="text" id="occupation" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Education Level</label>
+                <select id="educationLevel" class="w-full border rounded-lg px-3 py-2">
+                  <option value="">Select Education Level</option>
+                  <option value="juniorHigh">Junior High</option>
+                  <option value="seniorHigh">Senior High</option>
+                  <option value="university">University</option>
+                </select>
+              </div>
 
-   
-      langSelect.addEventListener("change", (e) => {
-        const selectedLang = e.target.value;
-        translatePage("settings", selectedLang);
+              
+              <div id="gradeGroup" class="hidden">
+                <label class="block text-sm font-medium mb-1">Grade</label>
+                <input type="text" id="grade" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <div id="schoolGroup" class="hidden">
+                <label class="block text-sm font-medium mb-1">School Name</label>
+                <input type="text" id="schoolName" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <div id="universityGroup" class="hidden">
+                <label class="block text-sm font-medium mb-1">University</label>
+                <input type="text" id="university" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <div id="uniLevelGroup" class="hidden">
+                <label class="block text-sm font-medium mb-1">University Level</label>
+                <input type="text" id="uniLevel" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <div id="programGroup" class="hidden">
+                <label class="block text-sm font-medium mb-1">Program</label>
+                <input type="text" id="program" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+
+              
+              <div>
+                <label class="block text-sm font-medium mb-1">Profile Picture</label>
+                <input type="file" id="profilePhoto" class="w-full border rounded-lg px-3 py-2" accept="image/*" />
+                <img id="profilePhotoPreview" src="" alt="Profile Preview" class="mt-3 w-24 h-24 rounded-full object-cover hidden" />
+              </div>
+
+              <button type="button" id="saveProfileBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Save Profile</button>
+            </form>
+          </div>
+        </section>
+
+        
+        <section id="section-security" class="space-y-6 hidden">
+          <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">🔒 Change Password</h2>
+            <form class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Current Password</label>
+                <input type="password" id="currentPassword" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">New Password</label>
+                <input type="password" id="newPassword" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Confirm New Password</label>
+                <input type="password" id="confirmNewPassword" class="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <button type="button" id="submitPasswordBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg">Update Password</button>
+            </form>
+          </div>
+          <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">🚪 Logout</h2>
+            <p class="text-sm text-gray-600 mb-4">You can log out of your account here.</p>
+            <button id="logoutBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg">Log Out</button>
+          </div>
+        </section>
+
+        
+        <section id="section-preferences" class="space-y-6 hidden">
+          <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">🌐 Preferences</h2>
+            <div class="flex items-center justify-between">
+              <span>Dark Mode</span>
+              <input type="checkbox" id="darkModeToggle" class="w-5 h-5" />
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+<footer class="bg-white text-center py-4 border-t">
+  <p class="text-sm text-gray-500" data-i18n="copyright">
+    © 2025 SmartStudentAct
+  </p>
+</footer>
+
+
+<div id="toast-container" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+
+<script src="/js/translate.js"></script>
+<script>
+  
+  const tabs = {
+    profile: document.getElementById("section-profile"),
+    security: document.getElementById("section-security"),
+    preferences: document.getElementById("section-preferences"),
+  };
+
+  function switchTab(tab) {
+    Object.values(tabs).forEach((section) => section.classList.add("hidden"));
+    tabs[tab].classList.remove("hidden");
+  }
+
+  document
+    .getElementById("tab-profile")
+    .addEventListener("click", () => switchTab("profile"));
+  document
+    .getElementById("tab-security")
+    .addEventListener("click", () => switchTab("security"));
+  document
+    .getElementById("tab-preferences")
+    .addEventListener("click", () => switchTab("preferences"));
+
+  // Default tab on load
+  switchTab("profile");
+</script>
+
+
+  <script>
+  const API_BASE_URL = "https://api.smartstudentact.com/api"; 
+
+  function showToast(message, type = "info") {
+    const toastContainer =
+      document.getElementById("toast-container") || createToastContainer();
+    const toast = document.createElement("div");
+    toast.className = `px-4 py-2 rounded-lg text-white mb-2 ${
+      type === "success"
+        ? "bg-green-500"
+        : type === "error"
+        ? "bg-red-500"
+        : "bg-blue-500"
+    }`;
+    toast.innerText = message;
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  function createToastContainer() {
+    const container = document.createElement("div");
+    container.id = "toast-container";
+    container.className = "fixed top-4 right-4 z-50";
+    document.body.appendChild(container);
+    return container;
+  }
+
+  
+  async function loadProfile() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile`, {
+        method: "GET",
+        credentials: "include", 
       });
+      if (!res.ok) throw new Error("Failed to load profile");
+      const profile = await res.json();
 
-    
-      fetchUserProfile();
+      document.getElementById("firstName").value = profile.firstName || "";
+      document.getElementById("lastName").value = profile.lastName || "";
+      document.getElementById("email").value = profile.email || "";
+      document.getElementById("phone").value = profile.phone || "";
+      document.getElementById("occupation").value = profile.occupation || "";
+      document.getElementById("educationLevel").value =
+        profile.educationLevel || "";
+      document.getElementById("grade").value = profile.grade || "";
+      document.getElementById("schoolName").value = profile.schoolName || "";
+      document.getElementById("university").value = profile.university || "";
+      document.getElementById("uniLevel").value = profile.uniLevel || "";
+      document.getElementById("program").value = profile.program || "";
+
+      
+      initEducationFields(profile);
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  }
+
+  
+  document
+    .getElementById("saveProfileBtn")
+    .addEventListener("click", async () => {
+      const payload = {
+        firstName: document.getElementById("firstName").value,
+        lastName: document.getElementById("lastName").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        occupation: document.getElementById("occupation").value,
+        educationLevel: document.getElementById("educationLevel").value,
+        grade: document.getElementById("grade").value,
+        schoolName: document.getElementById("schoolName").value,
+        university: document.getElementById("university").value,
+        uniLevel: document.getElementById("uniLevel").value,
+        program: document.getElementById("program").value,
+      };
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to update profile");
+        showToast("✅ Profile updated successfully", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
     });
-  </script>
-  <script src="settings.js"></script>
+
+  
+  document
+    .getElementById("submitPasswordBtn")
+    .addEventListener("click", async () => {
+      const payload = {
+        currentPassword: document.getElementById("currentPassword").value,
+        newPassword: document.getElementById("newPassword").value,
+        confirmNewPassword: document.getElementById("confirmNewPassword").value,
+      };
+
+      if (payload.newPassword !== payload.confirmNewPassword) {
+        showToast("❌ Passwords do not match", "error");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/settings`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to update password");
+        showToast("🔑 Password updated successfully", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+
+  document
+    .getElementById("profilePhoto")
+    .addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("profilePhoto", file);
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to upload photo");
+
+        
+        document.getElementById("profilePhotoPreview").src = data.photoUrl;
+        showToast("📸 Profile picture updated", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+
+  const educationLevelSelect = document.getElementById("educationLevel");
+  const gradeGroup = document.getElementById("gradeGroup");
+  const schoolGroup = document.getElementById("schoolGroup");
+  const universityGroup = document.getElementById("universityGroup");
+  const uniLevelGroup = document.getElementById("uniLevelGroup");
+  const programGroup = document.getElementById("programGroup");
+
+  function updateEducationFields() {
+    const level = educationLevelSelect.value;
+
+
+    gradeGroup.classList.add("hidden");
+    schoolGroup.classList.add("hidden");
+    universityGroup.classList.add("hidden");
+    uniLevelGroup.classList.add("hidden");
+    programGroup.classList.add("hidden");
+
+    if (level === "juniorHigh") {
+      gradeGroup.classList.remove("hidden");
+      schoolGroup.classList.remove("hidden");
+    } else if (level === "seniorHigh") {
+      gradeGroup.classList.remove("hidden");
+      schoolGroup.classList.remove("hidden");
+    } else if (level === "university") {
+      universityGroup.classList.remove("hidden");
+      uniLevelGroup.classList.remove("hidden");
+      programGroup.classList.remove("hidden");
+    }
+  }
+
+  
+  educationLevelSelect.addEventListener("change", updateEducationFields);
+
+  
+  function initEducationFields(profile) {
+    if (profile && profile.educationLevel) {
+      educationLevelSelect.value = profile.educationLevel;
+    }
+    updateEducationFields();
+  }
+
+  async function handleLogout() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        window.location.href = "/login.html"; 
+      } else {
+        showToast("Failed to log out.", "error");
+      }
+    } catch (err) {
+      showToast("An error occurred during logout.", "error");
+    }
+  }
+
+  async function checkAuthAndLoad() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/status`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        window.location.href = "/login.html";
+        return;
+      }
+      loadProfile();
+    } catch (error) {
+      console.error("Authentication check failed:", error);
+      window.location.href = "/login.html";
+    }
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", handleLogout);
+
+  checkAuthAndLoad();
+</script>
 </body>
 </html>

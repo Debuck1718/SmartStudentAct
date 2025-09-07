@@ -170,7 +170,7 @@
         <i class="fas fa-robot text-2xl mb-1"></i><span data-i18n="ai_checker_tab" class="text-xs font-medium">🤖AI Checker</span>
       </a>
       <a href="./profile.html" class="tab-link flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-500 transition-colors" data-tab="profile">
-        <i class="fas fa-user-circle text-2xl mb-1"></i><span data-i18n="profile_tab" class="text-xs font-medium">👤Profile</span>
+        <i class="fas fa-user-circle text-2xl mb-1"></i><span data-i18n="profile_tab" class="text-xs font-medium">Profile</span>
       </a>
     </div>
   </nav>
@@ -477,39 +477,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   
   async function fetchAssignments() {
-    try {
-      const assignments = await fetchWithAuth("/student/assignments");
-      DOMElements.assignmentsList.innerHTML =
-        assignments.map(
-          (a) =>
-            `<li class="p-2 border-b">${a.title} - ${
-              a.description || ""
-            }</li>`
-        ).join("") ||
-        `<p data-i18n="no_assignments" class="italic text-gray-500 text-center">No assignments added yet.</p>`;
-    } catch (e) {
-      showToast(e.message, "error");
-    }
+  try {
+    let assignments = await fetchWithAuth("/student/assignments");
+    if (!Array.isArray(assignments)) assignments = [];
+    DOMElements.assignmentsList.innerHTML = assignments.length
+      ? assignments.map((a) =>
+          `<li class="p-2 border-b">${a.title || "Untitled"} - ${a.description || ""}</li>`
+        ).join("")
+      : `<p data-i18n="no_assignments" class="italic text-gray-500 text-center">No assignments added yet.</p>`;
+  } catch (e) {
+    showToast(e.message, "error");
   }
+}
 
-  async function fetchQuizzes() {
-    try {
-      const quizzes = await fetchWithAuth("/student/quizzes");
-      const quizzesList = document.getElementById("quizzes-list");
-      quizzesList.innerHTML = quizzes.length
-        ? quizzes
-            .map(
-              (q) =>
-                `<li class="p-2 border-b">${q.title} - Due: ${new Date(
-                  q.dueDate
-                ).toLocaleDateString()}</li>`
-            )
-            .join("")
-        : `<p data-i18n="no_quizzes" class="italic text-gray-500 text-center">No quizzes assigned yet.</p>`;
-    } catch (e) {
-      showToast(e.message, "error");
-    }
+async function fetchQuizzes() {
+  try {
+    let quizzes = await fetchWithAuth("/student/quizzes");
+    if (!Array.isArray(quizzes)) quizzes = [];
+    const quizzesList = document.getElementById("quizzes-list");
+    quizzesList.innerHTML = quizzes.length
+      ? quizzes.map((q) =>
+          `<li class="p-2 border-b">${q.title || "Untitled"} - Due: ${q.dueDate ? new Date(q.dueDate).toLocaleDateString() : "N/A"}</li>`
+        ).join("")
+      : `<p data-i18n="no_quizzes" class="italic text-gray-500 text-center">No quizzes assigned yet.</p>`;
+  } catch (e) {
+    showToast(e.message, "error");
   }
+}
+
 
   function renderChart() {
     if (!DOMElements.chartCanvas) return;
