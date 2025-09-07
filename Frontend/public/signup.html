@@ -732,10 +732,12 @@ function validateForm() {
   if (form.password !== form.confirmPassword) errors.confirmPassword = "Passwords do not match.";
   if (!form.occupation) errors.occupation = "Occupation is required.";
 
+  
+  if (!form.schoolName) errors.schoolName = "School name required.";
+  if (!form.schoolCountry) errors.schoolCountry = "School country required.";
+
   if (form.occupation === "student") {
     if (!form.educationLevel) errors.educationLevel = "Education level required.";
-    if (!form.schoolName) errors.schoolName = "School name required.";
-    if (!form.schoolCountry) errors.schoolCountry = "School country required.";
     if ((form.educationLevel === "junior" || form.educationLevel === "high") && !form.grade)
       errors.grade = "Grade required.";
   } else if (form.occupation === "teacher") {
@@ -801,6 +803,8 @@ occupationSelect.addEventListener("change", () => {
     educationLevelField.classList.remove("hidden");
     gradeField.classList.remove("hidden");
   } else if (occupationSelect.value === "teacher") {
+    schoolNameField.classList.remove("hidden");
+    schoolCountryField.classList.remove("hidden");
     teacherGradeField.classList.remove("hidden");
     teacherSubjectField.classList.remove("hidden");
   }
