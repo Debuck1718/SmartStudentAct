@@ -751,47 +751,41 @@
 
 
   async function fetchTeacherProfile() {
-    const res = await fetchAPI("/teacher/profile");
-    if (res && res.ok) {
-      const data = await res.json();
-      document.getElementById("teacher-name").innerText = data.name || "Teacher";
-    }
+  const res = await fetchAPI("/teacher/profile");
+  if (res && res.ok) {
+    const data = await res.json();
+    const nameEl = document.getElementById("profilePreviewName");
+    if (nameEl) nameEl.innerText = data.name || "Teacher";
   }
+}
 
-  
-  async function fetchStudents() {
-    const res = await fetchAPI("/teacher/students");
-    if (res && res.ok) {
-      const students = await res.json();
-      const container = document.getElementById("students-list");
+async function fetchStudents() {
+  const res = await fetchAPI("/teacher/students");
+  if (res && res.ok) {
+    const students = await res.json();
+    const container = document.getElementById("studentsList"); // updated ID
+    if (container) {
       container.innerHTML = students
         .map(
-          (s) => `
-          <div class="p-2 border-b">
-            ${s.name} - Points: ${s.points || 0}
-          </div>`
+          (s) => `<div class="p-2 border-b">${s.name} - Points: ${s.points || 0}</div>`
         )
         .join("");
     }
   }
+}
 
-
-  async function submitAssignment(e) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const res = await fetchAPI("/teacher/assignments", {
-      method: "POST",
-      body: formData,
-    });
-    if (res && res.ok) {
-      showToast("Assignment created successfully.", "success");
-      e.target.reset();
-      fetchAssignedTasks();
-    } else {
-      showToast("Failed to create assignment.", "error");
+async function fetchAssignedTasks() {
+  const res = await fetchAPI("/teacher/assignments");
+  if (res && res.ok) {
+    const tasks = await res.json();
+    const container = document.getElementById("assignedTasksList"); // updated ID
+    if (container) {
+      container.innerHTML = tasks
+        .map((t) => `<div class="p-2 border-b">${t.title} - Due: ${t.dueDate}</div>`)
+        .join("");
     }
   }
-
+}
 
   async function submitFeedback(e) {
     e.preventDefault();
@@ -868,15 +862,17 @@
 
   
   async function fetchOverdueTasks() {
-    const res = await fetchAPI("/teacher/overdue-tasks");
-    if (res && res.ok) {
-      const overdue = await res.json();
-      const container = document.getElementById("overdue-tasks");
+  const res = await fetchAPI("/teacher/overdue-tasks");
+  if (res && res.ok) {
+    const overdue = await res.json();
+    const container = document.getElementById("overdueTasksList"); // updated ID
+    if (container) {
       container.innerHTML = overdue.length
         ? overdue.map((t) => `<div class="p-2 border-b">${t.title} (Due: ${t.dueDate})</div>`).join("")
         : `<div class="p-2">No overdue tasks 🎉</div>`;
     }
   }
+}
 
  
   async function init() {
