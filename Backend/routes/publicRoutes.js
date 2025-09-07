@@ -339,96 +339,116 @@ module.exports = (eventBus) => {
     }
   );
 
-  publicRouter.post(
-    "/users/login",
-    loginLimiter,
-    validate(loginSchema),
-    async (req, res) => {
-      try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email }).select("+password");
+publicRouter.post(
+  "/users/login",
+  loginLimiter,
+  validate(loginSchema),
+  async (req, res) => {
+    try {
+      // Trim email and password to avoid whitespace issues
+      const email = req.body.email?.trim();
+      const password = req.body.password?.trim();
 
-        if (!user || !(await user.comparePassword(password))) {
-          return res
-            .status(401)
-            .json({ status: false, message: "Invalid credentials." });
-        }
-
-        const now = new Date();
-        let subscriptionActive = false;
-        let trialActive = false;
-
-        // --- Subscription check ---
-        if (user.subscription_status === "active" && user.payment_date) {
-          const expiry = user.nextBillingDate
-            ? new Date(user.nextBillingDate)
-            : new Date(user.payment_date);
-          if (!user.nextBillingDate) expiry.setMonth(expiry.getMonth() + 1);
-
-          subscriptionActive = now < expiry;
-
-          if (!subscriptionActive) {
-            user.subscription_status = "expired";
-            await user.save();
-          }
-        }
-
-        // --- Trial check ---
-        if (user.is_on_trial && user.trial_end_at) {
-          trialActive = now < new Date(user.trial_end_at);
-
-          if (!trialActive) {
-            user.is_on_trial = false;
-            await user.save();
-          }
-        }
-
-        const hasAccess = subscriptionActive || trialActive;
-
-        // --- Token generation ---
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-        await User.findByIdAndUpdate(user._id, { refreshToken });
-        setAuthCookies(res, accessToken, refreshToken);
-
-        // --- Redirect URL ---
-        const redirectUrl = getRedirectUrl(user, hasAccess);
-
-        res.json({
-          status: true,
-          message: "Login successful",
-          user: {
-            email: user.email,
-            role: user.role,
-            id: user._id,
-            subscriptionActive,
-            trialActive,
-          },
-          redirectUrl,
-        });
-      } catch (err) {
-        logger.error("❌ Login error:", err);
-        return res.status(500).json({ status: false, message: "Server error" });
+      if (!email || !password) {
+        return res
+          .status(400)
+          .json({ status: false, message: "Email and password are required." });
       }
+
+      const user = await User.findOne({ email }).select("+password");
+
+      if (!user) {
+        console.log(`Login failed: user not found for email ${email}`);
+        return res
+          .status(401)
+          .json({ status: false, message: "Invalid credentials." });
+      }
+
+      const match = await user.comparePassword(password);
+      console.log(`Login attempt for ${email}: password match = ${match}`);
+
+      if (!match) {
+        return res
+          .status(401)
+          .json({ status: false, message: "Invalid credentials." });
+      }
+
+      const now = new Date();
+      let subscriptionActive = false;
+      let trialActive = false;
+
+      // --- Subscription check ---
+      if (user.subscription_status === "active" && user.payment_date) {
+        const expiry = user.nextBillingDate
+          ? new Date(user.nextBillingDate)
+          : new Date(user.payment_date);
+        if (!user.nextBillingDate) expiry.setMonth(expiry.getMonth() + 1);
+
+        subscriptionActive = now < expiry;
+
+        if (!subscriptionActive) {
+          user.subscription_status = "expired";
+          await user.save();
+        }
+      }
+
+      // --- Trial check ---
+      if (user.is_on_trial && user.trial_end_at) {
+        trialActive = now < new Date(user.trial_end_at);
+
+        if (!trialActive) {
+          user.is_on_trial = false;
+          await user.save();
+        }
+      }
+
+      const hasAccess = subscriptionActive || trialActive;
+
+      // --- Token generation ---
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+      await User.findByIdAndUpdate(user._id, { refreshToken });
+      setAuthCookies(res, accessToken, refreshToken);
+
+      // --- Redirect URL ---
+      const redirectUrl = getRedirectUrl(user, hasAccess);
+
+      res.json({
+        status: true,
+        message: "Login successful",
+        user: {
+          email: user.email,
+          role: user.role,
+          id: user._id,
+          subscriptionActive,
+          trialActive,
+        },
+        redirectUrl,
+      });
+    } catch (err) {
+      logger.error("❌ Login error:", err);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
-  );
-
-  function getRedirectUrl(user, hasAccess) {
-    const { role } = user;
-    const bypassRoles = ["global_overseer", "overseer"];
-
-    // --- Role bypass ---
-    if (bypassRoles.includes(role)) {
-      return redirectPaths[role] || redirectPaths.default;
-    }
-
-    // --- Regular users ---
-    if (redirectPaths[role]) {
-      return hasAccess ? redirectPaths[role] : redirectPaths.payment;
-    }
-
-    return redirectPaths.default;
   }
+);
+
+function getRedirectUrl(user, hasAccess) {
+  const { role } = user;
+  const bypassRoles = ["global_overseer", "overseer"];
+
+  // --- Role bypass ---
+  if (bypassRoles.includes(role)) {
+    return redirectPaths[role] || redirectPaths.default;
+  }
+
+  // --- Regular users ---
+  if (redirectPaths[role]) {
+    return hasAccess ? redirectPaths[role] : redirectPaths.payment;
+  }
+
+  return redirectPaths.default;
+}
+
 
   publicRouter.post("/users/logout", async (req, res) => {
     try {

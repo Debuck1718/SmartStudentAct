@@ -6,7 +6,7 @@ const MONGODB_URI = "mongodb+srv://Smartstudentadmin:IAjFedj31EADYiZQ@cluster0.q
 
 async function checkUser() {
   await mongoose.connect(MONGODB_URI);
-  const user = await User.findOne({ email: "vmensa564@gmail.com" }).lean();
+  const user = await User.findOne({ email: "afedziesylvanus@gmail.com" }).lean();
   console.log(user ? "✅ User exists:" : "❌ User not found");
   console.log(user);
   process.exit(0);
