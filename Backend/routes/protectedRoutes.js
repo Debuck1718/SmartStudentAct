@@ -1196,17 +1196,17 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const teacher = await User.findById(req.user.id);
-      if (!teacher?.schoolName || !teacher?.grade) {
-        return res
-          .status(400)
-          .json({ message: "Teacher school or grade information is missing." });
+      if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
+        return res.status(400).json({
+          message: "Teacher school or grade information is missing.",
+        });
       }
 
       const { search } = req.query;
       const query = {
         role: "student",
         schoolName: teacher.schoolName,
-        grade: teacher.grade,
+        grade: { $in: teacher.teacherGrade }, 
       };
 
       if (search) {
@@ -1220,6 +1220,7 @@ protectedRouter.get(
       const students = await User.find(query).select(
         "firstname lastname email grade imageUrl"
       );
+
       res.status(200).json(students);
     } catch (error) {
       logger.error("Error fetching students for teacher's class:", error);
@@ -1227,6 +1228,8 @@ protectedRouter.get(
     }
   }
 );
+
+
 protectedRouter.post(
   "/teacher/quiz",
   authenticateJWT,
