@@ -379,7 +379,7 @@
 
   async function checkAuthAndLoad() {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/status`, {
+      const res = await fetch(`${API_BASE_URL}/auth/check`, {
         method: 'GET',
         credentials: 'include'
       });
