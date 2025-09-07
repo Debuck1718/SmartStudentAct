@@ -147,18 +147,18 @@ const userSchema = new mongoose.Schema(
       },
     },
     payment_gateway: {
-      type: String,
-      trim: true,
-      required: function () {
-        return !["overseer", "global_overseer"].includes(this.role);
-      },
-    },
-    payment_date: {
-      type: Date,
-      required: function () {
-        return !["overseer", "global_overseer"].includes(this.role);
-      },
-    },
+  type: String,
+  trim: true,
+  required: function () {
+    return !["overseer", "global_overseer"].includes(this.role) && !this.is_on_trial;
+  },
+},
+payment_date: {
+  type: Date,
+  required: function () {
+    return !["overseer", "global_overseer"].includes(this.role) && !this.is_on_trial;
+  },
+},
 
     managedRegions: {
       type: [String],
