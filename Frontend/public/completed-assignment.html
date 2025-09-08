@@ -1,143 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="page_title">Completed Assigned Tasks</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="./images/icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="./images/icon.png"
-    />
-    <link rel="manifest" href="/site.webmanifest" />
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-EWMR745QHX');
-</script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .language-switcher button {
-            margin-right: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            color: white;
-            font-weight: 600;
-        }
-        .language-switcher button.active { text-decoration: underline; transform: scale(1.1); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="page_title">Completed Assigned Tasks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EWMR745QHX');
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
 
-    
-    <div class="language-switcher mb-6">
-        <button id="en-btn" onclick="setLanguage('en')" class="bg-blue-500">English</button>
-        <button id="fr-btn" onclick="setLanguage('fr')" class="bg-blue-500">Français</button>
-        <button id="es-btn" onclick="setLanguage('es')" class="bg-blue-500">Español</button>
-        <button id="tr-btn" onclick="setLanguage('tr')" class="bg-blue-500">Türkçe</button>
-        <button id="ar-btn" onclick="setLanguage('ar')" class="bg-blue-500">العربية</button>
-        <button id="ru-btn" onclick="setLanguage('ru')" class="bg-blue-500">Русский</button>
-    </div>
+  <!-- Header -->
+  <header class="w-full max-w-2xl flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-blue-600">SmartStudentAct</h1>
 
-    <!-- Main container -->
-    <div class="container bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full">
-        <h1 class="text-3xl font-bold text-gray-800 text-center mb-6" data-i18n="page_title">Completed Assigned Tasks</h1>
-        <div id="tasks-list" class="space-y-4"></div>
-    </div>
+    <!-- Language Dropdown -->
+    <select id="language-dropdown" onchange="setLanguage(this.value)" class="p-2 border rounded-md bg-white shadow">
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="es">Español</option>
+      <option value="tr">Türkçe</option>
+      <option value="ar">العربية</option>
+      <option value="ru">Русский</option>
+    </select>
+  </header>
 
-    <script>
-        const translations = {
-            en: { page_title: "Completed Assigned Tasks", student: "Student", status: "Status", date: "Date", statuses: { Completed: "Completed", Graded: "Graded" } },
-            fr: { page_title: "Tâches Assignées Complétées", student: "Étudiant", status: "Statut", date: "Date", statuses: { Completed: "Terminé", Graded: "Noté" } },
-            es: { page_title: "Tareas Asignadas Completadas", student: "Estudiante", status: "Estado", date: "Fecha", statuses: { Completed: "Completado", Graded: "Calificado" } },
-            tr: { page_title: "Tamamlanan Atanan Görevler", student: "Öğrenci", status: "Durum", date: "Tarih", statuses: { Completed: "Tamamlandı", Graded: "Değerlendirildi" } },
-            ar: { page_title: "المهام المعينة المكتملة", student: "الطالب", status: "الحالة", date: "التاريخ", statuses: { Completed: "مكتمل", Graded: "تم التقييم" } },
-            ru: { page_title: "Завершенные Назначенные Задания", student: "Студент", status: "Статус", date: "Дата", statuses: { Completed: "Завершено", Graded: "Оценено" } }
-        };
+  <!-- Back button -->
+  <div class="w-full max-w-2xl mb-4">
+    <a href="teachers.html" class="inline-block px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition">
+      ← Back
+    </a>
+  </div>
 
-        let currentLang = 'en';
+  <!-- Main container -->
+  <div class="container bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full">
+    <h1 class="text-3xl font-bold text-gray-800 text-center mb-6" data-i18n="page_title">Completed Assigned Tasks</h1>
+    <div id="tasks-list" class="space-y-4"></div>
+  </div>
 
-        const assignedTasks = [
-            { id: 'a1', student: 'Alice Johnson', task: 'Algebra Worksheet', status: 'Completed', date: '2025-07-25' },
-            { id: 'a2', student: 'Bob Williams', task: 'History Report', status: 'Completed', date: '2025-07-22' },
-            { id: 'a3', student: 'Charlie Brown', task: 'Science Lab Report', status: 'Graded', date: '2025-07-20' },
-            { id: 'a4', student: 'Diana Prince', task: 'Geometry Test', status: 'Completed', date: '2025-07-19' },
-        ];
+  <script>
+    const translations = {
+      en: { page_title: "Completed Assigned Tasks", student: "Student", status: "Status", date: "Date", statuses: { Completed: "Completed", Graded: "Graded" } },
+      fr: { page_title: "Tâches Assignées Complétées", student: "Étudiant", status: "Statut", date: "Date", statuses: { Completed: "Terminé", Graded: "Noté" } },
+      es: { page_title: "Tareas Asignadas Completadas", student: "Estudiante", status: "Estado", date: "Fecha", statuses: { Completed: "Completado", Graded: "Calificado" } },
+      tr: { page_title: "Tamamlanan Atanan Görevler", student: "Öğrenci", status: "Durum", date: "Tarih", statuses: { Completed: "Tamamlandı", Graded: "Değerlendirildi" } },
+      ar: { page_title: "المهام المعينة المكتملة", student: "الطالب", status: "الحالة", date: "التاريخ", statuses: { Completed: "مكتمل", Graded: "تم التقييم" } },
+      ru: { page_title: "Завершенные Назначенные Задания", student: "Студент", status: "Статус", date: "Дата", statuses: { Completed: "Завершено", Graded: "Оценено" } }
+    };
 
-        const tasksListContainer = document.getElementById('tasks-list');
+    let currentLang = "en";
 
-        function createTaskItem(item) {
-            const labels = translations[currentLang];
-            const taskItemDiv = document.createElement('div');
-            taskItemDiv.className = 'bg-green-100 p-4 rounded-lg mb-2 border-l-4 border-green-500 shadow-sm';
+    const assignedTasks = [
+      { id: "a1", student: "Alice Johnson", task: "Algebra Worksheet", status: "Completed", date: "2025-07-25" },
+      { id: "a2", student: "Bob Williams", task: "History Report", status: "Completed", date: "2025-07-22" },
+      { id: "a3", student: "Charlie Brown", task: "Science Lab Report", status: "Graded", date: "2025-07-20" },
+      { id: "a4", student: "Diana Prince", task: "Geometry Test", status: "Completed", date: "2025-07-19" }
+    ];
 
-            const taskTitle = document.createElement('p');
-            taskTitle.className = 'text-lg font-semibold text-gray-700';
-            taskTitle.textContent = item.task;
-            taskItemDiv.appendChild(taskTitle);
+    const tasksListContainer = document.getElementById("tasks-list");
 
-            const studentDetails = document.createElement('p');
-            studentDetails.className = 'text-sm text-gray-600 mt-1';
-            studentDetails.textContent = `${labels.student}: ${item.student}`;
-            taskItemDiv.appendChild(studentDetails);
+    function createTaskItem(item) {
+      const labels = translations[currentLang];
+      const taskItemDiv = document.createElement("div");
+      taskItemDiv.className = "bg-green-100 p-4 rounded-lg mb-2 border-l-4 border-green-500 shadow-sm";
 
-            const statusDetails = document.createElement('p');
-            statusDetails.className = 'text-sm text-gray-600 mt-1';
-            statusDetails.textContent = `${labels.status}: ${labels.statuses[item.status] || item.status}`;
-            taskItemDiv.appendChild(statusDetails);
+      const taskTitle = document.createElement("p");
+      taskTitle.className = "text-lg font-semibold text-gray-700";
+      taskTitle.textContent = item.task;
+      taskItemDiv.appendChild(taskTitle);
 
-            const dateDetails = document.createElement('p');
-            dateDetails.className = 'text-sm text-gray-600 mt-1';
-            dateDetails.textContent = `${labels.date}: ${item.date}`;
-            taskItemDiv.appendChild(dateDetails);
+      const studentDetails = document.createElement("p");
+      studentDetails.className = "text-sm text-gray-600 mt-1";
+      studentDetails.textContent = `${labels.student}: ${item.student}`;
+      taskItemDiv.appendChild(studentDetails);
 
-            return taskItemDiv;
-        }
+      const statusDetails = document.createElement("p");
+      statusDetails.className = "text-sm text-gray-600 mt-1";
+      statusDetails.textContent = `${labels.status}: ${labels.statuses[item.status] || item.status}`;
+      taskItemDiv.appendChild(statusDetails);
 
-        function renderTasks() {
-            tasksListContainer.innerHTML = '';
-            assignedTasks.forEach(task => {
-                tasksListContainer.appendChild(createTaskItem(task));
-            });
-        }
+      const dateDetails = document.createElement("p");
+      dateDetails.className = "text-sm text-gray-600 mt-1";
+      dateDetails.textContent = `${labels.date}: ${item.date}`;
+      taskItemDiv.appendChild(dateDetails);
 
-        function setLanguage(lang) {
-            currentLang = lang;
-            // Update page title
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (translations[lang][key]) el.textContent = translations[lang][key];
-            });
+      return taskItemDiv;
+    }
 
-            // Highlight active button
-            document.querySelectorAll('.language-switcher button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`${lang}-btn`).classList.add('active');
+    function renderTasks() {
+      tasksListContainer.innerHTML = "";
+      assignedTasks.forEach(task => {
+        tasksListContainer.appendChild(createTaskItem(task));
+      });
+    }
 
-            renderTasks();
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (translations[lang][key]) el.textContent = translations[lang][key];
+      });
+      renderTasks();
+      document.body.dir = lang === "ar" ? "rtl" : "ltr";
+    }
 
-            // Adjust RTL for Arabic
-            document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            setLanguage('en');
-        });
-    </script>
+    document.addEventListener("DOMContentLoaded", () => {
+      setLanguage("en");
+      document.getElementById("language-dropdown").value = "en";
+    });
+  </script>
 
 </body>
 </html>
+

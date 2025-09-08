@@ -86,7 +86,7 @@
 
     
     async function loadTranslations() {
-      const res = await fetch('quiz_dashboard.json');
+      const res = await fetch('quiz-dashboard.json');
       translations = await res.json();
       translatePage();
     }
@@ -176,7 +176,7 @@ document.getElementById('quizForm').addEventListener('submit', async e => {
   });
 
   try {
-    const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
+    const res = await fetch(`${API_BASE_URL}/teacher/quiz`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: "include",
@@ -195,7 +195,7 @@ document.getElementById('quizForm').addEventListener('submit', async e => {
     async function fetchQuizzes() {
       quizList.innerHTML = `<li>${getTranslation('loading')}</li>`;
       try {
-        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, { method: "GET", credentials: "include" });
+        const res = await fetch(`${API_BASE_URL}/teacher/quiz`, { method: "GET", credentials: "include" });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || getTranslation('quizLoadErrorAlert'));
         quizList.innerHTML = "";

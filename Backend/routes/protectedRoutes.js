@@ -1197,7 +1197,7 @@ protectedRouter.get(
     try {
       const teacher = await User.findById(req.user.id);
       if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
-        // Return empty array instead of 400 so frontend doesn't break
+      
         return res.status(200).json([]);
       }
 
