@@ -78,6 +78,11 @@ const signupOtpSchema = Joi.object({
   }),
   grade: Joi.string().when("occupation", {
     is: "student",
+    then: Joi.required().pattern(/^(10|11|12|100|200|300|400)$/),
+    otherwise: Joi.allow(""),
+  }),
+  program: Joi.string().when("occupation", {
+    is: "student",
     then: Joi.required(),
     otherwise: Joi.allow(""),
   }),
@@ -91,12 +96,8 @@ const signupOtpSchema = Joi.object({
     then: Joi.required(),
     otherwise: Joi.allow(""),
   }),
-  program: Joi.string().when("occupation", {
-    is: "student",
-    then: Joi.required(),
-    otherwise: Joi.allow(""),
-  }),
 });
+
 
 
   const verifyOtpSchema = Joi.object({

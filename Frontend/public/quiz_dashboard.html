@@ -55,12 +55,17 @@
           ➕ Add Question
         </button>
 
-        <div class="mt-6">
-          <h3 class="text-lg font-semibold mb-2" data-i18n="assignTo">Assign To:</h3>
-          <input type="text" id="assignEmails" data-i18n-placeholder="studentEmailsPlaceholder" placeholder="Student Emails (comma separated)" class="w-full border p-2 rounded mb-2">
-          <input type="text" id="assignGrade" data-i18n-placeholder="gradePlaceholder" placeholder="Grade (optional)" class="w-full border p-2 rounded mb-2">
-          <input type="text" id="assignSchool" data-i18n-placeholder="schoolNamePlaceholder" placeholder="School Name (optional)" class="w-full border p-2 rounded">
-        </div>
+<div class="mt-6">
+  <h3 class="text-lg font-semibold mb-2" data-i18n="assignTo">Assign To:</h3>
+  <input type="text" id="assignEmails" data-i18n-placeholder="studentEmailsPlaceholder" placeholder="Student Emails (comma separated)" class="w-full border p-2 rounded mb-2">
+  
+  <input type="text" id="assignGrade" data-i18n-placeholder="gradePlaceholder" placeholder="Grade / Level (optional)" class="w-full border p-2 rounded mb-2">
+  
+  <input type="text" id="assignProgram" data-i18n-placeholder="programPlaceholder" placeholder="Program / Section (optional)" class="w-full border p-2 rounded mb-2">
+
+  <input type="text" id="assignSchool" data-i18n-placeholder="schoolNamePlaceholder" placeholder="School Name (optional)" class="w-full border p-2 rounded">
+</div>
+
 
         <button type="submit" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700" data-i18n="saveAndAssign">
           📤 Save & Assign Quiz
@@ -150,18 +155,20 @@
   document.getElementById('quizForm').addEventListener('submit', async e => {
     e.preventDefault();
 
-    const quizData = {
-      title: document.getElementById('quizTitle').value,
-      description: document.getElementById('quizDescription').value,
-      dueDate: document.getElementById('quizDueDate').value,
-      timeLimitMinutes: document.getElementById('quizTimeLimit').value || null,
-      questions: [],
-      assignTo: {
-        users: document.getElementById('assignEmails').value.split(',').map(e => e.trim()).filter(e => e),
-        grades: document.getElementById('assignGrade').value ? [Number(document.getElementById('assignGrade').value)] : [],
-        schools: document.getElementById('assignSchool').value ? [document.getElementById('assignSchool').value] : []
-      }
-    };
+const quizData = {
+  title: document.getElementById('quizTitle').value,
+  description: document.getElementById('quizDescription').value,
+  dueDate: document.getElementById('quizDueDate').value,
+  timeLimitMinutes: document.getElementById('quizTimeLimit').value || null,
+  questions: [],
+  assignTo: {
+    users: document.getElementById('assignEmails').value.split(',').map(e => e.trim()).filter(e => e),
+    grades: document.getElementById('assignGrade').value ? [Number(document.getElementById('assignGrade').value)] : [],
+    programs: document.getElementById('assignProgram').value ? [document.getElementById('assignProgram').value.trim()] : [],
+    schools: document.getElementById('assignSchool').value ? [document.getElementById('assignSchool').value] : []
+  }
+};
+
 
     document.querySelectorAll('#questionsContainer > div').forEach(qDiv => {
       const qText = qDiv.querySelector('input[name="questionText"]').value;
@@ -176,7 +183,7 @@
     });
 
     try {
-      const res = await fetch(`${API_BASE_URL}/teacher/quiz/:id`, {
+      const res = await fetch(`${API_BASE_URL}/teacher/quiz`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: "include",

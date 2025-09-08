@@ -16,7 +16,6 @@ const submissionSchema = new mongoose.Schema({
   last_saved_at: { type: Date, default: Date.now } 
 });
 
-
 const quizSchema = new mongoose.Schema({
   teacher_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   title: { type: String, required: true },
@@ -27,10 +26,12 @@ const quizSchema = new mongoose.Schema({
 
   assigned_to_users: [String],
   assigned_to_grades: [Number],
+  assigned_to_programs: [String],       
   assigned_to_schools: [String],
 
   submissions: [submissionSchema]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Quiz', quizSchema);
+
 

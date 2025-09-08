@@ -1322,17 +1322,19 @@ protectedRouter.post(
         });
       }
 
-      const quiz = new Quiz({
-        teacher_id: teacherId,
-        title,
-        description,
-        due_date: new Date(dueDate),
-        questions,
-        timeLimitMinutes: timeLimitMinutes || null,
-        assigned_to_users: assignTo?.users || [],
-        assigned_to_grades: assignTo?.grades || [],
-        assigned_to_schools: assignTo?.schools || [],
-      });
+const quiz = new Quiz({
+  teacher_id: teacherId,
+  title,
+  description,
+  due_date: new Date(dueDate),
+  questions,
+  timeLimitMinutes: timeLimitMinutes || null,
+  assigned_to_users: assignTo?.users || [],
+  assigned_to_grades: assignTo?.grades || [],
+  assigned_to_programs: assignTo?.programs || [],
+  assigned_to_schools: assignTo?.schools || [],
+});
+
 
       await quiz.save();
 

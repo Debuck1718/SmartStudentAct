@@ -753,12 +753,14 @@ function validateForm() {
   if (!form.schoolName) errors.schoolName = "School name required.";
   if (!form.schoolCountry) errors.schoolCountry = "School country required.";
 
-  if (form.occupation === "student") {
+if (form.occupation === "student") {
     if (!form.educationLevel) errors.educationLevel = "Education level required.";
-    if ((form.educationLevel === "junior" || form.educationLevel === "high") && !form.grade)
-      errors.grade = "Grade required.";
-    if (form.educationLevel === "university" && !form.program)
-      errors.program = "Program required."; // new
+
+    const gradeVal = Number(form.grade);
+    if ((form.educationLevel === "high" && gradeVal >= 10 && gradeVal <= 12) ||
+        (form.educationLevel === "university" && gradeVal >= 100 && gradeVal <= 400)) {
+      if (!form.program) errors.program = "Program required.";
+    }
   } else if (form.occupation === "teacher") {
     if (!form.teacherGrade) errors.teacherGrade = "Grade/Level required.";
     if (!form.teacherSubject) errors.teacherSubject = "Subject required.";
@@ -806,10 +808,14 @@ function updateUI() {
 educationLevelSelect.addEventListener("change", () => {
   populateGradeOptions();
 
-  if(educationLevelSelect.value === "university" && programField) {
-    programField.classList.remove("hidden"); 
+  const gradeVal = Number(gradeSelect.value);
+  const levelVal = Number(gradeSelect.value); 
+  if ((educationLevelSelect.value === "high" && gradeVal >= 10 && gradeVal <= 12) ||
+      (educationLevelSelect.value === "university" && levelVal >= 100 && levelVal <= 400)) {
+    if(programField) programField.classList.remove("hidden"); 
   } else if(programField) {
     programField.classList.add("hidden");
+    if(programInput) programInput.value = ""; 
   }
 
   updateUI();
@@ -830,8 +836,11 @@ occupationSelect.addEventListener("change", () => {
     educationLevelField.classList.remove("hidden");
     gradeField.classList.remove("hidden");
 
-    if(educationLevelSelect.value === "university" && programField) {
-      programField.classList.remove("hidden"); // show program field
+    const gradeVal = Number(gradeSelect.value);
+    const levelVal = Number(gradeSelect.value);
+    if ((educationLevelSelect.value === "high" && gradeVal >= 10 && gradeVal <= 12) ||
+        (educationLevelSelect.value === "university" && levelVal >= 100 && levelVal <= 400)) {
+      if(programField) programField.classList.remove("hidden"); 
     }
   } else if (occupationSelect.value === "teacher") {
     schoolNameField.classList.remove("hidden");
