@@ -1527,7 +1527,7 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const teacher = await User.findById(req.user.id);
-      if (!teacher?.schoolName || !teacher?.grade) {
+      if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
         return res
           .status(400)
           .json({ message: "Teacher school or grade information is missing." });
@@ -1537,7 +1537,7 @@ protectedRouter.get(
       const query = {
         role: "student",
         schoolName: teacher.schoolName,
-        grade: { $ne: teacher.grade },
+        grade: { $nin: teacher.teacherGrade },
       };
 
       if (search) {
@@ -1558,6 +1558,7 @@ protectedRouter.get(
     }
   }
 );
+
 
 protectedRouter.get("/auth/check", authenticateJWT, (req, res) => {
   res.json({
