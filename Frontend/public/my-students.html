@@ -1,308 +1,400 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="pageTitle">My Class Students</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="pageTitle">My Class Students</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .animate-spin { animation: spin 1s linear infinite; }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-  </style>
-</head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="container bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full">
+      <header
+        class="flex flex-col sm:flex-row justify-between items-center mb-4"
+      >
+        <div class="flex items-center space-x-2 mb-4 sm:mb-0">
+          <!-- 🔙 Back button -->
+          <button
+            onclick="window.location.href='dashboard.html'"
+            class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium shadow-md hover:bg-gray-300 transition duration-300 flex items-center space-x-2"
+            data-i18n="backBtn"
+          >
+            <span>⬅</span>
+            <span>Back</span>
+          </button>
+        </div>
 
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+        <h1
+          id="page-title"
+          class="text-3xl font-bold text-gray-800 text-center sm:text-left mb-4 sm:mb-0"
+          data-i18n="pageTitle"
+        >
+          My Class Students
+        </h1>
 
-  <div class="container bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full">
-    <header class="flex flex-col sm:flex-row justify-between items-center mb-4">
-      <h1 id="page-title" class="text-3xl font-bold text-gray-800 text-center sm:text-left mb-4 sm:mb-0" data-i18n="pageTitle">My Class Students</h1>
-      <div class="flex items-center space-x-2 mb-4 sm:mb-0">
-        <select id="language-select" class="border border-gray-300 rounded-md p-2 text-sm">
-          <option value="en">English</option>
-          <option value="fr">Français</option>
-          <option value="es">Español</option>
-          <option value="tr">Türkçe</option>
-          <option value="ar">العربية</option>
-          <option value="ru">Русский</option>
-        </select>
-        <button id="my-class-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:bg-blue-700 transition duration-300" data-i18n="myClassBtn">My Class</button>
-        <button id="other-students-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium shadow-md hover:bg-gray-300 transition duration-300" data-i18n="otherStudentsBtn">Other Students</button>
+        <div class="flex items-center space-x-2 mb-4 sm:mb-0">
+          <select
+            id="language-select"
+            class="border border-gray-300 rounded-md p-2 text-sm"
+          >
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="tr">Türkçe</option>
+            <option value="ar">العربية</option>
+            <option value="ru">Русский</option>
+          </select>
+          <button
+            id="my-class-btn"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:bg-blue-700 transition duration-300"
+            data-i18n="myClassBtn"
+          >
+            My Class
+          </button>
+          <button
+            id="other-students-btn"
+            class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium shadow-md hover:bg-gray-300 transition duration-300"
+            data-i18n="otherStudentsBtn"
+          >
+            Other Students
+          </button>
+        </div>
+      </header>
+
+      <div class="mb-6">
+        <input
+          type="text"
+          id="search-input"
+          placeholder=""
+          data-i18n-placeholder="searchStudents"
+          class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
-    </header>
 
-    <div class="mb-6">
-      <input type="text" id="search-input" placeholder="" data-i18n-placeholder="searchStudents" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <div id="content-area"></div>
     </div>
 
-    <div id="content-area"></div>
-  </div>
-
-  <script>
-    // 🔹 Embedded translations (instead of my-students.json)
-    const translations = {
-      pageTitle: {
-        en: "My Class Students",
-        fr: "Mes Étudiants de Classe",
-        es: "Mis Estudiantes de Clase",
-        tr: "Sınıfımdaki Öğrenciler",
-        ar: "طلابي في الصف",
-        ru: "Мои Ученики Класса"
-      },
-      myClassBtn: {
-        en: "My Class",
-        fr: "Ma Classe",
-        es: "Mi Clase",
-        tr: "Sınıfım",
-        ar: "صفي",
-        ru: "Мой Класс"
-      },
-      otherStudentsBtn: {
-        en: "Other Students",
-        fr: "Autres Étudiants",
-        es: "Otros Estudiantes",
-        tr: "Diğer Öğrenciler",
-        ar: "طلاب آخرون",
-        ru: "Другие Ученики"
-      },
-      students: {
-        en: "Students",
-        fr: "Étudiants",
-        es: "Estudiantes",
-        tr: "Öğrenciler",
-        ar: "طلاب",
-        ru: "Ученики"
-      },
-      searchStudents: {
-        en: "Search students...",
-        fr: "Rechercher des étudiants...",
-        es: "Buscar estudiantes...",
-        tr: "Öğrenci ara...",
-        ar: "ابحث عن الطلاب...",
-        ru: "Поиск учеников..."
-      },
-      loading: {
-        en: "Loading",
-        fr: "Chargement",
-        es: "Cargando",
-        tr: "Yükleniyor",
-        ar: "جارٍ التحميل",
-        ru: "Загрузка"
-      },
-      noMyClassStudents: {
-        en: "No students found in your class.",
-        fr: "Aucun étudiant trouvé dans votre classe.",
-        es: "No se encontraron estudiantes en tu clase.",
-        tr: "Sınıfınızda öğrenci bulunamadı.",
-        ar: "لم يتم العثور على طلاب في صفك.",
-        ru: "В вашем классе нет учеников."
-      },
-      noOtherStudents: {
-        en: "No other students found in your school.",
-        fr: "Aucun autre étudiant trouvé dans votre école.",
-        es: "No se encontraron otros estudiantes en tu escuela.",
-        tr: "Okulunuzda başka öğrenci bulunamadı.",
-        ar: "لم يتم العثور على طلاب آخرين في مدرستك.",
-        ru: "В вашей школе не найдено других учеников."
-      },
-      grade: {
-        en: "Grade",
-        fr: "Classe",
-        es: "Grado",
-        tr: "Sınıf",
-        ar: "الصف",
-        ru: "Класс"
-      },
-      error: {
-        en: "Error",
-        fr: "Erreur",
-        es: "Error",
-        tr: "Hata",
-        ar: "خطأ",
-        ru: "Ошибка"
-      },
-      studentLoadError: {
-        en: "Unable to load students. Please try again later.",
-        fr: "Impossible de charger les étudiants. Veuillez réessayer plus tard.",
-        es: "No se pueden cargar los estudiantes. Por favor, inténtelo más tarde.",
-        tr: "Öğrenciler yüklenemedi. Lütfen daha sonra tekrar deneyin.",
-        ar: "تعذر تحميل الطلاب. يرجى المحاولة لاحقًا.",
-        ru: "Не удалось загрузить учеников. Попробуйте позже."
-      }
-    };
-
-    let currentLang = "en";
-
-    // Helper for translating page elements
-    function applyTranslations() {
-      document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        if (translations[key] && translations[key][currentLang]) {
-          el.textContent = translations[key][currentLang];
-        }
-      });
-
-      document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-        const key = el.getAttribute("data-i18n-placeholder");
-        if (translations[key] && translations[key][currentLang]) {
-          el.placeholder = translations[key][currentLang];
-        }
-      });
-
-      document.body.dir = currentLang === "ar" ? "rtl" : "ltr";
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const API_BASE_URL = "https://api.smartstudentact.com/api";
-      const contentArea = document.getElementById("content-area");
-      const myClassBtn = document.getElementById("my-class-btn");
-      const otherStudentsBtn = document.getElementById("other-students-btn");
-      const searchInput = document.getElementById("search-input");
-      const langSelect = document.getElementById("language-select");
-
-      const API_ENDPOINTS = {
-        "my-class": "/teacher/students",
-        "other-students": "/teacher/students/other"
+    <script>
+      // 🔹 Embedded translations (instead of my-students.json)
+      const translations = {
+        pageTitle: {
+          en: "My Class Students",
+          fr: "Mes Étudiants de Classe",
+          es: "Mis Estudiantes de Clase",
+          tr: "Sınıfımdaki Öğrenciler",
+          ar: "طلابي في الصف",
+          ru: "Мои Ученики Класса",
+        },
+        myClassBtn: {
+          en: "My Class",
+          fr: "Ma Classe",
+          es: "Mi Clase",
+          tr: "Sınıfım",
+          ar: "صفي",
+          ru: "Мой Класс",
+        },
+        otherStudentsBtn: {
+          en: "Other Students",
+          fr: "Autres Étudiants",
+          es: "Otros Estudiantes",
+          tr: "Diğer Öğrenciler",
+          ar: "طلاب آخرون",
+          ru: "Другие Ученики",
+        },
+        students: {
+          en: "Students",
+          fr: "Étudiants",
+          es: "Estudiantes",
+          tr: "Öğrenciler",
+          ar: "طلاب",
+          ru: "Ученики",
+        },
+        searchStudents: {
+          en: "Search students...",
+          fr: "Rechercher des étudiants...",
+          es: "Buscar estudiantes...",
+          tr: "Öğrenci ara...",
+          ar: "ابحث عن الطلاب...",
+          ru: "Поиск учеников...",
+        },
+        loading: {
+          en: "Loading",
+          fr: "Chargement",
+          es: "Cargando",
+          tr: "Yükleniyor",
+          ar: "جارٍ التحميل",
+          ru: "Загрузка",
+        },
+        noMyClassStudents: {
+          en: "No students found in your class.",
+          fr: "Aucun étudiant trouvé dans votre classe.",
+          es: "No se encontraron estudiantes en tu clase.",
+          tr: "Sınıfınızda öğrenci bulunamadı.",
+          ar: "لم يتم العثور على طلاب في صفك.",
+          ru: "В вашем классе нет учеников.",
+        },
+        noOtherStudents: {
+          en: "No other students found in your school.",
+          fr: "Aucun autre étudiant trouvé dans votre école.",
+          es: "No se encontraron otros estudiantes en tu escuela.",
+          tr: "Okulunuzda başka öğrenci bulunamadı.",
+          ar: "لم يتم العثور على طلاب آخرين في مدرستك.",
+          ru: "В вашей школе не найдено других учеников.",
+        },
+        grade: {
+          en: "Grade",
+          fr: "Classe",
+          es: "Grado",
+          tr: "Sınıf",
+          ar: "الصف",
+          ru: "Класс",
+        },
+        error: {
+          en: "Error",
+          fr: "Erreur",
+          es: "Error",
+          tr: "Hata",
+          ar: "خطأ",
+          ru: "Ошибка",
+        },
+        studentLoadError: {
+          en: "Unable to load students. Please try again later.",
+          fr: "Impossible de charger les étudiants. Veuillez réessayer plus tard.",
+          es: "No se pueden cargar los estudiantes. Por favor, inténtelo más tarde.",
+          tr: "Öğrenciler yüklenemedi. Lütfen daha sonra tekrar deneyin.",
+          ar: "تعذر تحميل الطلاب. يرجى المحاولة لاحقًا.",
+          ru: "Не удалось загрузить учеников. Попробуйте позже.",
+        },
+        backBtn: {
+          en: "Back",
+          fr: "Retour",
+          es: "Atrás",
+          tr: "Geri",
+          ar: "رجوع",
+          ru: "Назад",
+        },
       };
 
-      let currentView = "my-class";
-      let searchTimeout;
+      let currentLang = "en";
 
-      const authFetch = async (url, options = {}) => {
-        return fetch(url, {
-          ...options,
-          credentials: "include",
-          headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+      function applyTranslations() {
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.getAttribute("data-i18n");
+          if (translations[key] && translations[key][currentLang]) {
+            el.textContent = translations[key][currentLang];
+          }
         });
-      };
 
-      function showLoading(viewName) {
-        const title = viewName === "my-class" ? translations.myClassBtn[currentLang] : translations.otherStudentsBtn[currentLang];
-        document.getElementById("page-title").textContent = `${title} ${translations.students[currentLang]}`;
-        contentArea.innerHTML = `
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+          const key = el.getAttribute("data-i18n-placeholder");
+          if (translations[key] && translations[key][currentLang]) {
+            el.placeholder = translations[key][currentLang];
+          }
+        });
+
+        document.body.dir = currentLang === "ar" ? "rtl" : "ltr";
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const API_BASE_URL = "https://api.smartstudentact.com/api";
+        const contentArea = document.getElementById("content-area");
+        const myClassBtn = document.getElementById("my-class-btn");
+        const otherStudentsBtn = document.getElementById("other-students-btn");
+        const searchInput = document.getElementById("search-input");
+        const langSelect = document.getElementById("language-select");
+
+        const API_ENDPOINTS = {
+          "my-class": "/teacher/students",
+          "other-students": "/teacher/students/other",
+        };
+
+        let currentView = "my-class";
+        let searchTimeout;
+
+        const authFetch = async (url, options = {}) => {
+          return fetch(url, {
+            ...options,
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              ...(options.headers || {}),
+            },
+          });
+        };
+
+        function showLoading(viewName) {
+          const title =
+            viewName === "my-class"
+              ? translations.myClassBtn[currentLang]
+              : translations.otherStudentsBtn[currentLang];
+          document.getElementById(
+            "page-title"
+          ).textContent = `${title} ${translations.students[currentLang]}`;
+          contentArea.innerHTML = `
           <div class="flex flex-col items-center justify-center py-12">
             <div class="animate-spin rounded-full h-12 w-12 border-4 border-t-4 border-gray-200 border-t-blue-500"></div>
-            <p class="ml-4 text-gray-500 mt-4">${translations.loading[currentLang]} ${title.toLowerCase()} ${translations.students[currentLang]}...</p>
+            <p class="ml-4 text-gray-500 mt-4">${
+              translations.loading[currentLang]
+            } ${title.toLowerCase()} ${
+            translations.students[currentLang]
+          }...</p>
           </div>
         `;
-      }
+        }
 
-      function createMyClassStudentCard(student) {
-        const div = document.createElement("div");
-        const imageUrl = student.imageUrl || `https://placehold.co/100x100/A0C4FF/ffffff?text=${student.firstname.charAt(0)}${student.lastname.charAt(0)}`;
-        div.className = `p-4 rounded-lg mb-2 border-l-4 border-blue-500 bg-blue-50 shadow-sm flex items-center space-x-4`;
-        div.innerHTML = `
+        function createMyClassStudentCard(student) {
+          const div = document.createElement("div");
+          const imageUrl =
+            student.imageUrl ||
+            `https://placehold.co/100x100/A0C4FF/ffffff?text=${student.firstname.charAt(
+              0
+            )}${student.lastname.charAt(0)}`;
+          div.className = `p-4 rounded-lg mb-2 border-l-4 border-blue-500 bg-blue-50 shadow-sm flex items-center space-x-4`;
+          div.innerHTML = `
           <img class="h-16 w-16 rounded-full object-cover" src="${imageUrl}" alt="${student.firstname} ${student.lastname}">
           <div class="flex-1">
             <p class="text-lg font-semibold text-gray-700">${student.firstname} ${student.lastname}</p>
             <p class="text-sm text-gray-600 mt-1">${translations.grade[currentLang]}: ${student.grade}</p>
           </div>
         `;
-        return div;
-      }
+          return div;
+        }
 
-      function createOtherStudentCard(student) {
-        const div = document.createElement("div");
-        const imageUrl = student.imageUrl || `https://placehold.co/120x120/AEC6CF/ffffff?text=${student.firstname.charAt(0)}${student.lastname.charAt(0)}`;
-        div.className = `flex flex-col items-center bg-blue-50 p-6 rounded-lg border-t-4 border-blue-400 shadow-sm transition-transform transform hover:scale-105`;
-        div.innerHTML = `
+        function createOtherStudentCard(student) {
+          const div = document.createElement("div");
+          const imageUrl =
+            student.imageUrl ||
+            `https://placehold.co/120x120/AEC6CF/ffffff?text=${student.firstname.charAt(
+              0
+            )}${student.lastname.charAt(0)}`;
+          div.className = `flex flex-col items-center bg-blue-50 p-6 rounded-lg border-t-4 border-blue-400 shadow-sm transition-transform transform hover:scale-105`;
+          div.innerHTML = `
           <img src="${imageUrl}" alt="${student.firstname} ${student.lastname}" class="w-24 h-24 rounded-full mb-4 object-cover border-4 border-white shadow-md">
           <div class="text-center">
             <p class="text-xl font-semibold text-gray-700">${student.firstname} ${student.lastname}</p>
             <p class="text-md text-gray-600">${translations.grade[currentLang]}: ${student.grade}</p>
           </div>
         `;
-        return div;
-      }
-
-      async function fetchStudentsAndRender(view, searchTerm = "") {
-        showLoading(view);
-        const endpoint = API_ENDPOINTS[view] + (searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : "");
-        try {
-          const response = await authFetch(`${API_BASE_URL}${endpoint}`);
-          if (!response.ok) {
-            if (response.status === 401 || response.status === 403) { window.location.href = "/login.html"; return; }
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const students = await response.json();
-          if (students.length === 0) {
-            const message = view === "my-class" ? translations.noMyClassStudents[currentLang] : translations.noOtherStudents[currentLang];
-            contentArea.innerHTML = `<div class="text-center text-gray-500 py-12"><p class="text-lg font-semibold">${message}</p></div>`;
-            return;
-          }
-          const fragment = document.createDocumentFragment();
-          if (view === "other-students") {
-            students.sort((a, b) => (`${a.firstname} ${a.lastname}`).localeCompare(`${b.firstname} ${b.lastname}`));
-            const gridContainer = document.createElement("div");
-            gridContainer.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6";
-            students.forEach(student => gridContainer.appendChild(createOtherStudentCard(student)));
-            fragment.appendChild(gridContainer);
-          } else {
-            const listContainer = document.createElement("div");
-            listContainer.className = "space-y-4";
-            students.forEach(student => listContainer.appendChild(createMyClassStudentCard(student)));
-            fragment.appendChild(listContainer);
-          }
-          contentArea.innerHTML = "";
-          contentArea.appendChild(fragment);
-        } catch (error) {
-          console.error("Failed to fetch students:", error);
-          contentArea.innerHTML = `<div class="text-center text-red-500 py-12"><p class="font-bold">${translations.error[currentLang]}:</p><p>${error.message}</p><p>${translations.studentLoadError[currentLang]}</p></div>`;
+          return div;
         }
-      }
 
-      // 🔹 Language switch
-      langSelect.addEventListener("change", (e) => {
-        currentLang = e.target.value;
+        async function fetchStudentsAndRender(view, searchTerm = "") {
+          showLoading(view);
+          const endpoint =
+            API_ENDPOINTS[view] +
+            (searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : "");
+          try {
+            const response = await authFetch(`${API_BASE_URL}${endpoint}`);
+            if (!response.ok) {
+              if (response.status === 401 || response.status === 403) {
+                window.location.href = "/login.html";
+                return;
+              }
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const students = await response.json();
+            if (students.length === 0) {
+              const message =
+                view === "my-class"
+                  ? translations.noMyClassStudents[currentLang]
+                  : translations.noOtherStudents[currentLang];
+              contentArea.innerHTML = `<div class="text-center text-gray-500 py-12"><p class="text-lg font-semibold">${message}</p></div>`;
+              return;
+            }
+            const fragment = document.createDocumentFragment();
+            if (view === "other-students") {
+              students.sort((a, b) =>
+                `${a.firstname} ${a.lastname}`.localeCompare(
+                  `${b.firstname} ${b.lastname}`
+                )
+              );
+              const gridContainer = document.createElement("div");
+              gridContainer.className =
+                "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6";
+              students.forEach((student) =>
+                gridContainer.appendChild(createOtherStudentCard(student))
+              );
+              fragment.appendChild(gridContainer);
+            } else {
+              const listContainer = document.createElement("div");
+              listContainer.className = "space-y-4";
+              students.forEach((student) =>
+                listContainer.appendChild(createMyClassStudentCard(student))
+              );
+              fragment.appendChild(listContainer);
+            }
+            contentArea.innerHTML = "";
+            contentArea.appendChild(fragment);
+          } catch (error) {
+            console.error("Failed to fetch students:", error);
+            contentArea.innerHTML = `<div class="text-center text-red-500 py-12"><p class="font-bold">${translations.error[currentLang]}:</p><p>${error.message}</p><p>${translations.studentLoadError[currentLang]}</p></div>`;
+          }
+        }
+
+        // 🔹 Language switch
+        langSelect.addEventListener("change", (e) => {
+          currentLang = e.target.value;
+          applyTranslations();
+          searchInput.placeholder = translations.searchStudents[currentLang];
+          fetchStudentsAndRender(currentView, searchInput.value);
+        });
+
+        // 🔹 Tab buttons
+        myClassBtn.addEventListener("click", () => {
+          currentView = "my-class";
+          fetchStudentsAndRender(currentView, searchInput.value);
+          myClassBtn.classList.replace("bg-gray-200", "bg-blue-600");
+          myClassBtn.classList.replace("text-gray-800", "text-white");
+          otherStudentsBtn.classList.replace("bg-blue-600", "bg-gray-200");
+          otherStudentsBtn.classList.replace("text-white", "text-gray-800");
+        });
+
+        otherStudentsBtn.addEventListener("click", () => {
+          currentView = "other-students";
+          fetchStudentsAndRender(currentView, searchInput.value);
+          otherStudentsBtn.classList.replace("bg-gray-200", "bg-blue-600");
+          otherStudentsBtn.classList.replace("text-gray-800", "text-white");
+          myClassBtn.classList.replace("bg-blue-600", "bg-gray-200");
+          myClassBtn.classList.replace("text-white", "text-gray-800");
+        });
+
+        searchInput.addEventListener("input", () => {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            fetchStudentsAndRender(currentView, searchInput.value.trim());
+          }, 300);
+        });
+
         applyTranslations();
         searchInput.placeholder = translations.searchStudents[currentLang];
-        fetchStudentsAndRender(currentView, searchInput.value);
+        fetchStudentsAndRender(currentView);
       });
-
-      // 🔹 Tab buttons
-      myClassBtn.addEventListener("click", () => {
-        currentView = "my-class";
-        fetchStudentsAndRender(currentView, searchInput.value);
-        myClassBtn.classList.replace("bg-gray-200", "bg-blue-600");
-        myClassBtn.classList.replace("text-gray-800", "text-white");
-        otherStudentsBtn.classList.replace("bg-blue-600", "bg-gray-200");
-        otherStudentsBtn.classList.replace("text-white", "text-gray-800");
-      });
-
-      otherStudentsBtn.addEventListener("click", () => {
-        currentView = "other-students";
-        fetchStudentsAndRender(currentView, searchInput.value);
-        otherStudentsBtn.classList.replace("bg-gray-200", "bg-blue-600");
-        otherStudentsBtn.classList.replace("text-gray-800", "text-white");
-        myClassBtn.classList.replace("bg-blue-600", "bg-gray-200");
-        myClassBtn.classList.replace("text-white", "text-gray-800");
-      });
-
-      // 🔹 Search listener
-      searchInput.addEventListener("input", () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-          fetchStudentsAndRender(currentView, searchInput.value.trim());
-        }, 300);
-      });
-
-      // 🔹 Initial load
-      applyTranslations();
-      searchInput.placeholder = translations.searchStudents[currentLang];
-      fetchStudentsAndRender(currentView);
-    });
-  </script>
-
-</body>
+    </script>
+  </body>
 </html>
