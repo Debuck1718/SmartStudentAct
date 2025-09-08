@@ -1353,6 +1353,30 @@ protectedRouter.post(
   }
 );
 
+protectedRouter.get(
+  "/teacher/quiz/:id",
+  authenticateJWT,
+  hasRole("teacher"),
+  async (req, res) => {
+    try {
+      const quiz = await Quiz.findOne({
+        _id: req.params.id,
+        teacher_id: req.user.id,
+      });
+
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+
+      res.status(200).json(quiz);
+    } catch (error) {
+      logger.error("Error fetching quiz:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+
 
 protectedRouter.get(
   "/teacher/quiz/:quizId/results",
@@ -1386,6 +1410,30 @@ protectedRouter.get(
     }
   }
 );
+
+protectedRouter.delete(
+  "/teacher/quiz/:id",
+  authenticateJWT,
+  hasRole("teacher"),
+  async (req, res) => {
+    try {
+      const quiz = await Quiz.findOneAndDelete({
+        _id: req.params.id,
+        teacher_id: req.user.id,
+      });
+
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+
+      res.status(200).json({ message: "Quiz deleted successfully" });
+    } catch (error) {
+      logger.error("Error deleting quiz:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 
 protectedRouter.get(
   "/teacher/overdue-tasks",

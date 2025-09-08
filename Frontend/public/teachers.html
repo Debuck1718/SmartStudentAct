@@ -666,6 +666,35 @@ function populateStudentSelects(allStudents, myGrade = [], otherGrade = []) {
         window.location.href = "/login.html";
       });
 
+      function renderStudents(students = []) {
+    const container = document.getElementById("studentsList");
+    if (!container) return;
+
+    if (students.length === 0) {
+      container.innerHTML = `<div class="p-4 text-center text-gray-500">No students found.</div>`;
+      return;
+    }
+
+    container.innerHTML = students
+      .map(
+        (s) => `
+        <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+          <div class="flex items-center gap-3">
+            <img src="${s.imageUrl || "./images/default-avatar.png"}"
+                 alt="student avatar"
+                 class="h-10 w-10 rounded-full border object-cover"/>
+            <div>
+              <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
+              <p class="text-sm text-gray-500">Grade ${s.grade || "-"}</p>
+            </div>
+          </div>
+          <span class="text-xs text-gray-400">${s.email}</span>
+        </div>
+      `
+      )
+      .join("");
+  }
+
       init();
     });
   </script>
