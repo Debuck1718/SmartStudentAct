@@ -1355,29 +1355,21 @@ const quiz = new Quiz({
   }
 );
 
+// Get all quizzes for the logged-in teacher
 protectedRouter.get(
-  "/teacher/quiz/:id",
+  "/teacher/quizzes",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const quiz = await Quiz.findOne({
-        _id: req.params.id,
-        teacher_id: req.user.id,
-      });
-
-      if (!quiz) {
-        return res.status(404).json({ message: "Quiz not found" });
-      }
-
-      res.status(200).json(quiz);
+      const quizzes = await Quiz.find({ teacher_id: req.user.id }).sort({ createdAt: -1 });
+      res.status(200).json(quizzes);
     } catch (error) {
-      logger.error("Error fetching quiz:", error);
+      logger.error("Error fetching teacher quizzes:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
-
 
 
 protectedRouter.get(

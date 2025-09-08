@@ -102,7 +102,7 @@
       </div>
     </header>
 
-    <!-- Navigation -->
+   
     <nav class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md">
       <a href="./my-students.html"
          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
@@ -119,7 +119,7 @@
     </nav>
 
     <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Students Section -->
+      
       <section id="studentsSection" class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentsInClass">
           🎓 Students in Your Class
@@ -127,7 +127,6 @@
         <div id="studentsList" class="divide-y divide-gray-200 text-gray-700"></div>
       </section>
 
-      <!-- Assignment Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
           ✏️ Create and Send Assignment
@@ -172,7 +171,7 @@
         </button>
       </section>
 
-      <!-- Points Section -->
+     
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="addPointsTitle">
           ➕ Add Student Points
@@ -200,7 +199,7 @@
         </button>
       </section>
 
-      <!-- Overdue Tasks -->
+     
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="overdueTasks">
           📌 Overdue Tasks
@@ -208,7 +207,7 @@
         <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
       </section>
 
-      <!-- Assigned Tasks -->
+     
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="assignedTasks">
           📝 Assigned Tasks & Feedback
@@ -216,7 +215,7 @@
         <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
       </section>
 
-      <!-- Feedback -->
+
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentFeedback">
           💬 Student Feedback Overview
@@ -224,7 +223,7 @@
         <div id="feedbackList" class="divide-y divide-gray-200"></div>
       </section>
 
-      <!-- Academic Calendar -->
+      
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">📅 Academic Calendar</h2>
         
@@ -255,10 +254,10 @@
 
   <script src="translate.js"></script>
   <script>
-    const API_BASE_URL = "https://api.smartstudentact.com/api";
+     const API_BASE_URL = "https://api.smartstudentact.com/api";
     let studentsCache = [];
 
-    function showToast(message, type="info"){
+    function showToast(message, type="info") {
       const container = document.getElementById("toast-container") || (() => {
         const el = document.createElement("div");
         el.id = "toast-container";
@@ -274,35 +273,24 @@
       setTimeout(()=>toast.remove(), 4000);
     }
 
-    function hideLoadingOverlay(){
+    function hideLoadingOverlay() {
       const el = document.getElementById("loadingOverlay");
       if(el) el.style.display = "none";
     }
 
-    async function fetchAPI(endpoint, options={}){
-      try{
-        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-          ...options,
-          credentials: "include",
-          headers: { ...(options.headers||{}) }
-        });
-        if(res.status === 401){
-          window.location.href = "/login.html";
-          return null;
-        }
+    async function fetchAPI(endpoint, options={}) {
+      try {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, credentials: "include", headers: { ...(options.headers||{}) } });
+        if(res.status === 401){ window.location.href = "/login.html"; return null; }
         return res;
-      }catch(err){
+      } catch(err) {
         console.error("Fetch error:", err);
         showToast("Network error, please try again.", "error");
         return null;
       }
     }
 
-    async function checkAuth(){
-      const res = await fetchAPI("/auth/check");
-      if(!res || !res.ok){ window.location.href="/login.html"; }
-    }
-
+    async function checkAuth(){ const res = await fetchAPI("/auth/check"); if(!res || !res.ok) window.location.href="/login.html"; }
     async function fetchTeacherProfile(){
       const res = await fetchAPI("/teacher/profile");
       if(res && res.ok){
@@ -312,49 +300,46 @@
       }
     }
 
+    function renderStudents(students = []) {
+      const container = document.getElementById("studentsList");
+      if (!container) return;
+      if (students.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-gray-500">No students found.</div>`;
+        return;
+      }
+      container.innerHTML = students.map(s => `
+        <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+          <div class="flex items-center gap-3">
+            <img src="${s.imageUrl || "./images/default-avatar.png"}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
+            <div>
+              <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
+              <p class="text-sm text-gray-500">Grade ${s.grade || "-"}</p>
+            </div>
+          </div>
+          <span class="text-xs text-gray-400">${s.email}</span>
+        </div>
+      `).join("");
+    }
+
     async function fetchStudents(){
       let myGrade = [], otherGrade = [];
       const res = await fetchAPI("/teacher/students");
       if(res && res.ok) myGrade = (await res.json()) || [];
-
       const resOther = await fetchAPI("/teacher/students/other");
       if(resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
-
       studentsCache = [...myGrade, ...otherGrade];
       renderStudents(myGrade);
       populateStudentSelects(studentsCache, myGrade, otherGrade);
     }
 
-function populateStudentSelects(allStudents, myGrade = [], otherGrade = []) {
-  const assignSelect = document.getElementById("student-select");
-  const pointsSelect = document.getElementById("points-student-select");
-
-  const toOptions = (list) =>
-    list
-      .map(
-        (s) =>
-          `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (Grade ${s.grade || "-"})</option>`
-      )
-      .join("");
-
-  if (assignSelect) {
-    assignSelect.innerHTML = `
-      <optgroup label="My Grade Students">
-        ${toOptions(myGrade)}
-      </optgroup>
-      <optgroup label="Other Students (Same School)">
-        ${toOptions(otherGrade)}
-      </optgroup>
-    `;
-  }
-
-  if (pointsSelect) {
-    pointsSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(allStudents)}`;
-  }
-
-  validateAssignmentForm();
-  validatePointsForm();
-}
+    function populateStudentSelects(allStudents, myGrade = [], otherGrade = []) {
+      const assignSelect = document.getElementById("student-select");
+      const pointsSelect = document.getElementById("points-student-select");
+      const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (Grade ${s.grade || "-"})</option>`).join("");
+      if(assignSelect) assignSelect.innerHTML = `<optgroup label="My Grade Students">${toOptions(myGrade)}</optgroup><optgroup label="Other Students (Same School)">${toOptions(otherGrade)}</optgroup>`;
+      if(pointsSelect) pointsSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(allStudents)}`;
+      validateAssignmentForm(); validatePointsForm();
+    }
 
 
     async function fetchAssignedTasks(){
@@ -666,34 +651,11 @@ function populateStudentSelects(allStudents, myGrade = [], otherGrade = []) {
         window.location.href = "/login.html";
       });
 
-      function renderStudents(students = []) {
-    const container = document.getElementById("studentsList");
-    if (!container) return;
-
-    if (students.length === 0) {
-      container.innerHTML = `<div class="p-4 text-center text-gray-500">No students found.</div>`;
-      return;
-    }
-
-    container.innerHTML = students
-      .map(
-        (s) => `
-        <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
-          <div class="flex items-center gap-3">
-            <img src="${s.imageUrl || "./images/default-avatar.png"}"
-                 alt="student avatar"
-                 class="h-10 w-10 rounded-full border object-cover"/>
-            <div>
-              <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
-              <p class="text-sm text-gray-500">Grade ${s.grade || "-"}</p>
-            </div>
-          </div>
-          <span class="text-xs text-gray-400">${s.email}</span>
-        </div>
-      `
-      )
-      .join("");
-  }
+     document.getElementById("addTermButton").addEventListener("click", (e)=>{
+  e.preventDefault();
+  console.log("Add Term clicked"); 
+  addTerm();
+});
 
       init();
     });
