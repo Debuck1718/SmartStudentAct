@@ -180,12 +180,29 @@ const teacherAssignmentSchema = Joi.object({
   title: Joi.string().required(),
   description: Joi.string().allow("", null),
   due_date: Joi.date().iso().required(),
+
   assigned_to_users: Joi.array().items(Joi.string().email()).default([]),
+
   assigned_to_grades: Joi.array()
-    .items(Joi.number().integer().min(0).max(12))
+    .items(Joi.number().integer().min(1).max(12))
     .default([]),
+
+  assigned_to_levels: Joi.array()
+    .items(Joi.number().integer().min(100).max(900).step(100))
+    .default([]),
+
+  assigned_to_programs: Joi.array()
+    .items(Joi.string())
+    .default([]),
+
   assigned_to_schools: Joi.array().items(Joi.string()).default([]),
+  
+  assignToMyGrade: Joi.boolean().default(false),   
+  assignToMyLevel: Joi.boolean().default(false),   
+  assignToSchool: Joi.boolean().default(false),
+  assignToMyProgram: Joi.boolean().default(false), 
 }).unknown(true);
+
 
 const feedbackSchema = Joi.object({
   feedback_grade: Joi.number().min(0).max(100).optional(),
@@ -1008,12 +1025,18 @@ protectedRouter.post(
   "/teacher/calendar",
   authenticateJWT,
   hasRole("teacher"),
-  validate(academicCalendarSchema),
   async (req, res) => {
-    const { schoolName, academicYear, terms } = req.body;
+    const { academicYear, terms } = req.body;
     const teacherId = req.user.id;
 
     try {
+      const teacher = await User.findById(teacherId).populate("school");
+      if (!teacher || !teacher.schoolName) {
+        return res.status(400).json({ message: "Teacher school not found." });
+      }
+
+      const schoolName = teacher.schoolName; 
+
       const school = await School.findOne({ name: schoolName });
       if (!school) {
         return res.status(404).json({ message: "School not found." });
@@ -1028,12 +1051,10 @@ protectedRouter.post(
         schoolCalendar.teacher_id = teacherId;
         schoolCalendar.terms = terms;
         await schoolCalendar.save();
-        res
-          .status(200)
-          .json({
-            message: "Academic calendar updated successfully.",
-            calendar: schoolCalendar,
-          });
+        res.status(200).json({
+          message: "Academic calendar updated successfully.",
+          calendar: schoolCalendar,
+        });
       } else {
         schoolCalendar = new SchoolCalendar({
           teacher_id: teacherId,
@@ -1043,12 +1064,10 @@ protectedRouter.post(
           terms,
         });
         await schoolCalendar.save();
-        res
-          .status(201)
-          .json({
-            message: "Academic calendar submitted successfully.",
-            calendar: schoolCalendar,
-          });
+        res.status(201).json({
+          message: "Academic calendar submitted successfully.",
+          calendar: schoolCalendar,
+        });
       }
     } catch (error) {
       logger.error("Error submitting academic calendar:", error);
@@ -1057,6 +1076,7 @@ protectedRouter.post(
   }
 );
 
+
 protectedRouter.post(
   "/teacher/assignments",
   authenticateJWT,
@@ -1064,35 +1084,92 @@ protectedRouter.post(
   localUpload.single("file"),
   async (req, res) => {
     try {
-      const { studentEmail, title, description, dueDate } = req.body;
+      const {
+        title,
+        description,
+        due_date,
+        assigned_to_users,
+        assigned_to_grades,
+        assigned_to_levels,
+        assigned_to_programs,
+        assigned_to_schools,
+        assignToMyGrade,
+        assignToMyLevel,
+        assignToSchool,
+        assignToMyProgram,
+      } = req.body;
+
       const teacherId = req.user.id;
 
-      if (!studentEmail || !title || !dueDate) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Missing required fields: studentEmail, title, or dueDate.",
-          });
+      if (!title || !due_date) {
+        return res.status(400).json({
+          message: "Missing required fields: title or dueDate.",
+        });
       }
 
-      const student = await User.findOne({
-        email: studentEmail,
-        role: "student",
-      });
-      if (!student) {
-        return res.status(404).json({ message: "Student not found." });
+      const teacher = await User.findById(teacherId);
+      if (!teacher) {
+        return res.status(404).json({ message: "Teacher not found." });
       }
+
+      let targetUsers = [];
+      let targetGrades = [];
+      let targetLevels = [];
+      let targetPrograms = [];
+      let targetSchools = [];
+
+      if (Array.isArray(assigned_to_users) && assigned_to_users.length > 0) {
+        targetUsers.push(...assigned_to_users);
+      }
+
+      if (Array.isArray(assigned_to_grades) && assigned_to_grades.length > 0) {
+        targetGrades.push(...assigned_to_grades);
+      }
+
+      if (Array.isArray(assigned_to_levels) && assigned_to_levels.length > 0) {
+        targetLevels.push(...assigned_to_levels);
+      }
+
+      if (Array.isArray(assigned_to_programs) && assigned_to_programs.length > 0) {
+        targetPrograms.push(...assigned_to_programs);
+      }
+
+      if (Array.isArray(assigned_to_schools) && assigned_to_schools.length > 0) {
+        targetSchools.push(...assigned_to_schools);
+      }
+
+      if (assignToMyGrade && teacher.grade) {
+        targetGrades.push(teacher.grade);
+      }
+
+      if (assignToMyLevel && teacher.level) {
+        targetLevels.push(teacher.level);
+      }
+
+      if (assignToMyProgram && teacher.programOfStudy) {
+        targetPrograms.push(teacher.programOfStudy);
+      }
+
+      if (assignToSchool && teacher.schoolName) {
+        targetSchools.push(teacher.schoolName);
+      }
+
+      targetUsers = [...new Set(targetUsers)];
+      targetGrades = [...new Set(targetGrades)];
+      targetLevels = [...new Set(targetLevels)];
+      targetPrograms = [...new Set(targetPrograms)];
+      targetSchools = [...new Set(targetSchools)];
 
       const newAssignment = new Assignment({
         title,
         description,
-        due_date: new Date(dueDate),
+        due_date: new Date(due_date),
         created_by: teacherId,
-
-        assigned_to_users: [student.email],
-        assigned_to_schools: [student.schoolName],
-        assigned_to_grades: [student.grade],
+        assigned_to_users: targetUsers,
+        assigned_to_grades: targetGrades,
+        assigned_to_levels: targetLevels,
+        assigned_to_programs: targetPrograms,
+        assigned_to_schools: targetSchools,
         attachment_file: req.file
           ? `/uploads/assignments/${req.file.filename}`
           : null,
@@ -1106,18 +1183,17 @@ protectedRouter.post(
         creatorId: teacherId,
       });
 
-      res
-        .status(201)
-        .json({
-          message: "Assignment created successfully!",
-          assignment: newAssignment,
-        });
+      res.status(201).json({
+        message: "Assignment created successfully!",
+        assignment: newAssignment,
+      });
     } catch (error) {
       logger.error("Error creating assignment:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
+
 
 protectedRouter.get(
   "/teacher/assignments",

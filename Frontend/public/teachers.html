@@ -119,6 +119,7 @@
     </nav>
 
     <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Students Section -->
       <section id="studentsSection" class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentsInClass">
           🎓 Students in Your Class
@@ -126,6 +127,7 @@
         <div id="studentsList" class="divide-y divide-gray-200 text-gray-700"></div>
       </section>
 
+      <!-- Assignment Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
           ✏️ Create and Send Assignment
@@ -139,7 +141,6 @@
         <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle">Assignment Title:</label>
         <input type="text" id="assignmentTitle" maxlength="100"
                class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-               data-i18n-placeholder="assignmentPlaceholder"
                placeholder="e.g., History Essay on World War II" />
 
         <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2" data-i18n="dueDate">Due Date:</label>
@@ -151,7 +152,6 @@
         </label>
         <textarea id="assignmentText" maxlength="5000"
                   class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-                  data-i18n-placeholder="assignmentTextPlaceholder"
                   placeholder="Type your assignment here..."></textarea>
         <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
 
@@ -161,9 +161,7 @@
           </label>
           <div id="fileStatus" class="flex items-center gap-2">
             <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
-            <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">
-              Clear
-            </button>
+            <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">Clear</button>
           </div>
         </div>
 
@@ -174,6 +172,7 @@
         </button>
       </section>
 
+      <!-- Points Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="addPointsTitle">
           ➕ Add Student Points
@@ -187,12 +186,12 @@
         <label for="pointsInput" class="block text-gray-700 font-bold mb-2" data-i18n="pointsToAdd">Points to Add:</label>
         <input type="number" id="pointsInput" min="1"
                class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-               data-i18n-placeholder="pointsPlaceholder" placeholder="e.g., 10" />
+               placeholder="e.g., 10" />
 
         <label for="reasonText" class="block text-gray-700 font-bold mb-2" data-i18n="reasonOptional">Reason (Optional):</label>
         <textarea id="reasonText"
                   class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y"
-                  data-i18n-placeholder="reasonPlaceholder" placeholder="e.g., Great participation in class discussion."></textarea>
+                  placeholder="e.g., Great participation in class discussion."></textarea>
 
         <button id="addPointsButton"
                 class="w-full py-4 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -201,6 +200,7 @@
         </button>
       </section>
 
+      <!-- Overdue Tasks -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="overdueTasks">
           📌 Overdue Tasks
@@ -208,6 +208,7 @@
         <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
       </section>
 
+      <!-- Assigned Tasks -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="assignedTasks">
           📝 Assigned Tasks & Feedback
@@ -215,6 +216,7 @@
         <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
       </section>
 
+      <!-- Feedback -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentFeedback">
           💬 Student Feedback Overview
@@ -222,38 +224,39 @@
         <div id="feedbackList" class="divide-y divide-gray-200"></div>
       </section>
 
-
+      <!-- Academic Calendar -->
       <section class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="academicCalendar">
-          📅 Academic Calendar
-        </h2>
-        <input type="date" id="termStart"
-               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-               data-i18n-placeholder="termStart" placeholder="Start of Term (YYYY-MM-DD)" />
-        <input type="date" id="termEnd"
-               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-               data-i18n-placeholder="termEnd" placeholder="End of Term (YYYY-MM-DD)" />
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">📅 Academic Calendar</h2>
+        
+        <input type="text" id="academicYear"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg"
+               placeholder="Academic Year (e.g. 2025/2026)" />
+
+        <div id="termsContainer" class="space-y-4"></div>
+
+        <button id="addTermButton"
+                class="w-full py-2 mb-3 bg-blue-600 text-white rounded-lg">
+          ➕ Add Term
+        </button>
+
         <button id="saveCalendarButton"
                 class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition">
           Save Calendar
         </button>
+
         <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
       </section>
     </main>
 
-   
     <footer class="text-center text-sm text-gray-500 py-6 mt-4">
       © <span id="currentYear"></span> SmartStudentAct
     </footer>
   </div>
 
-
   <script src="translate.js"></script>
-
   <script>
     const API_BASE_URL = "https://api.smartstudentact.com/api";
     let studentsCache = [];
-
 
     function showToast(message, type="info"){
       const container = document.getElementById("toast-container") || (() => {
@@ -300,57 +303,59 @@
       if(!res || !res.ok){ window.location.href="/login.html"; }
     }
 
-async function fetchTeacherProfile(){
-  const res = await fetchAPI("/teacher/profile");
-  if(res && res.ok){
-    const data = await res.json();
-
-    const nameEl = document.getElementById("profilePreviewName");
-    if(nameEl) nameEl.innerText = data.name || "Teacher";
-
-    const img = document.getElementById("profileAvatar");
-    img.src = data.profile_picture_url || "./images/default-avatar.png";
-  }
-}
+    async function fetchTeacherProfile(){
+      const res = await fetchAPI("/teacher/profile");
+      if(res && res.ok){
+        const data = await res.json();
+        document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
+        document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
+      }
+    }
 
     async function fetchStudents(){
+      let myGrade = [], otherGrade = [];
       const res = await fetchAPI("/teacher/students");
-      if(res && res.ok){
-        studentsCache = (await res.json()) || [];
-        renderStudents(studentsCache);
-        populateStudentSelects(studentsCache);
-      }
+      if(res && res.ok) myGrade = (await res.json()) || [];
+
+      const resOther = await fetchAPI("/teacher/students/other");
+      if(resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
+
+      studentsCache = [...myGrade, ...otherGrade];
+      renderStudents(myGrade);
+      populateStudentSelects(studentsCache, myGrade, otherGrade);
     }
 
-    function renderStudents(students){
-      const container = document.getElementById("studentsList");
-      if(!container) return;
-      if(!students.length){
-        container.innerHTML = `<div class="p-4 text-gray-500">No students yet.</div>`;
-        return;
-      }
-      container.innerHTML = students.map(s => `
-        <div class="p-4 flex items-center justify-between hover:bg-gray-50 transition">
-          <span class="font-medium text-gray-800">${s.firstname} ${s.lastname}</span>
-          <span class="text-sm font-semibold text-green-600">Points: ${s.points||0}</span>
-        </div>
-      `).join("");
-    }
+function populateStudentSelects(allStudents, myGrade = [], otherGrade = []) {
+  const assignSelect = document.getElementById("student-select");
+  const pointsSelect = document.getElementById("points-student-select");
 
-    function populateStudentSelects(students){
-      const assignSelect = document.getElementById("student-select");
-      const pointsSelect = document.getElementById("points-student-select");
-      const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname}</option>`).join("");
+  const toOptions = (list) =>
+    list
+      .map(
+        (s) =>
+          `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (Grade ${s.grade || "-"})</option>`
+      )
+      .join("");
 
-      if(assignSelect){
-        assignSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(students)}`;
-      }
-      if(pointsSelect){
-        pointsSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(students)}`;
-      }
-      validateAssignmentForm();
-      validatePointsForm();
-    }
+  if (assignSelect) {
+    assignSelect.innerHTML = `
+      <optgroup label="My Grade Students">
+        ${toOptions(myGrade)}
+      </optgroup>
+      <optgroup label="Other Students (Same School)">
+        ${toOptions(otherGrade)}
+      </optgroup>
+    `;
+  }
+
+  if (pointsSelect) {
+    pointsSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(allStudents)}`;
+  }
+
+  validateAssignmentForm();
+  validatePointsForm();
+}
+
 
     async function fetchAssignedTasks(){
       const res = await fetchAPI("/teacher/assignments");
@@ -540,7 +545,7 @@ async function fetchTeacherProfile(){
       const btn = document.getElementById("addPointsButton");
       btn.disabled = true;
 
-      const res = await fetchAPI("/rewards/teacher/points", {
+      const res = await fetchAPI("/rewards/teacher/add-points", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -559,25 +564,55 @@ async function fetchTeacherProfile(){
       btn.disabled = false;
     }
 
-    function wireCalendar(){
-      document.getElementById("saveCalendarButton").addEventListener("click", async () => {
-        const termStart = document.getElementById("termStart").value;
-        const termEnd = document.getElementById("termEnd").value;
-        const res = await fetchAPI("/teacher/calendar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ termStart, termEnd })
-        });
-        const msg = document.getElementById("calendarMsg");
-        if(res && res.ok){
-          msg.textContent = "Calendar updated.";
-          showToast("Calendar updated.", "success");
-        }else{
-          msg.textContent = "Failed to save calendar.";
-          showToast("Failed to save calendar.", "error");
-        }
-      });
+   function wireCalendar(){
+  const termsContainer = document.getElementById("termsContainer");
+
+  function addTerm(){
+    const termIndex = termsContainer.children.length + 1;
+    const termDiv = document.createElement("div");
+    termDiv.className = "p-3 border rounded-lg";
+    termDiv.innerHTML = `
+      <label class="block font-semibold mb-1">Term ${termIndex}</label>
+      <input type="date" class="termStart w-full p-2 mb-2 border rounded" placeholder="Start Date" />
+      <input type="date" class="termEnd w-full p-2 mb-2 border rounded" placeholder="End Date" />
+    `;
+    termsContainer.appendChild(termDiv);
+  }
+
+  document.getElementById("addTermButton").addEventListener("click", (e)=>{
+    e.preventDefault();
+    addTerm();
+  });
+
+  addTerm();
+
+  document.getElementById("saveCalendarButton").addEventListener("click", async () => {
+    const academicYear = document.getElementById("academicYear").value;
+
+    const terms = Array.from(termsContainer.children).map((div, i) => {
+      return {
+        termName: `Term ${i+1}`,
+        startDate: div.querySelector(".termStart").value,
+        endDate: div.querySelector(".termEnd").value,
+      };
+    });
+
+    const res = await fetchAPI("/teacher/calendar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ academicYear, terms })
+    });
+
+    const msg = document.getElementById("calendarMsg");
+    if(res && res.ok){
+      msg.textContent = "Calendar updated.";
+      showToast("Calendar updated.", "success");
+    }else{
+      msg.textContent = "Failed to save calendar.";
+      showToast("Failed to save calendar.", "error");
     }
+  });
+}
 
     async function init(){
       try{
