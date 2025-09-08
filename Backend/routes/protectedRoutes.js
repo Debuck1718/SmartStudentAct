@@ -187,8 +187,9 @@ const teacherAssignmentSchema = Joi.object({
     .items(Joi.number().integer().min(1).max(12))
     .default([]),
 
+  // University levels (100, 200, 300, 400)
   assigned_to_levels: Joi.array()
-    .items(Joi.number().integer().min(100).max(900).step(100))
+    .items(Joi.number().valid(100, 200, 300, 400))
     .default([]),
 
   assigned_to_programs: Joi.array()
@@ -196,11 +197,11 @@ const teacherAssignmentSchema = Joi.object({
     .default([]),
 
   assigned_to_schools: Joi.array().items(Joi.string()).default([]),
-  
-  assignToMyGrade: Joi.boolean().default(false),   
-  assignToMyLevel: Joi.boolean().default(false),   
+
+  assignToMyGrade: Joi.boolean().default(false),
+  assignToMyLevel: Joi.boolean().default(false),
   assignToSchool: Joi.boolean().default(false),
-  assignToMyProgram: Joi.boolean().default(false), 
+  assignToMyProgram: Joi.boolean().default(false),
 }).unknown(true);
 
 
