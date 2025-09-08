@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-i18n="dashboardTitle">Teacher Dashboard</title>
 
-
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -14,9 +14,7 @@
     gtag("config", "G-EWMR745QHX");
   </script>
 
-
   <script src="https://cdn.tailwindcss.com"></script>
-
 
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
@@ -38,7 +36,6 @@
     }
     @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
 
-   
     .custom-file-input::-webkit-file-upload-button { visibility: hidden; }
     .custom-file-input::before {
       content: "📎 Pick Document/File";
@@ -51,6 +48,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen antialiased">
 
+  <!-- Loading Overlay -->
   <div id="loadingOverlay"
        class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]">
     <div class="text-center p-6 bg-white rounded-xl shadow-lg">
@@ -61,16 +59,16 @@
     </div>
   </div>
 
-
   <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
 
+    <!-- Header -->
     <header class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200">
       <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0" data-i18n="dashboardTitle">
         📚 Teacher Dashboard
       </h1>
 
       <div class="flex items-center space-x-6">
-       
+        <!-- Language Selector -->
         <select id="language-select"
                 class="rounded-full px-4 py-2 bg-white text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <option value="en">EN</option>
@@ -81,6 +79,7 @@
           <option value="ru">RU</option>
         </select>
 
+        <!-- Profile Dropdown -->
         <div class="relative inline-block text-left">
           <button id="profile-menu-button" type="button"
                   class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition focus:outline-none">
@@ -91,35 +90,32 @@
           </button>
           <div id="profile-dropdown-menu"
                class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden">
-            <a href="/AI-Essay-Checker.html" class="block px-4 py-2 text-sm hover:bg-gray-100">🤖 AI Essay Checker</a>
-            <a href="/quiz_dashboard.html" class="block px-4 py-2 text-sm hover:bg-gray-100">📝 Quiz Dashboard</a>
-            <a href="/profile.html" class="block px-4 py-2 text-sm hover:bg-gray-100">Your Profile</a>
-            <a href="/settings.html" class="block px-4 py-2 text-sm hover:bg-gray-100">Settings</a>
-            <a href="/contact.html" class="block px-4 py-2 text-sm hover:bg-gray-100">📩 Contact</a>
+            <a href="/AI-Essay-Checker.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="aiChecker">🤖 AI Essay Checker</a>
+            <a href="/quiz_dashboard.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="quizDashboard">📝 Quiz Dashboard</a>
+            <a href="/profile.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="yourProfile">👤 Your Profile</a>
+            <a href="/settings.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="settings">⚙️ Settings</a>
+            <a href="/contact.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="contact">📩 Contact</a>
             <button id="logoutButton"
-                    class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">🚪 Sign out</button>
+                    class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" data-i18n="signOut">🚪 Sign out</button>
           </div>
         </div>
       </div>
     </header>
 
+    <!-- Navigation -->
     <nav class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md">
       <a href="/my-students.html"
-         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">
-        👨‍🎓 My Class
-      </a>
+         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+         data-i18n="myClass">👨‍🎓 My Class</a>
       <a href="/completed-assignment.html"
-         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">
-        ✅ Completed Tasks
-      </a>
+         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+         data-i18n="completedTasks">✅ Completed Tasks</a>
       <a href="/quiz_dashboard.html"
-         class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition">
-        📝 Quiz Dashboard
-      </a>
+         class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition"
+         data-i18n="quizDashboard">📝 Quiz Dashboard</a>
       <a href="/AI-Essay-Checker.html"
-         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">
-        🤖 AI Checker
-      </a>
+         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+         data-i18n="aiChecker">🤖 AI Checker</a>
     </nav>
 
     <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -245,9 +241,9 @@
       </section>
     </main>
 
-    <!-- Footer -->
+   
     <footer class="text-center text-sm text-gray-500 py-6 mt-4">
-      © <span id="currentYear"></span> SmartStudentAct 2025
+      © <span id="currentYear"></span> SmartStudentAct
     </footer>
   </div>
 
@@ -304,36 +300,18 @@
       if(!res || !res.ok){ window.location.href="/login.html"; }
     }
 
-    async function fetchTeacherProfile(){
-      const res = await fetchAPI("/teacher/profile");
-      if(res && res.ok){
-        const data = await res.json();
-        const nameEl = document.getElementById("profilePreviewName");
-        if(nameEl) nameEl.innerText = data.name || "Teacher";
-      }
-      await fetchTeacherPhoto(); 
-    }
+async function fetchTeacherProfile(){
+  const res = await fetchAPI("/teacher/profile");
+  if(res && res.ok){
+    const data = await res.json();
 
-    async function fetchTeacherPhoto(){
-      try{
-        const urlWithNoCache = `/profile/upload-photo?t=${Date.now()}`; 
-        const res = await fetchAPI(urlWithNoCache, { method: "GET" });
-        if(res && res.ok){
-          const blob = await res.blob();
-          if(blob && blob.size > 0){
-            const objectURL = URL.createObjectURL(blob);
-            const img = document.getElementById("profileAvatar");
-            if(img) img.src = objectURL;
-            return;
-          }
-        }
-      }catch(err){
-        console.warn("Photo fetch failed:", err);
-      }
-      const img = document.getElementById("profileAvatar");
-      if(img) img.src = "./images/default-avatar.png";
-    }
+    const nameEl = document.getElementById("profilePreviewName");
+    if(nameEl) nameEl.innerText = data.name || "Teacher";
 
+    const img = document.getElementById("profileAvatar");
+    img.src = data.profile_picture_url || "./images/default-avatar.png";
+  }
+}
 
     async function fetchStudents(){
       const res = await fetchAPI("/teacher/students");
