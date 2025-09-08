@@ -55,8 +55,8 @@ module.exports = (eventBus) => {
 
 const signupOtpSchema = Joi.object({
   phone: Joi.string()
-    .pattern(/^\+?[1-9]\d{1,14}$/)
-    .required(),
+  .pattern(/^\+?[1-9]\d{1,14}$/)
+  .required(),
   email: Joi.string().email().required(),
   firstname: Joi.string().min(2).max(50).required(),
   lastname: Joi.string().min(2).max(50).required(),
