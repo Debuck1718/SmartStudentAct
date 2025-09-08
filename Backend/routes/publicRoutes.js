@@ -53,45 +53,51 @@ module.exports = (eventBus) => {
     default: "/login.html",
   };
 
-  const signupOtpSchema = Joi.object({
-    phone: Joi.string()
-      .pattern(/^\+?[1-9]\d{1,14}$/)
-      .required(),
-    email: Joi.string().email().required(),
-    firstname: Joi.string().min(2).max(50).required(),
-    lastname: Joi.string().min(2).max(50).required(),
-    password: Joi.string()
-      .min(8)
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-      .message(
-        "Password must be at least 8 characters, with one uppercase, one number, one special char."
-      )
-      .required(),
-    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    occupation: Joi.string().valid("student", "teacher").required(),
-    schoolName: Joi.string().required(),
-    schoolCountry: Joi.string().required(),
-    educationLevel: Joi.string().when("occupation", {
-      is: "student",
-      then: Joi.required(),
-      otherwise: Joi.allow(""),
-    }),
-    grade: Joi.string().when("occupation", {
-      is: "student",
-      then: Joi.required(),
-      otherwise: Joi.allow(""),
-    }),
-    teacherGrade: Joi.string().when("occupation", {
-      is: "teacher",
-      then: Joi.required(),
-      otherwise: Joi.allow(""),
-    }),
-    teacherSubject: Joi.string().when("occupation", {
-      is: "teacher",
-      then: Joi.required(),
-      otherwise: Joi.allow(""),
-    }),
-  });
+const signupOtpSchema = Joi.object({
+  phone: Joi.string()
+    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .required(),
+  email: Joi.string().email().required(),
+  firstname: Joi.string().min(2).max(50).required(),
+  lastname: Joi.string().min(2).max(50).required(),
+  password: Joi.string()
+    .min(8)
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+    .message(
+      "Password must be at least 8 characters, with one uppercase, one number, one special char."
+    )
+    .required(),
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+  occupation: Joi.string().valid("student", "teacher").required(),
+  schoolName: Joi.string().required(),
+  schoolCountry: Joi.string().required(),
+  educationLevel: Joi.string().when("occupation", {
+    is: "student",
+    then: Joi.required(),
+    otherwise: Joi.allow(""),
+  }),
+  grade: Joi.string().when("occupation", {
+    is: "student",
+    then: Joi.required(),
+    otherwise: Joi.allow(""),
+  }),
+  teacherGrade: Joi.string().when("occupation", {
+    is: "teacher",
+    then: Joi.required(),
+    otherwise: Joi.allow(""),
+  }),
+  teacherSubject: Joi.string().when("occupation", {
+    is: "teacher",
+    then: Joi.required(),
+    otherwise: Joi.allow(""),
+  }),
+  program: Joi.string().when("occupation", {
+    is: "student",
+    then: Joi.required(),
+    otherwise: Joi.allow(""),
+  }),
+});
+
 
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
@@ -140,63 +146,66 @@ module.exports = (eventBus) => {
 
 
   publicRouter.post(
-    "/users/signup-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-    validate(signupOtpSchema),
-    async (req, res) => {
-      try {
-        const {
-          firstname,
-          lastname,
-          email,
-          phone,
-          password,
-          occupation,
-          schoolName,
-          schoolCountry,
-          educationLevel,
-          grade,
-          teacherGrade,
-          teacherSubject,
-        } = req.body;
+  "/users/signup-otp",
+  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+  validate(signupOtpSchema),
+  async (req, res) => {
+    try {
+      const {
+        firstname,
+        lastname,
+        email,
+        phone,
+        password,
+        occupation,
+        schoolName,
+        schoolCountry,
+        educationLevel,
+        grade,
+        teacherGrade,
+        teacherSubject,
+        program, 
+      } = req.body;
 
-        logger.info("Signup OTP request payload:", req.body);
+      logger.info("Signup OTP request payload:", req.body);
 
-        const existingUser = await User.findOne({ email });
+      const existingUser = await User.findOne({ email });
 
-        const otpTokenPayload = {
-          temporaryUserId: crypto.randomUUID(),
-          firstname,
-          lastname,
-          email,
-          phone,
-          password, 
-          occupation,
-          schoolName,
-          schoolCountry,
-          educationLevel,
-          grade,
-          teacherGrade,
-          teacherSubject,
-          code: Math.floor(100000 + Math.random() * 900000).toString(),
-        };
+      const otpTokenPayload = {
+        temporaryUserId: crypto.randomUUID(),
+        firstname,
+        lastname,
+        email,
+        phone,
+        password,
+        occupation,
+        schoolName,
+        schoolCountry,
+        educationLevel,
+        grade,
+        teacherGrade,
+        teacherSubject,
+        program, 
+        code: Math.floor(100000 + Math.random() * 900000).toString(),
+      };
 
-        const otpToken = jwt.sign(otpTokenPayload, JWT_SECRET, { expiresIn: "10m" });
-        await sendOTPEmail(email, firstname, otpTokenPayload.code);
+      const otpToken = jwt.sign(otpTokenPayload, JWT_SECRET, { expiresIn: "10m" });
+      await sendOTPEmail(email, firstname, otpTokenPayload.code);
 
-        return res.status(200).json({
-          status: "success",
-          message: existingUser
-            ? "OTP sent to existing user."
-            : "OTP sent. Please verify to complete signup.",
-          otpToken,
-        });
-      } catch (err) {
-        logger.error("❌ Signup-OTP error:", err);
-        res.status(500).json({ message: "Signup failed." });
-      }
+      return res.status(200).json({
+        status: "success",
+        message: existingUser
+          ? "OTP sent to existing user."
+          : "OTP sent. Please verify to complete signup.",
+        otpToken,
+      });
+    } catch (err) {
+      logger.error("❌ Signup-OTP error:", err);
+      res.status(500).json({ message: "Signup failed." });
     }
-  );
+  }
+);
+
 
  
   publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
@@ -233,27 +242,29 @@ module.exports = (eventBus) => {
         const now = new Date();
         const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-        const newUserData = {
-          _id: decoded.temporaryUserId,
-          firstname: decoded.firstname || "User",
-          lastname: decoded.lastname || "Unknown",
-          email: decoded.email,
-          phone: decoded.phone || "",
-          password, 
-          verified: true,
-          role: decoded.occupation || "student",
-          occupation: decoded.occupation || "student",
-          educationLevel: decoded.educationLevel || "high",
-          grade: decoded.grade,
-          schoolName: decoded.schoolName || "Unknown School",
-          schoolCountry: decoded.schoolCountry || "GH",
-          teacherGrade: decoded.teacherGrade || [],
-          teacherSubject: decoded.teacherSubject || "",
-          is_on_trial: true,
-          trial_start_at: now,
-          trial_end_at: trialEndAt,
-          subscription_status: "inactive",
-        };
+const newUserData = {
+  _id: decoded.temporaryUserId,
+  firstname: decoded.firstname || "User",
+  lastname: decoded.lastname || "Unknown",
+  email: decoded.email,
+  phone: decoded.phone || "",
+  password,
+  verified: true,
+  role: decoded.occupation || "student",
+  occupation: decoded.occupation || "student",
+  educationLevel: decoded.educationLevel || "high",
+  grade: decoded.grade,
+  schoolName: decoded.schoolName || "Unknown School",
+  schoolCountry: decoded.schoolCountry || "GH",
+  teacherGrade: decoded.teacherGrade || [],
+  teacherSubject: decoded.teacherSubject || "",
+  program: decoded.program || "", 
+  is_on_trial: true,
+  trial_start_at: now,
+  trial_end_at: trialEndAt,
+  subscription_status: "inactive",
+};
+
 
         const newUser = new User(newUserData);
         await newUser.save();

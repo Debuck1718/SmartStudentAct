@@ -84,7 +84,7 @@
   let translations = {};
   let currentLang = 'en';
 
-  // ✅ Load translations with fallback
+
   async function loadTranslations() {
     try {
       const res = await fetch("/locales/quiz-dashboard.json");
@@ -92,7 +92,7 @@
       translations = await res.json();
     } catch (err) {
       console.warn("⚠️ Could not load translations, using defaults:", err.message);
-      translations = {}; // fallback: empty, will use placeholders
+      translations = {}; 
     }
     translatePage();
   }
@@ -147,7 +147,6 @@
 
   addQuestionBtn.addEventListener('click', createQuestionBlock);
 
-  // ✅ Save quiz
   document.getElementById('quizForm').addEventListener('submit', async e => {
     e.preventDefault();
 
@@ -177,7 +176,7 @@
     });
 
     try {
-      const res = await fetch(`${API_BASE_URL}/teacher/quiz`, {
+      const res = await fetch(`${API_BASE_URL}/teacher/quiz/:id`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: "include",
@@ -192,11 +191,10 @@
     }
   });
 
-  // ✅ Fetch quizzes
   async function fetchQuizzes() {
     quizList.innerHTML = `<li>${getTranslation('loading') || "Loading..."}</li>`;
     try {
-      const res = await fetch(`${API_BASE_URL}/teacher/quiz`, { method: "GET", credentials: "include" });
+      const res = await fetch(`${API_BASE_URL}/teacher/quiz/:id`, { method: "GET", credentials: "include" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || getTranslation('quizLoadErrorAlert') || "Error loading quizzes");
       quizList.innerHTML = "";

@@ -164,89 +164,97 @@
     </style>
   </head>
   <body>
-    <div class="container bg-white p-6 rounded-lg shadow-lg">
-      <h1 class="text-center text-2xl font-bold mb-6 text-gray-800">
-        📝 Create Your Account
-      </h1>
+<div class="flex justify-end mb-4">
+  <select id="languageSelect" class="picker w-32">
+    <option value="en">English</option>
+    <option value="fr">Français</option>
+    <option value="es">Español</option>
+    <option value="tr">Türkçe</option>
+    <option value="ar">عربي</option>
+    <option value="ru">Русский</option>
+    <option value="pt">Português</option>
+    <option value="de">Deutsch</option>
+  </select>
+</div>
 
-      <div id="signupFormSection" class="form-section">
-        <div class="flex flex-col md:flex-row gap-2 mb-2">
-          <label class="sr-only" for="firstnameInput">First Name</label>
-          <input
-            id="firstnameInput"
-            type="text"
-            placeholder="First Name"
-            class="input flex-1"
-          />
-          <label class="sr-only" for="lastnameInput">Last Name</label>
-          <input
-            id="lastnameInput"
-            type="text"
-            placeholder="Last Name"
-            class="input flex-1"
-          />
-        </div>
-        <p id="firstnameError" class="error-text hidden"></p>
-        <p id="lastnameError" class="error-text hidden"></p>
+<h1 class="text-center text-2xl font-bold mb-6 text-gray-800" data-i18n="pageTitle">Create Your Account</h1>
 
-        <label class="sr-only" for="emailInput">Email</label>
-        <input
-          id="emailInput"
-          type="email"
-          placeholder="Email"
-          class="input mb-2"
-        />
-        <p id="emailError" class="error-text hidden"></p>
+<div id="signupFormSection" class="form-section">
+  <div class="flex flex-col md:flex-row gap-2 mb-2">
+    <input
+      id="firstnameInput"
+      type="text"
+      placeholder=""
+      class="input flex-1"
+      data-i18n-placeholder="firstName"
+    />
+    <input
+      id="lastnameInput"
+      type="text"
+      placeholder=""
+      class="input flex-1"
+      data-i18n-placeholder="lastName"
+    />
+  </div>
+  <p id="firstnameError" class="error-text hidden"></p>
+  <p id="lastnameError" class="error-text hidden"></p>
 
-        <label class="sr-only" for="phoneInput">Phone Number</label>
-        <input
-          id="phoneInput"
-          type="tel"
-          placeholder="Phone Number"
-          class="input mb-2"
-        />
-        <p id="phoneError" class="error-text hidden"></p>
+  <input
+    id="emailInput"
+    type="email"
+    placeholder=""
+    class="input mb-2"
+    data-i18n-placeholder="email"
+  />
+  <p id="emailError" class="error-text hidden"></p>
 
-        <label class="sr-only" for="passwordInput">Password</label>
-        <input
-          id="passwordInput"
-          type="password"
-          placeholder="Password (min 8 characters)"
-          class="input mb-2"
-        />
-        <p id="passwordError" class="error-text hidden"></p>
+  <input
+    id="phoneInput"
+    type="tel"
+    placeholder=""
+    class="input mb-2"
+    data-i18n-placeholder="phone"
+  />
+  <p id="phoneError" class="error-text hidden"></p>
 
-        <label class="sr-only" for="confirmPasswordInput"
-          >Confirm Password</label
-        >
-        <input
-          id="confirmPasswordInput"
-          type="password"
-          placeholder="Confirm Password"
-          class="input mb-2"
-        />
-        <p id="confirmPasswordError" class="error-text hidden"></p>
+  <input
+    id="passwordInput"
+    type="password"
+    placeholder=""
+    class="input mb-2"
+    data-i18n-placeholder="password"
+  />
+  <p id="passwordError" class="error-text hidden"></p>
 
-        <div class="picker-container">
-          <label class="sr-only" for="occupationSelect">Occupation</label>
-          <select id="occupationSelect" class="picker">
-            <option value="">Select Occupation</option>
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-          </select>
-        </div>
-        <p id="occupationError" class="error-text hidden"></p>
+  <input
+    id="confirmPasswordInput"
+    type="password"
+    placeholder=""
+    class="input mb-2"
+    data-i18n-placeholder="confirmPassword"
+  />
+  <p id="confirmPasswordError" class="error-text hidden"></p>
 
-        <div id="schoolNameField" class="input-container hidden">
-          <label class="sr-only" for="schoolNameInput">School Name</label>
-          <input
-            id="schoolNameInput"
-            type="text"
-            placeholder="School Name"
-            class="input"
-          />
-        </div>
-        <p id="schoolNameError" class="error-text hidden"></p>
+  <div class="picker-container">
+    <select id="occupationSelect" class="picker" data-i18n-placeholder="occupation">
+      <option value="">Select Occupation</option>
+      <option value="student" data-i18n="student">Student</option>
+      <option value="teacher" data-i18n="teacher">Teacher</option>
+    </select>
+  </div>
+  <p id="occupationError" class="error-text hidden"></p>
+
+  <div id="schoolNameField" class="input-container hidden">
+    <input
+      id="schoolNameInput"
+      type="text"
+      placeholder=""
+      class="input"
+      data-i18n-placeholder="schoolName"
+    />
+  </div>
+  <p id="schoolNameError" class="error-text hidden"></p>
+
 
         <div id="schoolCountryField" class="picker-container hidden">
           <label class="sr-only" for="schoolCountrySelect"
@@ -506,23 +514,30 @@
         <p id="schoolCountryError" class="error-text hidden"></p>
 
         <div id="educationLevelField" class="picker-container hidden">
-          <label class="sr-only" for="educationLevelSelect"
-            >Education Level</label
-          >
-          <select id="educationLevelSelect" class="picker">
-            <option value="">Select Level</option>
-            <option value="junior">Junior High</option>
-            <option value="high">Senior High</option>
-            <option value="university">University</option>
-          </select>
-        </div>
-        <p id="educationLevelError" class="error-text hidden"></p>
+    <select id="educationLevelSelect" class="picker" data-i18n-placeholder="educationLevel">
+      <option value="">Select Level</option>
+      <option value="junior">Junior High</option>
+      <option value="high">Senior High</option>
+      <option value="university">University</option>
+    </select>
+  </div>
+  <p id="educationLevelError" class="error-text hidden"></p>
 
-        <div id="gradeField" class="picker-container hidden">
-          <label class="sr-only" for="gradeSelect">Grade</label>
-          <select id="gradeSelect" class="picker"></select>
-        </div>
-        <p id="gradeError" class="error-text hidden"></p>
+  <div id="gradeField" class="picker-container hidden">
+    <select id="gradeSelect" class="picker"></select>
+  </div>
+  <p id="gradeError" class="error-text hidden"></p>
+
+  <div id="programField" class="input-container hidden">
+    <input
+      id="programInput"
+      type="text"
+      placeholder=""
+      class="input"
+      data-i18n-placeholder="program"
+    />
+    <p id="programError" class="error-text hidden"></p>
+  </div>
 
         <div id="teacherGradeField" class="picker-container hidden">
           <label class="sr-only" for="teacherGradeSelect">Grade/Level</label>
@@ -551,7 +566,7 @@
         <p id="teacherGradeError" class="error-text hidden"></p>
 
         <div id="teacherSubjectField" class="input-container hidden">
-          <label class="sr-only" for="teacherSubjectInput">Subject</label>
+          <label class="sr-only" for="teacherSubjectInput">Subject/Program</label>
           <input
             id="teacherSubjectInput"
             type="text"
@@ -672,6 +687,8 @@ const educationLevelField = document.getElementById("educationLevelField");
 const gradeField = document.getElementById("gradeField");
 const teacherGradeField = document.getElementById("teacherGradeField");
 const teacherSubjectField = document.getElementById("teacherSubjectField");
+const programField = document.getElementById("programField");
+const programInput = document.getElementById("programInput");
 const requestOtpButton = document.getElementById("requestOtpButton");
 const verifyOtpButton = document.getElementById("verifyOtpButton");
 const otpInput = document.getElementById("otpInput");
@@ -718,6 +735,7 @@ function validateForm() {
     grade: gradeSelect.value,
     teacherGrade: teacherGradeSelect.value,
     teacherSubject: teacherSubjectInput.value.trim(),
+    program: programInput ? programInput.value.trim() : "", 
   };
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -732,7 +750,6 @@ function validateForm() {
   if (form.password !== form.confirmPassword) errors.confirmPassword = "Passwords do not match.";
   if (!form.occupation) errors.occupation = "Occupation is required.";
 
-  
   if (!form.schoolName) errors.schoolName = "School name required.";
   if (!form.schoolCountry) errors.schoolCountry = "School country required.";
 
@@ -740,6 +757,8 @@ function validateForm() {
     if (!form.educationLevel) errors.educationLevel = "Education level required.";
     if ((form.educationLevel === "junior" || form.educationLevel === "high") && !form.grade)
       errors.grade = "Grade required.";
+    if (form.educationLevel === "university" && !form.program)
+      errors.program = "Program required."; // new
   } else if (form.occupation === "teacher") {
     if (!form.teacherGrade) errors.teacherGrade = "Grade/Level required.";
     if (!form.teacherSubject) errors.teacherSubject = "Subject required.";
@@ -786,6 +805,13 @@ function updateUI() {
 
 educationLevelSelect.addEventListener("change", () => {
   populateGradeOptions();
+
+  if(educationLevelSelect.value === "university" && programField) {
+    programField.classList.remove("hidden"); 
+  } else if(programField) {
+    programField.classList.add("hidden");
+  }
+
   updateUI();
 });
 
@@ -796,12 +822,17 @@ occupationSelect.addEventListener("change", () => {
   gradeField.classList.add("hidden");
   teacherGradeField.classList.add("hidden");
   teacherSubjectField.classList.add("hidden");
+  if(programField) programField.classList.add("hidden"); 
 
   if (occupationSelect.value === "student") {
     schoolNameField.classList.remove("hidden");
     schoolCountryField.classList.remove("hidden");
     educationLevelField.classList.remove("hidden");
     gradeField.classList.remove("hidden");
+
+    if(educationLevelSelect.value === "university" && programField) {
+      programField.classList.remove("hidden"); // show program field
+    }
   } else if (occupationSelect.value === "teacher") {
     schoolNameField.classList.remove("hidden");
     schoolCountryField.classList.remove("hidden");
@@ -812,12 +843,16 @@ occupationSelect.addEventListener("change", () => {
   updateUI();
 });
 
+
 const formInputs = [
   firstnameInput, lastnameInput, emailInput, phoneInput,
   passwordInput, confirmPasswordInput, occupationSelect,
   educationLevelSelect, schoolNameInput, schoolCountrySelect,
   gradeSelect, teacherGradeSelect, teacherSubjectInput
 ];
+
+if(programInput) formInputs.push(programInput);
+
 formInputs.forEach(input => input.addEventListener("input", updateUI));
 formInputs.forEach(input => input.addEventListener("blur", updateUI));
 
@@ -900,6 +935,34 @@ function populateGradeOptions() {
   else if(level === "high") for(let i=10;i<=12;i++) gradeSelect.innerHTML += `<option value="${i}">Grade ${i}</option>`;
   else if(level === "university") for(let i=100;i<=400;i+=100) gradeSelect.innerHTML += `<option value="${i}">Level ${i}</option>`;
 }
+
+const languageSelect = document.getElementById("languageSelect");
+  languageSelect.addEventListener("change", () => loadTranslations(languageSelect.value));
+
+  async function loadTranslations(lang) {
+    try {
+      const res = await fetch(`/locales/signup.json`);
+      const translations = await res.json();
+
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (translations[key] && translations[key][lang]) {
+          el.textContent = translations[key][lang];
+        }
+      });
+
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        const key = el.getAttribute("data-i18n-placeholder");
+        if (translations[key] && translations[key][lang]) {
+          el.placeholder = translations[key][lang];
+        }
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => loadTranslations("en"));
 </script>
   </body>
 </html>

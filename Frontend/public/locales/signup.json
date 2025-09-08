@@ -1,0 +1,172 @@
+{
+  "pageTitle": {
+    "en": "Create Your Account",
+    "fr": "Créer votre compte",
+    "es": "Crea tu cuenta",
+    "tr": "Hesabınızı Oluşturun",
+    "ar": "إنشاء حسابك",
+    "ru": "Создайте свой аккаунт",
+    "pt": "Crie sua conta",
+    "de": "Konto erstellen"
+  },
+  "firstName": {
+    "en": "First Name",
+    "fr": "Prénom",
+    "es": "Nombre",
+    "tr": "Ad",
+    "ar": "الاسم الأول",
+    "ru": "Имя",
+    "pt": "Primeiro Nome",
+    "de": "Vorname"
+  },
+  "lastName": {
+    "en": "Last Name",
+    "fr": "Nom de famille",
+    "es": "Apellido",
+    "tr": "Soyad",
+    "ar": "اسم العائلة",
+    "ru": "Фамилия",
+    "pt": "Sobrenome",
+    "de": "Nachname"
+  },
+  "email": {
+    "en": "Email",
+    "fr": "E-mail",
+    "es": "Correo electrónico",
+    "tr": "E-posta",
+    "ar": "البريد الإلكتروني",
+    "ru": "Электронная почта",
+    "pt": "Email",
+    "de": "E-Mail"
+  },
+  "phone": {
+    "en": "Phone Number",
+    "fr": "Numéro de téléphone",
+    "es": "Número de teléfono",
+    "tr": "Telefon Numarası",
+    "ar": "رقم الهاتف",
+    "ru": "Номер телефона",
+    "pt": "Número de Telefone",
+    "de": "Telefonnummer"
+  },
+  "password": {
+    "en": "Password (min 8 characters)",
+    "fr": "Mot de passe (min 8 caractères)",
+    "es": "Contraseña (mínimo 8 caracteres)",
+    "tr": "Şifre (en az 8 karakter)",
+    "ar": "كلمة المرور (8 أحرف على الأقل)",
+    "ru": "Пароль (мин. 8 символов)",
+    "pt": "Senha (mínimo 8 caracteres)",
+    "de": "Passwort (mind. 8 Zeichen)"
+  },
+  "confirmPassword": {
+    "en": "Confirm Password",
+    "fr": "Confirmer le mot de passe",
+    "es": "Confirmar contraseña",
+    "tr": "Şifreyi Onayla",
+    "ar": "تأكيد كلمة المرور",
+    "ru": "Подтвердите пароль",
+    "pt": "Confirmar Senha",
+    "de": "Passwort bestätigen"
+  },
+  "occupation": {
+    "en": "Occupation",
+    "fr": "Occupation",
+    "es": "Ocupación",
+    "tr": "Meslek",
+    "ar": "المهنة",
+    "ru": "Род занятий",
+    "pt": "Ocupação",
+    "de": "Beruf"
+  },
+  "student": {
+    "en": "Student",
+    "fr": "Étudiant",
+    "es": "Estudiante",
+    "tr": "Öğrenci",
+    "ar": "طالب",
+    "ru": "Студент",
+    "pt": "Estudante",
+    "de": "Student"
+  },
+  "teacher": {
+    "en": "Teacher",
+    "fr": "Enseignant",
+    "es": "Profesor",
+    "tr": "Öğretmen",
+    "ar": "معلم",
+    "ru": "Учитель",
+    "pt": "Professor",
+    "de": "Lehrer"
+  },
+  "schoolName": {
+    "en": "School Name",
+    "fr": "Nom de l'école",
+    "es": "Nombre de la escuela",
+    "tr": "Okul Adı",
+    "ar": "اسم المدرسة",
+    "ru": "Название школы",
+    "pt": "Nome da Escola",
+    "de": "Schulname"
+  },
+  "educationLevel": {
+    "en": "Education Level",
+    "fr": "Niveau d'éducation",
+    "es": "Nivel educativo",
+    "tr": "Eğitim Seviyesi",
+    "ar": "المستوى التعليمي",
+    "ru": "Уровень образования",
+    "pt": "Nível de Educação",
+    "de": "Bildungsstufe"
+  },
+  "grade": {
+    "en": "Grade",
+    "fr": "Classe",
+    "es": "Grado",
+    "tr": "Sınıf",
+    "ar": "الصف",
+    "ru": "Класс",
+    "pt": "Ano Escolar",
+    "de": "Klasse"
+  },
+  "program": {
+    "en": "Program",
+    "fr": "Programme",
+    "es": "Programa",
+    "tr": "Program",
+    "ar": "البرنامج",
+    "ru": "Программа",
+    "pt": "Programa",
+    "de": "Studiengang"
+  },
+  "requestOtp": {
+    "en": "Request OTP",
+    "fr": "Demander OTP",
+    "es": "Solicitar OTP",
+    "tr": "OTP İste",
+    "ar": "طلب رمز التحقق",
+    "ru": "Запросить OTP",
+    "pt": "Solicitar OTP",
+    "de": "OTP anfordern"
+  },
+  "verifyOtp": {
+    "en": "Verify OTP",
+    "fr": "Vérifier OTP",
+    "es": "Verificar OTP",
+    "tr": "OTP Doğrula",
+    "ar": "تحقق من الرمز",
+    "ru": "Проверить OTP",
+    "pt": "Verificar OTP",
+    "de": "OTP überprüfen"
+  },
+  "alreadyHaveAccount": {
+    "en": "Already have an account? Login",
+    "fr": "Vous avez déjà un compte ? Connectez-vous",
+    "es": "¿Ya tienes una cuenta? Inicia sesión",
+    "tr": "Zaten bir hesabınız var mı? Giriş yapın",
+    "ar": "هل لديك حساب بالفعل؟ تسجيل الدخول",
+    "ru": "Уже есть аккаунт? Войти",
+    "pt": "Já tem uma conta? Entrar",
+    "de": "Sie haben bereits ein Konto? Einloggen"
+  }
+}
