@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main container for the contact form -->
+    <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg transition-all duration-300 transform scale-100 hover:shadow-2xl">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Contact Us</h1>
+        <p class="text-center text-gray-500 mb-8">We'd love to hear from you. Please fill out the form below.</p>
+
+        <!-- The main contact form -->
+        <form id="contactForm" class="space-y-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input type="text" id="name" name="name" required
+                       class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200">
+            </div>
+
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input type="email" id="email" name="email" required
+                       class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200">
+            </div>
+
+            <div>
+                <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea id="message" name="message" rows="4" required
+                          class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"></textarea>
+            </div>
+
+            <div class="flex justify-center">
+                <button type="submit" id="submitBtn"
+                        class="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-semibold rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105">
+                    Send Message
+                </button>
+            </div>
+        </form>
+
+        <!-- Message display area for success or error -->
+        <div id="messageBox" class="mt-6 p-4 rounded-lg text-center font-medium hidden"></div>
+
+    </div>
+
+    <script>
+        // Get the form, button, and message box elements from the DOM
+        const form = document.getElementById('contactForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageBox = document.getElementById('messageBox');
+
+        // Function to display a message to the user
+        const showMessage = (message, type) => {
+            messageBox.textContent = message;
+            messageBox.className = 'mt-6 p-4 rounded-lg text-center font-medium'; // Reset classes
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-800');
+            }
+            messageBox.classList.remove('hidden');
+        };
+
+        // Add an event listener for form submission
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent the default form submission (page reload)
+
+            // Get form data
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            // Disable button and show loading text
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // Hide previous messages
+            messageBox.classList.add('hidden');
+
+            try {
+                // Send a POST request to the /contact endpoint
+                const response = await fetch('/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage(result.message, 'success');
+                    form.reset(); // Clear the form on success
+                } else {
+                    // Handle server-side errors
+                    showMessage(result.error || 'Something went wrong. Please try again.', 'error');
+                }
+            } catch (error) {
+                // Handle network or other unexpected errors
+                console.error('Submission error:', error);
+                showMessage('Failed to connect to the server. Please check your network.', 'error');
+            } finally {
+                // Re-enable the button and reset its text
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+    </script>
+</body>
+</html>

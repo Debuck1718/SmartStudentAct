@@ -4,213 +4,659 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-i18n="dashboardTitle">Teacher Dashboard</title>
+
+
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){ dataLayer.push(arguments); }
     gtag("js", new Date());
     gtag("config", "G-EWMR745QHX");
   </script>
+
+
   <script src="https://cdn.tailwindcss.com"></script>
+
+
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
   <style>
     @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
     body { font-family: "Inter", sans-serif; }
-    .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #3b82f6; border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite; }
+
+    .spinner {
+      border: 4px solid rgba(0,0,0,0.1);
+      border-top: 4px solid #3b82f6;
+      border-radius: 50%;
+      width: 32px; height: 32px;
+      animation: spin 1s linear infinite;
+    }
     @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+   
+    .custom-file-input::-webkit-file-upload-button { visibility: hidden; }
+    .custom-file-input::before {
+      content: "📎 Pick Document/File";
+      display: inline-block;
+      background-color: #2563eb; color: #fff; font-weight: 600;
+      padding: 10px 14px; border-radius: 8px; cursor: pointer;
+    }
+    .custom-file-input:hover::before { background-color: #1d4ed8; }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans antialiased">
-  <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]">
+<body class="bg-gray-100 min-h-screen antialiased">
+
+  <div id="loadingOverlay"
+       class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]">
     <div class="text-center p-6 bg-white rounded-xl shadow-lg">
       <div class="spinner mx-auto mb-4"></div>
-      <p class="text-lg text-gray-700 font-medium" data-i18n="loadingMessage">Loading teacher dashboard...</p>
+      <p class="text-lg text-gray-700 font-medium" data-i18n="loadingMessage">
+        Loading teacher dashboard...
+      </p>
     </div>
   </div>
 
-  <!-- Container -->
+
   <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-    <!-- Header -->
+
     <header class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200">
-      <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0" data-i18n="dashboardTitle">📚 Teacher Dashboard</h1>
+      <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0" data-i18n="dashboardTitle">
+        📚 Teacher Dashboard
+      </h1>
+
       <div class="flex items-center space-x-6">
-        <!-- Language -->
-        <select id="language-select" class="rounded-full px-4 py-2 bg-white text-gray-700 border border-gray-300">
-          <option value="en">EN</option><option value="fr">FR</option>
-          <option value="es">ES</option><option value="tr">TR</option>
-          <option value="ar">AR</option><option value="ru">RU</option>
+       
+        <select id="language-select"
+                class="rounded-full px-4 py-2 bg-white text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="en">EN</option>
+          <option value="fr">FR</option>
+          <option value="es">ES</option>
+          <option value="tr">TR</option>
+          <option value="ar">AR</option>
+          <option value="ru">RU</option>
         </select>
-        <!-- Profile -->
+
         <div class="relative inline-block text-left">
-          <button id="profile-menu-button" type="button" class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200">
-            <img id="profileAvatar" src="./images/default-avatar.png" alt="Profile Avatar" class="h-10 w-10 rounded-full object-cover border border-gray-300" />
+          <button id="profile-menu-button" type="button"
+                  class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition focus:outline-none">
+            <img id="profileAvatar" src="./images/default-avatar.png" alt="Profile Avatar"
+                 class="h-10 w-10 rounded-full object-cover border border-gray-300" />
             <span id="profilePreviewName" class="hidden sm:inline font-medium text-gray-700">Teacher</span>
             <i class="fas fa-chevron-down text-gray-400"></i>
           </button>
-          <div id="profile-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+          <div id="profile-dropdown-menu"
+               class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden">
             <a href="/AI-Essay-Checker.html" class="block px-4 py-2 text-sm hover:bg-gray-100">🤖 AI Essay Checker</a>
             <a href="/quiz_dashboard.html" class="block px-4 py-2 text-sm hover:bg-gray-100">📝 Quiz Dashboard</a>
             <a href="/profile.html" class="block px-4 py-2 text-sm hover:bg-gray-100">Your Profile</a>
             <a href="/settings.html" class="block px-4 py-2 text-sm hover:bg-gray-100">Settings</a>
-            <button id="logoutButton" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">🚪 Sign out</button>
+            <a href="/contact.html" class="block px-4 py-2 text-sm hover:bg-gray-100">📩 Contact</a>
+            <button id="logoutButton"
+                    class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">🚪 Sign out</button>
           </div>
         </div>
       </div>
     </header>
 
-    
     <nav class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md">
-      <a href="/my-students.html" class="flex-1 text-center py-3 m-1 bg-blue-600 text-white rounded-lg">👨‍🎓 My Class</a>
-      <a href="/completed-assignment.html" class="flex-1 text-center py-3 m-1 bg-blue-600 text-white rounded-lg">✅ Completed Tasks</a>
-      <a href="/quiz_dashboard.html" class="flex-1 text-center py-3 m-1 bg-purple-600 text-white rounded-lg">📝 Quiz Dashboard</a>
-      <a href="/AI-Essay-Checker.html" class="flex-1 text-center py-3 m-1 bg-blue-600 text-white rounded-lg">🤖 AI Checker</a>
+      <a href="/my-students.html"
+         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">
+        👨‍🎓 My Class
+      </a>
+      <a href="/completed-assignment.html"
+         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">
+        ✅ Completed Tasks
+      </a>
+      <a href="/quiz_dashboard.html"
+         class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition">
+        📝 Quiz Dashboard
+      </a>
+      <a href="/AI-Essay-Checker.html"
+         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">
+        🤖 AI Checker
+      </a>
     </nav>
 
-   
     <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <section id="studentsSection" class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold mb-4">🎓 Students in Your Class</h2>
-        <div id="studentsList"></div>
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentsInClass">
+          🎓 Students in Your Class
+        </h2>
+        <div id="studentsList" class="divide-y divide-gray-200 text-gray-700"></div>
       </section>
-      <section id="assignedTasks" class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold mb-4">📝 Assigned Tasks & Feedback</h2>
-        <div id="assignedTasksList"></div>
+
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
+          ✏️ Create and Send Assignment
+        </h2>
+
+        <label for="student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student:</label>
+        <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+          <select id="student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+        </div>
+
+        <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle">Assignment Title:</label>
+        <input type="text" id="assignmentTitle" maxlength="100"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               data-i18n-placeholder="assignmentPlaceholder"
+               placeholder="e.g., History Essay on World War II" />
+
+        <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2" data-i18n="dueDate">Due Date:</label>
+        <input type="datetime-local" id="assignmentDueDate"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+        <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails">
+          Assignment Details (max 1000 words or attach file):
+        </label>
+        <textarea id="assignmentText" maxlength="5000"
+                  class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                  data-i18n-placeholder="assignmentTextPlaceholder"
+                  placeholder="Type your assignment here..."></textarea>
+        <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+          <label class="custom-file-input cursor-pointer text-base">
+            <input type="file" id="assignmentFile" class="custom-file-input" />
+          </label>
+          <div id="fileStatus" class="flex items-center gap-2">
+            <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
+            <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <button id="sendAssignmentButton"
+                class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled data-i18n="sendAssignment">
+          Send Assignment
+        </button>
       </section>
-      <section id="feedback" class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold mb-4">💬 Student Feedback</h2>
-        <div id="feedbackList"></div>
+
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="addPointsTitle">
+          ➕ Add Student Points
+        </h2>
+
+        <label for="points-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student:</label>
+        <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+          <select id="points-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+        </div>
+
+        <label for="pointsInput" class="block text-gray-700 font-bold mb-2" data-i18n="pointsToAdd">Points to Add:</label>
+        <input type="number" id="pointsInput" min="1"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+               data-i18n-placeholder="pointsPlaceholder" placeholder="e.g., 10" />
+
+        <label for="reasonText" class="block text-gray-700 font-bold mb-2" data-i18n="reasonOptional">Reason (Optional):</label>
+        <textarea id="reasonText"
+                  class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y"
+                  data-i18n-placeholder="reasonPlaceholder" placeholder="e.g., Great participation in class discussion."></textarea>
+
+        <button id="addPointsButton"
+                class="w-full py-4 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                data-i18n="addPointsButton" disabled>
+          Add Points
+        </button>
       </section>
-      <section id="overdueTasks" class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-semibold mb-4">📌 Overdue Tasks</h2>
-        <div id="overdueTasksList"></div>
+
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="overdueTasks">
+          📌 Overdue Tasks
+        </h2>
+        <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
+      </section>
+
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="assignedTasks">
+          📝 Assigned Tasks & Feedback
+        </h2>
+        <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
+      </section>
+
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentFeedback">
+          💬 Student Feedback Overview
+        </h2>
+        <div id="feedbackList" class="divide-y divide-gray-200"></div>
+      </section>
+
+
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="academicCalendar">
+          📅 Academic Calendar
+        </h2>
+        <input type="date" id="termStart"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+               data-i18n-placeholder="termStart" placeholder="Start of Term (YYYY-MM-DD)" />
+        <input type="date" id="termEnd"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+               data-i18n-placeholder="termEnd" placeholder="End of Term (YYYY-MM-DD)" />
+        <button id="saveCalendarButton"
+                class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition">
+          Save Calendar
+        </button>
+        <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
       </section>
     </main>
 
+    <!-- Footer -->
     <footer class="text-center text-sm text-gray-500 py-6 mt-4">
       © <span id="currentYear"></span> SmartStudentAct 2025
     </footer>
   </div>
 
+
   <script src="translate.js"></script>
+
   <script>
     const API_BASE_URL = "https://api.smartstudentact.com/api";
+    let studentsCache = [];
 
-    function hideLoadingOverlay(){ document.getElementById("loadingOverlay").style.display="none"; }
 
-    async function fetchAPI(endpoint, options={}) {
-      try {
-        const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, credentials:"include" });
-        if(res.status===401){ window.location.href="/login.html"; return null; }
+    function showToast(message, type="info"){
+      const container = document.getElementById("toast-container") || (() => {
+        const el = document.createElement("div");
+        el.id = "toast-container";
+        el.className = "fixed top-4 right-4 z-[1000] space-y-2";
+        document.body.appendChild(el);
+        return el;
+      })();
+      const colors = { success:"bg-green-600", error:"bg-red-600", info:"bg-blue-600", warning:"bg-yellow-500 text-gray-900" };
+      const toast = document.createElement("div");
+      toast.className = `px-4 py-2 rounded text-white shadow ${colors[type]||colors.info}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(()=>toast.remove(), 4000);
+    }
+
+    function hideLoadingOverlay(){
+      const el = document.getElementById("loadingOverlay");
+      if(el) el.style.display = "none";
+    }
+
+    async function fetchAPI(endpoint, options={}){
+      try{
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...options,
+          credentials: "include",
+          headers: { ...(options.headers||{}) }
+        });
+        if(res.status === 401){
+          window.location.href = "/login.html";
+          return null;
+        }
         return res;
-      } catch(e){ console.error(e); return null; }
+      }catch(err){
+        console.error("Fetch error:", err);
+        showToast("Network error, please try again.", "error");
+        return null;
+      }
+    }
+
+    async function checkAuth(){
+      const res = await fetchAPI("/auth/check");
+      if(!res || !res.ok){ window.location.href="/login.html"; }
     }
 
     async function fetchTeacherProfile(){
-    const res = await fetchAPI("/teacher/profile");
-    if(res && res.ok){
-      const data = await res.json();
-      document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
+      const res = await fetchAPI("/teacher/profile");
+      if(res && res.ok){
+        const data = await res.json();
+        const nameEl = document.getElementById("profilePreviewName");
+        if(nameEl) nameEl.innerText = data.name || "Teacher";
+      }
       await fetchTeacherPhoto(); 
     }
-  }
 
-  async function fetchTeacherPhoto(){
-    try {
-      const res = await fetchAPI("/profile/upload-photo"); 
-      if(res && res.ok){
-        const blob = await res.blob();
-        if(blob.size > 0){
-          const photoUrl = URL.createObjectURL(blob);
-          document.getElementById("profileAvatar").src = photoUrl;
-        } else {
-          document.getElementById("profileAvatar").src = "./images/default-avatar.png";
+    async function fetchTeacherPhoto(){
+      try{
+        const urlWithNoCache = `/profile/upload-photo?t=${Date.now()}`; 
+        const res = await fetchAPI(urlWithNoCache, { method: "GET" });
+        if(res && res.ok){
+          const blob = await res.blob();
+          if(blob && blob.size > 0){
+            const objectURL = URL.createObjectURL(blob);
+            const img = document.getElementById("profileAvatar");
+            if(img) img.src = objectURL;
+            return;
+          }
         }
-      } else {
-        document.getElementById("profileAvatar").src = "./images/default-avatar.png";
+      }catch(err){
+        console.warn("Photo fetch failed:", err);
       }
-    } catch(err){
-      console.error("Error fetching profile photo:", err);
-      document.getElementById("profileAvatar").src = "./images/default-avatar.png";
+      const img = document.getElementById("profileAvatar");
+      if(img) img.src = "./images/default-avatar.png";
     }
-  }
+
 
     async function fetchStudents(){
       const res = await fetchAPI("/teacher/students");
       if(res && res.ok){
-        const students = await res.json();
-        document.getElementById("studentsList").innerHTML = students.map(s =>
-          `<div class="p-2 flex justify-between border-b">
-             <span>${s.firstname} ${s.lastname}</span>
-             <span class="text-green-600">Points: ${s.points||0}</span>
-           </div>`).join("");
+        studentsCache = (await res.json()) || [];
+        renderStudents(studentsCache);
+        populateStudentSelects(studentsCache);
       }
+    }
+
+    function renderStudents(students){
+      const container = document.getElementById("studentsList");
+      if(!container) return;
+      if(!students.length){
+        container.innerHTML = `<div class="p-4 text-gray-500">No students yet.</div>`;
+        return;
+      }
+      container.innerHTML = students.map(s => `
+        <div class="p-4 flex items-center justify-between hover:bg-gray-50 transition">
+          <span class="font-medium text-gray-800">${s.firstname} ${s.lastname}</span>
+          <span class="text-sm font-semibold text-green-600">Points: ${s.points||0}</span>
+        </div>
+      `).join("");
+    }
+
+    function populateStudentSelects(students){
+      const assignSelect = document.getElementById("student-select");
+      const pointsSelect = document.getElementById("points-student-select");
+      const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname}</option>`).join("");
+
+      if(assignSelect){
+        assignSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(students)}`;
+      }
+      if(pointsSelect){
+        pointsSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(students)}`;
+      }
+      validateAssignmentForm();
+      validatePointsForm();
     }
 
     async function fetchAssignedTasks(){
       const res = await fetchAPI("/teacher/assignments");
-      if(res && res.ok){
-        const tasks = await res.json();
-        document.getElementById("assignedTasksList").innerHTML = tasks.map(t =>
-          `<div class="p-2 border-b">
-             <strong>${t.title}</strong><br/>
-             <small>Assigned to: ${t.studentName} | Due: ${new Date(t.dueDate).toLocaleString()}</small>
-           </div>`).join("");
-      }
-    }
+      const container = document.getElementById("assignedTasksList");
+      if(!container) return;
 
-    async function fetchFeedback(){
-      const res = await fetchAPI("/teacher/feedback");
       if(res && res.ok){
-        const feedbacks = await res.json();
-        document.getElementById("feedbackList").innerHTML = feedbacks.map(f =>
-          `<div class="p-2 border-b">
-             <strong>${f.studentName}</strong>: ${f.comment}
-           </div>`).join("");
+        const tasks = (await res.json()) || [];
+        container.innerHTML = tasks.length ? tasks.map(t => `
+          <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+            <div class="flex-1">
+              <h4 class="font-bold text-gray-800">${t.title}</h4>
+              <p class="text-sm text-gray-500">Assigned to: ${t.studentName}</p>
+            </div>
+            <span class="text-sm text-gray-600 sm:ml-4 mt-2 sm:mt-0">Due: ${new Date(t.dueDate).toLocaleString()}</span>
+          </div>
+        `).join("") : `<div class="p-4 text-center text-gray-500">No assignments assigned 🎉</div>`;
       }
     }
 
     async function fetchOverdueTasks(){
       const res = await fetchAPI("/teacher/overdue-tasks");
+      const container = document.getElementById("overdueTasksList");
+      if(!container) return;
+
       if(res && res.ok){
-        const overdue = await res.json();
-        document.getElementById("overdueTasksList").innerHTML = overdue.map(t =>
-          `<div class="p-2 border-b text-red-600">
-             <strong>${t.title}</strong> (Student: ${t.studentName})<br/>
-             Overdue since: ${new Date(t.dueDate).toLocaleString()}
-           </div>`).join("");
+        const overdue = (await res.json()) || [];
+        container.innerHTML = overdue.length ? overdue.map(t => `
+          <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+            <div class="flex-1">
+              <h4 class="font-bold text-red-600">${t.title}</h4>
+              <p class="text-sm text-gray-500">Student: ${t.studentName}</p>
+            </div>
+            <span class="text-sm text-red-500 sm:ml-4 mt-2 sm:mt-0">Overdue since: ${new Date(t.dueDate).toLocaleString()}</span>
+          </div>
+        `).join("") : `<div class="p-4 text-center text-gray-500">No overdue tasks 🎉</div>`;
       }
     }
 
+    async function fetchFeedback(){
+      const res = await fetchAPI("/teacher/feedback");
+      const container = document.getElementById("feedbackList");
+      if(!container) return;
+
+      if(res && res.ok){
+        const feedbacks = (await res.json()) || [];
+        container.innerHTML = feedbacks.length ? feedbacks.map(f => `
+          <div class="p-4 flex items-start space-x-3 border-b last:border-b-0 hover:bg-gray-50">
+            <i class="fas fa-comment-dots text-blue-500 mt-1"></i>
+            <div class="flex-1">
+              <p class="font-medium text-gray-800">${f.studentName}</p>
+              <p class="text-sm text-gray-600">${f.comment}</p>
+            </div>
+          </div>
+        `).join("") : `<div class="p-4 text-center text-gray-500">No feedback yet 🎉</div>`;
+      }
+    }
+
+    function getWordCount(text){
+      const trimmed = (text || "").trim();
+      if(!trimmed) return 0;
+      return trimmed.split(/\s+/).length;
+    }
+
+    function validateAssignmentForm(){
+      const studentId = document.getElementById("student-select").value;
+      const title = document.getElementById("assignmentTitle").value.trim();
+      const due = document.getElementById("assignmentDueDate").value;
+      const text = document.getElementById("assignmentText").value.trim();
+      const file = document.getElementById("assignmentFile").files[0];
+
+      const words = getWordCount(text);
+      const hasContent = words > 0 || !!file; 
+      const valid = !!studentId && !!title && !!due && hasContent;
+
+      const btn = document.getElementById("sendAssignmentButton");
+      btn.disabled = !valid;
+
+      document.getElementById("wordCountText").textContent = `Word count: ${words}`;
+    }
+
+    function wireAssignmentForm(){
+      const inputs = [
+        "student-select","assignmentTitle","assignmentDueDate","assignmentText","assignmentFile"
+      ];
+      inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        const evt = (id === "assignmentText") ? "input" : "change";
+        el.addEventListener(evt, validateAssignmentForm);
+      });
+
+      const fileInput = document.getElementById("assignmentFile");
+      const fileNameEl = document.getElementById("fileName");
+      const clearBtn = document.getElementById("clearFileButton");
+
+      fileInput.addEventListener("change", () => {
+        const f = fileInput.files[0];
+        if(f){
+          fileNameEl.textContent = f.name;
+          clearBtn.classList.remove("hidden");
+        }else{
+          fileNameEl.textContent = "No file selected.";
+          clearBtn.classList.add("hidden");
+        }
+        validateAssignmentForm();
+      });
+
+      clearBtn.addEventListener("click", () => {
+        fileInput.value = "";
+        fileNameEl.textContent = "No file selected.";
+        clearBtn.classList.add("hidden");
+        validateAssignmentForm();
+      });
+
+      document.getElementById("sendAssignmentButton").addEventListener("click", sendAssignment);
+    }
+
+    async function sendAssignment(){
+      const studentId = document.getElementById("student-select").value;
+      const title = document.getElementById("assignmentTitle").value.trim();
+      const dueDate = document.getElementById("assignmentDueDate").value;
+      const text = document.getElementById("assignmentText").value.trim();
+      const file = document.getElementById("assignmentFile").files[0];
+
+      if(!studentId || !title || !dueDate || (!text && !file)){
+        showToast("Please fill all required fields.", "warning");
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("studentId", studentId);
+      fd.append("title", title);
+      fd.append("dueDate", dueDate);
+      if(text) fd.append("text", text);
+      if(file) fd.append("file", file);
+
+      const btn = document.getElementById("sendAssignmentButton");
+      btn.disabled = true;
+
+      const res = await fetchAPI("/teacher/assignments", { method: "POST", body: fd });
+      if(res && res.ok){
+        showToast("Assignment sent successfully.", "success");
+        document.getElementById("student-select").value = "";
+        document.getElementById("assignmentTitle").value = "";
+        document.getElementById("assignmentDueDate").value = "";
+        document.getElementById("assignmentText").value = "";
+        document.getElementById("assignmentFile").value = "";
+        document.getElementById("fileName").textContent = "No file selected.";
+        document.getElementById("clearFileButton").classList.add("hidden");
+        validateAssignmentForm();
+        fetchAssignedTasks();
+      }else{
+        showToast("Failed to send assignment.", "error");
+      }
+      btn.disabled = false;
+    }
+
+
+    function validatePointsForm(){
+      const studentId = document.getElementById("points-student-select").value;
+      const points = Number(document.getElementById("pointsInput").value);
+      const btn = document.getElementById("addPointsButton");
+      btn.disabled = !(studentId && points > 0);
+    }
+
+    function wirePointsForm(){
+      ["points-student-select","pointsInput","reasonText"].forEach(id => {
+        const el = document.getElementById(id);
+        const evt = (id === "reasonText") ? "input" : "change";
+        el.addEventListener(evt, validatePointsForm);
+      });
+      document.getElementById("addPointsButton").addEventListener("click", addPoints);
+    }
+
+    async function addPoints(){
+      const studentId = document.getElementById("points-student-select").value;
+      const points = Number(document.getElementById("pointsInput").value);
+      const reason = document.getElementById("reasonText").value.trim();
+
+      if(!studentId || !(points > 0)){
+        showToast("Please select a student and enter points.", "warning");
+        return;
+      }
+
+      const payload = { studentId, points, reason };
+      const btn = document.getElementById("addPointsButton");
+      btn.disabled = true;
+
+      const res = await fetchAPI("/rewards/teacher/points", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if(res && res.ok){
+        showToast("Points added successfully.", "success");
+        document.getElementById("points-student-select").value = "";
+        document.getElementById("pointsInput").value = "";
+        document.getElementById("reasonText").value = "";
+        validatePointsForm();
+        fetchStudents();
+      }else{
+        showToast("Failed to add points.", "error");
+      }
+      btn.disabled = false;
+    }
+
+    function wireCalendar(){
+      document.getElementById("saveCalendarButton").addEventListener("click", async () => {
+        const termStart = document.getElementById("termStart").value;
+        const termEnd = document.getElementById("termEnd").value;
+        const res = await fetchAPI("/teacher/calendar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ termStart, termEnd })
+        });
+        const msg = document.getElementById("calendarMsg");
+        if(res && res.ok){
+          msg.textContent = "Calendar updated.";
+          showToast("Calendar updated.", "success");
+        }else{
+          msg.textContent = "Failed to save calendar.";
+          showToast("Failed to save calendar.", "error");
+        }
+      });
+    }
+
     async function init(){
-      await fetchTeacherProfile();
-      await fetchStudents();
-      await fetchAssignedTasks();
-      await fetchFeedback();
-      await fetchOverdueTasks();
-      hideLoadingOverlay();
+      try{
+        await checkAuth();
+
+      
+        const defaultLang = "en";
+        translatePage("teachers", defaultLang);
+        document.getElementById("language-select").addEventListener("change", (e)=>{
+          translatePage("teachers", e.target.value);
+        });
+
+        
+        await Promise.all([
+          fetchTeacherProfile(),
+          fetchStudents(),
+          fetchAssignedTasks(),
+          fetchFeedback(),
+          fetchOverdueTasks()
+        ]);
+
+       
+        wireAssignmentForm();
+        wirePointsForm();
+        wireCalendar();
+      }catch(err){
+        console.error("Init error:", err);
+        showToast("Failed to load dashboard. Please try again.", "error");
+      }finally{
+        hideLoadingOverlay();
+      }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("currentYear").innerText = new Date().getFullYear();
-      init();
+      document.getElementById("currentYear").textContent = new Date().getFullYear();
 
-      // Dropdown toggle
-      const btn=document.getElementById("profile-menu-button");
-      const menu=document.getElementById("profile-dropdown-menu");
-      btn.addEventListener("click",()=>menu.classList.toggle("hidden"));
-      document.addEventListener("click",(e)=>{ if(!btn.contains(e.target)&&!menu.contains(e.target)) menu.classList.add("hidden"); });
-
-      document.getElementById("logoutButton").addEventListener("click",async()=>{
-        await fetchAPI("/users/logout",{method:"POST"});
-        window.location.href="/login.html";
+      const btn = document.getElementById("profile-menu-button");
+      const menu = document.getElementById("profile-dropdown-menu");
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menu.classList.toggle("hidden");
       });
+      document.addEventListener("click", (e) => {
+        if(!btn.contains(e.target) && !menu.contains(e.target)){
+          menu.classList.add("hidden");
+        }
+      });
+
+      document.getElementById("logoutButton").addEventListener("click", async () => {
+        await fetchAPI("/users/logout", { method: "POST" });
+        window.location.href = "/login.html";
+      });
+
+      init();
     });
   </script>
 </body>
 </html>
+
 
