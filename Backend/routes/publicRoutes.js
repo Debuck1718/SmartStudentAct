@@ -55,17 +55,15 @@ module.exports = (eventBus) => {
 
 const signupOtpSchema = Joi.object({
   phone: Joi.string()
-  .pattern(/^\+?[1-9]\d{1,14}$/)
-  .required(),
+    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .required(),
   email: Joi.string().email().required(),
   firstname: Joi.string().min(2).max(50).required(),
   lastname: Joi.string().min(2).max(50).required(),
   password: Joi.string()
     .min(8)
     .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-    .message(
-      "Password must be at least 8 characters, with one uppercase, one number, one special char."
-    )
+    .message("Password must be at least 8 characters, with one uppercase, one number, one special char.")
     .required(),
   confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
   occupation: Joi.string().valid("student", "teacher").required(),
@@ -78,7 +76,7 @@ const signupOtpSchema = Joi.object({
   }),
   grade: Joi.string().when("occupation", {
     is: "student",
-    then: Joi.required().pattern(/^(10|11|12|100|200|300|400)$/),
+    then: Joi.string().pattern(/^(10|11|12|100|200|300|400)$/).required(),
     otherwise: Joi.allow(""),
   }),
   program: Joi.string().when("occupation", {
@@ -97,8 +95,6 @@ const signupOtpSchema = Joi.object({
     otherwise: Joi.allow(""),
   }),
 });
-
-
 
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
