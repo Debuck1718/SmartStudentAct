@@ -86,7 +86,7 @@
 
     
     async function loadTranslations() {
-      const res = await fetch('quiz-dashboard.json');
+      const res = await fetch('./quiz-dashboard.json');
       translations = await res.json();
       translatePage();
     }
@@ -152,16 +152,19 @@ document.getElementById('quizForm').addEventListener('submit', async e => {
   const timeLimitValue = document.getElementById('quizTimeLimit').value;
   const timeLimitMinutes = timeLimitValue ? Number(timeLimitValue) : null;
 
-  const quizData = {
-    title: document.getElementById('quizTitle').value,
-    description: document.getElementById('quizDescription').value,
-    due_date: document.getElementById('quizDueDate').value,
-    timeLimitMinutes,  
-    questions: [],
-    assigned_to_users: document.getElementById('assignEmails').value.split(',').map(e => e.trim()).filter(e => e),
-    assigned_to_grades: document.getElementById('assignGrade').value ? [Number(document.getElementById('assignGrade').value)] : [],
-    assigned_to_schools: document.getElementById('assignSchool').value ? [document.getElementById('assignSchool').value] : []
-  };
+ const quizData = {
+  title: document.getElementById('quizTitle').value,
+  description: document.getElementById('quizDescription').value,
+  dueDate: document.getElementById('quizDueDate').value,   // camelCase
+  timeLimitMinutes,
+  questions: [],
+  assignTo: {   
+    users: document.getElementById('assignEmails').value.split(',').map(e => e.trim()).filter(e => e),
+    grades: document.getElementById('assignGrade').value ? [Number(document.getElementById('assignGrade').value)] : [],
+    schools: document.getElementById('assignSchool').value ? [document.getElementById('assignSchool').value] : []
+  }
+};
+
 
   document.querySelectorAll('#questionsContainer > div').forEach(qDiv => {
     const qText = qDiv.querySelector('input[name="questionText"]').value;
