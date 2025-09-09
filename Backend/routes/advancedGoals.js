@@ -13,6 +13,25 @@ const { authenticateJWT, requireAdmin } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
 
 
+function hasRole(allowedRoles = []) {
+  return (req, res, next) => {
+    try {
+      const userRole = req.user?.role; 
+      if (!userRole) {
+        return res.status(403).json({ message: "No role assigned. Forbidden." });
+      }
+      if (allowedRoles.includes(userRole)) {
+        return next();
+      }
+      return res.status(403).json({ message: "Forbidden: insufficient role." });
+    } catch (err) {
+      logger.error("Error in hasRole middleware:", err);
+      return res.status(500).json({ message: "Server error in role check." });
+    }
+  };
+}
+
+
 
 const studentGoalSchema = Joi.object({
     description: Joi.string().required(),

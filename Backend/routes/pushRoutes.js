@@ -1,4 +1,4 @@
-// routes/push.js
+
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User"); 
@@ -12,7 +12,7 @@ router.post("/push/subscribe", authenticateJWT, async (req, res) => {
       return res.status(400).json({ message: "Invalid subscription object" });
     }
 
-    // Save subscription on the user
+
     await User.findByIdAndUpdate(req.user.id, {
       PushSub: subscription,
     });
