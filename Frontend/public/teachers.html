@@ -1,144 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-i18n="dashboardTitle">Teacher Dashboard</title>
 
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-
-    function gtag() {
-      dataLayer.push(arguments);
-    }
+    function gtag(){ dataLayer.push(arguments); }
     gtag("js", new Date());
     gtag("config", "G-EWMR745QHX");
   </script>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
   <style>
-    body {
-      font-family: "Inter", sans-serif;
-    }
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+    body { font-family: "Inter", sans-serif; }
 
     .spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
+      border: 4px solid rgba(0,0,0,0.1);
       border-top: 4px solid #3b82f6;
       border-radius: 50%;
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       animation: spin 1s linear infinite;
     }
+    @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
 
-    @keyframes spin {
-      0% {
-        transform: rotate(0)
-      }
-
-      100% {
-        transform: rotate(360deg)
-      }
-    }
-
-    .custom-file-input::-webkit-file-upload-button {
-      visibility: hidden;
-    }
-
+    .custom-file-input::-webkit-file-upload-button { visibility: hidden; }
     .custom-file-input::before {
       content: "📎 Pick Document/File";
       display: inline-block;
-      background-color: #2563eb;
-      color: #fff;
-      font-weight: 600;
-      padding: 10px 14px;
-      border-radius: 8px;
-      cursor: pointer;
+      background-color: #2563eb; color: #fff; font-weight: 600;
+      padding: 10px 14px; border-radius: 8px; cursor: pointer;
     }
-
-    .custom-file-input:hover::before {
-      background-color: #1d4ed8;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
+    .custom-file-input:hover::before { background-color: #1d4ed8; }
   </style>
 </head>
+<body class="bg-gray-100 min-h-screen antialiased">
 
-<body class="bg-gray-100 min-h-screen antialiased flex flex-col lg:flex-row">
-
-  <div id="loadingOverlay" class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]">
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay"
+       class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]">
     <div class="text-center p-6 bg-white rounded-xl shadow-lg">
       <div class="spinner mx-auto mb-4"></div>
       <p class="text-lg text-gray-700 font-medium" data-i18n="loadingMessage">
-        Loading dashboard...
+        Loading teacher dashboard...
       </p>
     </div>
   </div>
 
-  <aside class="w-full lg:w-64 bg-gray-900 text-white flex flex-col p-4 shadow-lg lg:min-h-screen">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold" data-i18n="dashboardTitle">Teacher Dashboard</h1>
-      <button id="menuButton" class="lg:hidden text-white focus:outline-none">
-        <i class="fas fa-bars"></i>
-      </button>
-    </div>
-    <nav id="mainNav" class="flex-grow space-y-2 hidden lg:block">
-      <a href="#" id="tab-overview" class="tab-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition active"
-        data-target="overview" data-i18n="overview">
-        <i class="fas fa-home mr-3"></i> 📊 Overview
-      </a>
-      <a href="#" id="tab-myClass" class="tab-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition"
-        data-target="myClass" data-i18n="myClass">
-        <i class="fas fa-users mr-3"></i> 👨‍🎓 My Class
-      </a>
-      <a href="#" id="tab-assignments" class="tab-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition"
-        data-target="assignments" data-i18n="assignments">
-        <i class="fas fa-pencil-alt mr-3"></i> ✏️ Assignments
-      </a>
-      <a href="#" id="tab-feedback" class="tab-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition"
-        data-target="feedback" data-i18n="feedback">
-        <i class="fas fa-comment-dots mr-3"></i> 💬 Feedback
-      </a>
-      <a href="#" id="tab-points" class="tab-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition"
-        data-target="points" data-i18n="points">
-        <i class="fas fa-medal mr-3"></i> ➕ Add Points
-      </a>
-      <a href="#" id="tab-calendar" class="tab-link flex items-center p-3 rounded-lg hover:bg-gray-700 transition"
-        data-target="calendar" data-i18n="calendar">
-        <i class="fas fa-calendar-alt mr-3"></i> 📅 Calendar
-      </a>
-      <a href="./AI-Essay-Checker.html" class="flex items-center p-3 rounded-lg hover:bg-gray-700 transition"
-        data-i18n="aiChecker">
-        <i class="fas fa-robot mr-3"></i> 🤖 AI Essay Checker
-      </a>
-      <a href="./quiz_dashboard.html" class="flex items-center p-3 rounded-lg hover:bg-gray-700 transition"
-        data-i18n="quizDashboard">
-        <i class="fas fa-question-circle mr-3"></i> 📝 Quiz Dashboard
-      </a>
-    </nav>
-  </aside>
+  <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
 
-  <div class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-
+    <!-- Header -->
     <header class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200">
-      <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0" id="pageTitle" data-i18n="overview">
-        📊 Overview
+      <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0" data-i18n="dashboardTitle">
+        📚 Teacher Dashboard
       </h1>
 
       <div class="flex items-center space-x-6">
-        <select id="language-select" class="rounded-full px-4 py-2 bg-white text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <!-- Language Selector -->
+        <select id="language-select"
+                class="rounded-full px-4 py-2 bg-white text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <option value="en">EN</option>
           <option value="fr">FR</option>
           <option value="es">ES</option>
@@ -147,547 +79,562 @@
           <option value="ru">RU</option>
         </select>
 
+        <!-- Profile Dropdown -->
         <div class="relative inline-block text-left">
-          <button id="profile-menu-button" type="button" class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition focus:outline-none">
-            <img id="profileAvatar" src="./images/default-avatar.png" alt="Profile Avatar" class="h-10 w-10 rounded-full object-cover border border-gray-300" />
+          <button id="profile-menu-button" type="button"
+                  class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition focus:outline-none">
+            <img id="profileAvatar" src="./images/default-avatar.png" alt="Profile Avatar"
+                 class="h-10 w-10 rounded-full object-cover border border-gray-300" />
             <span id="profilePreviewName" class="hidden sm:inline font-medium text-gray-700">Teacher</span>
             <i class="fas fa-chevron-down text-gray-400"></i>
           </button>
-          <div id="profile-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden z-10">
+          <div id="profile-dropdown-menu"
+               class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden">
+            <a href="./AI-Essay-Checker.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="aiChecker">🤖 AI Essay Checker</a>
+            <a href="./quiz_dashboard.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="quizDashboard">📝 Quiz Dashboard</a>
             <a href="./profile.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="yourProfile">👤 Your Profile</a>
             <a href="./settings.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="settings">⚙️ Settings</a>
             <a href="./contact.html" class="block px-4 py-2 text-sm hover:bg-gray-100" data-i18n="contact">📩 Contact</a>
-            <button id="logoutButton" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" data-i18n="signOut">🚪 Sign out</button>
+            <button id="logoutButton"
+                    class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100" data-i18n="signOut">🚪 Sign out</button>
           </div>
         </div>
       </div>
     </header>
-    
-    <main>
-      <div id="overview" class="tab-content active grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <section class="bg-white rounded-xl p-6 shadow-lg">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="overdueTasks">
-            📌 Overdue Tasks
-          </h2>
-          <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
-        </section>
 
-        <section class="bg-white rounded-xl p-6 shadow-lg">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="assignedTasks">
-            📝 Assigned Tasks & Feedback
-          </h2>
-          <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
-        </section>
+   
+    <nav class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md">
+      <a href="./my-students.html"
+         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+         data-i18n="myClass">👨‍🎓 My Class</a>
+      <a href="./completed-assignment.html"
+         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+         data-i18n="completedTasks">✅ Completed Tasks</a>
+      <a href="./quiz_dashboard.html"
+         class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition"
+         data-i18n="quizDashboard">📝 Quiz Dashboard</a>
+      <a href="./AI Essay Checker.html"
+         class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+         data-i18n="aiChecker">🤖 AI Checker</a>
+    </nav>
 
-        <section class="bg-white rounded-xl p-6 shadow-lg">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentFeedback">
-            💬 Student Feedback Overview
-          </h2>
-          <div id="feedbackList" class="divide-y divide-gray-200"></div>
-        </section>
-      </div>
+    <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <section id="studentsSection" class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentsInClass">
+          🎓 Students in Your Class
+        </h2>
+        <div id="studentsList" class="divide-y divide-gray-200 text-gray-700"></div>
+      </section>
 
-      <div id="myClass" class="tab-content">
-        <section id="studentsSection" class="bg-white rounded-xl p-6 shadow-lg">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentsInClass">
-            🎓 Students in Your Class
-          </h2>
-          <div id="studentsList" class="divide-y divide-gray-200 text-gray-700"></div>
-        </section>
-      </div>
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
+          ✏️ Create and Send Assignment
+        </h2>
 
-      <div id="assignments" class="tab-content">
-        <section class="bg-white rounded-xl p-6 shadow-lg">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
-            ✏️ Create and Send Assignment
-          </h2>
+        <label for="student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student:</label>
+        <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+          <select id="student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+        </div>
 
-          <label for="student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student:</label>
-          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-            <select id="student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
-          </div>
+        <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle">Assignment Title:</label>
+        <input type="text" id="assignmentTitle" maxlength="100"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               placeholder="e.g., History Essay on World War II" />
 
-          <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle">Assignment Title:</label>
-          <input type="text" id="assignmentTitle" maxlength="100" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., History Essay on World War II" />
+        <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2" data-i18n="dueDate">Due Date:</label>
+        <input type="datetime-local" id="assignmentDueDate"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
 
-          <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2" data-i18n="dueDate">Due Date:</label>
-          <input type="datetime-local" id="assignmentDueDate" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails">
+          Assignment Details (max 1000 words or attach file):
+        </label>
+        <textarea id="assignmentText" maxlength="5000"
+                  class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                  placeholder="Type your assignment here..."></textarea>
+        <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
 
-          <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails">
-            Assignment Details (max 1000 words or attach file):
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+          <label class="custom-file-input cursor-pointer text-base">
+            <input type="file" id="assignmentFile" class="custom-file-input" />
           </label>
-          <textarea id="assignmentText" maxlength="5000" class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" placeholder="Type your assignment here..."></textarea>
-          <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
-
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-            <label class="custom-file-input cursor-pointer text-base">
-              <input type="file" id="assignmentFile" class="custom-file-input" />
-            </label>
-            <div id="fileStatus" class="flex items-center gap-2">
-              <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
-              <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">Clear</button>
-            </div>
+          <div id="fileStatus" class="flex items-center gap-2">
+            <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
+            <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">Clear</button>
           </div>
+        </div>
 
-          <button id="sendAssignmentButton" class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled data-i18n="sendAssignment">
-            Send Assignment
-          </button>
-        </section>
-      </div>
+        <button id="sendAssignmentButton"
+                class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled data-i18n="sendAssignment">
+          Send Assignment
+        </button>
+      </section>
 
-      <div id="points" class="tab-content">
-        <section class="bg-white rounded-xl p-6 shadow-lg">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="addPointsTitle">
-            ➕ Add Student Points
-          </h2>
+     
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="addPointsTitle">
+          ➕ Add Student Points
+        </h2>
 
-          <label for="points-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student:</label>
-          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-            <select id="points-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
-          </div>
+        <label for="points-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student:</label>
+        <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+          <select id="points-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+        </div>
 
-          <label for="pointsInput" class="block text-gray-700 font-bold mb-2" data-i18n="pointsToAdd">Points to Add:</label>
-          <input type="number" id="pointsInput" min="1" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="e.g., 10" />
+        <label for="pointsInput" class="block text-gray-700 font-bold mb-2" data-i18n="pointsToAdd">Points to Add:</label>
+        <input type="number" id="pointsInput" min="1"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+               placeholder="e.g., 10" />
 
-          <label for="reasonText" class="block text-gray-700 font-bold mb-2" data-i18n="reasonOptional">Reason (Optional):</label>
-          <textarea id="reasonText" class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y" placeholder="e.g., Great participation in class discussion."></textarea>
+        <label for="reasonText" class="block text-gray-700 font-bold mb-2" data-i18n="reasonOptional">Reason (Optional):</label>
+        <textarea id="reasonText"
+                  class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y"
+                  placeholder="e.g., Great participation in class discussion."></textarea>
 
-          <button id="addPointsButton" class="w-full py-4 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="addPointsButton" disabled>
-            Add Points
-          </button>
-        </section>
-      </div>
+        <button id="addPointsButton"
+                class="w-full py-4 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                data-i18n="addPointsButton" disabled>
+          Add Points
+        </button>
+      </section>
 
-      <div id="feedback" class="tab-content">
-        <section class="bg-white rounded-xl p-6 shadow-lg">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentFeedback">
-            💬 Student Feedback Overview
-          </h2>
-          <div id="feedbackList" class="divide-y divide-gray-200"></div>
-        </section>
-      </div>
+     
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="overdueTasks">
+          📌 Overdue Tasks
+        </h2>
+        <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
+      </section>
 
-      <div id="calendar" class="tab-content">
-        <section class="bg-white rounded-xl p-6 shadow-lg">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">📅 Academic Calendar</h2>
+     
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="assignedTasks">
+          📝 Assigned Tasks & Feedback
+        </h2>
+        <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
+      </section>
 
-          <input type="text" id="academicYear" class="w-full p-3 mb-4 border border-gray-300 rounded-lg" placeholder="Academic Year (e.g. 2025/2026)" />
 
-          <div id="termsContainer" class="space-y-4"></div>
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentFeedback">
+          💬 Student Feedback Overview
+        </h2>
+        <div id="feedbackList" class="divide-y divide-gray-200"></div>
+      </section>
 
-          <button id="addTermButton" class="w-full py-2 mb-3 bg-blue-600 text-white rounded-lg">
-            ➕ Add Term
-          </button>
+      
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">📅 Academic Calendar</h2>
+        
+        <input type="text" id="academicYear"
+               class="w-full p-3 mb-4 border border-gray-300 rounded-lg"
+               placeholder="Academic Year (e.g. 2025/2026)" />
 
-          <button id="saveCalendarButton" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition">
-            Save Calendar
-          </button>
+        <div id="termsContainer" class="space-y-4"></div>
 
-          <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
-        </section>
-      </div>
+        <button id="addTermButton"
+                class="w-full py-2 mb-3 bg-blue-600 text-white rounded-lg">
+          ➕ Add Term
+        </button>
+
+        <button id="saveCalendarButton"
+                class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition">
+          Save Calendar
+        </button>
+
+        <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
+      </section>
     </main>
-    
+
     <footer class="text-center text-sm text-gray-500 py-6 mt-4">
       © <span id="currentYear"></span> SmartStudentAct
     </footer>
   </div>
-  
+
   <script src="translate.js"></script>
-  <script>
+<script>
     const API_BASE_URL = "https://api.smartstudentact.com/api";
     let studentsCache = [];
 
-    // Utility Functions
     function showToast(message, type = "info") {
-      const container = document.getElementById("toast-container") || (() => {
-        const el = document.createElement("div");
-        el.id = "toast-container";
-        el.className = "fixed top-4 right-4 z-[1000] space-y-2";
-        document.body.appendChild(el);
-        return el;
-      })();
-      const colors = {
-        success: "bg-green-600",
-        error: "bg-red-600",
-        info: "bg-blue-600",
-        warning: "bg-yellow-500 text-gray-900"
-      };
-      const toast = document.createElement("div");
-      toast.className = `px-4 py-2 rounded text-white shadow ${colors[type] || colors.info}`;
-      toast.textContent = message;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 4000);
+        const container = document.getElementById("toast-container") || (() => {
+            const el = document.createElement("div");
+            el.id = "toast-container";
+            el.className = "fixed top-4 right-4 z-[1000] space-y-2";
+            document.body.appendChild(el);
+            return el;
+        })();
+        const colors = {
+            success: "bg-green-600",
+            error: "bg-red-600",
+            info: "bg-blue-600",
+            warning: "bg-yellow-500 text-gray-900"
+        };
+        const toast = document.createElement("div");
+        toast.className = `px-4 py-2 rounded text-white shadow ${colors[type] || colors.info}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
     }
 
     function hideLoadingOverlay() {
-      const el = document.getElementById("loadingOverlay");
-      if (el) el.style.display = "none";
+        const el = document.getElementById("loadingOverlay");
+        if (el) el.style.display = "none";
     }
 
     async function fetchAPI(endpoint, options = {}) {
-      try {
-        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-          ...options,
-          credentials: "include",
-          headers: {
-            ...(options.headers || {})
-          }
-        });
-        if (res.status === 401) {
-          window.location.href = "/login.html";
-          return null;
+        try {
+            const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options,
+                credentials: "include",
+                headers: { ...(options.headers || {}) }
+            });
+            if (res.status === 401) {
+                window.location.href = "/login.html";
+                return null;
+            }
+            return res;
+        } catch (err) {
+            console.error("Fetch error:", err);
+            showToast("Network error, please try again.", "error");
+            return null;
         }
-        return res;
-      } catch (err) {
-        console.error("Fetch error:", err);
-        showToast("Network error, please try again.", "error");
-        return null;
-      }
     }
 
     async function checkAuth() {
-      const res = await fetchAPI("/auth/check");
-      if (!res || !res.ok) window.location.href = "/login.html";
+        const res = await fetchAPI("/auth/check");
+        if (!res || !res.ok) window.location.href = "/login.html";
     }
 
-    // Tab Management
-    function setupTabs() {
-      const tabs = document.querySelectorAll(".tab-link");
-      const pageTitle = document.getElementById("pageTitle");
-
-      tabs.forEach(tab => {
-        tab.addEventListener("click", (e) => {
-          e.preventDefault();
-          const target = tab.dataset.target;
-          const targetTitle = tab.getAttribute('data-i18n');
-          
-          document.querySelectorAll(".tab-content").forEach(content => {
-            content.classList.remove("active");
-          });
-          document.querySelectorAll(".tab-link").forEach(link => {
-            link.classList.remove("active");
-            link.classList.remove("bg-gray-700");
-          });
-
-          document.getElementById(target).classList.add("active");
-          tab.classList.add("active", "bg-gray-700");
-          pageTitle.setAttribute('data-i18n', targetTitle);
-          translatePage("teachers", document.getElementById("language-select").value);
-        });
-      });
-    }
-
-    // Data Fetching and Rendering
     async function fetchTeacherProfile() {
-      const res = await fetchAPI("/teacher/profile");
-      if (res && res.ok) {
-        const data = await res.json();
-        document.getElementById("profilePreviewName").innerText = data.firstname || "Teacher";
-        document.getElementById("profileAvatar").src = data.imageUrl || "./images/default-avatar.png";
-      }
+        const res = await fetchAPI("/teacher/profile");
+        if (res && res.ok) {
+            const data = await res.json();
+            document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
+            document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
+        }
     }
 
     function renderStudents(students = []) {
-      const container = document.getElementById("studentsList");
-      if (!container) return;
-      if (students.length === 0) {
-        container.innerHTML = `<div class="p-4 text-center text-gray-500">No students found.</div>`;
-        return;
-      }
-      container.innerHTML = students.map(s => `
-        <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
-          <div class="flex items-center gap-3">
-            <img src="${s.imageUrl || "./images/default-avatar.png"}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
-            <div>
-              <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
-              <p class="text-sm text-gray-500">Grade ${s.grade || "-"}</p>
+        const container = document.getElementById("studentsList");
+        if (!container) return;
+        if (students.length === 0) {
+            container.innerHTML = `<div class="p-4 text-center text-gray-500">No students found.</div>`;
+            return;
+        }
+        container.innerHTML = students.map(s => `
+          <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+            <div class="flex items-center gap-3">
+              <img src="${s.imageUrl || "./images/default-avatar.png"}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
+              <div>
+                <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
+                <p class="text-sm text-gray-500">Grade ${s.grade || "-"}</p>
+              </div>
             </div>
+            <span class="text-xs text-gray-400">${s.email}</span>
           </div>
-          <span class="text-xs text-gray-400">${s.email}</span>
-        </div>
-      `).join("");
+        `).join("");
     }
 
     async function fetchStudents() {
-      let myGrade = [],
-        otherGrade = [];
-      const res = await fetchAPI("/teacher/students");
-      if (res && res.ok) myGrade = (await res.json()) || [];
-      const resOther = await fetchAPI("/teacher/students/other");
-      if (resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
-      studentsCache = [...myGrade, ...otherGrade];
-      renderStudents(myGrade);
-      populateStudentSelects(studentsCache, myGrade, otherGrade);
+        let myGrade = [],
+            otherGrade = [];
+        const res = await fetchAPI("/teacher/students");
+        if (res && res.ok) myGrade = (await res.json()) || [];
+        const resOther = await fetchAPI("/teacher/students/other");
+        if (resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
+        studentsCache = [...myGrade, ...otherGrade];
+        renderStudents(myGrade);
+        populateStudentSelects(studentsCache, myGrade, otherGrade);
     }
 
     function populateStudentSelects(allStudents, myGrade = [], otherGrade = []) {
-      const assignSelect = document.getElementById("student-select");
-      const pointsSelect = document.getElementById("points-student-select");
-      const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (Grade ${s.grade || "-"})</option>`).join("");
-      if (assignSelect) assignSelect.innerHTML = `<optgroup label="My Grade Students">${toOptions(myGrade)}</optgroup><optgroup label="Other Students (Same School)">${toOptions(otherGrade)}</optgroup>`;
-      if (pointsSelect) pointsSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(allStudents)}`;
-      validateAssignmentForm();
-      validatePointsForm();
+        const assignSelect = document.getElementById("student-select");
+        const pointsSelect = document.getElementById("points-student-select");
+        const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (Grade ${s.grade || "-"})</option>`).join("");
+        if (assignSelect) assignSelect.innerHTML = `<optgroup label="My Grade Students">${toOptions(myGrade)}</optgroup><optgroup label="Other Students (Same School)">${toOptions(otherGrade)}</optgroup>`;
+        if (pointsSelect) pointsSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(allStudents)}`;
+        validateAssignmentForm();
+        validatePointsForm();
     }
 
     async function fetchAssignedTasks() {
-      const res = await fetchAPI("/teacher/assignments");
-      const container = document.getElementById("assignedTasksList");
-      if (!container) return;
+        const res = await fetchAPI("/teacher/assignments");
+        const container = document.getElementById("assignedTasksList");
+        if (!container) return;
 
-      if (res && res.ok) {
-        const tasks = (await res.json()) || [];
-        container.innerHTML = tasks.length ? tasks.map(t => `
-          <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
-            <div class="flex-1">
-              <h4 class="font-bold text-gray-800">${t.title}</h4>
-              <p class="text-sm text-gray-500">Assigned to: ${t.assigned_to_users.join(', ') || 'N/A'}</p>
-            </div>
-            <span class="text-sm text-gray-600 sm:ml-4 mt-2 sm:mt-0">Due: ${t.due_date ? new Date(t.due_date).toLocaleString() : 'No Due Date'}</span>
-          </div>
-        `).join("") : `<div class="p-4 text-center text-gray-500">No assignments assigned 🎉</div>`;
-      } else {
-        container.innerHTML = `<div class="p-4 text-center text-red-500">Failed to load assigned tasks.</div>`;
-      }
+        if (res && res.ok) {
+            const tasks = (await res.json()) || [];
+            container.innerHTML = tasks.length ? tasks.map(t => `
+              <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+                <div class="flex-1">
+                  <h4 class="font-bold text-gray-800">${t.title}</h4>
+                  <p class="text-sm text-gray-500">Assigned to: ${t.assigned_to_users.join(', ') || 'N/A'}</p>
+                </div>
+                <span class="text-sm text-gray-600 sm:ml-4 mt-2 sm:mt-0">Due: ${t.due_date ? new Date(t.due_date).toLocaleString() : 'No Due Date'}</span>
+              </div>
+            `).join("") : `<div class="p-4 text-center text-gray-500">No assignments assigned 🎉</div>`;
+        } else {
+            container.innerHTML = `<div class="p-4 text-center text-red-500">Failed to load assigned tasks.</div>`;
+        }
     }
 
     async function fetchOverdueTasks() {
-      const res = await fetchAPI("/teacher/overdue-tasks");
-      const container = document.getElementById("overdueTasksList");
-      if (!container) return;
+        const res = await fetchAPI("/teacher/overdue-tasks");
+        const container = document.getElementById("overdueTasksList");
+        if (!container) return;
 
-      if (res && res.ok) {
-        const overdue = (await res.json()) || [];
-        container.innerHTML = overdue.length ? overdue.map(t => {
-          const student = studentsCache.find(s => t.assigned_to_users.includes(s.email));
-          const studentName = student ? `${student.firstname} ${student.lastname}` : 'N/A';
+        if (res && res.ok) {
+            const overdue = (await res.json()) || [];
+            container.innerHTML = overdue.length ? overdue.map(t => {
+                const student = studentsCache.find(s => t.assigned_to_users.includes(s.email));
+                const studentName = student ? `${student.firstname} ${student.lastname}` : 'N/A';
 
-          return `
-            <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
-              <div class="flex-1">
-                <h4 class="font-bold text-red-600">${t.title}</h4>
-                <p class="text-sm text-gray-500">Student: ${studentName}</p>
-              </div>
-              <span class="text-sm text-red-500 sm:ml-4 mt-2 sm:mt-0">Overdue since: ${new Date(t.due_date).toLocaleString()}</span>
-            </div>
-          `;
-        }).join("") : `<div class="p-4 text-center text-gray-500">No overdue tasks 🎉</div>`;
-      } else {
-        container.innerHTML = `<div class="p-4 text-center text-red-500">Failed to load overdue tasks.</div>`;
-      }
+                return `
+                  <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+                    <div class="flex-1">
+                      <h4 class="font-bold text-red-600">${t.title}</h4>
+                      <p class="text-sm text-gray-500">Student: ${studentName}</p>
+                    </div>
+                    <span class="text-sm text-red-500 sm:ml-4 mt-2 sm:mt-0">Overdue since: ${new Date(t.due_date).toLocaleString()}</span>
+                  </div>
+                `;
+            }).join("") : `<div class="p-4 text-center text-gray-500">No overdue tasks 🎉</div>`;
+        } else {
+            container.innerHTML = `<div class="p-4 text-center text-red-500">Failed to load overdue tasks.</div>`;
+        }
     }
 
     async function fetchFeedback() {
-      const res = await fetchAPI("/teacher/feedback");
-      const container = document.getElementById("feedbackList");
-      if (!container) return;
+        const res = await fetchAPI("/teacher/feedback");
+        const container = document.getElementById("feedbackList");
+        if (!container) return;
 
-      if (res && res.ok) {
-        const feedbacks = (await res.json()) || [];
-        container.innerHTML = feedbacks.length ? feedbacks.map(f => `
-          <div class="p-4 flex items-start space-x-3 border-b last:border-b-0 hover:bg-gray-50">
-            <i class="fas fa-comment-dots text-blue-500 mt-1"></i>
-            <div class="flex-1">
-              <p class="font-medium text-gray-800">${f.student_email || 'N/A'}</p>
-              <p class="text-sm text-gray-600">${f.message}</p>
-            </div>
-          </div>
-        `).join("") : `<div class="p-4 text-center text-gray-500">No feedback yet 🎉</div>`;
-      } else {
-        container.innerHTML = `<div class="p-4 text-center text-red-500">Failed to load feedback.</div>`;
-      }
+        if (res && res.ok) {
+            const feedbacks = (await res.json()) || [];
+            container.innerHTML = feedbacks.length ? feedbacks.map(f => `
+              <div class="p-4 flex items-start space-x-3 border-b last:border-b-0 hover:bg-gray-50">
+                <i class="fas fa-comment-dots text-blue-500 mt-1"></i>
+                <div class="flex-1">
+                  <p class="font-medium text-gray-800">${f.student_email || 'N/A'}</p>
+                  <p class="text-sm text-gray-600">${f.message}</p>
+                </div>
+              </div>
+            `).join("") : `<div class="p-4 text-center text-gray-500">No feedback yet 🎉</div>`;
+        } else {
+            container.innerHTML = `<div class="p-4 text-center text-red-500">Failed to load feedback.</div>`;
+        }
     }
 
-    // Form and UI Logic
     function addTerm() {
-      const termsContainer = document.getElementById("termsContainer");
-      const termIndex = termsContainer.children.length + 1;
-      const termDiv = document.createElement("div");
-      termDiv.className = "p-3 border rounded-lg";
-      termDiv.innerHTML = `
-        <label class="block font-semibold mb-1">Term ${termIndex}</label>
-        <input type="date" class="termStart w-full p-2 mb-2 border rounded" placeholder="Start Date" />
-        <input type="date" class="termEnd w-full p-2 mb-2 border rounded" placeholder="End Date" />
-      `;
-      termsContainer.appendChild(termDiv);
+        const termsContainer = document.getElementById("termsContainer");
+        const termIndex = termsContainer.children.length + 1;
+        const termDiv = document.createElement("div");
+        termDiv.className = "p-3 border rounded-lg";
+        termDiv.innerHTML = `
+          <label class="block font-semibold mb-1">Term ${termIndex}</label>
+          <input type="date" class="termStart w-full p-2 mb-2 border rounded" placeholder="Start Date" />
+          <input type="date" class="termEnd w-full p-2 mb-2 border rounded" placeholder="End Date" />
+        `;
+        termsContainer.appendChild(termDiv);
     }
 
     function wireCalendar() {
-      const termsContainer = document.getElementById("termsContainer");
-      document.getElementById("addTermButton").addEventListener("click", (e) => {
-        e.preventDefault();
+        const termsContainer = document.getElementById("termsContainer");
+
+        document.getElementById("addTermButton").addEventListener("click", (e) => {
+            e.preventDefault();
+            addTerm();
+        });
+
         addTerm();
-      });
-      addTerm();
-      document.getElementById("saveCalendarButton").addEventListener("click", async () => {
-        const academicYear = document.getElementById("academicYear").value;
-        const terms = Array.from(termsContainer.children).map((div, i) => {
-          return {
-            termName: `Term ${i+1}`,
-            startDate: div.querySelector(".termStart").value,
-            endDate: div.querySelector(".termEnd").value,
-          };
-        });
 
-        const res = await fetchAPI("/teacher/calendar", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            academicYear,
-            terms
-          })
-        });
+        document.getElementById("saveCalendarButton").addEventListener("click", async() => {
+            const academicYear = document.getElementById("academicYear").value;
 
-        const msg = document.getElementById("calendarMsg");
-        if (res && res.ok) {
-          msg.textContent = "Calendar updated.";
-          showToast("Calendar updated.", "success");
-        } else {
-          msg.textContent = "Failed to save calendar.";
-          showToast("Failed to save calendar.", "error");
-        }
-      });
+            const terms = Array.from(termsContainer.children).map((div, i) => {
+                return {
+                    termName: `Term ${i+1}`,
+                    startDate: div.querySelector(".termStart").value,
+                    endDate: div.querySelector(".termEnd").value,
+                };
+            });
+
+            const res = await fetchAPI("/teacher/calendar", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    academicYear,
+                    terms
+                })
+            });
+
+            const msg = document.getElementById("calendarMsg");
+            if (res && res.ok) {
+                msg.textContent = "Calendar updated.";
+                showToast("Calendar updated.", "success");
+            } else {
+                msg.textContent = "Failed to save calendar.";
+                showToast("Failed to save calendar.", "error");
+            }
+        });
     }
 
+    // New functions to fix ReferenceError
     function validateAssignmentForm() {
-      const title = document.getElementById('assignmentTitle').value.trim();
-      const text = document.getElementById('assignmentText').value.trim();
-      const file = document.getElementById('assignmentFile').files.length > 0;
-      const studentSelect = document.getElementById('student-select').value;
-      const sendButton = document.getElementById('sendAssignmentButton');
+        const title = document.getElementById('assignmentTitle').value.trim();
+        const text = document.getElementById('assignmentText').value.trim();
+        const file = document.getElementById('assignmentFile').files.length > 0;
+        const studentSelect = document.getElementById('student-select').value;
+        const sendButton = document.getElementById('sendAssignmentButton');
 
-      if (title && (text || file) && studentSelect) {
-        sendButton.disabled = false;
-      } else {
-        sendButton.disabled = true;
-      }
+        if (title && (text || file) && studentSelect) {
+            sendButton.disabled = false;
+        } else {
+            sendButton.disabled = true;
+        }
     }
 
     function validatePointsForm() {
-      const pointsInput = document.getElementById('pointsInput').value.trim();
-      const studentSelect = document.getElementById('points-student-select').value;
-      const addButton = document.getElementById('addPointsButton');
+        const pointsInput = document.getElementById('pointsInput').value.trim();
+        const studentSelect = document.getElementById('points-student-select').value;
+        const addButton = document.getElementById('addPointsButton');
 
-      if (pointsInput && studentSelect) {
-        addButton.disabled = false;
-      } else {
-        addButton.disabled = true;
-      }
+        if (pointsInput && studentSelect) {
+            addButton.disabled = false;
+        } else {
+            addButton.disabled = true;
+        }
     }
 
     function wireAssignmentForm() {
-      const assignTitle = document.getElementById('assignmentTitle');
-      const assignText = document.getElementById('assignmentText');
-      const assignFile = document.getElementById('assignmentFile');
-      const clearFileBtn = document.getElementById('clearFileButton');
-      const fileNameSpan = document.getElementById('fileName');
-      const sendBtn = document.getElementById('sendAssignmentButton');
+        const assignTitle = document.getElementById('assignmentTitle');
+        const assignText = document.getElementById('assignmentText');
+        const assignFile = document.getElementById('assignmentFile');
+        const clearFileBtn = document.getElementById('clearFileButton');
+        const fileNameSpan = document.getElementById('fileName');
+        const sendBtn = document.getElementById('sendAssignmentButton');
 
-      assignTitle.addEventListener('input', validateAssignmentForm);
-      assignText.addEventListener('input', validateAssignmentForm);
-      assignFile.addEventListener('change', () => {
-        if (assignFile.files.length > 0) {
-          fileNameSpan.textContent = assignFile.files[0].name;
-          clearFileBtn.classList.remove('hidden');
-        } else {
-          fileNameSpan.textContent = 'No file selected.';
-          clearFileBtn.classList.add('hidden');
-        }
-        validateAssignmentForm();
-      });
+        assignTitle.addEventListener('input', validateAssignmentForm);
+        assignText.addEventListener('input', validateAssignmentForm);
+        assignFile.addEventListener('change', () => {
+            if (assignFile.files.length > 0) {
+                fileNameSpan.textContent = assignFile.files[0].name;
+                clearFileBtn.classList.remove('hidden');
+            } else {
+                fileNameSpan.textContent = 'No file selected.';
+                clearFileBtn.classList.add('hidden');
+            }
+            validateAssignmentForm();
+        });
 
-      clearFileBtn.addEventListener('click', () => {
-        assignFile.value = '';
-        fileNameSpan.textContent = 'No file selected.';
-        clearFileBtn.classList.add('hidden');
-        validateAssignmentForm();
-      });
+        clearFileBtn.addEventListener('click', () => {
+            assignFile.value = '';
+            fileNameSpan.textContent = 'No file selected.';
+            clearFileBtn.classList.add('hidden');
+            validateAssignmentForm();
+        });
 
-      sendBtn.addEventListener('click', async () => {
-        showToast('Sending assignment...', 'info');
-      });
+        sendBtn.addEventListener('click', async() => {
+            // Your form submission logic here
+            // This part is not fully defined in your original code, so I'm leaving it as a placeholder.
+            // You would collect form data, create a FormData object (if a file is present), and send it to the backend.
+            showToast('Sending assignment...', 'info');
+        });
     }
 
     function wirePointsForm() {
-      const pointsInput = document.getElementById('pointsInput');
-      const pointsSelect = document.getElementById('points-student-select');
-      const addBtn = document.getElementById('addPointsButton');
+        const pointsInput = document.getElementById('pointsInput');
+        const pointsSelect = document.getElementById('points-student-select');
+        const addBtn = document.getElementById('addPointsButton');
 
-      pointsInput.addEventListener('input', validatePointsForm);
-      pointsSelect.addEventListener('change', validatePointsForm);
+        pointsInput.addEventListener('input', validatePointsForm);
+        pointsSelect.addEventListener('change', validatePointsForm);
 
-      addBtn.addEventListener('click', async () => {
-        const studentId = pointsSelect.value;
-        const points = pointsInput.value;
-        const reason = document.getElementById('reasonText').value;
+        addBtn.addEventListener('click', async() => {
+            const studentId = pointsSelect.value;
+            const points = pointsInput.value;
+            const reason = document.getElementById('reasonText').value;
 
-        if (!studentId || !points) {
-          showToast('Please select a student and enter points.', 'error');
-          return;
-        }
+            if (!studentId || !points) {
+                showToast('Please select a student and enter points.', 'error');
+                return;
+            }
 
-        showToast(`Adding ${points} points to a student...`, 'info');
-      });
+            // Here you would send a POST request to your backend to add points
+            showToast(`Adding ${points} points to a student...`, 'info');
+
+            // Example of a placeholder API call:
+            // const res = await fetchAPI('/teacher/add-points', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ studentId, points, reason })
+            // });
+            // if (res && res.ok) {
+            //     showToast('Points added successfully!', 'success');
+            // } else {
+            //     showToast('Failed to add points.', 'error');
+            // }
+        });
     }
 
-    function init() {
-      checkAuth();
-      const defaultLang = "en";
-      translatePage("teachers", defaultLang);
-      document.getElementById("language-select").addEventListener("change", (e) => {
-        translatePage("teachers", e.target.value);
-      });
 
-      Promise.all([
-        fetchTeacherProfile(),
-        fetchStudents(),
-        fetchAssignedTasks(),
-        fetchFeedback(),
-        fetchOverdueTasks()
-      ]).finally(() => {
-        hideLoadingOverlay();
-      });
+    async function init() {
+        try {
+            await checkAuth();
 
-      wireAssignmentForm();
-      wirePointsForm();
-      wireCalendar();
-      setupTabs();
+            const defaultLang = "en";
+            translatePage("teachers", defaultLang);
+            document.getElementById("language-select").addEventListener("change", (e) => {
+                translatePage("teachers", e.target.value);
+            });
+
+            await Promise.all([
+                fetchTeacherProfile(),
+                fetchStudents(),
+                fetchAssignedTasks(),
+                fetchFeedback(),
+                fetchOverdueTasks()
+            ]);
+
+            wireAssignmentForm();
+            wirePointsForm();
+            wireCalendar();
+        } catch (err) {
+            console.error("Init error:", err);
+            showToast("Failed to load dashboard. Please try again.", "error");
+        } finally {
+            hideLoadingOverlay();
+        }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("currentYear").textContent = new Date().getFullYear();
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
 
-      const menuButton = document.getElementById("menuButton");
-      const mainNav = document.getElementById("mainNav");
-      menuButton.addEventListener("click", () => {
-        mainNav.classList.toggle("hidden");
-      });
-
-      const profileBtn = document.getElementById("profile-menu-button");
-      const profileMenu = document.getElementById("profile-dropdown-menu");
-      profileBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        profileMenu.classList.toggle("hidden");
-      });
-      document.addEventListener("click", (e) => {
-        if (!profileBtn.contains(e.target) && !profileMenu.contains(e.target)) {
-          profileMenu.classList.add("hidden");
-        }
-      });
-
-      document.getElementById("logoutButton").addEventListener("click", async () => {
-        await fetchAPI("/users/logout", {
-          method: "POST"
+        const btn = document.getElementById("profile-menu-button");
+        const menu = document.getElementById("profile-dropdown-menu");
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            menu.classList.toggle("hidden");
         });
-        window.location.href = "/login.html";
-      });
+        document.addEventListener("click", (e) => {
+            if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add("hidden");
+            }
+        });
 
-      init();
+        document.getElementById("logoutButton").addEventListener("click", async() => {
+            await fetchAPI("/users/logout", {
+                method: "POST"
+            });
+            window.location.href = "/login.html";
+        });
+
+        init();
     });
-  </script>
+</script>
 </body>
 </html>
 

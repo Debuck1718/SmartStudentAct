@@ -1116,6 +1116,10 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
+      if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+        return res.status(400).json({ message: "Invalid teacher ID." });
+      }
+
       const teacherId = new mongoose.Types.ObjectId(req.user.id);
       const assignments = await Assignment.find({ teacher_id: teacherId }).sort({ createdAt: -1 });
       res.status(200).json(assignments);
@@ -1125,7 +1129,6 @@ protectedRouter.get(
     }
   }
 );
-
 protectedRouter.post(
   "/teacher/feedback/:submissionId",
   authenticateJWT,
@@ -1212,6 +1215,10 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
+      if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+        return res.status(400).json({ message: "Invalid teacher ID." });
+      }
+      
       const now = new Date();
       const teacherId = new mongoose.Types.ObjectId(req.user.id);
       const overdueAssignments = await Assignment.find({
@@ -1249,6 +1256,10 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
+      if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+        return res.status(400).json({ message: "Invalid teacher ID." });
+      }
+
       const teacherId = new mongoose.Types.ObjectId(req.user.id);
       const teacherAssignments = await Assignment.find({ teacher_id: teacherId }).select("_id");
       const assignmentIds = teacherAssignments.map((a) => a._id);
@@ -1478,8 +1489,11 @@ protectedRouter.get(
   hasRole("student"),
   async (req, res) => {
     try {
+      if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+        return res.status(400).json({ message: "Invalid student ID." });
+      }
+
       const studentId = new mongoose.Types.ObjectId(req.user.id);
-      
       const tasks = await StudentTask.find({ student_id: studentId }).sort({ due_date: 1 });
       res.status(200).json(tasks);
     } catch (error) {
