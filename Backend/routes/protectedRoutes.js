@@ -31,6 +31,8 @@ const uploadRouter = require("./uploadRoutes");
 const paymentController = require("../controllers/paymentController");
 const { getUserPrice } = require('../services/pricingService');
 
+const mongoose = require('mongoose');
+
 const smsApi = {};
 async function sendSMS(phone, message) {
   if (!phone) return;
@@ -1114,7 +1116,8 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const assignments = await Assignment.find({ teacher_id: req.user.id }).sort({ createdAt: -1 });
+      const teacherId = new mongoose.Types.ObjectId(req.user.id);
+      const assignments = await Assignment.find({ teacher_id: teacherId }).sort({ createdAt: -1 });
       res.status(200).json(assignments);
     } catch (error) {
       logger.error("Error fetching assignments:", error);
@@ -1210,8 +1213,9 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const now = new Date();
+      const teacherId = new mongoose.Types.ObjectId(req.user.id);
       const overdueAssignments = await Assignment.find({
-        teacher_id: req.user.id,
+        teacher_id: teacherId,
         due_date: { $lt: now },
       });
 
@@ -1245,13 +1249,14 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacherAssignments = await Assignment.find({ teacher_id: req.user.id }).select("_id");
+      const teacherId = new mongoose.Types.ObjectId(req.user.id);
+      const teacherAssignments = await Assignment.find({ teacher_id: teacherId }).select("_id");
       const assignmentIds = teacherAssignments.map((a) => a._id);
 
       const submissionsWithFeedback = await Submission.find({
         assignment_id: { $in: assignmentIds },
         $or: [{ feedback_grade: { $ne: null } }, { feedback_comments: { $ne: null } }],
-      }).populate({ path: "user_id", select: "email", model: User }); // match String _id
+      }).populate({ path: "user_id", select: "email", model: User });
 
       const formattedFeedback = submissionsWithFeedback.map((f) => ({
         student_email: f.user_id?.email,
@@ -1266,7 +1271,6 @@ protectedRouter.get(
     }
   }
 );
-
 
 protectedRouter.post(
   "/teacher/message",
@@ -1303,26 +1307,31 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const teacher = await User.findById(req.user.id);
-      if (!teacher?.school || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
-        return res.status(200).json([]); 
+      if (!teacher || (!teacher.school && !teacher.schoolName) || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
+        return res.status(200).json([]);
       }
 
       const { search } = req.query;
-      const query = {
+      const schoolQuery = {
         role: "student",
-        school: teacher.school,
         grade: { $nin: teacher.teacherGrade },
       };
 
+      if (teacher.school) {
+        schoolQuery.school = teacher.school;
+      } else if (teacher.schoolName) {
+        schoolQuery.schoolName = teacher.schoolName;
+      }
+
       if (search) {
-        query.$or = [
+        schoolQuery.$or = [
           { firstname: { $regex: search, $options: "i" } },
           { lastname: { $regex: search, $options: "i" } },
           { email: { $regex: search, $options: "i" } },
         ];
       }
 
-      const otherStudents = await User.find(query).select("firstname lastname email grade imageUrl");
+      const otherStudents = await User.find(schoolQuery).select("firstname lastname email grade imageUrl");
       res.status(200).json(otherStudents);
     } catch (error) {
       logger.error("Error fetching students from other classes:", error);
@@ -1338,26 +1347,31 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const teacher = await User.findById(req.user.id);
-      if (!teacher?.school || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
+      if (!teacher || (!teacher.school && !teacher.schoolName) || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
         return res.status(200).json([]);
       }
 
       const { search } = req.query;
-      const query = {
+      const schoolQuery = {
         role: "student",
-        school: teacher.school,
         grade: { $in: teacher.teacherGrade },
       };
 
+      if (teacher.school) {
+        schoolQuery.school = teacher.school;
+      } else if (teacher.schoolName) {
+        schoolQuery.schoolName = teacher.schoolName;
+      }
+
       if (search) {
-        query.$or = [
+        schoolQuery.$or = [
           { firstname: { $regex: search, $options: "i" } },
           { lastname: { $regex: search, $options: "i" } },
           { email: { $regex: search, $options: "i" } },
         ];
       }
 
-      const students = await User.find(query).select("firstname lastname email grade imageUrl");
+      const students = await User.find(schoolQuery).select("firstname lastname email grade imageUrl");
       res.status(200).json(students || []);
     } catch (error) {
       logger.error("Error fetching students for teacher's class:", error);
@@ -1464,7 +1478,9 @@ protectedRouter.get(
   hasRole("student"),
   async (req, res) => {
     try {
-      const tasks = await StudentTask.find({ student_id: req.user.id }).sort({ due_date: 1 });
+      const studentId = new mongoose.Types.ObjectId(req.user.id);
+      
+      const tasks = await StudentTask.find({ student_id: studentId }).sort({ due_date: 1 });
       res.status(200).json(tasks);
     } catch (error) {
       logger.error("Error fetching tasks:", error);
@@ -1547,15 +1563,21 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const student = await User.findById(req.user.id);
-      if (!student || !student.schoolName) {
-        return res
-          .status(400)
-          .json({ message: "Student school information is missing." });
+      if (!student || (!student.school && !student.schoolName)) {
+        return res.status(400).json({ message: "Student school information is missing." });
       }
-      const teachers = await User.find({
-        role: "teacher",
-        schoolName: student.schoolName,
-      }).select("firstName lastName email");
+
+      let query = {
+        role: "teacher"
+      };
+
+      if (student.school) {
+        query.school = student.school;
+      } else if (student.schoolName) {
+        query.schoolName = student.schoolName;
+      }
+
+      const teachers = await User.find(query).select("firstName lastName email");
 
       res.status(200).json({ teachers });
     } catch (error) {
