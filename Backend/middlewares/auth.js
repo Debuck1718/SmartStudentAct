@@ -30,37 +30,39 @@ const isPublicRoute = (url) => {
 
 function generateAccessToken(user) {
   return jwt.sign(
-    { id: user.id, role: user.role, email: user.email },
-    JWT_SECRET,
-    { expiresIn: ACCESS_TOKEN_EXPIRY }
+    { id: user._id, role: user.role, email: user.email },
+    JWT_SECRET, {
+      expiresIn: ACCESS_TOKEN_EXPIRY
+    }
   );
 }
 
 function generateRefreshToken(user) {
   return jwt.sign(
-    { id: user.id, role: user.role, email: user.email },
-    JWT_REFRESH_SECRET,
-    { expiresIn: REFRESH_TOKEN_EXPIRY }
+    { id: user._id, role: user.role, email: user.email },
+    JWT_REFRESH_SECRET, {
+      expiresIn: REFRESH_TOKEN_EXPIRY
+    }
   );
 }
 
 function setAuthCookies(res, accessToken, refreshToken) {
   const cookieOptions = {
     httpOnly: true,
-    secure: isProd,                
-    sameSite: "None",              
+    secure: isProd,
+    sameSite: "None",
     domain: ".smartstudentact.com",
-    path: "/",                     
+    path: "/",
   };
 
   res.cookie("access_token", accessToken, {
     ...cookieOptions,
-    maxAge: 15 * 60 * 1000, 
+    maxAge: 15 * 60 * 1000,
   });
 
   res.cookie("refresh_token", refreshToken, {
     ...cookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000, 
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
 
@@ -105,7 +107,7 @@ const authenticateJWT = (req, res, next) => {
           }
 
           const newAccessToken = generateAccessToken({
-            id: refreshDecoded.id,
+            _id: refreshDecoded.id,
             role: refreshDecoded.role,
             email: refreshDecoded.email,
           });
@@ -125,7 +127,7 @@ const authenticateJWT = (req, res, next) => {
             sameSite: "None",
             domain: ".smartstudentact.com",
             path: "/",
-            maxAge: 15 * 60 * 1000, 
+            maxAge: 15 * 60 * 1000,
           });
 
           req.userId = refreshDecoded.id;
