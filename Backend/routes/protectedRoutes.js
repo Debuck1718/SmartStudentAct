@@ -1114,12 +1114,8 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacherId = req.user.id;
-      console.log("Teacher ID:", teacherId);
-
-      const assignments = await Assignment.find({ teacher_id: teacherId }).sort({ createdAt: -1 });
-
-      res.status(200).json(assignments || []);
+      const assignments = await Assignment.find({ teacher_id: req.user.id }).sort({ createdAt: -1 });
+      res.status(200).json(assignments);
     } catch (error) {
       logger.error("Error fetching assignments:", error);
       res.status(500).json({ message: "Server error" });
@@ -1243,34 +1239,24 @@ protectedRouter.get(
   }
 );
 
-
 protectedRouter.get(
   "/teacher/feedback",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacherId = req.user.id;
-
-      // Find all assignments by this teacher
-      const teacherAssignments = await Assignment.find({ teacher_id: teacherId }).select("_id");
+      const teacherAssignments = await Assignment.find({ teacher_id: req.user.id }).select("_id");
       const assignmentIds = teacherAssignments.map((a) => a._id);
 
-      if (assignmentIds.length === 0) {
-        return res.status(200).json([]); // No assignments yet
-      }
-
-      // Find submissions that have feedback
       const submissionsWithFeedback = await Submission.find({
         assignment_id: { $in: assignmentIds },
         $or: [{ feedback_grade: { $ne: null } }, { feedback_comments: { $ne: null } }],
-      }).populate("user_id", "email"); // user_id is string, populate works if matches
+      }).populate({ path: "user_id", select: "email", model: User }); // match String _id
 
-      // Format feedback for response
       const formattedFeedback = submissionsWithFeedback.map((f) => ({
-        student_email: f.user_id?.email || "Unknown",
-        message: f.feedback_comments || (f.feedback_grade !== null ? `Graded: ${f.feedback_grade}` : "No feedback"),
-        file_name: f.feedback_file || null,
+        student_email: f.user_id?.email,
+        message: f.feedback_comments || `Graded: ${f.feedback_grade}`,
+        file_name: f.feedback_file,
       }));
 
       res.status(200).json(formattedFeedback);
@@ -1280,7 +1266,6 @@ protectedRouter.get(
     }
   }
 );
-
 
 
 protectedRouter.post(
@@ -1314,22 +1299,18 @@ protectedRouter.post(
 protectedRouter.get(
   "/teacher/students/other",
   authenticateJWT,
-  hasRole(["teacher"]),
+  hasRole("teacher"),
   async (req, res) => {
     try {
       const teacher = await User.findById(req.user.id);
-
-      if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
-        return res.status(400).json({
-          message: "Teacher school or grade information is missing.",
-        });
+      if (!teacher?.school || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
+        return res.status(200).json([]); // empty instead of 400
       }
 
       const { search } = req.query;
-
       const query = {
         role: "student",
-        schoolName: teacher.schoolName,
+        school: teacher.school,
         grade: { $nin: teacher.teacherGrade },
       };
 
@@ -1341,10 +1322,7 @@ protectedRouter.get(
         ];
       }
 
-      const otherStudents = await User.find(query).select(
-        "firstname lastname email grade imageUrl"
-      );
-
+      const otherStudents = await User.find(query).select("firstname lastname email grade imageUrl");
       res.status(200).json(otherStudents);
     } catch (error) {
       logger.error("Error fetching students from other classes:", error);
@@ -1353,24 +1331,21 @@ protectedRouter.get(
   }
 );
 
-
 protectedRouter.get(
   "/teacher/students",
   authenticateJWT,
-  hasRole(["teacher"]),
+  hasRole("teacher"),
   async (req, res) => {
     try {
       const teacher = await User.findById(req.user.id);
-
-      if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
-        return res.status(200).json([]); 
+      if (!teacher?.school || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
+        return res.status(200).json([]);
       }
 
       const { search } = req.query;
-
       const query = {
         role: "student",
-        schoolName: teacher.schoolName,
+        school: teacher.school,
         grade: { $in: teacher.teacherGrade },
       };
 
@@ -1382,10 +1357,7 @@ protectedRouter.get(
         ];
       }
 
-      const students = await User.find(query).select(
-        "firstname lastname email grade imageUrl"
-      );
-
+      const students = await User.find(query).select("firstname lastname email grade imageUrl");
       res.status(200).json(students || []);
     } catch (error) {
       logger.error("Error fetching students for teacher's class:", error);
@@ -1393,9 +1365,6 @@ protectedRouter.get(
     }
   }
 );
-
-
-
 
 protectedRouter.get("/auth/check", authenticateJWT, (req, res) => {
   res.json({
