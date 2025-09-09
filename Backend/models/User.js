@@ -5,7 +5,6 @@ const BCRYPT_SALT_ROUNDS = 10;
 
 const userSchema = new mongoose.Schema(
   {
-    _id: { type: String, required: true },
     firstname: { type: String, required: true, trim: true, minlength: 2, maxlength: 50 },
     lastname: { type: String, required: true, trim: true, minlength: 2, maxlength: 50 },
     email: {
@@ -142,6 +141,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// --- Password hashing ---
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   if (this._rawPassword) {
@@ -158,12 +158,16 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
+userSchema.methods.setRawHashedPassword = function (hashedPassword) {
+  this._rawPassword = hashedPassword;
+  this.password = hashedPassword;
+};
 
+// Remove sensitive fields when converting to JSON
 userSchema.set("toJSON", {
   transform: function (doc, ret) {
     delete ret.password;
@@ -175,12 +179,4 @@ userSchema.set("toJSON", {
   },
 });
 
-userSchema.methods.setRawHashedPassword = function (hashedPassword) {
-  this._rawPassword = hashedPassword;
-  this.password = hashedPassword;
-};
-
-
 module.exports = mongoose.model("User", userSchema);
-
-

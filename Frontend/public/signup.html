@@ -860,81 +860,85 @@
     input.addEventListener("input", updateUI);
   });
 
-  requestOtpButton.addEventListener("click", async () => {
-    if (isSubmitting) return;
+ 
+requestOtpButton.addEventListener("click", async () => {
+  if (isSubmitting) return;
 
-    const {
-      errors,
-      data
-    } = validateForm();
-    if (Object.keys(errors).length > 0) {
-      updateUI();
-      return;
+  const { errors, data } = validateForm();
+  if (Object.keys(errors).length > 0) {
+    updateUI();
+    return;
+  }
+
+  setLoadingState(requestOtpButton, true, "Request OTP");
+
+  try {
+    const response = await fetch(API_REQUEST_OTP, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      
+      userData = { ...data, otpToken: result.otpToken };
+
+      showMessage("OTP sent successfully! Check your email.", "success");
+      signupFormSection.classList.add("hidden");
+      otpSection.classList.remove("hidden");
+    } else {
+      showMessage(result.message || "Failed to request OTP. Please try again.");
     }
+  } catch (error) {
+    showMessage("Network error. Please try again.");
+  } finally {
+    setLoadingState(requestOtpButton, false, "Request OTP");
+  }
+});
 
-    setLoadingState(requestOtpButton, true, "Request OTP");
 
-    try {
-      const response = await fetch(API_REQUEST_OTP, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        userData = data;
-        showMessage("OTP sent successfully! Check your email.", "success");
-        signupFormSection.classList.add("hidden");
-        otpSection.classList.remove("hidden");
-      } else {
-        showMessage(result.message || "Failed to request OTP. Please try again.");
-      }
-    } catch (error) {
-      showMessage("Network error. Please try again.");
-    } finally {
-      setLoadingState(requestOtpButton, false, "Request OTP");
+verifyOtpButton.addEventListener("click", async () => {
+  if (isSubmitting) return;
+
+  const code = otpInput.value.trim();
+  if (!code) {
+    document.getElementById("otpError").textContent = "OTP is required.";
+    document.getElementById("otpError").classList.remove("hidden");
+    return;
+  }
+
+  setLoadingState(verifyOtpButton, true, "Verify OTP");
+
+  try {
+    const response = await fetch(API_VERIFY_OTP, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code,
+        email: userData.email,
+        password: userData.password,
+        otpToken: userData.otpToken,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      showMessage(result.message, "success");
+      window.location.href = result.redirectUrl; 
+    } else {
+      showMessage(result.message || "Invalid OTP. Please try again.");
     }
-  });
+  } catch (err) {
+    showMessage("Network error. Please try again.");
+  } finally {
+    setLoadingState(verifyOtpButton, false, "Verify OTP");
+  }
+});
 
-  verifyOtpButton.addEventListener("click", async () => {
-    if (isSubmitting) return;
 
-    const otp = otpInput.value.trim();
-    if (!otp) {
-      document.getElementById("otpError").textContent = "OTP is required.";
-      document.getElementById("otpError").classList.remove("hidden");
-      return;
-    }
-
-    setLoadingState(verifyOtpButton, true, "Verify OTP");
-
-    try {
-      const response = await fetch(API_VERIFY_OTP, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          ...userData,
-          otp
-        }),
-      });
-      const result = await response.json();
-
-      if (response.ok) {
-        showMessage("Account created successfully! Redirecting...", "success");
-        window.location.href = "./dashboard.html"; // Redirect on success
-      } else {
-        showMessage(result.message || "Invalid OTP. Please try again.");
-      }
-    } catch (error) {
-      showMessage("Network error. Please try again.");
-    } finally {
-      setLoadingState(verifyOtpButton, false, "Verify OTP");
-    }
-  });
 
   openTermsLink.addEventListener("click", (e) => {
     e.preventDefault();
