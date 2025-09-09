@@ -1304,7 +1304,7 @@ protectedRouter.get(
     try {
       const teacher = await User.findById(req.user.id);
       if (!teacher?.school || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
-        return res.status(200).json([]); // empty instead of 400
+        return res.status(200).json([]); 
       }
 
       const { search } = req.query;
@@ -1614,7 +1614,7 @@ protectedRouter.post(
   async (req, res) => {
     try {
       const { quizId } = req.params;
-      const { answers, finalize } = req.body; 
+      const { answers, finalize, autoSubmit } = req.body;
 
       const student = await User.findById(req.user.id);
       if (!student) return res.status(404).json({ message: "Student not found." });
@@ -1622,30 +1622,42 @@ protectedRouter.post(
       const quiz = await Quiz.findById(quizId);
       if (!quiz) return res.status(404).json({ message: "Quiz not found." });
 
+   
+      const allowed =
+        quiz.assigned_to_users.includes(student.email) ||
+        quiz.assigned_to_grades.includes(student.grade) ||
+        quiz.assigned_to_schools.includes(student.schoolName);
+
+      if (!allowed) return res.status(403).json({ message: "Not authorized for this quiz." });
+
+     
       let submission = quiz.submissions.find(
-        sub => sub.student_id.toString() === student._id.toString()
+        sub => String(sub.student_id) === String(student._id)
       );
 
       if (!submission) {
         submission = {
           student_id: student._id,
           answers: [],
+          score: 0,
           started_at: new Date(),
-          auto_submitted: false,
+          submitted_at: null,
+          auto_submitted: false
         };
         quiz.submissions.push(submission);
       }
 
+     
       submission.answers = answers;
 
-      if (finalize || (quiz.timeLimitMinutes && submission.started_at)) {
+      if (finalize || (quiz.timeLimitMinutes && autoSubmit)) {
         let score = 0;
-        quiz.questions.forEach((q, index) => {
-          if (answers[index] === q.correct) score++;
+        quiz.questions.forEach((q, idx) => {
+          if (answers[idx] === q.correct) score++;
         });
         submission.score = score;
         submission.submitted_at = new Date();
-        submission.auto_submitted = !!finalize ? false : submission.auto_submitted;
+        submission.auto_submitted = !!autoSubmit;
       }
 
       await quiz.save();
@@ -1658,10 +1670,12 @@ protectedRouter.post(
 
       res.status(201).json({
         message: finalize ? "Quiz submitted successfully!" : "Answers auto-saved.",
-        score: submission.score || null,
+        score: submission.score,
         total: quiz.questions.length,
         submission,
+        quiz
       });
+
     } catch (error) {
       logger.error("Error submitting quiz:", error);
       res.status(500).json({ message: "Server error" });

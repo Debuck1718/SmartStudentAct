@@ -64,7 +64,7 @@
   
   <script src="translate.js"></script>
 
-  <script>
+ <script>
     const API_BASE = 'https://api.smartstudentact.com/api';
     const urlParams = new URLSearchParams(window.location.search);
     const quizId = urlParams.get('quizId');
@@ -86,196 +86,224 @@
     let countdownInterval = null;
 
     const showLoading = () => {
-      loadingSpinner.classList.remove('hidden');
-      mainContent.classList.add('hidden');
+        loadingSpinner.classList.remove('hidden');
+        mainContent.classList.add('hidden');
     };
 
     const hideLoading = () => {
-      loadingSpinner.classList.add('hidden');
-      mainContent.classList.remove('hidden');
+        loadingSpinner.classList.add('hidden');
+        mainContent.classList.remove('hidden');
     };
-
+    
     const fetchQuiz = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/student/quizzes/${quizId}`, {
-          method: 'GET',
-          credentials: 'include'
-        });
-        if (!res.ok) throw new Error('Failed to load quiz.');
-        const data = await res.json();
-        renderQuiz(data.quiz);
-        hideLoading();
-      } catch (err) {
-        questionsContainer.innerHTML = `<p class="text-red-500">${err.message}</p>`;
-        console.error(err);
-      }
+        if (!quizId) {
+            hideLoading();
+            questionsContainer.innerHTML = `<p class="text-gray-500 text-center text-lg mt-8" data-i18n="noQuizIdError">No quiz ID provided.</p>`;
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/student/quizzes/${quizId}`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (res.status === 404) {
+                hideLoading();
+                questionsContainer.innerHTML = `<p class="text-gray-500 text-center text-lg mt-8" data-i18n="noQuizFound">No quiz found with this ID.</p>`;
+                return;
+            }
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Failed to load quiz.');
+            }
+
+            const data = await res.json();
+            renderQuiz(data.quiz);
+            hideLoading();
+        } catch (err) {
+            hideLoading();
+            questionsContainer.innerHTML = `<p class="text-red-500 text-center text-lg mt-8">${err.message}</p>`;
+            console.error(err);
+        }
     };
 
     const startCountdown = (minutes) => {
-      if (!minutes) return;
-      quizTimer.classList.remove('hidden');
-      let remainingSeconds = minutes * 60;
+        if (!minutes) return;
+        quizTimer.classList.remove('hidden');
+        let remainingSeconds = minutes * 60;
 
-      countdownInterval = setInterval(() => {
-        const mins = Math.floor(remainingSeconds / 60);
-        const secs = remainingSeconds % 60;
-        timeRemainingSpan.textContent = `${mins}m ${secs}s`;
-        remainingSeconds--;
+        countdownInterval = setInterval(() => {
+            const mins = Math.floor(remainingSeconds / 60);
+            const secs = remainingSeconds % 60;
+            timeRemainingSpan.textContent = `${mins}m ${secs}s`;
+            remainingSeconds--;
 
-        if (remainingSeconds < 0) {
-          clearInterval(countdownInterval);
-          alert(getTranslation('timeUpAutoSubmit'));
-          autoSubmitQuiz();
-        }
-      }, 1000);
+            if (remainingSeconds < 0) {
+                clearInterval(countdownInterval);
+                alert(getTranslation('timeUpAutoSubmit'));
+                autoSubmitQuiz();
+            }
+        }, 1000);
     };
 
     const renderQuiz = (quiz) => {
-      quizTitle.textContent = quiz.title;
-      quizDesc.textContent = quiz.description || '';
+        quizTitle.textContent = quiz.title;
+        quizDesc.textContent = quiz.description || '';
 
-      if (quiz.timeLimitMinutes) startCountdown(quiz.timeLimitMinutes);
+        if (quiz.timeLimitMinutes) startCountdown(quiz.timeLimitMinutes);
 
-      questionsContainer.innerHTML = "";
-      quiz.questions.forEach((q, idx) => {
-        const div = document.createElement('div');
-        div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
-        div.setAttribute("data-question", idx);
-        div.innerHTML = `
-          <p class="font-semibold mb-2">${idx + 1}. ${q.question}</p>
-          <div class="space-y-2">
-            ${q.options.map((opt, i) => `
-              <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
-                <input type="radio" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4">
-                <span class="text-gray-700">${opt}</span>
-              </label>
-            `).join('')}
-          </div>
-          <p class="hidden text-red-500 text-sm mt-2 warning" data-i18n="answerThisQuestionWarning">⚠️ Please answer this question</p>
-        `;
-        questionsContainer.appendChild(div);
-      });
-      translateElements(questionsContainer);
+        questionsContainer.innerHTML = "";
+        quiz.questions.forEach((q, idx) => {
+            const div = document.createElement('div');
+            div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
+            div.setAttribute("data-question", idx);
+            div.innerHTML = `
+              <p class="font-semibold mb-2">${idx + 1}. ${q.question}</p>
+              <div class="space-y-2">
+                ${q.options.map((opt, i) => `
+                  <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
+                    <input type="radio" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4">
+                    <span class="text-gray-700">${opt}</span>
+                  </label>
+                `).join('')}
+              </div>
+              <p class="hidden text-red-500 text-sm mt-2 warning" data-i18n="answerThisQuestionWarning">⚠️ Please answer this question</p>
+            `;
+            questionsContainer.appendChild(div);
+        });
+        translateElements(questionsContainer);
     };
 
     const autoSubmitQuiz = async () => {
-      submitButton.disabled = true;
-      const answers = {};
-      document.querySelectorAll('[data-question]').forEach((div, idx) => {
-        const selected = quizForm.querySelector(`input[name=q${idx}]:checked`);
-        answers[idx] = selected ? selected.value : null;
-      });
-
-      try {
-        const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ answers, autoSubmit: true })
+        submitButton.disabled = true;
+        const answers = {};
+        document.querySelectorAll('[data-question]').forEach((div, idx) => {
+            const selected = quizForm.querySelector(`input[name=q${idx}]:checked`);
+            answers[idx] = selected ? selected.value : null;
         });
 
-        if (!res.ok) throw new Error('Auto-submit failed');
-        const result = await res.json();
-        showResults(result.quiz, result.submission);
-      } catch (err) {
-        console.error(err);
-        alert(getTranslation('autoSubmitError'));
-      }
+        try {
+            const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    answers,
+                    autoSubmit: true
+                })
+            });
+
+            if (!res.ok) throw new Error('Auto-submit failed');
+            const result = await res.json();
+            showResults(result.quiz, result.submission);
+        } catch (err) {
+            console.error(err);
+            alert(getTranslation('autoSubmitError'));
+        }
     };
 
     const showResults = (quiz, submission) => {
-      clearInterval(countdownInterval);
-      quizTimer.classList.add('hidden');
-      quizForm.classList.add('hidden');
-      quizResult.classList.remove('hidden');
-      scoreText.textContent = `${getTranslation('youScored')} ${submission.score} / ${quiz.questions.length}`;
+        clearInterval(countdownInterval);
+        quizTimer.classList.add('hidden');
+        quizForm.classList.add('hidden');
+        quizResult.classList.remove('hidden');
+        scoreText.textContent = `${getTranslation('youScored')} ${submission.score} / ${quiz.questions.length}`;
 
-      breakdownContainer.innerHTML = '';
-      quiz.questions.forEach((q, idx) => {
-        const studentAnswer = submission.answers[idx] || getTranslation('noAnswer');
-        const isCorrect = q.correct === studentAnswer;
+        breakdownContainer.innerHTML = '';
+        quiz.questions.forEach((q, idx) => {
+            const studentAnswer = submission.answers[idx] || getTranslation('noAnswer');
+            const isCorrect = q.correct === studentAnswer;
 
-        const div = document.createElement('div');
-        div.className = `p-3 rounded-lg transition-colors ${isCorrect ? 'bg-green-100' : 'bg-red-100'}`;
-        div.innerHTML = `
-          <p class="font-semibold">${idx + 1}. ${q.question}</p>
-          <p class="mt-1"><span data-i18n="yourAnswer">Your answer</span>: <span class="${isCorrect ? 'text-green-600' : 'text-red-600'} font-medium">${studentAnswer}</span></p>
-          <p class="mt-1"><span data-i18n="correctAnswer">Correct answer</span>: <span class="font-bold text-green-700">${q.correct}</span></p>
-          ${isCorrect ? '' : `<p class="mt-2 text-red-500 text-sm font-semibold" data-i18n="incorrectAnswerFeedback">Your answer was incorrect.</p>`}
-        `;
-        breakdownContainer.appendChild(div);
-      });
-      translateElements(breakdownContainer);
+            const div = document.createElement('div');
+            div.className = `p-3 rounded-lg transition-colors ${isCorrect ? 'bg-green-100' : 'bg-red-100'}`;
+            div.innerHTML = `
+              <p class="font-semibold">${idx + 1}. ${q.question}</p>
+              <p class="mt-1"><span data-i18n="yourAnswer">Your answer</span>: <span class="${isCorrect ? 'text-green-600' : 'text-red-600'} font-medium">${studentAnswer}</span></p>
+              <p class="mt-1"><span data-i18n="correctAnswer">Correct answer</span>: <span class="font-bold text-green-700">${q.correct}</span></p>
+              ${isCorrect ? '' : `<p class="mt-2 text-red-500 text-sm font-semibold" data-i18n="incorrectAnswerFeedback">Your answer was incorrect.</p>`}
+            `;
+            breakdownContainer.appendChild(div);
+        });
+        translateElements(breakdownContainer);
     };
 
-    quizForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearInterval(countdownInterval);
-      submitButton.disabled = true;
+    quizForm.addEventListener('submit', async(e) => {
+        e.preventDefault();
+        clearInterval(countdownInterval);
+        submitButton.disabled = true;
 
-      const answers = {};
-      let allAnswered = true;
+        const answers = {};
+        let allAnswered = true;
 
-      document.querySelectorAll('[data-question]').forEach(div => {
-        div.classList.remove('border', 'border-red-500');
-        div.querySelector('.warning').classList.add('hidden');
-      });
-
-      const totalQuestions = document.querySelectorAll('[data-question]').length;
-
-      for (let i = 0; i < totalQuestions; i++) {
-        const selected = quizForm.querySelector(`input[name=q${i}]:checked`);
-        if (selected) {
-          answers[i] = selected.value;
-        } else {
-          allAnswered = false;
-          const div = document.querySelector(`[data-question="${i}"]`);
-          div.classList.add('border', 'border-red-500');
-          div.querySelector('.warning').classList.remove('hidden');
-        }
-      }
-
-      if (!allAnswered) {
-        alert(getTranslation('answerAllQuestionsWarning'));
-        submitButton.disabled = false;
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ answers, autoSubmit: false })
+        document.querySelectorAll('[data-question]').forEach(div => {
+            div.classList.remove('border', 'border-red-500');
+            div.querySelector('.warning').classList.add('hidden');
         });
 
-        if (!res.ok) throw new Error('Submit failed');
-        const result = await res.json();
-        showResults(result.quiz, result.submission);
-      } catch (err) {
-        alert(getTranslation('submittingError'));
-        console.error(err);
-      }
+        const totalQuestions = document.querySelectorAll('[data-question]').length;
+
+        for (let i = 0; i < totalQuestions; i++) {
+            const selected = quizForm.querySelector(`input[name=q${i}]:checked`);
+            if (selected) {
+                answers[i] = selected.value;
+            } else {
+                allAnswered = false;
+                const div = document.querySelector(`[data-question="${i}"]`);
+                div.classList.add('border', 'border-red-500');
+                div.querySelector('.warning').classList.remove('hidden');
+            }
+        }
+
+        if (!allAnswered) {
+            alert(getTranslation('answerAllQuestionsWarning'));
+            submitButton.disabled = false;
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    answers,
+                    autoSubmit: false
+                })
+            });
+
+            if (!res.ok) throw new Error('Submit failed');
+            const result = await res.json();
+            showResults(result.quiz, result.submission);
+        } catch (err) {
+            alert(getTranslation('submittingError'));
+            console.error(err);
+        }
     });
 
     function getTranslation(key) {
-      if (typeof translations !== 'undefined' && translations[key] && translations[key][currentLang]) {
-        return translations[key][currentLang];
-      }
-      return key;
+        if (typeof translations !== 'undefined' && translations[key] && translations[key][currentLang]) {
+            return translations[key][currentLang];
+        }
+        return key;
     }
 
     languageSelect.addEventListener("change", (e) => {
-      const lang = e.target.value;
-      translatePage('student-quiz', lang);
-      document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";
+        const lang = e.target.value;
+        translatePage('student-quiz', lang);
+        document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      translatePage('student-quiz', 'en');
-      fetchQuiz();
+        translatePage('student-quiz', 'en');
+        fetchQuiz();
     });
-  </script>
+</script>
 </body>
 </html>
 
