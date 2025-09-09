@@ -1,0 +1,52 @@
+{
+  "teachersTitle": {
+    "en": "Teachers in Your School",
+    "fr": "Professeurs de votre école",
+    "es": "Maestros en tu escuela"
+  },
+  "noTeachers": {
+    "en": "No teachers found in your school.",
+    "fr": "Aucun professeur trouvé dans votre école.",
+    "es": "No se encontraron maestros en tu escuela."
+  },
+  "teacherLabel": {
+    "en": "Teacher",
+    "fr": "Professeur",
+    "es": "Maestro"
+  },
+  "subjectLabel": {
+    "en": "Subject",
+    "fr": "Matière",
+    "es": "Asignatura"
+  },
+  "notSpecified": {
+    "en": "N/A",
+    "fr": "N/A",
+    "es": "N/A"
+  },
+  "unauthorized": {
+    "en": "Unauthorized",
+    "fr": "Non autorisé",
+    "es": "No autorizado"
+  },
+  "forbidden": {
+    "en": "Forbidden",
+    "fr": "Interdit",
+    "es": "Prohibido"
+  },
+  "httpError": {
+    "en": "HTTP error!",
+    "fr": "Erreur HTTP !",
+    "es": "¡Error de HTTP!"
+  },
+  "invalidData": {
+    "en": "Invalid data from server.",
+    "fr": "Données de serveur invalides.",
+    "es": "Datos no válidos del servidor."
+  },
+  "failedLoad": {
+    "en": "Failed to load",
+    "fr": "Échec du chargement",
+    "es": "No se pudo cargar"
+  }
+}

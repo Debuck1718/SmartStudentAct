@@ -511,35 +511,36 @@
 
 
     async function handleSaveBudget() {
-      const description = document.getElementById("expense-name").value.trim();
-      const amount = parseFloat(document.getElementById("expense-amount").value.trim());
-      const date = document.getElementById("expense-date").value;
-      const category = document.getElementById("expense-category").value;
+  const description = document.getElementById("expense-name").value.trim();
+  const amount = parseFloat(document.getElementById("expense-amount").value.trim());
+  const date = document.getElementById("expense-date").value;
+  const category = document.getElementById("expense-category").value;
 
-      if (!description || isNaN(amount) || !date) {
-        return showToast("Enter all budget fields", "warning");
-      }
+  if (!description || isNaN(amount) || !date) {
+    return showToast("Enter all budget fields", "warning");
+  }
 
-      try {
-        await fetchWithAuth("/budget/add-entry", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            description,
-            amount,
-            date,
-            category
-          }),
-        });
-        showToast("Budget entry saved!", "success");
-        closeModal("budget-modal");
-        fetchBudget();
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
+  try {
+    await fetchWithAuth("/budget/add-entry", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        description,
+        amount,
+        date,
+        category,
+        type: "expense", 
+      }),
+    });
+    showToast("Budget entry saved!", "success");
+    closeModal("budget-modal");
+    fetchBudget();
+  } catch (e) {
+    showToast(e.message, "error");
+  }
+}
 
     async function fetchBudget() {
       try {

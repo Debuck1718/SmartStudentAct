@@ -6,19 +6,9 @@
   <title data-i18n="teachersTitle">Teachers List</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="./images/icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="./images/icon.png"
-    />
-    <link rel="manifest" href="/site.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -32,7 +22,6 @@
 
 <main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
 
-  
   <div class="mb-4 text-right">
     <select id="language-select" class="border border-gray-300 rounded-md p-2 text-sm">
       <option value="en">English</option>
@@ -46,18 +35,15 @@
 
   <h1 id="teachersTitle" class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8" data-i18n="teachersTitle">Teachers in Your School</h1>
 
-  
   <div id="loading-skeleton" class="space-y-4">
     <div class="skeleton w-full h-20"></div>
     <div class="skeleton w-full h-20"></div>
     <div class="skeleton w-full h-20"></div>
   </div>
 
-  
   <div id="error-message" class="text-center text-red-500 font-medium py-4 hidden" role="alert"></div>
   <div id="no-teachers-message" class="text-center text-gray-500 font-medium py-4 hidden" data-i18n="noTeachers">No teachers found in your school.</div>
 
- 
   <div id="teachers-list" class="space-y-4"></div>
 </main>
 
@@ -71,27 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const langSelect = document.getElementById('language-select');
 
   let currentLang = 'en';
+  let translations = {}; // Initialize translations here
 
-  function translateUI() {
-    translatePage('teachers-list', currentLang);
-  }
-
-  langSelect.addEventListener('change', e => {
-    currentLang = e.target.value;
-    translateUI();
-  });
-
-  const renderTeacherItem = (teacher) => {
+  function renderTeacherItem(teacher) {
     const card = document.createElement('div');
     card.classList.add('bg-white', 'p-4', 'rounded-lg', 'border', 'border-gray-200', 'shadow-sm', 'hover:shadow-md', 'transition-shadow');
-    card.setAttribute('aria-label', `${translations.teacherLabel[currentLang]} ${teacher.firstName} ${teacher.lastName}, ${translations.subjectLabel[currentLang]}: ${teacher.teacherSubject}`);
+    card.setAttribute('aria-label', `${translations.teacherLabel?.[currentLang] || 'Teacher'} ${teacher.firstName} ${teacher.lastName}, ${translations.subjectLabel?.[currentLang] || 'Subject'}: ${teacher.teacherSubject}`);
 
     const nameEl = document.createElement('p');
     nameEl.textContent = `${teacher.firstName} ${teacher.lastName}`;
     nameEl.classList.add('text-lg', 'font-semibold', 'text-gray-800');
 
     const subjectEl = document.createElement('p');
-    subjectEl.textContent = `${translations.subjectLabel[currentLang]}: ${teacher.teacherSubject || translations.notSpecified[currentLang]}`;
+    subjectEl.textContent = `${translations.subjectLabel?.[currentLang] || 'Subject'}: ${teacher.teacherSubject || translations.notSpecified?.[currentLang] || 'N/A'}`;
     subjectEl.classList.add('text-sm', 'text-gray-600', 'mt-1');
 
     const emailEl = document.createElement('a');
@@ -104,6 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
     card.appendChild(emailEl);
     teachersList.appendChild(card);
   };
+
+  async function translateUI() {
+    try {
+      translations = await translatePage('teachers-list', currentLang);
+    } catch (err) {
+      console.error('Error in translateUI:', err);
+    }
+  }
 
   const fetchTeachers = async () => {
     teachersList.innerHTML = '';
@@ -119,9 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (!res.ok) {
-        if (res.status === 401) throw new Error(translations.unauthorized[currentLang]);
-        if (res.status === 403) throw new Error(translations.forbidden[currentLang]);
-        throw new Error(`${translations.httpError[currentLang]}: ${res.status}`);
+        if (res.status === 401) throw new Error(translations.unauthorized?.[currentLang] || 'Unauthorized');
+        if (res.status === 403) throw new Error(translations.forbidden?.[currentLang] || 'Forbidden');
+        throw new Error(`${translations.httpError?.[currentLang] || 'HTTP error'} status: ${res.status}`);
       }
 
       const data = await res.json();
@@ -133,19 +119,28 @@ document.addEventListener('DOMContentLoaded', () => {
           data.teachers.forEach(renderTeacherItem);
         }
       } else {
-        throw new Error(translations.invalidData[currentLang]);
+        throw new Error(translations.invalidData?.[currentLang] || 'Invalid data from server.');
       }
     } catch (err) {
       console.error('Failed to fetch teachers:', err);
-      errorMessage.textContent = `${translations.failedLoad[currentLang]}: ${err.message}`;
+      errorMessage.textContent = `${translations.failedLoad?.[currentLang] || 'Failed to load'}: ${err.message}`;
       errorMessage.classList.remove('hidden');
     } finally {
       loadingSkeleton.classList.add('hidden');
     }
   };
 
-  translateUI();
-  fetchTeachers();
+  langSelect.addEventListener('change', async e => {
+    currentLang = e.target.value;
+    await translateUI();
+    fetchTeachers();
+  });
+
+  
+  (async () => {
+    await translateUI();
+    fetchTeachers();
+  })();
 });
 </script>
 </body>

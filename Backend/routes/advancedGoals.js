@@ -382,7 +382,7 @@ router.post('/goals', authenticateJWT, async (req, res) => {
 
         let studentGoals = await StudentRewards.findOne({ studentId: userId });
         if (!studentGoals) {
-            studentGoals = new StudentRewards({ studentId: userId, name: req.user.firstname });
+            studentGoals = new StudentRewards({ studentId: userId });
         }
 
         studentGoals.goals.push(value);
