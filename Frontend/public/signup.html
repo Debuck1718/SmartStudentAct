@@ -10,92 +10,17 @@
     <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-EWMR745QHX');
-</script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      gtag('config', 'G-EWMR745QHX');
+    </script>
     <style>
       body {
         font-family: "Inter", sans-serif;
-        background-color: #f4f4f4;
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-      }
-      .container {
-        width: 100%;
-        max-width: 480px;
-      }
-      .form-section {
-        display: flex;
-        flex-direction: column;
-      }
-      .input,
-      .picker {
-        background-color: #fff;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        border-width: 1px;
-        border-color: #ddd;
-        font-size: 16px;
-        width: 100%;
-      }
-      .input.error,
-      .picker.error {
-        border-color: red;
-      }
-      .error-text {
-        color: red;
-        font-size: 0.875rem;
-        margin-bottom: 10px;
-        margin-left: 4px;
-      }
-      .submit-button {
-        background-color: #28a745;
-        padding: 15px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 55px;
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out;
-        border: none;
-        width: 100%;
-        font-weight: bold;
-        color: #fff;
-        font-size: 18px;
-        margin-top: 15px;
-        margin-bottom: 10px;
-      }
-      .submit-button:hover:not(:disabled) {
-        background-color: #218838;
-      }
-      .submit-button:disabled {
-        background-color: #94d3a2;
-        cursor: not-allowed;
-      }
-      .picker-container {
-        background-color: #fff;
-        border-radius: 8px;
-        border-width: 1px;
-        border-color: #ddd;
-        margin-bottom: 10px;
-        overflow: hidden;
-        width: 100%;
-      }
-      .picker {
-        width: 100%;
-        padding: 12px;
-        border: none;
-        background-color: transparent;
-        font-size: 16px;
       }
       .spinner {
         border: 4px solid rgba(255, 255, 255, 0.3);
@@ -113,154 +38,104 @@
           transform: rotate(360deg);
         }
       }
-      .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-      }
-      .modal-content {
-        background-color: #fff;
-        border-radius: 8px;
-        padding: 20px;
-        width: 90%;
-        max-width: 500px;
-        max-height: 80vh;
-        display: flex;
-        flex-direction: column;
-      }
-      .modal-body {
-        overflow-y: auto;
-        margin-bottom: 20px;
-      }
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        border: 0;
-      }
-      #messageBox {
-        transition: opacity 0.3s;
-      }
-      .hidden {
-        display: none !important;
-      }
-      .terms-link {
-        color: #2563eb;
-        text-decoration: underline;
-        cursor: pointer;
-        margin-bottom: 10px;
-      }
     </style>
   </head>
-  <body>
-<div class="flex justify-end mb-4">
-  <select id="languageSelect" class="picker w-32">
-    <option value="en">English</option>
-    <option value="fr">Français</option>
-    <option value="es">Español</option>
-    <option value="tr">Türkçe</option>
-    <option value="ar">عربي</option>
-    <option value="ru">Русский</option>
-    <option value="pt">Português</option>
-    <option value="de">Deutsch</option>
-  </select>
-</div>
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="container bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg relative">
+      <div class="flex justify-end mb-4 absolute top-4 right-4">
+        <select id="languageSelect" class="bg-gray-100 text-gray-800 rounded-lg p-2 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+          <option value="tr">Türkçe</option>
+          <option value="ar">عربي</option>
+          <option value="ru">Русский</option>
+          <option value="pt">Português</option>
+          <option value="de">Deutsch</option>
+        </select>
+      </div>
 
-<h1 class="text-center text-2xl font-bold mb-6 text-gray-800" data-i18n="pageTitle">Create Your Account</h1>
+      <h1 class="text-center text-3xl font-extrabold text-gray-900 mb-6 mt-8" data-i18n="pageTitle">Create Your Account</h1>
 
-<div id="signupFormSection" class="form-section">
-  <div class="flex flex-col md:flex-row gap-2 mb-2">
-    <input
-      id="firstnameInput"
-      type="text"
-      placeholder=""
-      class="input flex-1"
-      data-i18n-placeholder="firstName"
-    />
-    <input
-      id="lastnameInput"
-      type="text"
-      placeholder=""
-      class="input flex-1"
-      data-i18n-placeholder="lastName"
-    />
-  </div>
-  <p id="firstnameError" class="error-text hidden"></p>
-  <p id="lastnameError" class="error-text hidden"></p>
+      <div id="signupFormSection" class="flex flex-col">
+        <div class="flex flex-col md:flex-row gap-4 mb-2">
+          <input
+            id="firstnameInput"
+            type="text"
+            placeholder=""
+            class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            data-i18n-placeholder="firstName"
+          />
+          <input
+            id="lastnameInput"
+            type="text"
+            placeholder=""
+            class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            data-i18n-placeholder="lastName"
+          />
+        </div>
+        <p id="firstnameError" class="text-red-500 text-sm mb-2 hidden"></p>
+        <p id="lastnameError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-  <input
-    id="emailInput"
-    type="email"
-    placeholder=""
-    class="input mb-2"
-    data-i18n-placeholder="email"
-  />
-  <p id="emailError" class="error-text hidden"></p>
+        <input
+          id="emailInput"
+          type="email"
+          placeholder=""
+          class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+          data-i18n-placeholder="email"
+        />
+        <p id="emailError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-  <input
-    id="phoneInput"
-    type="tel"
-    placeholder=""
-    class="input mb-2"
-    data-i18n-placeholder="phone"
-  />
-  <p id="phoneError" class="error-text hidden"></p>
+        <input
+          id="phoneInput"
+          type="tel"
+          placeholder=""
+          class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+          data-i18n-placeholder="phone"
+        />
+        <p id="phoneError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-  <input
-    id="passwordInput"
-    type="password"
-    placeholder=""
-    class="input mb-2"
-    data-i18n-placeholder="password"
-  />
-  <p id="passwordError" class="error-text hidden"></p>
+        <input
+          id="passwordInput"
+          type="password"
+          placeholder=""
+          class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+          data-i18n-placeholder="password"
+        />
+        <p id="passwordError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-  <input
-    id="confirmPasswordInput"
-    type="password"
-    placeholder=""
-    class="input mb-2"
-    data-i18n-placeholder="confirmPassword"
-  />
-  <p id="confirmPasswordError" class="error-text hidden"></p>
+        <input
+          id="confirmPasswordInput"
+          type="password"
+          placeholder=""
+          class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+          data-i18n-placeholder="confirmPassword"
+        />
+        <p id="confirmPasswordError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-  <div class="picker-container">
-    <select id="occupationSelect" class="picker" data-i18n-placeholder="occupation">
-      <option value="">Select Occupation</option>
-      <option value="student" data-i18n="student">Student</option>
-      <option value="teacher" data-i18n="teacher">Teacher</option>
-    </select>
-  </div>
-  <p id="occupationError" class="error-text hidden"></p>
+        <div class="w-full p-0 rounded-lg border border-gray-300 overflow-hidden mb-2 focus-within:ring-2 focus-within:ring-blue-500">
+          <select id="occupationSelect" class="w-full bg-white p-3 rounded-lg focus:outline-none" data-i18n-placeholder="occupation">
+            <option value="">Select Occupation</option>
+            <option value="student" data-i18n="student">Student</option>
+            <option value="teacher" data-i18n="teacher">Teacher</option>
+          </select>
+        </div>
+        <p id="occupationError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-  <div id="schoolNameField" class="input-container hidden">
-    <input
-      id="schoolNameInput"
-      type="text"
-      placeholder=""
-      class="input"
-      data-i18n-placeholder="schoolName"
-    />
-  </div>
-  <p id="schoolNameError" class="error-text hidden"></p>
+        <div id="schoolNameField" class="w-full hidden">
+          <input
+            id="schoolNameInput"
+            type="text"
+            placeholder=""
+            class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+            data-i18n-placeholder="schoolName"
+          />
+        </div>
+        <p id="schoolNameError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-
-        <div id="schoolCountryField" class="picker-container hidden">
-          <label class="sr-only" for="schoolCountrySelect"
-            >School Country</label
-          >
-          <select id="schoolCountrySelect" class="picker">
+        <div id="schoolCountryField" class="w-full hidden">
+          <label class="sr-only" for="schoolCountrySelect">School Country</label>
+          <select id="schoolCountrySelect" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-2">
             <option value="">Select Country</option>
             <option value="AF">Afghanistan</option>
             <option value="AX">Aland Islands</option>
@@ -511,37 +386,39 @@
             <option value="ZW">Zimbabwe</option>
           </select>
         </div>
-        <p id="schoolCountryError" class="error-text hidden"></p>
+        <p id="schoolCountryError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-        <div id="educationLevelField" class="picker-container hidden">
-    <select id="educationLevelSelect" class="picker" data-i18n-placeholder="educationLevel">
-      <option value="">Select Level</option>
-      <option value="junior">Junior High</option>
-      <option value="high">Senior High</option>
-      <option value="university">University</option>
-    </select>
-  </div>
-  <p id="educationLevelError" class="error-text hidden"></p>
+        <div id="educationLevelField" class="w-full hidden">
+          <select id="educationLevelSelect" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-2" data-i18n-placeholder="educationLevel">
+            <option value="">Select Level</option>
+            <option value="junior">Junior High</option>
+            <option value="high">Senior High</option>
+            <option value="university">University</option>
+          </select>
+        </div>
+        <p id="educationLevelError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-  <div id="gradeField" class="picker-container hidden">
-    <select id="gradeSelect" class="picker"></select>
-  </div>
-  <p id="gradeError" class="error-text hidden"></p>
+        <div id="gradeField" class="w-full hidden">
+          <select id="gradeSelect" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-2">
+            <option value="">Select Grade</option>
+          </select>
+        </div>
+        <p id="gradeError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-  <div id="programField" class="input-container hidden">
-    <input
-      id="programInput"
-      type="text"
-      placeholder=""
-      class="input"
-      data-i18n-placeholder="program"
-    />
-    <p id="programError" class="error-text hidden"></p>
-  </div>
+        <div id="programField" class="w-full hidden">
+          <input
+            id="programInput"
+            type="text"
+            placeholder=""
+            class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+            data-i18n-placeholder="program"
+          />
+          <p id="programError" class="text-red-500 text-sm mb-2 hidden"></p>
+        </div>
 
-        <div id="teacherGradeField" class="picker-container hidden">
+        <div id="teacherGradeField" class="w-full hidden">
           <label class="sr-only" for="teacherGradeSelect">Grade/Level</label>
-          <select id="teacherGradeSelect" class="picker">
+          <select id="teacherGradeSelect" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-2">
             <option value="">Select Grade/Level</option>
             <optgroup label="Junior High">
               <option value="5">Grade 5</option>
@@ -563,22 +440,22 @@
             </optgroup>
           </select>
         </div>
-        <p id="teacherGradeError" class="error-text hidden"></p>
+        <p id="teacherGradeError" class="text-red-500 text-sm mb-2 hidden"></p>
 
-        <div id="teacherSubjectField" class="input-container hidden">
+        <div id="teacherSubjectField" class="w-full hidden">
           <label class="sr-only" for="teacherSubjectInput">Subject/Program</label>
           <input
             id="teacherSubjectInput"
             type="text"
             placeholder="Subject"
-            class="input"
+            class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
           />
         </div>
-        <p id="teacherSubjectError" class="error-text hidden"></p>
+        <p id="teacherSubjectError" class="text-red-500 text-sm mb-2 hidden"></p>
 
         <button
           id="requestOtpButton"
-          class="submit-button"
+          class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center mt-2"
           type="button"
           disabled
         >
@@ -586,49 +463,54 @@
         </button>
       </div>
 
-      <div id="otpSection" class="form-section hidden">
+      <div id="otpSection" class="flex flex-col hidden">
         <label class="sr-only" for="otpInput">Enter OTP</label>
         <input
           id="otpInput"
           type="text"
           placeholder="Enter OTP"
-          class="input"
+          class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
           inputmode="numeric"
           pattern="[0-9]*"
         />
-        <p id="otpError" class="error-text hidden"></p>
-        <button id="verifyOtpButton" class="submit-button" type="button">
+        <p id="otpError" class="text-red-500 text-sm mb-2 hidden"></p>
+        <button id="verifyOtpButton" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-300 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center">
           Verify OTP
         </button>
       </div>
 
       <p class="text-center text-sm mt-4 text-gray-600">
         By signing up, you agree to our
-        <span id="openTermsLink" class="terms-link">Terms & Conditions</span>.
+        <span id="openTermsLink" class="text-blue-600 underline cursor-pointer">Terms & Conditions</span>.
       </p>
 
       <p id="messageText" class="text-center text-sm font-medium opacity-0"></p>
       <a
         href="./login.html"
         id="loginLink"
-        class="text-center text-blue-600 mt-5 block"
+        class="text-center text-blue-600 mt-5 block hover:underline"
       >
         Already have an account? Login
       </a>
     </div>
 
-    <div id="modalOverlay" class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-body">
-          <p id="modalMessage"></p>
+    <div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-sm">
+        <div class="modal-body overflow-y-auto mb-4">
+          <p id="modalMessage" class="text-center text-gray-800"></p>
+        </div>
+        <div class="flex justify-end">
+          <button id="closeModalButton" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+            Close
+          </button>
         </div>
       </div>
     </div>
 
-    <div id="termsModal" class="modal-overlay">
-      <div class="modal-content">
-        <h2 class="text-xl font-bold mb-4">Terms & Conditions</h2>
-        <div class="modal-body text-sm text-gray-700">
+    <div id="termsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+        <h2 class="text-2xl font-bold mb-4 text-gray-900">Terms & Conditions</h2>
+        <div class="modal-body text-sm text-gray-700 overflow-y-auto mb-4">
           <p class="mb-2">
             By using SmartStudent, you agree to provide accurate and truthful
             information. Falsifying registration may result in a permanent ban.
@@ -642,8 +524,8 @@
           </p>
         </div>
         <button
-          id="closeModalButton"
-          class="bg-gray-200 text-gray-800 p-3 rounded-lg font-bold"
+          id="closeTermsModalButton"
+          class="bg-gray-200 text-gray-800 p-3 rounded-lg font-bold hover:bg-gray-300 transition-colors duration-200"
         >
           Close
         </button>
@@ -652,7 +534,7 @@
 
     <div
       id="messageAlertBox"
-      class="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-xl hidden transition-opacity duration-300 z-[1001]"
+      class="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-xl hidden transition-opacity duration-300 z-50"
     >
       <span id="messageAlertText"></span>
       <button
@@ -662,316 +544,306 @@
         &times;
       </button>
     </div>
-<script>
-const termsModal = document.getElementById("termsModal");
-const openTermsLink = document.getElementById("openTermsLink");
-const closeModalButton = document.getElementById("closeModalButton");
-const signupFormSection = document.getElementById("signupFormSection");
-const otpSection = document.getElementById("otpSection");
-const firstnameInput = document.getElementById("firstnameInput");
-const lastnameInput = document.getElementById("lastnameInput");
-const emailInput = document.getElementById("emailInput");
-const phoneInput = document.getElementById("phoneInput");
-const passwordInput = document.getElementById("passwordInput");
-const confirmPasswordInput = document.getElementById("confirmPasswordInput");
-const occupationSelect = document.getElementById("occupationSelect");
-const educationLevelSelect = document.getElementById("educationLevelSelect");
-const schoolNameInput = document.getElementById("schoolNameInput");
-const schoolCountrySelect = document.getElementById("schoolCountrySelect");
-const gradeSelect = document.getElementById("gradeSelect");
-const teacherGradeSelect = document.getElementById("teacherGradeSelect");
-const teacherSubjectInput = document.getElementById("teacherSubjectInput");
-const schoolNameField = document.getElementById("schoolNameField");
-const schoolCountryField = document.getElementById("schoolCountryField");
-const educationLevelField = document.getElementById("educationLevelField");
-const gradeField = document.getElementById("gradeField");
-const teacherGradeField = document.getElementById("teacherGradeField");
-const teacherSubjectField = document.getElementById("teacherSubjectField");
-const programField = document.getElementById("programField");
-const programInput = document.getElementById("programInput");
-const requestOtpButton = document.getElementById("requestOtpButton");
-const verifyOtpButton = document.getElementById("verifyOtpButton");
-const otpInput = document.getElementById("otpInput");
-const messageAlertBox = document.getElementById("messageAlertBox");
-const messageAlertText = document.getElementById("messageAlertText");
-
-const API_REQUEST_OTP = "https://api.smartstudentact.com/users/signup-otp";
-const API_VERIFY_OTP = "https://api.smartstudentact.com/users/verify-otp";
-
-let userData = {};
-let isSubmitting = false;
-
-function showMessage(message, type = "error") {
-  messageAlertText.textContent = message;
-  messageAlertBox.classList.remove("hidden","bg-red-500","bg-green-500");
-  messageAlertBox.classList.add(type === "error" ? "bg-red-500" : "bg-green-500");
-  messageAlertBox.classList.remove("hidden");
-}
-
-function setLoadingState(button, isLoading, originalText) {
-  isSubmitting = isLoading;
-  if (isLoading) {
-    button.disabled = true;
-    button.innerHTML = '<span class="spinner"></span>';
-  } else {
-    button.disabled = false;
-    button.innerHTML = originalText;
-  }
-}
-
-function validateForm() {
-  const errors = {};
-  const form = {
-    firstname: firstnameInput.value.trim(),
-    lastname: lastnameInput.value.trim(),
-    email: emailInput.value.trim(),
-    phone: phoneInput.value.trim(),
-    password: passwordInput.value,
-    confirmPassword: confirmPasswordInput.value,
-    occupation: occupationSelect.value,
-    educationLevel: educationLevelSelect.value,
-    schoolName: schoolNameInput.value.trim(),
-    schoolCountry: schoolCountrySelect.value,
-    grade: gradeSelect.value,
-    teacherGrade: teacherGradeSelect.value,
-    teacherSubject: teacherSubjectInput.value.trim(),
-    program: programInput ? programInput.value.trim() : "", 
-  };
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-  const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-  if (!form.firstname) errors.firstname = "First name is required.";
-  if (!form.lastname) errors.lastname = "Last name is required.";
-  if (!emailRegex.test(form.email)) errors.email = "Valid email required.";
-  if (!phoneRegex.test(form.phone)) errors.phone = "Valid phone required.";
-  if (!passRegex.test(form.password)) errors.password = "Password must be strong.";
-  if (form.password !== form.confirmPassword) errors.confirmPassword = "Passwords do not match.";
-  if (!form.occupation) errors.occupation = "Occupation is required.";
-
-  if (!form.schoolName) errors.schoolName = "School name required.";
-  if (!form.schoolCountry) errors.schoolCountry = "School country required.";
-
-if (form.occupation === "student") {
-    if (!form.educationLevel) errors.educationLevel = "Education level required.";
-
-    const gradeVal = Number(form.grade);
-    if ((form.educationLevel === "high" && gradeVal >= 10 && gradeVal <= 12) ||
-        (form.educationLevel === "university" && gradeVal >= 100 && gradeVal <= 400)) {
-      if (!form.program) errors.program = "Program required.";
-    }
-  } else if (form.occupation === "teacher") {
-    if (!form.teacherGrade) errors.teacherGrade = "Grade/Level required.";
-    if (!form.teacherSubject) errors.teacherSubject = "Subject required.";
-  }
-
-  return { errors, data: form };
-}
-
-function updateUI() {
-  const { errors } = validateForm();
-  const inputs = {
-    firstname: firstnameInput,
-    lastname: lastnameInput,
-    email: emailInput,
-    phone: phoneInput,
-    password: passwordInput,
-    confirmPassword: confirmPasswordInput,
-    occupation: occupationSelect,
-    educationLevel: educationLevelSelect,
-    schoolName: schoolNameInput,
-    schoolCountry: schoolCountrySelect,
-    grade: gradeSelect,
-    teacherGrade: teacherGradeSelect,
-    teacherSubject: teacherSubjectInput,
-  };
-
-  Object.keys(inputs).forEach(key => {
-    const input = inputs[key];
-    const errorEl = document.getElementById(`${key}Error`);
-    if (errorEl) {
-      if (errors[key]) {
-        input.classList.add("error");
-        errorEl.textContent = errors[key];
-        errorEl.classList.remove("hidden");
-      } else {
-        input.classList.remove("error");
-        errorEl.classList.add("hidden");
+    <script>
+      const termsModal = document.getElementById("termsModal");
+      const openTermsLink = document.getElementById("openTermsLink");
+      const closeTermsModalButton = document.getElementById("closeTermsModalButton");
+      const signupFormSection = document.getElementById("signupFormSection");
+      const otpSection = document.getElementById("otpSection");
+      const firstnameInput = document.getElementById("firstnameInput");
+      const lastnameInput = document.getElementById("lastnameInput");
+      const emailInput = document.getElementById("emailInput");
+      const phoneInput = document.getElementById("phoneInput");
+      const passwordInput = document.getElementById("passwordInput");
+      const confirmPasswordInput = document.getElementById("confirmPasswordInput");
+      const occupationSelect = document.getElementById("occupationSelect");
+      const educationLevelSelect = document.getElementById("educationLevelSelect");
+      const schoolNameInput = document.getElementById("schoolNameInput");
+      const schoolCountrySelect = document.getElementById("schoolCountrySelect");
+      const gradeSelect = document.getElementById("gradeSelect");
+      const teacherGradeSelect = document.getElementById("teacherGradeSelect");
+      const teacherSubjectInput = document.getElementById("teacherSubjectInput");
+      const schoolNameField = document.getElementById("schoolNameField");
+      const schoolCountryField = document.getElementById("schoolCountryField");
+      const educationLevelField = document.getElementById("educationLevelField");
+      const gradeField = document.getElementById("gradeField");
+      const teacherGradeField = document.getElementById("teacherGradeField");
+      const teacherSubjectField = document.getElementById("teacherSubjectField");
+      const programField = document.getElementById("programField");
+      const programInput = document.getElementById("programInput");
+      const requestOtpButton = document.getElementById("requestOtpButton");
+      const verifyOtpButton = document.getElementById("verifyOtpButton");
+      const otpInput = document.getElementById("otpInput");
+      const messageAlertBox = document.getElementById("messageAlertBox");
+      const messageAlertText = document.getElementById("messageAlertText");
+      const modalOverlay = document.getElementById("modalOverlay");
+      const modalMessage = document.getElementById("modalMessage");
+      const closeModalButton = document.getElementById("closeModalButton");
+    
+      const API_REQUEST_OTP = "https://api.smartstudentact.com/users/signup-otp";
+      const API_VERIFY_OTP = "https://api.smartstudentact.com/users/verify-otp";
+    
+      let userData = {};
+      let isSubmitting = false;
+    
+      function showMessage(message, type = "error") {
+        messageAlertText.textContent = message;
+        messageAlertBox.classList.remove("hidden", "bg-red-500", "bg-green-500");
+        messageAlertBox.classList.add(type === "error" ? "bg-red-500" : "bg-green-500");
+        messageAlertBox.classList.remove("hidden");
+        setTimeout(() => {
+          messageAlertBox.classList.add("hidden");
+        }, 5000);
       }
-    }
-  });
-
-  requestOtpButton.disabled = Object.keys(errors).length > 0;
-}
-
-educationLevelSelect.addEventListener("change", () => {
-  populateGradeOptions();
-
-  const gradeVal = Number(gradeSelect.value);
-  const levelVal = Number(gradeSelect.value); 
-  if ((educationLevelSelect.value === "high" && gradeVal >= 10 && gradeVal <= 12) ||
-      (educationLevelSelect.value === "university" && levelVal >= 100 && levelVal <= 400)) {
-    if(programField) programField.classList.remove("hidden"); 
-  } else if(programField) {
-    programField.classList.add("hidden");
-    if(programInput) programInput.value = ""; 
-  }
-
-  updateUI();
-});
-
-occupationSelect.addEventListener("change", () => {
-  schoolNameField.classList.add("hidden");
-  schoolCountryField.classList.add("hidden");
-  educationLevelField.classList.add("hidden");
-  gradeField.classList.add("hidden");
-  teacherGradeField.classList.add("hidden");
-  teacherSubjectField.classList.add("hidden");
-  if(programField) programField.classList.add("hidden"); 
-
-  if (occupationSelect.value === "student") {
-    schoolNameField.classList.remove("hidden");
-    schoolCountryField.classList.remove("hidden");
-    educationLevelField.classList.remove("hidden");
-    gradeField.classList.remove("hidden");
-
-    const gradeVal = Number(gradeSelect.value);
-    const levelVal = Number(gradeSelect.value);
-    if ((educationLevelSelect.value === "high" && gradeVal >= 10 && gradeVal <= 12) ||
-        (educationLevelSelect.value === "university" && levelVal >= 100 && levelVal <= 400)) {
-      if(programField) programField.classList.remove("hidden"); 
-    }
-  } else if (occupationSelect.value === "teacher") {
-    schoolNameField.classList.remove("hidden");
-    schoolCountryField.classList.remove("hidden");
-    teacherGradeField.classList.remove("hidden");
-    teacherSubjectField.classList.remove("hidden");
-  }
-
-  updateUI();
-});
-
-
-const formInputs = [
-  firstnameInput, lastnameInput, emailInput, phoneInput,
-  passwordInput, confirmPasswordInput, occupationSelect,
-  educationLevelSelect, schoolNameInput, schoolCountrySelect,
-  gradeSelect, teacherGradeSelect, teacherSubjectInput
-];
-
-if(programInput) formInputs.push(programInput);
-
-formInputs.forEach(input => input.addEventListener("input", updateUI));
-formInputs.forEach(input => input.addEventListener("blur", updateUI));
-
-async function requestOTP(event) {
-  event.preventDefault();
-  const { data } = validateForm();
-  userData = { ...data };
-
-  try {
-    const res = await fetch(API_REQUEST_OTP, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(userData)
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.message || "Failed to send OTP");
-
-    userData.otpToken = result.otpToken; 
-    alert("✅ OTP sent to your email. Please check and verify.");
-    otpSection.classList.remove("hidden");
-    signupFormSection.classList.add("hidden");
-  } catch (err) {
-    alert("❌ " + err.message);
-  }
-}
-
-async function verifyOTP(event) {
-  event.preventDefault();
-  const otpCode = otpInput.value.trim();
-  try {
-    const res = await fetch(API_VERIFY_OTP, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        email: userData.email,
-        password: userData.password,
-        code: otpCode,
-        otpToken: userData.otpToken
-      })
-    });
-
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.message || "OTP verification failed");
-
-    alert("🎉 Account created successfully! Redirecting...");
-    if(result.redirectUrl) window.location.href = result.redirectUrl;
-    else window.location.href = "/login.html";
-  } catch (err) {
-    alert("❌ " + err.message);
-  }
-}
-
-requestOtpButton.addEventListener("click", requestOTP);
-verifyOtpButton.addEventListener("click", verifyOTP);
-
-
-openTermsLink.addEventListener("click", e => {
-  e.preventDefault();
-  termsModal.classList.remove("hidden");
-  termsModal.classList.add("flex");
-});
-closeModalButton.addEventListener("click", () => {
-  termsModal.classList.add("hidden");
-  termsModal.classList.remove("flex");
-});
-termsModal.addEventListener("click", e => {
-  if (e.target === termsModal) {
-    termsModal.classList.add("hidden");
-    termsModal.classList.remove("flex");
-  }
-});
-
-
-function populateGradeOptions() {
-  gradeSelect.innerHTML = '<option value="">Select Grade</option>';
-  const level = educationLevelSelect.value;
-  if(level === "junior") for(let i=7;i<=9;i++) gradeSelect.innerHTML += `<option value="${i}">Grade ${i}</option>`;
-  else if(level === "high") for(let i=10;i<=12;i++) gradeSelect.innerHTML += `<option value="${i}">Grade ${i}</option>`;
-  else if(level === "university") for(let i=100;i<=400;i+=100) gradeSelect.innerHTML += `<option value="${i}">Level ${i}</option>`;
-}
-
-const languageSelect = document.getElementById("languageSelect");
-  languageSelect.addEventListener("change", () => loadTranslations(languageSelect.value));
-
-  async function loadTranslations(lang) {
-    try {
-      const res = await fetch(`/locales/signup.json`);
-      const translations = await res.json();
-
-      document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        if (translations[key] && translations[key][lang]) {
-          el.textContent = translations[key][lang];
+    
+      function setLoadingState(button, isLoading, originalText) {
+        isSubmitting = isLoading;
+        if (isLoading) {
+          button.disabled = true;
+          button.innerHTML = '<span class="spinner"></span>';
+        } else {
+          button.disabled = false;
+          button.innerHTML = originalText;
         }
-      });
-
-      document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-        const key = el.getAttribute("data-i18n-placeholder");
-        if (translations[key] && translations[key][lang]) {
-          el.placeholder = translations[key][lang];
+      }
+    
+      function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+          errorElement.textContent = message;
+          errorElement.classList.remove("hidden");
         }
+      }
+    
+      function clearError(elementId) {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+          errorElement.textContent = "";
+          errorElement.classList.add("hidden");
+        }
+      }
+    
+      function getFormData() {
+        return {
+          firstname: firstnameInput.value.trim(),
+          lastname: lastnameInput.value.trim(),
+          email: emailInput.value.trim(),
+          phone: phoneInput.value.trim(),
+          password: passwordInput.value,
+          confirmPassword: confirmPasswordInput.value,
+          occupation: occupationSelect.value,
+          educationLevel: educationLevelSelect.value,
+          schoolName: schoolNameInput.value.trim(),
+          schoolCountry: schoolCountrySelect.value,
+          grade: gradeSelect.value,
+          teacherGrade: teacherGradeSelect.value,
+          teacherSubject: teacherSubjectInput.value.trim(),
+          program: programInput.value.trim(),
+        };
+      }
+    
+      function validateForm(formData) {
+        const errors = {};
+        clearAllErrors();
+    
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    
+        if (!formData.firstname) errors.firstname = "First name is required.";
+        if (!formData.lastname) errors.lastname = "Last name is required.";
+        if (!emailRegex.test(formData.email)) errors.email = "Valid email required.";
+        if (!phoneRegex.test(formData.phone)) errors.phone = "Valid phone number required (e.g., +15551234567).";
+        if (!passRegex.test(formData.password)) errors.password = "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
+        if (formData.password !== formData.confirmPassword) errors.confirmPassword = "Passwords do not match.";
+        if (!formData.occupation) errors.occupation = "Occupation is required.";
+        if (!formData.schoolName) errors.schoolName = "School name is required.";
+        if (!formData.schoolCountry) errors.schoolCountry = "School country is required.";
+    
+        if (formData.occupation === "student") {
+          if (!formData.educationLevel) errors.educationLevel = "Education level is required.";
+          if (!formData.grade) errors.grade = "Grade is required.";
+          const gradeVal = Number(formData.grade);
+          if (formData.educationLevel !== "junior" && !formData.program) {
+            errors.program = "Program is required for this level.";
+          }
+        } else if (formData.occupation === "teacher") {
+          if (!formData.teacherGrade) errors.teacherGrade = "Grade/Level is required.";
+          if (!formData.teacherSubject) errors.teacherSubject = "Subject is required.";
+        }
+    
+        return errors;
+      }
+    
+      function clearAllErrors() {
+        document.querySelectorAll("[id$='Error']").forEach(el => {
+          el.classList.add("hidden");
+        });
+      }
+    
+      function updateGradeSelect() {
+        const level = educationLevelSelect.value;
+        gradeSelect.innerHTML = '<option value="">Select Grade</option>';
+        if (level === "junior") {
+          for (let i = 5; i <= 9; i++) {
+            const option = document.createElement("option");
+            option.value = i;
+            option.textContent = `Grade ${i}`;
+            gradeSelect.appendChild(option);
+          }
+        } else if (level === "high") {
+          for (let i = 10; i <= 12; i++) {
+            const option = document.createElement("option");
+            option.value = i;
+            option.textContent = `Grade ${i}`;
+            gradeSelect.appendChild(option);
+          }
+        } else if (level === "university") {
+          for (let i = 100; i <= 400; i += 100) {
+            const option = document.createElement("option");
+            option.value = i;
+            option.textContent = `Level ${i}`;
+            gradeSelect.appendChild(option);
+          }
+        }
+      }
+    
+      function updateUI() {
+        const occupation = occupationSelect.value;
+        const educationLevel = educationLevelSelect.value;
+    
+        // Show/hide fields based on occupation
+        const isStudent = occupation === "student";
+        const isTeacher = occupation === "teacher";
+    
+        schoolNameField.classList.toggle("hidden", !isStudent && !isTeacher);
+        schoolCountryField.classList.toggle("hidden", !isStudent && !isTeacher);
+        educationLevelField.classList.toggle("hidden", !isStudent);
+        gradeField.classList.toggle("hidden", !isStudent);
+        teacherGradeField.classList.toggle("hidden", !isTeacher);
+        teacherSubjectField.classList.toggle("hidden", !isTeacher);
+    
+        // Show/hide program field for students
+        programField.classList.toggle("hidden", !(isStudent && (educationLevel === "high" || educationLevel === "university")));
+    
+        // Update grade select options
+        if (isStudent) {
+          updateGradeSelect();
+        }
+      }
+    
+      function checkAndToggleRequestButton() {
+        const formData = getFormData();
+        const errors = validateForm(formData);
+        const hasErrors = Object.keys(errors).length > 0;
+        requestOtpButton.disabled = hasErrors;
+      }
+    
+      function handleFormInput() {
+        updateUI();
+        checkAndToggleRequestButton();
+      }
+    
+      async function handleRequestOtp() {
+        const originalText = "Request OTP";
+        setLoadingState(requestOtpButton, true, originalText);
+        
+        const formData = getFormData();
+        const errors = validateForm(formData);
+    
+        if (Object.keys(errors).length > 0) {
+          Object.keys(errors).forEach(key => {
+            showError(`${key}Error`, errors[key]);
+          });
+          setLoadingState(requestOtpButton, false, originalText);
+          return;
+        }
+    
+        try {
+          const response = await fetch(API_REQUEST_OTP, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              firstName: formData.firstname,
+              lastName: formData.lastname,
+              email: formData.email,
+              phone: formData.phone,
+              password: formData.password,
+              occupation: formData.occupation,
+              schoolName: formData.schoolName,
+              schoolCountry: formData.schoolCountry,
+              educationLevel: formData.educationLevel,
+              grade: formData.grade,
+              program: formData.program,
+              teacherGrade: formData.teacherGrade,
+              teacherSubject: formData.teacherSubject,
+            }),
+          });
+          const result = await response.json();
+          if (response.ok) {
+            userData = { ...formData };
+            signupFormSection.classList.add("hidden");
+            otpSection.classList.remove("hidden");
+            showMessage("OTP sent successfully to your phone.", "success");
+          } else {
+            showMessage(result.message || "Something went wrong. Please try again.");
+          }
+        } catch (error) {
+          showMessage("Network error. Please check your connection.");
+        } finally {
+          setLoadingState(requestOtpButton, false, originalText);
+        }
+      }
+    
+      async function handleVerifyOtp() {
+        const originalText = "Verify OTP";
+        setLoadingState(verifyOtpButton, true, originalText);
+    
+        try {
+          const response = await fetch(API_VERIFY_OTP, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: userData.email,
+              otp: otpInput.value.trim(),
+            }),
+          });
+          const result = await response.json();
+          if (response.ok) {
+            showMessage("Account created successfully!", "success");
+            modalMessage.textContent = "Your account has been created successfully. You can now log in.";
+            modalOverlay.classList.remove("hidden");
+          } else {
+            showMessage(result.message || "Invalid OTP. Please try again.");
+          }
+        } catch (error) {
+          showMessage("Network error. Please check your connection.");
+        } finally {
+          setLoadingState(verifyOtpButton, false, originalText);
+        }
+      }
+    
+      // Event listeners
+      document.addEventListener("DOMContentLoaded", () => {
+        const formInputs = document.querySelectorAll("#signupFormSection input, #signupFormSection select");
+        formInputs.forEach(input => {
+          input.addEventListener("input", handleFormInput);
+          input.addEventListener("change", handleFormInput);
+        });
+    
+        requestOtpButton.addEventListener("click", handleRequestOtp);
+        verifyOtpButton.addEventListener("click", handleVerifyOtp);
+    
+        openTermsLink.addEventListener("click", () => termsModal.classList.remove("hidden"));
+        closeTermsModalButton.addEventListener("click", () => termsModal.classList.add("hidden"));
+        closeModalButton.addEventListener("click", () => modalOverlay.classList.add("hidden"));
+    
+        handleFormInput();
       });
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", () => loadTranslations("en"));
-</script>
+    </script>
   </body>
 </html>

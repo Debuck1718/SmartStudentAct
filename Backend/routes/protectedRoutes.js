@@ -1129,6 +1129,7 @@ protectedRouter.get(
     }
   }
 );
+
 protectedRouter.post(
   "/teacher/feedback/:submissionId",
   authenticateJWT,
@@ -1483,25 +1484,22 @@ protectedRouter.post(
   }
 );
 
-protectedRouter.get(
-  "/student/tasks",
-  authenticateJWT,
-  hasRole("student"),
-  async (req, res) => {
+router.get("/student/tasks", authenticateJWT, async (req, res) => {
     try {
-      if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
-        return res.status(400).json({ message: "Invalid student ID." });
-      }
+        const studentId = req.userId; 
+        if (!studentId) {
+            return res.status(400).json({ message: "Student ID missing from request." });
+        }
 
-      const studentId = new mongoose.Types.ObjectId(req.user.id);
-      const tasks = await StudentTask.find({ student_id: studentId }).sort({ due_date: 1 });
-      res.status(200).json(tasks);
+        const tasks = await Task.find({ studentId: studentId });
+
+        res.status(200).json({ tasks });
     } catch (error) {
-      logger.error("Error fetching tasks:", error);
-      res.status(500).json({ message: "Server error" });
+     
+        logger.error("Error fetching tasks:", error);
+        res.status(500).json({ message: "Failed to fetch tasks." });
     }
-  }
-);
+});
 
 protectedRouter.patch(
   "/student/tasks/:id/complete",
