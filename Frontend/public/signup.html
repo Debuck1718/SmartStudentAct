@@ -915,6 +915,7 @@ verifyOtpButton.addEventListener("click", async () => {
     const response = await fetch(API_VERIFY_OTP, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include", 
       body: JSON.stringify({
         code,
         email: userData.email,
@@ -937,6 +938,7 @@ verifyOtpButton.addEventListener("click", async () => {
     setLoadingState(verifyOtpButton, false, "Verify OTP");
   }
 });
+
 
 
 
