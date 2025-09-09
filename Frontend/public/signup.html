@@ -559,7 +559,7 @@
         &times;
       </button>
     </div>
-   <script>
+<script>
 // =============================================================================
 // DOM ELEMENT REFERENCES
 // =============================================================================
@@ -610,12 +610,6 @@ let isSubmitting = false;
 // =============================================================================
 // UTILITY FUNCTIONS
 // =============================================================================
-
-/**
- * Displays a temporary message alert box.
- * @param {string} message - The message to display.
- * @param {string} [type='error'] - The type of message ('success' or 'error').
- */
 function showMessage(message, type = "error") {
   messageAlertText.textContent = message;
   messageAlertBox.className = `fixed bottom-4 right-4 text-white p-4 rounded-lg shadow-xl transition-opacity duration-300 z-50 ${
@@ -625,28 +619,12 @@ function showMessage(message, type = "error") {
   setTimeout(() => messageAlertBox.classList.add("hidden"), 5000);
 }
 
-/**
- * Manages the loading state of a button.
- * @param {HTMLElement} button - The button element.
- * @param {boolean} isLoading - Whether the button should be in a loading state.
- * @param {string} originalText - The original text of the button.
- */
 function setLoadingState(button, isLoading, originalText) {
   isSubmitting = isLoading;
-  if (isLoading) {
-    button.disabled = true;
-    button.innerHTML = '<span class="spinner"></span>';
-  } else {
-    button.disabled = false;
-    button.innerHTML = originalText;
-  }
+  button.disabled = isLoading;
+  button.innerHTML = isLoading ? '<span class="spinner"></span>' : originalText;
 }
 
-/**
- * Displays a specific form validation error message.
- * @param {string} elementId - The ID of the element to show the error on.
- * @param {string} message - The error message.
- */
 function showError(elementId, message) {
   const el = document.getElementById(elementId);
   if (el) {
@@ -655,10 +633,6 @@ function showError(elementId, message) {
   }
 }
 
-/**
- * Hides a specific form validation error message.
- * @param {string} elementId - The ID of the element to clear.
- */
 function clearError(elementId) {
   const el = document.getElementById(elementId);
   if (el) {
@@ -667,9 +641,6 @@ function clearError(elementId) {
   }
 }
 
-/**
- * Clears all form validation error messages.
- */
 function clearAllErrors() {
   document.querySelectorAll("[id$='Error']").forEach((el) => {
     el.textContent = "";
@@ -677,10 +648,6 @@ function clearAllErrors() {
   });
 }
 
-/**
- * Collects form data from all input fields.
- * @returns {object} - An object containing all form data.
- */
 function getFormData() {
   return {
     firstname: firstnameInput.value.trim(),
@@ -700,11 +667,6 @@ function getFormData() {
   };
 }
 
-/**
- * Validates the entire form and returns an object of errors.
- * @param {object} formData - The data to validate.
- * @returns {object} - An object with field names as keys and error messages as values.
- */
 function validateForm(formData) {
   const errors = {};
   clearAllErrors();
@@ -726,7 +688,7 @@ function validateForm(formData) {
   if (formData.occupation === "student") {
     if (!formData.educationLevel) errors.educationLevel = "Please select Education Level.";
     if (formData.educationLevel && !formData.grade) errors.grade = "Grade is required.";
-    if (formData.educationLevel === "university" && !formData.program) errors.program = "Program is required for University students.";
+    if ((formData.educationLevel === "university" || formData.educationLevel === "high") && !formData.program) errors.program = "Program is required.";
   } else if (formData.occupation === "teacher") {
     if (!formData.teacherGrade) errors.teacherGrade = "Grade/Level is required.";
     if (!formData.teacherSubject) errors.teacherSubject = "Subject is required.";
@@ -738,10 +700,6 @@ function validateForm(formData) {
 // =============================================================================
 // UI LOGIC & EVENT HANDLERS
 // =============================================================================
-
-/**
- * Updates the grade select options based on the selected education level.
- */
 function updateGradeSelect() {
   const level = educationLevelSelect.value;
   gradeSelect.innerHTML = '<option value="">Select Grade</option>';
@@ -754,52 +712,36 @@ function updateGradeSelect() {
   }
 }
 
-/**
- * Toggles form fields based on the selected occupation.
- */
 function handleOccupationChange() {
   const occupation = occupationSelect.value;
   const studentFields = [educationLevelField, gradeField, programField];
   const teacherFields = [teacherGradeField, teacherSubjectField];
   const commonFields = [schoolNameField, schoolCountryField];
 
-  // Hide all conditional fields first
-  [...studentFields, ...teacherFields, ...commonFields].forEach((field) =>
-    field.classList.add("hidden")
-  );
+  [...studentFields, ...teacherFields, ...commonFields].forEach((field) => field.classList.add("hidden"));
 
-  // Show fields based on selection
   if (occupation === "student") {
     [...studentFields, ...commonFields].forEach((field) => field.classList.remove("hidden"));
-    handleEducationLevelChange(); // Re-trigger level change to update grades
+    handleEducationLevelChange();
   } else if (occupation === "teacher") {
     [...teacherFields, ...commonFields].forEach((field) => field.classList.remove("hidden"));
   }
 }
 
-/**
- * Toggles specific student fields based on the selected education level.
- */
 function handleEducationLevelChange() {
   const level = educationLevelSelect.value;
   gradeField.classList.toggle("hidden", !level);
-  programField.classList.toggle("hidden", level !== "university");
+  programField.classList.toggle("hidden", level === "university" || level === "high");
   updateGradeSelect();
 }
 
-/**
- * Handles the "Request OTP" button click event.
- */
 async function handleRequestOtp() {
   if (isSubmitting) return;
 
   userData = getFormData();
   const errors = validateForm(userData);
-
   if (Object.keys(errors).length > 0) {
-    for (const key in errors) {
-      showError(`${key}Error`, errors[key]);
-    }
+    for (const key in errors) showError(`${key}Error`, errors[key]);
     return;
   }
 
@@ -828,9 +770,6 @@ async function handleRequestOtp() {
   }
 }
 
-/**
- * Handles the "Verify OTP" button click event.
- */
 async function handleVerifyOtp() {
   if (isSubmitting) return;
 
@@ -849,11 +788,10 @@ async function handleVerifyOtp() {
       body: JSON.stringify({ ...userData, otp }),
     });
 
+    const result = await response.json();
     if (response.ok) {
-      // Backend handles HttpOnly JWT and redirection
-      showMessage("Account created successfully! Redirecting...", "success");
+      showMessage("Account verified successfully!", "success");
     } else {
-      const result = await response.json();
       showMessage(result.message || "Failed to verify OTP. Please try again.");
     }
   } catch (error) {
@@ -867,31 +805,36 @@ async function handleVerifyOtp() {
 // =============================================================================
 // EVENT LISTENERS & INITIALIZATION
 // =============================================================================
-
-// Modal listeners
 openTermsLink.addEventListener("click", () => termsModal.classList.remove("hidden"));
 closeTermsModalButton.addEventListener("click", () => termsModal.classList.add("hidden"));
 closeModalButton.addEventListener("click", () => modalOverlay.classList.add("hidden"));
 
-// Form field change listeners
 occupationSelect.addEventListener("change", handleOccupationChange);
 educationLevelSelect.addEventListener("change", handleEducationLevelChange);
 
-// Button listeners
 requestOtpButton.addEventListener("click", handleRequestOtp);
 verifyOtpButton.addEventListener("click", handleVerifyOtp);
 
-// Enable/disable the "Request OTP" button based on form validity
-document.querySelectorAll("input, select").forEach((el) => {
-  el.addEventListener("input", () => {
-    const formData = getFormData();
-    const errors = validateForm(formData);
-    requestOtpButton.disabled = Object.keys(errors).length > 0;
-  });
-});
+function updateRequestButtonState() {
+  const formData = getFormData();
+  const errors = validateForm(formData);
+  if (Object.keys(errors).length === 0 && !isSubmitting) {
+    requestOtpButton.disabled = false;
+    requestOtpButton.classList.add("bg-green-500", "hover:bg-green-600");
+    requestOtpButton.classList.remove("bg-gray-400", "cursor-not-allowed");
+  } else {
+    requestOtpButton.disabled = true;
+    requestOtpButton.classList.remove("bg-green-500", "hover:bg-green-600");
+    requestOtpButton.classList.add("bg-gray-400", "cursor-not-allowed");
+  }
+}
 
+document.querySelectorAll("input, select").forEach((el) => el.addEventListener("input", updateRequestButtonState));
 
 handleOccupationChange();
+updateRequestButtonState();
+
 </script>
+
   </body>
 </html>
