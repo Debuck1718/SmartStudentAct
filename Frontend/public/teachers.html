@@ -253,306 +253,157 @@
   </div>
 
   <script src="translate.js"></script>
-  <script>
-     const API_BASE_URL = "https://api.smartstudentact.com/api";
-    let studentsCache = [];
+ <script>
+  const API_BASE_URL = "https://api.smartstudentact.com/api";
+  let studentsCache = [];
 
-    function showToast(message, type="info") {
-      const container = document.getElementById("toast-container") || (() => {
-        const el = document.createElement("div");
-        el.id = "toast-container";
-        el.className = "fixed top-4 right-4 z-[1000] space-y-2";
-        document.body.appendChild(el);
-        return el;
-      })();
-      const colors = { success:"bg-green-600", error:"bg-red-600", info:"bg-blue-600", warning:"bg-yellow-500 text-gray-900" };
-      const toast = document.createElement("div");
-      toast.className = `px-4 py-2 rounded text-white shadow ${colors[type]||colors.info}`;
-      toast.textContent = message;
-      container.appendChild(toast);
-      setTimeout(()=>toast.remove(), 4000);
+  function showToast(message, type="info") {
+    const container = document.getElementById("toast-container") || (() => {
+      const el = document.createElement("div");
+      el.id = "toast-container";
+      el.className = "fixed top-4 right-4 z-[1000] space-y-2";
+      document.body.appendChild(el);
+      return el;
+    })();
+    const colors = { success:"bg-green-600", error:"bg-red-600", info:"bg-blue-600", warning:"bg-yellow-500 text-gray-900" };
+    const toast = document.createElement("div");
+    toast.className = `px-4 py-2 rounded text-white shadow ${colors[type]||colors.info}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(()=>toast.remove(), 4000);
+  }
+
+  function hideLoadingOverlay() {
+    const el = document.getElementById("loadingOverlay");
+    if(el) el.style.display = "none";
+  }
+
+  async function fetchAPI(endpoint, options={}) {
+    try {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, credentials: "include", headers: { ...(options.headers||{}) } });
+      if(res.status === 401){ window.location.href = "/login.html"; return null; }
+      return res;
+    } catch(err) {
+      console.error("Fetch error:", err);
+      showToast("Network error, please try again.", "error");
+      return null;
     }
+  }
 
-    function hideLoadingOverlay() {
-      const el = document.getElementById("loadingOverlay");
-      if(el) el.style.display = "none";
+  async function checkAuth(){ 
+    const res = await fetchAPI("/auth/check"); 
+    if(!res || !res.ok) window.location.href="/login.html"; 
+  }
+
+  async function fetchTeacherProfile(){
+    const res = await fetchAPI("/teacher/profile");
+    if(res && res.ok){
+      const data = await res.json();
+      document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
+      document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
     }
+  }
 
-    async function fetchAPI(endpoint, options={}) {
-      try {
-        const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, credentials: "include", headers: { ...(options.headers||{}) } });
-        if(res.status === 401){ window.location.href = "/login.html"; return null; }
-        return res;
-      } catch(err) {
-        console.error("Fetch error:", err);
-        showToast("Network error, please try again.", "error");
-        return null;
-      }
+  function renderStudents(students = []) {
+    const container = document.getElementById("studentsList");
+    if (!container) return;
+    if (students.length === 0) {
+      container.innerHTML = `<div class="p-4 text-center text-gray-500">No students found.</div>`;
+      return;
     }
-
-    async function checkAuth(){ const res = await fetchAPI("/auth/check"); if(!res || !res.ok) window.location.href="/login.html"; }
-    async function fetchTeacherProfile(){
-      const res = await fetchAPI("/teacher/profile");
-      if(res && res.ok){
-        const data = await res.json();
-        document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
-        document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
-      }
-    }
-
-    function renderStudents(students = []) {
-      const container = document.getElementById("studentsList");
-      if (!container) return;
-      if (students.length === 0) {
-        container.innerHTML = `<div class="p-4 text-center text-gray-500">No students found.</div>`;
-        return;
-      }
-      container.innerHTML = students.map(s => `
-        <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
-          <div class="flex items-center gap-3">
-            <img src="${s.imageUrl || "./images/default-avatar.png"}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
-            <div>
-              <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
-              <p class="text-sm text-gray-500">Grade ${s.grade || "-"}</p>
-            </div>
+    container.innerHTML = students.map(s => `
+      <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+        <div class="flex items-center gap-3">
+          <img src="${s.imageUrl || "./images/default-avatar.png"}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
+          <div>
+            <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
+            <p class="text-sm text-gray-500">Grade ${s.grade || "-"}</p>
           </div>
-          <span class="text-xs text-gray-400">${s.email}</span>
         </div>
-      `).join("");
-    }
+        <span class="text-xs text-gray-400">${s.email}</span>
+      </div>
+    `).join("");
+  }
 
-    async function fetchStudents(){
-      let myGrade = [], otherGrade = [];
-      const res = await fetchAPI("/teacher/students");
-      if(res && res.ok) myGrade = (await res.json()) || [];
-      const resOther = await fetchAPI("/teacher/students/other");
-      if(resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
-      studentsCache = [...myGrade, ...otherGrade];
-      renderStudents(myGrade);
-      populateStudentSelects(studentsCache, myGrade, otherGrade);
-    }
+  async function fetchStudents(){
+    let myGrade = [], otherGrade = [];
+    const res = await fetchAPI("/teacher/students");
+    if(res && res.ok) myGrade = (await res.json()) || [];
+    const resOther = await fetchAPI("/teacher/students/other");
+    if(resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
+    studentsCache = [...myGrade, ...otherGrade];
+    renderStudents(myGrade);
+    populateStudentSelects(studentsCache, myGrade, otherGrade);
+  }
 
-    function populateStudentSelects(allStudents, myGrade = [], otherGrade = []) {
-      const assignSelect = document.getElementById("student-select");
-      const pointsSelect = document.getElementById("points-student-select");
-      const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (Grade ${s.grade || "-"})</option>`).join("");
-      if(assignSelect) assignSelect.innerHTML = `<optgroup label="My Grade Students">${toOptions(myGrade)}</optgroup><optgroup label="Other Students (Same School)">${toOptions(otherGrade)}</optgroup>`;
-      if(pointsSelect) pointsSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(allStudents)}`;
-      validateAssignmentForm(); validatePointsForm();
-    }
+  function populateStudentSelects(allStudents, myGrade = [], otherGrade = []) {
+    const assignSelect = document.getElementById("student-select");
+    const pointsSelect = document.getElementById("points-student-select");
+    const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (Grade ${s.grade || "-"})</option>`).join("");
+    if(assignSelect) assignSelect.innerHTML = `<optgroup label="My Grade Students">${toOptions(myGrade)}</optgroup><optgroup label="Other Students (Same School)">${toOptions(otherGrade)}</optgroup>`;
+    if(pointsSelect) pointsSelect.innerHTML = `<option value="">-- Select --</option>${toOptions(allStudents)}`;
+    validateAssignmentForm(); validatePointsForm();
+  }
 
+  async function fetchAssignedTasks(){
+    const res = await fetchAPI("/teacher/assignments");
+    const container = document.getElementById("assignedTasksList");
+    if(!container) return;
 
-    async function fetchAssignedTasks(){
-      const res = await fetchAPI("/teacher/assignments");
-      const container = document.getElementById("assignedTasksList");
-      if(!container) return;
-
-      if(res && res.ok){
-        const tasks = (await res.json()) || [];
-        container.innerHTML = tasks.length ? tasks.map(t => `
-          <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
-            <div class="flex-1">
-              <h4 class="font-bold text-gray-800">${t.title}</h4>
-              <p class="text-sm text-gray-500">Assigned to: ${t.studentName}</p>
-            </div>
-            <span class="text-sm text-gray-600 sm:ml-4 mt-2 sm:mt-0">Due: ${new Date(t.dueDate).toLocaleString()}</span>
+    if(res && res.ok){
+      const tasks = (await res.json()) || [];
+      container.innerHTML = tasks.length ? tasks.map(t => `
+        <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+          <div class="flex-1">
+            <h4 class="font-bold text-gray-800">${t.title}</h4>
+            <p class="text-sm text-gray-500">Assigned to: ${t.studentName}</p>
           </div>
-        `).join("") : `<div class="p-4 text-center text-gray-500">No assignments assigned 🎉</div>`;
-      }
+          <span class="text-sm text-gray-600 sm:ml-4 mt-2 sm:mt-0">Due: ${new Date(t.dueDate).toLocaleString()}</span>
+        </div>
+      `).join("") : `<div class="p-4 text-center text-gray-500">No assignments assigned 🎉</div>`;
     }
+  }
 
-    async function fetchOverdueTasks(){
-      const res = await fetchAPI("/teacher/overdue-tasks");
-      const container = document.getElementById("overdueTasksList");
-      if(!container) return;
+  async function fetchOverdueTasks(){
+    const res = await fetchAPI("/teacher/overdue-tasks");
+    const container = document.getElementById("overdueTasksList");
+    if(!container) return;
 
-      if(res && res.ok){
-        const overdue = (await res.json()) || [];
-        container.innerHTML = overdue.length ? overdue.map(t => `
-          <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
-            <div class="flex-1">
-              <h4 class="font-bold text-red-600">${t.title}</h4>
-              <p class="text-sm text-gray-500">Student: ${t.studentName}</p>
-            </div>
-            <span class="text-sm text-red-500 sm:ml-4 mt-2 sm:mt-0">Overdue since: ${new Date(t.dueDate).toLocaleString()}</span>
+    if(res && res.ok){
+      const overdue = (await res.json()) || [];
+      container.innerHTML = overdue.length ? overdue.map(t => `
+        <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+          <div class="flex-1">
+            <h4 class="font-bold text-red-600">${t.title}</h4>
+            <p class="text-sm text-gray-500">Student: ${t.studentName}</p>
           </div>
-        `).join("") : `<div class="p-4 text-center text-gray-500">No overdue tasks 🎉</div>`;
-      }
+          <span class="text-sm text-red-500 sm:ml-4 mt-2 sm:mt-0">Overdue since: ${new Date(t.dueDate).toLocaleString()}</span>
+        </div>
+      `).join("") : `<div class="p-4 text-center text-gray-500">No overdue tasks 🎉</div>`;
     }
+  }
 
-    async function fetchFeedback(){
-      const res = await fetchAPI("/teacher/feedback");
-      const container = document.getElementById("feedbackList");
-      if(!container) return;
+  async function fetchFeedback(){
+    const res = await fetchAPI("/teacher/feedback");
+    const container = document.getElementById("feedbackList");
+    if(!container) return;
 
-      if(res && res.ok){
-        const feedbacks = (await res.json()) || [];
-        container.innerHTML = feedbacks.length ? feedbacks.map(f => `
-          <div class="p-4 flex items-start space-x-3 border-b last:border-b-0 hover:bg-gray-50">
-            <i class="fas fa-comment-dots text-blue-500 mt-1"></i>
-            <div class="flex-1">
-              <p class="font-medium text-gray-800">${f.studentName}</p>
-              <p class="text-sm text-gray-600">${f.comment}</p>
-            </div>
+    if(res && res.ok){
+      const feedbacks = (await res.json()) || [];
+      container.innerHTML = feedbacks.length ? feedbacks.map(f => `
+        <div class="p-4 flex items-start space-x-3 border-b last:border-b-0 hover:bg-gray-50">
+          <i class="fas fa-comment-dots text-blue-500 mt-1"></i>
+          <div class="flex-1">
+            <p class="font-medium text-gray-800">${f.studentName}</p>
+            <p class="text-sm text-gray-600">${f.comment}</p>
           </div>
-        `).join("") : `<div class="p-4 text-center text-gray-500">No feedback yet 🎉</div>`;
-      }
+        </div>
+      `).join("") : `<div class="p-4 text-center text-gray-500">No feedback yet 🎉</div>`;
     }
-
-    function getWordCount(text){
-      const trimmed = (text || "").trim();
-      if(!trimmed) return 0;
-      return trimmed.split(/\s+/).length;
-    }
-
-    function validateAssignmentForm(){
-      const studentId = document.getElementById("student-select").value;
-      const title = document.getElementById("assignmentTitle").value.trim();
-      const due = document.getElementById("assignmentDueDate").value;
-      const text = document.getElementById("assignmentText").value.trim();
-      const file = document.getElementById("assignmentFile").files[0];
-
-      const words = getWordCount(text);
-      const hasContent = words > 0 || !!file; 
-      const valid = !!studentId && !!title && !!due && hasContent;
-
-      const btn = document.getElementById("sendAssignmentButton");
-      btn.disabled = !valid;
-
-      document.getElementById("wordCountText").textContent = `Word count: ${words}`;
-    }
-
-    function wireAssignmentForm(){
-      const inputs = [
-        "student-select","assignmentTitle","assignmentDueDate","assignmentText","assignmentFile"
-      ];
-      inputs.forEach(id => {
-        const el = document.getElementById(id);
-        if(!el) return;
-        const evt = (id === "assignmentText") ? "input" : "change";
-        el.addEventListener(evt, validateAssignmentForm);
-      });
-
-      const fileInput = document.getElementById("assignmentFile");
-      const fileNameEl = document.getElementById("fileName");
-      const clearBtn = document.getElementById("clearFileButton");
-
-      fileInput.addEventListener("change", () => {
-        const f = fileInput.files[0];
-        if(f){
-          fileNameEl.textContent = f.name;
-          clearBtn.classList.remove("hidden");
-        }else{
-          fileNameEl.textContent = "No file selected.";
-          clearBtn.classList.add("hidden");
-        }
-        validateAssignmentForm();
-      });
-
-      clearBtn.addEventListener("click", () => {
-        fileInput.value = "";
-        fileNameEl.textContent = "No file selected.";
-        clearBtn.classList.add("hidden");
-        validateAssignmentForm();
-      });
-
-      document.getElementById("sendAssignmentButton").addEventListener("click", sendAssignment);
-    }
-
-    async function sendAssignment(){
-      const studentId = document.getElementById("student-select").value;
-      const title = document.getElementById("assignmentTitle").value.trim();
-      const dueDate = document.getElementById("assignmentDueDate").value;
-      const text = document.getElementById("assignmentText").value.trim();
-      const file = document.getElementById("assignmentFile").files[0];
-
-      if(!studentId || !title || !dueDate || (!text && !file)){
-        showToast("Please fill all required fields.", "warning");
-        return;
-      }
-
-      const fd = new FormData();
-      fd.append("studentId", studentId);
-      fd.append("title", title);
-      fd.append("dueDate", dueDate);
-      if(text) fd.append("text", text);
-      if(file) fd.append("file", file);
-
-      const btn = document.getElementById("sendAssignmentButton");
-      btn.disabled = true;
-
-      const res = await fetchAPI("/teacher/assignments", { method: "POST", body: fd });
-      if(res && res.ok){
-        showToast("Assignment sent successfully.", "success");
-        document.getElementById("student-select").value = "";
-        document.getElementById("assignmentTitle").value = "";
-        document.getElementById("assignmentDueDate").value = "";
-        document.getElementById("assignmentText").value = "";
-        document.getElementById("assignmentFile").value = "";
-        document.getElementById("fileName").textContent = "No file selected.";
-        document.getElementById("clearFileButton").classList.add("hidden");
-        validateAssignmentForm();
-        fetchAssignedTasks();
-      }else{
-        showToast("Failed to send assignment.", "error");
-      }
-      btn.disabled = false;
-    }
-
-
-    function validatePointsForm(){
-      const studentId = document.getElementById("points-student-select").value;
-      const points = Number(document.getElementById("pointsInput").value);
-      const btn = document.getElementById("addPointsButton");
-      btn.disabled = !(studentId && points > 0);
-    }
-
-    function wirePointsForm(){
-      ["points-student-select","pointsInput","reasonText"].forEach(id => {
-        const el = document.getElementById(id);
-        const evt = (id === "reasonText") ? "input" : "change";
-        el.addEventListener(evt, validatePointsForm);
-      });
-      document.getElementById("addPointsButton").addEventListener("click", addPoints);
-    }
-
-    async function addPoints(){
-      const studentId = document.getElementById("points-student-select").value;
-      const points = Number(document.getElementById("pointsInput").value);
-      const reason = document.getElementById("reasonText").value.trim();
-
-      if(!studentId || !(points > 0)){
-        showToast("Please select a student and enter points.", "warning");
-        return;
-      }
-
-      const payload = { studentId, points, reason };
-      const btn = document.getElementById("addPointsButton");
-      btn.disabled = true;
-
-      const res = await fetchAPI("/rewards/teacher/add-points", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if(res && res.ok){
-        showToast("Points added successfully.", "success");
-        document.getElementById("points-student-select").value = "";
-        document.getElementById("pointsInput").value = "";
-        document.getElementById("reasonText").value = "";
-        validatePointsForm();
-        fetchStudents();
-      }else{
-        showToast("Failed to add points.", "error");
-      }
-      btn.disabled = false;
-    }
-
-   function wireCalendar(){
-  const termsContainer = document.getElementById("termsContainer");
+  }
 
   function addTerm(){
+    const termsContainer = document.getElementById("termsContainer");
     const termIndex = termsContainer.children.length + 1;
     const termDiv = document.createElement("div");
     termDiv.className = "p-3 border rounded-lg";
@@ -564,102 +415,97 @@
     termsContainer.appendChild(termDiv);
   }
 
-  document.getElementById("addTermButton").addEventListener("click", (e)=>{
-    e.preventDefault();
+  function wireCalendar(){
+    const termsContainer = document.getElementById("termsContainer");
+
+    document.getElementById("addTermButton").addEventListener("click", (e)=>{
+      e.preventDefault();
+      addTerm();
+    });
+
     addTerm();
-  });
 
-  addTerm();
+    document.getElementById("saveCalendarButton").addEventListener("click", async () => {
+      const academicYear = document.getElementById("academicYear").value;
 
-  document.getElementById("saveCalendarButton").addEventListener("click", async () => {
-    const academicYear = document.getElementById("academicYear").value;
+      const terms = Array.from(termsContainer.children).map((div, i) => {
+        return {
+          termName: `Term ${i+1}`,
+          startDate: div.querySelector(".termStart").value,
+          endDate: div.querySelector(".termEnd").value,
+        };
+      });
 
-    const terms = Array.from(termsContainer.children).map((div, i) => {
-      return {
-        termName: `Term ${i+1}`,
-        startDate: div.querySelector(".termStart").value,
-        endDate: div.querySelector(".termEnd").value,
-      };
-    });
+      const res = await fetchAPI("/teacher/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ academicYear, terms })
+      });
 
-    const res = await fetchAPI("/teacher/calendar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ academicYear, terms })
-    });
-
-    const msg = document.getElementById("calendarMsg");
-    if(res && res.ok){
-      msg.textContent = "Calendar updated.";
-      showToast("Calendar updated.", "success");
-    }else{
-      msg.textContent = "Failed to save calendar.";
-      showToast("Failed to save calendar.", "error");
-    }
-  });
-}
-
-    async function init(){
-      try{
-        await checkAuth();
-
-      
-        const defaultLang = "en";
-        translatePage("teachers", defaultLang);
-        document.getElementById("language-select").addEventListener("change", (e)=>{
-          translatePage("teachers", e.target.value);
-        });
-
-        
-        await Promise.all([
-          fetchTeacherProfile(),
-          fetchStudents(),
-          fetchAssignedTasks(),
-          fetchFeedback(),
-          fetchOverdueTasks()
-        ]);
-
-       
-        wireAssignmentForm();
-        wirePointsForm();
-        wireCalendar();
-      }catch(err){
-        console.error("Init error:", err);
-        showToast("Failed to load dashboard. Please try again.", "error");
-      }finally{
-        hideLoadingOverlay();
+      const msg = document.getElementById("calendarMsg");
+      if(res && res.ok){
+        msg.textContent = "Calendar updated.";
+        showToast("Calendar updated.", "success");
+      }else{
+        msg.textContent = "Failed to save calendar.";
+        showToast("Failed to save calendar.", "error");
       }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("currentYear").textContent = new Date().getFullYear();
-
-      const btn = document.getElementById("profile-menu-button");
-      const menu = document.getElementById("profile-dropdown-menu");
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        menu.classList.toggle("hidden");
-      });
-      document.addEventListener("click", (e) => {
-        if(!btn.contains(e.target) && !menu.contains(e.target)){
-          menu.classList.add("hidden");
-        }
-      });
-
-      document.getElementById("logoutButton").addEventListener("click", async () => {
-        await fetchAPI("/users/logout", { method: "POST" });
-        window.location.href = "/login.html";
-      });
-
-     document.getElementById("addTermButton").addEventListener("click", (e)=>{
-  e.preventDefault();
-  console.log("Add Term clicked"); 
-  addTerm();
-});
-
-      init();
     });
-  </script>
+  }
+
+
+  async function init(){
+    try{
+      await checkAuth();
+
+      const defaultLang = "en";
+      translatePage("teachers", defaultLang);
+      document.getElementById("language-select").addEventListener("change", (e)=>{
+        translatePage("teachers", e.target.value);
+      });
+
+      await Promise.all([
+        fetchTeacherProfile(),
+        fetchStudents(),
+        fetchAssignedTasks(),
+        fetchFeedback(),
+        fetchOverdueTasks()
+      ]);
+
+      wireAssignmentForm();
+      wirePointsForm();
+      wireCalendar();
+    }catch(err){
+      console.error("Init error:", err);
+      showToast("Failed to load dashboard. Please try again.", "error");
+    }finally{
+      hideLoadingOverlay();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
+
+    const btn = document.getElementById("profile-menu-button");
+    const menu = document.getElementById("profile-dropdown-menu");
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.classList.toggle("hidden");
+    });
+    document.addEventListener("click", (e) => {
+      if(!btn.contains(e.target) && !menu.contains(e.target)){
+        menu.classList.add("hidden");
+      }
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", async () => {
+      await fetchAPI("/users/logout", { method: "POST" });
+      window.location.href = "/login.html";
+    });
+
+    init();
+  });
+</script>
 </body>
 </html>
 

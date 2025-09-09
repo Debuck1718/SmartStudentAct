@@ -4,7 +4,9 @@ const rateLimit = require("express-rate-limit");
 const Joi = require("joi");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const User = require("../models/User");
+const School = require("../models/School");
 const logger = require("../utils/logger");
 const {
   generateAccessToken,
@@ -22,7 +24,7 @@ const {
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
 const IS_PROD = process.env.NODE_ENV === "production";
 const JWT_SECRET = process.env.JWT_SECRET;
-const PASSWORD_RESET_EXPIRY = 3600000; 
+const PASSWORD_RESET_EXPIRY = 3600000; // 1h
 
 if (!JWT_SECRET)
   throw new Error("JWT_SECRET is not defined in environment variables.");
@@ -53,48 +55,53 @@ module.exports = (eventBus) => {
     default: "/login.html",
   };
 
-const signupOtpSchema = Joi.object({
-  phone: Joi.string()
-    .pattern(/^\+?[1-9]\d{1,14}$/)
-    .required(),
-  email: Joi.string().email().required(),
-  firstname: Joi.string().min(2).max(50).required(),
-  lastname: Joi.string().min(2).max(50).required(),
-  password: Joi.string()
-    .min(8)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-    .message("Password must be at least 8 characters, with one uppercase, one number, one special char.")
-    .required(),
-  confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-  occupation: Joi.string().valid("student", "teacher").required(),
-  schoolName: Joi.string().required(),
-  schoolCountry: Joi.string().required(),
-  educationLevel: Joi.string().when("occupation", {
-    is: "student",
-    then: Joi.required(),
-    otherwise: Joi.allow(""),
-  }),
-  grade: Joi.string().when("occupation", {
-    is: "student",
-    then: Joi.string().pattern(/^(10|11|12|100|200|300|400)$/).required(),
-    otherwise: Joi.allow(""),
-  }),
-  program: Joi.string().when("occupation", {
-    is: "student",
-    then: Joi.required(),
-    otherwise: Joi.allow(""),
-  }),
-  teacherGrade: Joi.string().when("occupation", {
-    is: "teacher",
-    then: Joi.required(),
-    otherwise: Joi.allow(""),
-  }),
-  teacherSubject: Joi.string().when("occupation", {
-    is: "teacher",
-    then: Joi.required(),
-    otherwise: Joi.allow(""),
-  }),
-});
+  // ---------- SCHEMAS ----------
+  const signupOtpSchema = Joi.object({
+    phone: Joi.string()
+      .pattern(/^\+?[1-9]\d{1,14}$/)
+      .required(),
+    email: Joi.string().email().required(),
+    firstname: Joi.string().min(2).max(50).required(),
+    lastname: Joi.string().min(2).max(50).required(),
+    password: Joi.string()
+      .min(8)
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+      .message(
+        "Password must be at least 8 characters, with one uppercase, one number, one special char."
+      )
+      .required(),
+    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+    occupation: Joi.string().valid("student", "teacher").required(),
+    schoolName: Joi.string().required(),
+    schoolCountry: Joi.string().required(),
+    educationLevel: Joi.string().when("occupation", {
+      is: "student",
+      then: Joi.required(),
+      otherwise: Joi.allow(""),
+    }),
+    grade: Joi.string().when("occupation", {
+      is: "student",
+      then: Joi.string()
+        .pattern(/^(10|11|12|100|200|300|400)$/)
+        .required(),
+      otherwise: Joi.allow(""),
+    }),
+    program: Joi.string().when("occupation", {
+      is: "student",
+      then: Joi.required(),
+      otherwise: Joi.allow(""),
+    }),
+    teacherGrade: Joi.string().when("occupation", {
+      is: "teacher",
+      then: Joi.required(),
+      otherwise: Joi.allow(""),
+    }),
+    teacherSubject: Joi.string().when("occupation", {
+      is: "teacher",
+      then: Joi.required(),
+      otherwise: Joi.allow(""),
+    }),
+  });
 
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
@@ -141,70 +148,38 @@ const signupOtpSchema = Joi.object({
     next();
   };
 
-
+  // ---------- SIGNUP OTP ----------
   publicRouter.post(
-  "/users/signup-otp",
-  rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-  validate(signupOtpSchema),
-  async (req, res) => {
-    try {
-      const {
-        firstname,
-        lastname,
-        email,
-        phone,
-        password,
-        occupation,
-        schoolName,
-        schoolCountry,
-        educationLevel,
-        grade,
-        teacherGrade,
-        teacherSubject,
-        program, 
-      } = req.body;
+    "/users/signup-otp",
+    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+    validate(signupOtpSchema),
+    async (req, res) => {
+      try {
+        const payload = {
+          ...req.body,
+          temporaryUserId: crypto.randomUUID(),
+          code: Math.floor(100000 + Math.random() * 900000).toString(),
+        };
 
-      logger.info("Signup OTP request payload:", req.body);
+        const existingUser = await User.findOne({ email: payload.email });
+        const otpToken = jwt.sign(payload, JWT_SECRET, { expiresIn: "10m" });
+        await sendOTPEmail(payload.email, payload.firstname, payload.code);
 
-      const existingUser = await User.findOne({ email });
-
-      const otpTokenPayload = {
-        temporaryUserId: crypto.randomUUID(),
-        firstname,
-        lastname,
-        email,
-        phone,
-        password,
-        occupation,
-        schoolName,
-        schoolCountry,
-        educationLevel,
-        grade,
-        teacherGrade,
-        teacherSubject,
-        program, 
-        code: Math.floor(100000 + Math.random() * 900000).toString(),
-      };
-
-      const otpToken = jwt.sign(otpTokenPayload, JWT_SECRET, { expiresIn: "10m" });
-      await sendOTPEmail(email, firstname, otpTokenPayload.code);
-
-      return res.status(200).json({
-        status: "success",
-        message: existingUser
-          ? "OTP sent to existing user."
-          : "OTP sent. Please verify to complete signup.",
-        otpToken,
-      });
-    } catch (err) {
-      logger.error("❌ Signup-OTP error:", err);
-      res.status(500).json({ message: "Signup failed." });
+        return res.status(200).json({
+          status: "success",
+          message: existingUser
+            ? "OTP sent to existing user."
+            : "OTP sent. Please verify to complete signup.",
+          otpToken,
+        });
+      } catch (err) {
+        logger.error("❌ Signup-OTP error:", err);
+        res.status(500).json({ message: "Signup failed." });
+      }
     }
-  }
-);
+  );
 
-
- 
+  // ---------- VERIFY OTP ----------
   publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
     const { code, email, password, otpToken } = req.body;
 
@@ -219,10 +194,10 @@ const signupOtpSchema = Joi.object({
       let user = await User.findOne({ email }).select("+password");
 
       if (user) {
+        // Existing user: set password if not set
         if (!user.password) {
-          user.password = password; 
+          user.password = password;
           await user.save();
-          logger.info(`Password set for existing user: ${email}`);
         }
 
         const accessToken = generateAccessToken(user);
@@ -236,34 +211,47 @@ const signupOtpSchema = Joi.object({
           redirectUrl: getRedirectUrl(user, true),
         });
       } else {
+        // -------- Find or create school --------
+        let school = await School.findOne({
+          name: decoded.schoolName.trim(),
+          schoolCountry: decoded.schoolCountry.toUpperCase(),
+        });
+
+        if (!school) {
+          school = new School({
+            name: decoded.schoolName.trim(),
+            schoolCountry: decoded.schoolCountry.toUpperCase(),
+            tier: 1, // default
+          });
+          await school.save();
+        }
+
+        // -------- Create user --------
         const now = new Date();
         const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-const newUserData = {
-  _id: decoded.temporaryUserId,
-  firstname: decoded.firstname || "User",
-  lastname: decoded.lastname || "Unknown",
-  email: decoded.email,
-  phone: decoded.phone || "",
-  password,
-  verified: true,
-  role: decoded.occupation || "student",
-  occupation: decoded.occupation || "student",
-  educationLevel: decoded.educationLevel || "high",
-  grade: decoded.grade,
-  schoolName: decoded.schoolName || "Unknown School",
-  schoolCountry: decoded.schoolCountry || "GH",
-  teacherGrade: decoded.teacherGrade || [],
-  teacherSubject: decoded.teacherSubject || "",
-  program: decoded.program || "", 
-  is_on_trial: true,
-  trial_start_at: now,
-  trial_end_at: trialEndAt,
-  subscription_status: "inactive",
-};
+        const newUser = new User({
+          _id: decoded.temporaryUserId,
+          firstname: decoded.firstname || "User",
+          lastname: decoded.lastname || "Unknown",
+          email: decoded.email,
+          phone: decoded.phone || "",
+          password,
+          verified: true,
+          role: decoded.occupation || "student",
+          occupation: decoded.occupation || "student",
+          educationLevel: decoded.educationLevel || "high",
+          grade: decoded.grade,
+          school: school._id, // 🔥 reference instead of raw strings
+          teacherGrade: decoded.teacherGrade || [],
+          teacherSubject: decoded.teacherSubject || "",
+          program: decoded.program || "",
+          is_on_trial: true,
+          trial_start_at: now,
+          trial_end_at: trialEndAt,
+          subscription_status: "inactive",
+        });
 
-
-        const newUser = new User(newUserData);
         await newUser.save();
 
         const accessToken = generateAccessToken(newUser);
@@ -289,6 +277,7 @@ const newUserData = {
     }
   });
 
+  // ---------- LOGIN ----------
   publicRouter.post(
     "/users/login",
     loginLimiter,
@@ -300,11 +289,15 @@ const newUserData = {
 
         const user = await User.findOne({ email }).select("+password");
         if (!user)
-          return res.status(401).json({ status: false, message: "Invalid credentials." });
+          return res
+            .status(401)
+            .json({ status: false, message: "Invalid credentials." });
 
         const match = await user.comparePassword(password);
         if (!match)
-          return res.status(401).json({ status: false, message: "Invalid credentials." });
+          return res
+            .status(401)
+            .json({ status: false, message: "Invalid credentials." });
 
         const now = new Date();
         let subscriptionActive = false;
@@ -361,11 +354,14 @@ const newUserData = {
   function getRedirectUrl(user, hasAccess) {
     const { role } = user;
     const bypassRoles = ["global_overseer", "overseer"];
-    if (bypassRoles.includes(role)) return redirectPaths[role] || redirectPaths.default;
-    if (redirectPaths[role]) return hasAccess ? redirectPaths[role] : redirectPaths.payment;
+    if (bypassRoles.includes(role))
+      return redirectPaths[role] || redirectPaths.default;
+    if (redirectPaths[role])
+      return hasAccess ? redirectPaths[role] : redirectPaths.payment;
     return redirectPaths.default;
   }
 
+  // ---------- LOGOUT ----------
   publicRouter.post("/users/logout", async (req, res) => {
     try {
       const refreshToken = req.cookies.refresh_token;
@@ -388,6 +384,7 @@ const newUserData = {
     }
   });
 
+  // ---------- PASSWORD RESET ----------
   publicRouter.post(
     "/auth/forgot-password",
     generalLimiter,
@@ -411,7 +408,10 @@ const newUserData = {
         )}/reset-password.html?token=${token}`;
         await sendResetEmail(user.email, resetLink);
 
-        eventBus.emit("password_reset_requested", { userId: user._id, email: user.email });
+        eventBus.emit("password_reset_requested", {
+          userId: user._id,
+          email: user.email,
+        });
         res.status(200).json({
           message: "If an account exists, a reset link has been sent.",
         });
@@ -438,7 +438,7 @@ const newUserData = {
             .status(400)
             .json({ message: "Password reset token is invalid or expired." });
 
-        user.password = newPassword; 
+        user.password = newPassword;
         user.reset_password_token = undefined;
         user.reset_password_expires = undefined;
         await user.save();
@@ -451,6 +451,7 @@ const newUserData = {
     }
   );
 
+  // ---------- CONTACT ----------
   publicRouter.post(
     "/contact",
     generalLimiter,
@@ -465,7 +466,9 @@ const newUserData = {
            <p><strong>Email:</strong> ${email}</p>
            <p><strong>Message:</strong><br>${message}</p>`
         );
-        res.status(200).json({ message: "Your message has been sent successfully." });
+        res
+          .status(200)
+          .json({ message: "Your message has been sent successfully." });
       } catch (err) {
         logger.error("❌ Contact form error:", err);
         res.status(500).json({ error: "Failed to send message." });

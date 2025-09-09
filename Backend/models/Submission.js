@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const submissionSchema = new mongoose.Schema({
   assignment_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Assignment', required: true },
-  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  submission_text: String,  
+  user_id: { type: String, ref: 'User', required: true }, // 🔥 match User._id (String)
+  submission_text: String,
   submission_file: String,
   submitted_at: Date,
   feedback_grade: Number,

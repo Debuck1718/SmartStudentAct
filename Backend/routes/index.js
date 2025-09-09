@@ -1,7 +1,8 @@
 // routes/index.js
 const publicRoutes = require("./publicRoutes");
 const protectedRoutes = require("./protectedRoutes");
-const webhookRoutes = require("./webhookRoutes"); 
+const webhookRoutes = require("./webhookRoutes");
+const pushRoutes = require("./pushRoutes"); // ✅ new
 
 module.exports = (app, eventBus, agenda) => {
   const publicApiRouter = publicRoutes(eventBus, agenda);
@@ -9,8 +10,10 @@ module.exports = (app, eventBus, agenda) => {
 
   app.use("/api", publicApiRouter);
 
-  app.use("/api", webhookRoutes); 
+  app.use("/api", webhookRoutes);
 
- 
   app.use("/api", protectedApiRouter);
+
+  app.use("/api", pushRoutes);
 };
+

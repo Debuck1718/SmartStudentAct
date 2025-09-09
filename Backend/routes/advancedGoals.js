@@ -235,36 +235,85 @@ router.get('/advice', authenticateJWT, async (req, res) => {
 });
 
 
-router.post('/teacher/add-points', authenticateJWT, requireAdmin, async (req, res) => {
+router.post(
+  "/teacher/add-points",
+  authenticateJWT,
+  hasRole(["teacher", "admin"]), 
+  async (req, res) => {
     try {
-        const { studentEmail, points, reason } = req.body;
-        if (!studentEmail || points === undefined || !reason) {
-            return res.status(400).json({ message: 'Missing required fields.' });
-        }
+      const { studentId, points, reason } = req.body;
 
-        const student = await User.findOne({ email: studentEmail });
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found.' });
-        }
-        await User.findByIdAndUpdate(student._id, { $inc: { smart_points: parseInt(points, 10) } });
+      if (!studentId || points === undefined || !reason) {
+        return res.status(400).json({ message: "Missing required fields." });
+      }
 
-        const studentRewards = await StudentRewards.findOne({ studentId: student._id });
-        if (studentRewards) {
-             studentRewards.pointsLog.push({ 
-                 points, 
-                 source: 'Teacher', 
-                 description: reason,
-                 date: new Date()
-             });
-             await studentRewards.save();
-        }
+      const student = await User.findById(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found." });
+      }
 
-        res.status(200).json({ message: `Successfully added ${points} points to ${student.firstname}.` });
+      await User.findByIdAndUpdate(student._id, {
+        $inc: { smart_points: parseInt(points, 10) },
+      });
+
+      let studentRewards = await StudentRewards.findOne({ studentId: student._id });
+      if (!studentRewards) {
+        studentRewards = new StudentRewards({
+          studentId: student._id,
+          pointsLog: [],
+        });
+      }
+
+      const sourceRole = req.user.role === "admin" ? "Admin" : "Teacher";
+
+      studentRewards.pointsLog.push({
+        points,
+        source: sourceRole,
+        description: reason,
+        date: new Date(),
+      });
+
+      await studentRewards.save();
+
+      res.status(200).json({
+        message: `Successfully added ${points} points to ${student.firstname}.`,
+      });
     } catch (error) {
-        logger.error('Error adding points:', error);
-        res.status(500).json({ message: 'Server error occurred while adding points.' });
+      logger.error("Error adding points:", error);
+      res.status(500).json({ message: "Server error occurred while adding points." });
     }
-});
+  }
+);
+
+router.get(
+  "/teacher/view-points/:studentId",
+  authenticateJWT,
+  hasRole(["teacher", "admin"]),
+  async (req, res) => {
+    try {
+      const { studentId } = req.params;
+
+      const student = await User.findById(studentId).select("firstname lastname smart_points");
+      if (!student) {
+        return res.status(404).json({ message: "Student not found." });
+      }
+
+      const studentRewards = await StudentRewards.findOne({ studentId: student._id });
+
+      res.status(200).json({
+        student: {
+          id: student._id,
+          name: `${student.firstname} ${student.lastname}`,
+          smart_points: student.smart_points || 0,
+        },
+        pointsLog: studentRewards ? studentRewards.pointsLog : [],
+      });
+    } catch (error) {
+      logger.error("Error fetching student points:", error);
+      res.status(500).json({ message: "Server error occurred while fetching points." });
+    }
+  }
+);
 
 router.post('/milestone-completed', authenticateJWT, checkSubscription, async (req, res) => {
     try {

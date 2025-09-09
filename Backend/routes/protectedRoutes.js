@@ -1032,16 +1032,11 @@ protectedRouter.post(
 
     try {
       const teacher = await User.findById(teacherId).populate("school");
-      if (!teacher || !teacher.schoolName) {
+      if (!teacher || !teacher.school) {
         return res.status(400).json({ message: "Teacher school not found." });
       }
 
-      const schoolName = teacher.schoolName; 
-
-      const school = await School.findOne({ name: schoolName });
-      if (!school) {
-        return res.status(404).json({ message: "School not found." });
-      }
+      const school = teacher.school; 
 
       let schoolCalendar = await SchoolCalendar.findOne({
         school: school._id,
@@ -1052,30 +1047,32 @@ protectedRouter.post(
         schoolCalendar.teacher_id = teacherId;
         schoolCalendar.terms = terms;
         await schoolCalendar.save();
-        res.status(200).json({
+        return res.status(200).json({
           message: "Academic calendar updated successfully.",
           calendar: schoolCalendar,
         });
-      } else {
-        schoolCalendar = new SchoolCalendar({
-          teacher_id: teacherId,
-          school: school._id,
-          schoolName: school.name,
-          academicYear,
-          terms,
-        });
-        await schoolCalendar.save();
-        res.status(201).json({
-          message: "Academic calendar submitted successfully.",
-          calendar: schoolCalendar,
-        });
       }
+
+      schoolCalendar = new SchoolCalendar({
+        teacher_id: teacherId,
+        school: school._id,
+        schoolName: school.name, 
+        academicYear,
+        terms,
+      });
+      await schoolCalendar.save();
+
+      return res.status(201).json({
+        message: "Academic calendar submitted successfully.",
+        calendar: schoolCalendar,
+      });
     } catch (error) {
       logger.error("Error submitting academic calendar:", error);
-      res.status(500).json({ message: "Server error" });
+      return res.status(500).json({ message: "Server error" });
     }
   }
 );
+
 
 
 protectedRouter.post(
@@ -1085,109 +1082,24 @@ protectedRouter.post(
   localUpload.single("file"),
   async (req, res) => {
     try {
-      const {
-        title,
-        description,
-        due_date,
-        assigned_to_users,
-        assigned_to_grades,
-        assigned_to_levels,
-        assigned_to_programs,
-        assigned_to_schools,
-        assignToMyGrade,
-        assignToMyLevel,
-        assignToSchool,
-        assignToMyProgram,
-      } = req.body;
-
       const teacherId = req.user.id;
-
-      if (!title || !due_date) {
-        return res.status(400).json({
-          message: "Missing required fields: title or dueDate.",
-        });
-      }
-
-      const teacher = await User.findById(teacherId);
-      if (!teacher) {
-        return res.status(404).json({ message: "Teacher not found." });
-      }
-
-      let targetUsers = [];
-      let targetGrades = [];
-      let targetLevels = [];
-      let targetPrograms = [];
-      let targetSchools = [];
-
-      if (Array.isArray(assigned_to_users) && assigned_to_users.length > 0) {
-        targetUsers.push(...assigned_to_users);
-      }
-
-      if (Array.isArray(assigned_to_grades) && assigned_to_grades.length > 0) {
-        targetGrades.push(...assigned_to_grades);
-      }
-
-      if (Array.isArray(assigned_to_levels) && assigned_to_levels.length > 0) {
-        targetLevels.push(...assigned_to_levels);
-      }
-
-      if (Array.isArray(assigned_to_programs) && assigned_to_programs.length > 0) {
-        targetPrograms.push(...assigned_to_programs);
-      }
-
-      if (Array.isArray(assigned_to_schools) && assigned_to_schools.length > 0) {
-        targetSchools.push(...assigned_to_schools);
-      }
-
-      if (assignToMyGrade && teacher.grade) {
-        targetGrades.push(teacher.grade);
-      }
-
-      if (assignToMyLevel && teacher.level) {
-        targetLevels.push(teacher.level);
-      }
-
-      if (assignToMyProgram && teacher.programOfStudy) {
-        targetPrograms.push(teacher.programOfStudy);
-      }
-
-      if (assignToSchool && teacher.schoolName) {
-        targetSchools.push(teacher.schoolName);
-      }
-
-      targetUsers = [...new Set(targetUsers)];
-      targetGrades = [...new Set(targetGrades)];
-      targetLevels = [...new Set(targetLevels)];
-      targetPrograms = [...new Set(targetPrograms)];
-      targetSchools = [...new Set(targetSchools)];
+      const { title, description, due_date, assigned_to_users, assigned_to_grades, assigned_to_levels, assigned_to_programs, assigned_to_schools } = req.body;
 
       const newAssignment = new Assignment({
+        teacher_id: teacherId,
         title,
         description,
-        due_date: new Date(due_date),
-        created_by: teacherId,
-        assigned_to_users: targetUsers,
-        assigned_to_grades: targetGrades,
-        assigned_to_levels: targetLevels,
-        assigned_to_programs: targetPrograms,
-        assigned_to_schools: targetSchools,
-        attachment_file: req.file
-          ? `/uploads/assignments/${req.file.filename}`
-          : null,
+        file_path: req.file ? `/uploads/assignments/${req.file.filename}` : null,
+        due_date,
+        assigned_to_users: assigned_to_users || [],
+        assigned_to_grades: assigned_to_grades || [],
+        assigned_to_levels: assigned_to_levels || [],
+        assigned_to_programs: assigned_to_programs || [],
+        assigned_to_schools: assigned_to_schools || [],
       });
 
       await newAssignment.save();
-
-      eventBus.emit("assignment_created", {
-        assignmentId: newAssignment._id,
-        title: newAssignment.title,
-        creatorId: teacherId,
-      });
-
-      res.status(201).json({
-        message: "Assignment created successfully!",
-        assignment: newAssignment,
-      });
+      res.status(201).json({ message: "Assignment created successfully", assignment: newAssignment });
     } catch (error) {
       logger.error("Error creating assignment:", error);
       res.status(500).json({ message: "Server error" });
@@ -1202,14 +1114,15 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const assignments = await Assignment.find({ created_by: req.user.id });
-      res.status(200).json({ assignments });
+      const assignments = await Assignment.find({ teacher_id: req.user.id }).sort({ createdAt: -1 });
+      res.status(200).json(assignments);
     } catch (error) {
-      logger.error("Error fetching teacher assignments:", error);
+      logger.error("Error fetching assignments:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
+
 
 protectedRouter.post(
   "/teacher/feedback/:submissionId",
@@ -1218,144 +1131,32 @@ protectedRouter.post(
   localUpload.single("feedbackFile"),
   async (req, res) => {
     try {
+      const { feedback_grade, feedback_comments } = req.body;
       const { submissionId } = req.params;
-      const { grade, comments } = req.body;
-      const submission = await Submission.findById(submissionId);
-      if (!submission)
-        return res.status(404).json({ message: "Submission not found" });
 
-      const assignment = await Assignment.findById(submission.assignment_id);
-      if (!assignment || assignment.created_by.toString() !== req.user.id) {
-        return res
-          .status(403)
-          .json({
-            message:
-              "Forbidden. You are not authorized to provide feedback on this submission.",
-          });
+      const submission = await Submission.findById(submissionId).populate("assignment_id");
+      if (!submission) return res.status(404).json({ message: "Submission not found" });
+
+      const assignment = submission.assignment_id;
+      if (!assignment || assignment.teacher_id !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized to give feedback" });
       }
 
-      submission.feedback_grade = grade || null;
-      submission.feedback_comments = comments || null;
-      submission.feedback_file = req.file
-        ? `/uploads/feedback/${req.file.filename}`
-        : null;
+      submission.feedback_grade = feedback_grade || submission.feedback_grade;
+      submission.feedback_comments = feedback_comments || submission.feedback_comments;
+      submission.feedback_file = req.file ? `/uploads/feedback/${req.file.filename}` : submission.feedback_file;
       submission.feedback_given_at = new Date();
+
       await submission.save();
-
-      if (grade) {
-        eventBus.emit("assignment_graded", {
-          assignmentId: assignment._id,
-          studentId: submission.user_id,
-          grade: grade,
-        });
-      } else if (comments) {
-        eventBus.emit("feedback_given", {
-          assignmentId: assignment._id,
-          studentId: submission.user_id,
-          feedback: comments,
-        });
-      }
-
-      res
-        .status(200)
-        .json({ message: "Feedback saved successfully!", submission });
+      res.status(200).json({ message: "Feedback saved", submission });
     } catch (error) {
-      logger.error("Error saving feedback:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  }
-);
-
-protectedRouter.get(
-  "/teacher/students",
-  authenticateJWT,
-  hasRole("teacher"),
-  async (req, res) => {
-    try {
-      const teacher = await User.findById(req.user.id);
-      if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
-      
-        return res.status(200).json([]);
-      }
-
-      const { search } = req.query;
-      const query = {
-        role: "student",
-        schoolName: teacher.schoolName,
-        grade: { $in: teacher.teacherGrade }, 
-      };
-
-      if (search) {
-        query.$or = [
-          { firstname: { $regex: search, $options: "i" } },
-          { lastname: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-        ];
-      }
-
-      const students = await User.find(query).select(
-        "firstname lastname email grade imageUrl"
-      );
-
-      res.status(200).json(students || []);
-    } catch (error) {
-      logger.error("Error fetching students for teacher's class:", error);
+      logger.error("Error giving feedback:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
 
 
-
-protectedRouter.post(
-  "/teacher/quiz",
-  authenticateJWT,
-  hasRole("teacher"),
-  async (req, res) => {
-    try {
-      const { title, description, dueDate, questions, assignTo, timeLimitMinutes } = req.body;
-      const teacherId = req.user.id;
-
-      if (!title || !questions || questions.length === 0) {
-        return res.status(400).json({
-          message: "Quiz must have a title and at least one question.",
-        });
-      }
-
-const quiz = new Quiz({
-  teacher_id: teacherId,
-  title,
-  description,
-  due_date: new Date(dueDate),
-  questions,
-  timeLimitMinutes: timeLimitMinutes || null,
-  assigned_to_users: assignTo?.users || [],
-  assigned_to_grades: assignTo?.grades || [],
-  assigned_to_programs: assignTo?.programs || [],
-  assigned_to_schools: assignTo?.schools || [],
-});
-
-
-      await quiz.save();
-
-      eventBus.emit("quiz_created", {
-        quizId: quiz._id,
-        title: quiz.title,
-        teacherId,
-      });
-
-      res.status(201).json({
-        message: "Quiz created successfully!",
-        quiz,
-      });
-    } catch (error) {
-      logger.error("Error creating quiz:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  }
-);
-
-// Get all quizzes for the logged-in teacher
 protectedRouter.get(
   "/teacher/quizzes",
   authenticateJWT,
@@ -1372,57 +1173,31 @@ protectedRouter.get(
 );
 
 
-protectedRouter.get(
-  "/teacher/quiz/:quizId/results",
+protectedRouter.post(
+  "/teacher/quizzes",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const { quizId } = req.params;
+      const { title, description, due_date, timeLimitMinutes, questions, assigned_to_users, assigned_to_grades, assigned_to_programs, assigned_to_schools } = req.body;
 
-      const quiz = await Quiz.findById(quizId).populate("submissions.student_id", "firstname lastname email");
-
-      if (!quiz || quiz.teacher_id.toString() !== req.user.id) {
-        return res.status(403).json({
-          message: "Not authorized to view results for this quiz.",
-        });
-      }
-
-      const formattedResults = quiz.submissions.map(sub => ({
-        student: `${sub.student_id.firstname} ${sub.student_id.lastname}`,
-        email: sub.student_id.email,
-        score: sub.score ?? null,
-        startedAt: sub.started_at,
-        submittedAt: sub.submitted_at,
-        autoSubmitted: sub.auto_submitted
-      }));
-
-      res.status(200).json({ quiz: quiz.title, results: formattedResults });
-    } catch (error) {
-      logger.error("Error fetching quiz results:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  }
-);
-
-protectedRouter.delete(
-  "/teacher/quiz/:id",
-  authenticateJWT,
-  hasRole("teacher"),
-  async (req, res) => {
-    try {
-      const quiz = await Quiz.findOneAndDelete({
-        _id: req.params.id,
+      const quiz = new Quiz({
         teacher_id: req.user.id,
+        title,
+        description,
+        due_date,
+        timeLimitMinutes,
+        questions,
+        assigned_to_users: assigned_to_users || [],
+        assigned_to_grades: assigned_to_grades || [],
+        assigned_to_programs: assigned_to_programs || [],
+        assigned_to_schools: assigned_to_schools || [],
       });
 
-      if (!quiz) {
-        return res.status(404).json({ message: "Quiz not found" });
-      }
-
-      res.status(200).json({ message: "Quiz deleted successfully" });
+      await quiz.save();
+      res.status(201).json({ message: "Quiz created successfully", quiz });
     } catch (error) {
-      logger.error("Error deleting quiz:", error);
+      logger.error("Error creating quiz:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
@@ -1430,50 +1205,18 @@ protectedRouter.delete(
 
 
 protectedRouter.get(
-  "/teacher/overdue-tasks",
+  "/teacher/overdue",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacher = await User.findById(req.user.id);
       const now = new Date();
-
       const overdueAssignments = await Assignment.find({
-        created_by: req.user.id,
+        teacher_id: req.user.id,
         due_date: { $lt: now },
       });
 
-      const assignmentIds = overdueAssignments.map((a) => a._id);
-
-      const submittedAssignmentIds = (
-        await Submission.find({
-          assignment_id: { $in: assignmentIds },
-        })
-      ).map((sub) => sub.assignment_id.toString());
-
-      const unsubmittedOverdue = overdueAssignments.filter(
-        (assignment) =>
-          !submittedAssignmentIds.includes(assignment._id.toString())
-      );
-
-      const studentEmails = unsubmittedOverdue.map(
-        (assignment) => assignment.assigned_to_users[0]
-      );
-      const students = await User.find({
-        email: { $in: studentEmails },
-      }).select("firstname lastname email");
-      const studentMap = new Map(students.map((s) => [s.email, s]));
-
-      const formattedTasks = unsubmittedOverdue.map((assignment) => {
-        const student = studentMap.get(assignment.assigned_to_users[0]);
-        return {
-          title: assignment.title,
-          due_datetime: assignment.due_date,
-          student_email: student?.email,
-        };
-      });
-
-      res.status(200).json(formattedTasks);
+      res.status(200).json(overdueAssignments);
     } catch (error) {
       logger.error("Error fetching overdue tasks:", error);
       res.status(500).json({ message: "Server error" });
@@ -1481,21 +1224,15 @@ protectedRouter.get(
   }
 );
 
+
 protectedRouter.get(
   "/teacher/assigned-tasks",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const assignedTasks = await Assignment.find({ created_by: req.user.id });
-      const formattedTasks = assignedTasks.map((t) => ({
-        title: t.title,
-        due_datetime: t.due_date,
-        student_email: t.assigned_to_users[0],
-        subject: "N/A",
-        attachment: t.attachment_file,
-      }));
-      res.status(200).json(formattedTasks);
+      const assignedTasks = await Assignment.find({ teacher_id: req.user.id });
+      res.status(200).json(assignedTasks);
     } catch (error) {
       logger.error("Error fetching assigned tasks:", error);
       res.status(500).json({ message: "Server error" });
@@ -1503,23 +1240,19 @@ protectedRouter.get(
   }
 );
 
+
 protectedRouter.get(
   "/teacher/feedback",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacherAssignments = await Assignment.find({
-        created_by: req.user.id,
-      }).select("_id");
+      const teacherAssignments = await Assignment.find({ teacher_id: req.user.id }).select("_id");
       const assignmentIds = teacherAssignments.map((a) => a._id);
 
       const submissionsWithFeedback = await Submission.find({
         assignment_id: { $in: assignmentIds },
-        $or: [
-          { feedback_grade: { $ne: null } },
-          { feedback_comments: { $ne: null } },
-        ],
+        $or: [{ feedback_grade: { $ne: null } }, { feedback_comments: { $ne: null } }],
       }).populate("user_id", "email");
 
       const formattedFeedback = submissionsWithFeedback.map((f) => ({
@@ -1531,71 +1264,6 @@ protectedRouter.get(
       res.status(200).json(formattedFeedback);
     } catch (error) {
       logger.error("Error fetching feedback:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  }
-);
-
-protectedRouter.post(
-  "/teacher/message",
-  authenticateJWT,
-  hasRole("teacher"),
-  async (req, res) => {
-    const { to, text } = req.body;
-    try {
-      const student = await User.findOne({ email: to, role: "student" });
-      if (!student) {
-        return res.status(404).json({ message: "Student not found." });
-      }
-
-      eventBus.emit("teacher_message", {
-        userId: student._id,
-        message: text,
-        teacherName: req.user.firstname,
-      });
-
-      res.status(200).json({ message: "Message sent successfully!" });
-    } catch (error) {
-      logger.error("Error sending message:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  }
-);
-
-protectedRouter.get(
-  "/teacher/students/other",
-  authenticateJWT,
-  hasRole("teacher"),
-  async (req, res) => {
-    try {
-      const teacher = await User.findById(req.user.id);
-      if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
-        return res
-          .status(400)
-          .json({ message: "Teacher school or grade information is missing." });
-      }
-
-      const { search } = req.query;
-      const query = {
-        role: "student",
-        schoolName: teacher.schoolName,
-        grade: { $nin: teacher.teacherGrade },
-      };
-
-      if (search) {
-        query.$or = [
-          { firstname: { $regex: search, $options: "i" } },
-          { lastname: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-        ];
-      }
-
-      const otherStudents = await User.find(query).select(
-        "firstname lastname email grade imageUrl"
-      );
-      res.status(200).json(otherStudents);
-    } catch (error) {
-      logger.error("Error fetching students from other classes:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
@@ -1622,21 +1290,26 @@ protectedRouter.get(
   hasRole("student"),
   async (req, res) => {
     try {
-      const student = await User.findById(req.user.id);
+      const student = await User.findById(req.user.id).populate("school");
       if (!student) {
         return res.status(404).json({ message: "Student not found." });
       }
 
-      const assignments = await Assignment.find({
-        $or: [
-          { assigned_to_users: student.email },
-          { assigned_to_grades: student.grade },
-          { assigned_to_schools: student.schoolName },
-          { created_by: student._id }, 
-        ],
-      });
+      const conditions = [
+        { assigned_to_users: student.email },
+        { assigned_to_programs: student.program },
+        { assigned_to_schools: student.school },
+      ];
 
-      res.status(200).json({ assignments });
+      if (student.educationLevel === "university") {
+        conditions.push({ assigned_to_levels: student.uniLevel });
+      } else {
+        conditions.push({ assigned_to_grades: student.grade });
+      }
+
+      const assignments = await Assignment.find({ $or: conditions }).sort({ due_date: 1 });
+
+      res.status(200).json(assignments);
     } catch (error) {
       logger.error("Error fetching student assignments:", error);
       res.status(500).json({ message: "Server error" });
@@ -1646,82 +1319,81 @@ protectedRouter.get(
 
 
 protectedRouter.post(
-  "/student/assignments",
+  "/student/tasks",
   authenticateJWT,
   hasRole("student"),
   async (req, res) => {
     try {
-      const { title, description, dueDate, dueTime } = req.body;
-      const student = await User.findById(req.user.id);
-      if (!student) {
-        return res.status(404).json({ message: "Student not found." });
+      const { title, description, due_date } = req.body;
+
+      if (!title || !due_date) {
+        return res
+          .status(400)
+          .json({ message: "Title and due_date are required." });
       }
 
-      if (!title || !dueDate || !dueTime) {
-        return res.status(400).json({ message: "Title, dueDate and dueTime are required." });
+      const dueDate = new Date(due_date);
+      if (isNaN(dueDate)) {
+        return res.status(400).json({ message: "Invalid due_date" });
       }
 
-      const dueDateTime = new Date(`${dueDate}T${dueTime}`);
-
-      const newAssignment = new Assignment({
+      const newTask = new StudentTask({
+        student_id: req.user.id,
         title,
         description,
-        due_date: dueDateTime,
-        created_by: student._id,
-        assigned_to_users: [student.email], 
+        due_date: dueDate,
       });
 
-      await newAssignment.save();
+      await newTask.save();
 
-      eventBus.emit("assignment_created", {
-        assignmentId: newAssignment._id,
-        title: newAssignment.title,
-        creatorId: student._id,
+      req.app.locals.eventBus.emit("task_created", {
+        taskId: newTask._id,
+        studentId: req.user.id,
+        title: newTask.title,
       });
 
-      res.status(201).json({
-        message: "Assignment created successfully.",
-        assignment: newAssignment,
-      });
+      res
+        .status(201)
+        .json({ message: "Task created successfully", task: newTask });
     } catch (error) {
-      logger.error("Error creating student assignment:", error);
+      logger.error("Error creating student task:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
 
-
-protectedRouter.post(
-  "/student/reminders",
+protectedRouter.get(
+  "/student/tasks",
   authenticateJWT,
   hasRole("student"),
   async (req, res) => {
     try {
-      const { assignmentId } = req.body;
-      if (!assignmentId) {
-        return res.status(400).json({ message: "assignmentId is required." });
-      }
-
-      const assignment = await Assignment.findById(assignmentId);
-      if (!assignment) {
-        return res.status(404).json({ message: "Assignment not found." });
-      }
-
-      const reminderHours = [24, 6, 2];
-      reminderHours.forEach(async (hoursBefore) => {
-        const remindTime = new Date(assignment.due_date);
-        remindTime.setHours(remindTime.getHours() - hoursBefore);
-        if (remindTime > new Date()) {
-          await req.app.locals.agenda.schedule(remindTime, "assignment_reminder", {
-            assignmentId,
-            hoursBefore,
-          });
-        }
-      });
-
-      res.status(200).json({ message: "Reminders scheduled successfully." });
+      const tasks = await StudentTask.find({ student_id: req.user.id }).sort({ due_date: 1 });
+      res.status(200).json(tasks);
     } catch (error) {
-      logger.error("Error scheduling reminders:", error);
+      logger.error("Error fetching tasks:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.patch(
+  "/student/tasks/:id/complete",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
+    try {
+      const task = await StudentTask.findOneAndUpdate(
+        { _id: req.params.id, student_id: req.user.id },
+        { is_completed: true },
+        { new: true }
+      );
+
+      if (!task) return res.status(404).json({ message: "Task not found" });
+
+      res.status(200).json({ message: "Task marked as completed", task });
+    } catch (error) {
+      logger.error("Error marking task complete:", error);
       res.status(500).json({ message: "Server error" });
     }
   }

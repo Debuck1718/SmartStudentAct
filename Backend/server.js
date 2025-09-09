@@ -119,6 +119,10 @@ try {
   const webhookRoutes = require("./routes/webhookRoutes");
   app.use("/api", webhookRoutes);
 
+  const pushRoutes = require("./routes/pushRoutes");
+app.use("/api/push", pushRoutes);
+
+
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", protectedRoutes);
 

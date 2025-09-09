@@ -18,12 +18,15 @@ const userSchema = new mongoose.Schema(
     },
     phone: { type: String, unique: true, sparse: true, trim: true, match: [/^\+?[0-9]{7,15}$/, "Invalid phone number"] },
     password: { type: String, required: true, minlength: 8, select: false },
+
     role: {
       type: String,
       enum: ["student", "teacher", "admin", "overseer", "global_overseer"],
       required: true,
     },
+
     refreshToken: { type: String, select: false },
+
     occupation: {
       type: String,
       enum: ["student", "teacher", "admin"],
@@ -64,19 +67,26 @@ const userSchema = new mongoose.Schema(
     },
     program: { type: String, trim: true, maxlength: 100 },
 
-
     teacherGrade: {
-      type: [String], 
+      type: [String],
       required: function () {
         return this.occupation === "teacher";
       },
     },
     teacherSubject: {
-      type: String, 
+      type: String,
       trim: true,
       maxlength: 100,
       required: function () {
         return this.occupation === "teacher";
+      },
+    },
+
+    school: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: function () {
+        return ["student", "teacher", "admin"].includes(this.occupation);
       },
     },
 
@@ -87,7 +97,6 @@ const userSchema = new mongoose.Schema(
     lockoutUntil: { type: Date, default: null },
     reset_password_token: { type: String, select: false },
     reset_password_expires: { type: Date, select: false },
-
 
     is_on_trial: {
       type: Boolean,
@@ -125,25 +134,7 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-
     managedRegions: { type: [String], default: [] },
-
-    schoolName: {
-      type: String,
-      trim: true,
-      maxlength: 100,
-      required: function () {
-        return ["student", "teacher", "admin"].includes(this.occupation);
-      },
-    },
-    schoolCountry: {
-      type: String,
-      required: function () {
-        return ["student", "teacher", "admin"].includes(this.role);
-      },
-      trim: true,
-      maxlength: 100,
-    },
     earnedBadges: { type: [String], default: [] },
     trialInsightsUsed: { type: Number, default: 0 },
     trialInsightsLimit: { type: Number, default: 3 },
@@ -151,11 +142,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   if (this._rawPassword) {
-    this.password = this._rawPassword; 
+    this.password = this._rawPassword;
     delete this._rawPassword;
     return next();
   }
@@ -190,5 +180,7 @@ userSchema.methods.setRawHashedPassword = function (hashedPassword) {
   this.password = hashedPassword;
 };
 
+
 module.exports = mongoose.model("User", userSchema);
+
 
