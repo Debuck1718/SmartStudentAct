@@ -96,48 +96,45 @@ const authenticateJWT = (req, res, next) => {
             message: "Session expired. Please login again.",
           });
         }
+return jwt.verify(refreshToken, JWT_REFRESH_SECRET, async (refreshErr, refreshDecoded) => {
+  if (refreshErr) {
+    logger.error(`Refresh token invalid/expired: ${refreshErr.message}`);
+    return res.status(403).json({
+      status: false,
+      message: "Refresh token expired or invalid. Please login again.",
+    });
+  }
 
-        return jwt.verify(refreshToken, JWT_REFRESH_SECRET, async (refreshErr, refreshDecoded) => {
-          if (refreshErr) {
-            logger.error(`Refresh token invalid/expired: ${refreshErr.message}`);
-            return res.status(403).json({
-              status: false,
-              message: "Refresh token expired or invalid. Please login again.",
-            });
-          }
+  // FIX: Pass the decoded object directly. The `id` property is what the token uses.
+  const newAccessToken = generateAccessToken(refreshDecoded);
 
-          const newAccessToken = generateAccessToken({
-            _id: refreshDecoded.id,
-            role: refreshDecoded.role,
-            email: refreshDecoded.email,
-          });
+  const user = await User.findById(refreshDecoded.id);
+  if (!user || user.refreshToken !== refreshToken) {
+    logger.warn(`Refresh token mismatch for user ${refreshDecoded.id}.`);
+    return res.status(403).json({
+      status: false,
+      message: "Invalid session. Please login again.",
+    });
+  }
 
-          const user = await User.findById(refreshDecoded.id);
-          if (!user || user.refreshToken !== refreshToken) {
-            logger.warn(`Refresh token mismatch for user ${refreshDecoded.id}.`);
-            return res.status(403).json({
-              status: false,
-              message: "Invalid session. Please login again.",
-            });
-          }
+  res.cookie("access_token", newAccessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "None",
+    domain: ".smartstudentact.com",
+    path: "/",
+    maxAge: 15 * 60 * 1000,
+  });
 
-          res.cookie("access_token", newAccessToken, {
-            httpOnly: true,
-            secure: isProd,
-            sameSite: "None",
-            domain: ".smartstudentact.com",
-            path: "/",
-            maxAge: 15 * 60 * 1000,
-          });
+  req.userId = refreshDecoded.id;
+  req.userRole = refreshDecoded.role;
+  req.email = refreshDecoded.email;
+  req.user = refreshDecoded;
 
-          req.userId = refreshDecoded.id;
-          req.userRole = refreshDecoded.role;
-          req.email = refreshDecoded.email;
-          req.user = refreshDecoded;
+  logger.info("New access token issued via refresh token.");
+  return next();
+});
 
-          logger.info("New access token issued via refresh token.");
-          return next();
-        });
       }
 
       logger.error(`JWT verification failed: ${err.message}`);
