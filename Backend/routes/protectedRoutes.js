@@ -1484,7 +1484,7 @@ protectedRouter.post(
   }
 );
 
-router.get("/student/tasks", authenticateJWT, async (req, res) => {
+protectedRouter.get("/student/tasks", authenticateJWT, async (req, res) => {
     try {
         const studentId = req.userId; 
         if (!studentId) {
