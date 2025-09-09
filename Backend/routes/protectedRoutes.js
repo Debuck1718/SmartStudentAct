@@ -1114,15 +1114,18 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const assignments = await Assignment.find({ teacher_id: req.user.id }).sort({ createdAt: -1 });
-      res.status(200).json(assignments);
+      const teacherId = req.user.id;
+      console.log("Teacher ID:", teacherId);
+
+      const assignments = await Assignment.find({ teacher_id: teacherId }).sort({ createdAt: -1 });
+
+      res.status(200).json(assignments || []);
     } catch (error) {
       logger.error("Error fetching assignments:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
-
 
 protectedRouter.post(
   "/teacher/feedback/:submissionId",
@@ -1205,7 +1208,7 @@ protectedRouter.post(
 
 
 protectedRouter.get(
-  "/teacher/overdue",
+  "/teacher/overdue-tasks",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
@@ -1247,18 +1250,27 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacherAssignments = await Assignment.find({ teacher_id: req.user.id }).select("_id");
+      const teacherId = req.user.id;
+
+      // Find all assignments by this teacher
+      const teacherAssignments = await Assignment.find({ teacher_id: teacherId }).select("_id");
       const assignmentIds = teacherAssignments.map((a) => a._id);
 
+      if (assignmentIds.length === 0) {
+        return res.status(200).json([]); // No assignments yet
+      }
+
+      // Find submissions that have feedback
       const submissionsWithFeedback = await Submission.find({
         assignment_id: { $in: assignmentIds },
         $or: [{ feedback_grade: { $ne: null } }, { feedback_comments: { $ne: null } }],
-      }).populate("user_id", "email");
+      }).populate("user_id", "email"); // user_id is string, populate works if matches
 
+      // Format feedback for response
       const formattedFeedback = submissionsWithFeedback.map((f) => ({
-        student_email: f.user_id?.email,
-        message: f.feedback_comments || `Graded: ${f.feedback_grade}`,
-        file_name: f.feedback_file,
+        student_email: f.user_id?.email || "Unknown",
+        message: f.feedback_comments || (f.feedback_grade !== null ? `Graded: ${f.feedback_grade}` : "No feedback"),
+        file_name: f.feedback_file || null,
       }));
 
       res.status(200).json(formattedFeedback);
@@ -1268,6 +1280,121 @@ protectedRouter.get(
     }
   }
 );
+
+
+
+protectedRouter.post(
+  "/teacher/message",
+  authenticateJWT,
+  hasRole(["teacher"]),
+  async (req, res) => {
+    const { to, text } = req.body;
+
+    try {
+      const student = await User.findOne({ email: to, role: "student" });
+      if (!student) {
+        return res.status(404).json({ message: "Student not found." });
+      }
+
+      eventBus.emit("teacher_message", {
+        userId: student._id,
+        message: text,
+        teacherName: req.user.firstname,
+      });
+
+      res.status(200).json({ message: "Message sent successfully!" });
+    } catch (error) {
+      logger.error("Error sending message:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+
+protectedRouter.get(
+  "/teacher/students/other",
+  authenticateJWT,
+  hasRole(["teacher"]),
+  async (req, res) => {
+    try {
+      const teacher = await User.findById(req.user.id);
+
+      if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
+        return res.status(400).json({
+          message: "Teacher school or grade information is missing.",
+        });
+      }
+
+      const { search } = req.query;
+
+      const query = {
+        role: "student",
+        schoolName: teacher.schoolName,
+        grade: { $nin: teacher.teacherGrade },
+      };
+
+      if (search) {
+        query.$or = [
+          { firstname: { $regex: search, $options: "i" } },
+          { lastname: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const otherStudents = await User.find(query).select(
+        "firstname lastname email grade imageUrl"
+      );
+
+      res.status(200).json(otherStudents);
+    } catch (error) {
+      logger.error("Error fetching students from other classes:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+
+protectedRouter.get(
+  "/teacher/students",
+  authenticateJWT,
+  hasRole(["teacher"]),
+  async (req, res) => {
+    try {
+      const teacher = await User.findById(req.user.id);
+
+      if (!teacher?.schoolName || !teacher?.teacherGrade?.length) {
+        return res.status(200).json([]); 
+      }
+
+      const { search } = req.query;
+
+      const query = {
+        role: "student",
+        schoolName: teacher.schoolName,
+        grade: { $in: teacher.teacherGrade },
+      };
+
+      if (search) {
+        query.$or = [
+          { firstname: { $regex: search, $options: "i" } },
+          { lastname: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const students = await User.find(query).select(
+        "firstname lastname email grade imageUrl"
+      );
+
+      res.status(200).json(students || []);
+    } catch (error) {
+      logger.error("Error fetching students for teacher's class:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+
 
 
 protectedRouter.get("/auth/check", authenticateJWT, (req, res) => {
