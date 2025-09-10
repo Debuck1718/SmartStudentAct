@@ -435,7 +435,7 @@ async function fetchOverdueTasks() {
     if (!container) return;
     container.innerHTML = `<div class="p-4 text-gray-500">${translateText('loading')}...</div>`;
 
-    const res = await fetchAPI("/teacher/overdue");
+    const res = await fetchAPI("/teacher/overdue-tasks");
     if (res && res.ok) {
         const tasks = await res.json();
         if (!tasks.length) {
