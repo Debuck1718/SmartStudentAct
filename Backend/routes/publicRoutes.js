@@ -9,16 +9,16 @@ const User = require("../models/User");
 const School = require("../models/School");
 const logger = require("../utils/logger");
 const {
-  generateAccessToken,
-  generateRefreshToken,
-  setAuthCookies,
+  generateAccessToken,
+  generateRefreshToken,
+  setAuthCookies,
 } = require("../middlewares/auth");
 
 const {
-  sendOTPEmail,
-  sendWelcomeEmail,
-  sendResetEmail,
-  sendContactEmail,
+  sendOTPEmail,
+  sendWelcomeEmail,
+  sendResetEmail,
+  sendContactEmail,
 } = require("../utils/email");
 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
@@ -27,277 +27,291 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const PASSWORD_RESET_EXPIRY = 3600000; // 1h
 
 if (!JWT_SECRET)
-  throw new Error("JWT_SECRET is not defined in environment variables.");
+  throw new Error("JWT_SECRET is not defined in environment variables.");
 
 module.exports = (eventBus) => {
-  const publicRouter = express.Router();
+  const publicRouter = express.Router();
 
-  const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message:
-      "Too many login attempts from this IP, please try again after 15 minutes.",
-  });
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50,
+    message:
+      "Too many login attempts from this IP, please try again after 15 minutes.",
+  });
 
-  const generalLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 1000,
-    message: "Too many requests from this IP, please try again after an hour.",
-  });
+  const generalLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 1000,
+    message: "Too many requests from this IP, please try again after an hour.",
+  });
 
-  const redirectPaths = {
-    global_overseer: "/global_overseer.html",
-    overseer: "/overseer.html",
-    admin: "/admins.html",
-    teacher: "/teachers.html",
-    student: "/students.html",
-    payment: "/payment.html",
-    default: "/login.html",
-  };
+  const redirectPaths = {
+    global_overseer: "/global_overseer.html",
+    overseer: "/overseer.html",
+    admin: "/admins.html",
+    teacher: "/teachers.html",
+    student: "/students.html",
+    payment: "/payment.html",
+    default: "/login.html",
+  };
 
-  // ---------- SCHEMAS ----------
-  const signupOtpSchema = Joi.object({
-    phone: Joi.string()
-      .pattern(/^\+?[1-9]\d{1,14}$/)
-      .required(),
-    email: Joi.string().email().required(),
-    firstname: Joi.string().min(2).max(50).required(),
-    lastname: Joi.string().min(2).max(50).required(),
-    password: Joi.string()
-      .min(8)
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-      .message(
-        "Password must be at least 8 characters, with one uppercase, one number, one special char."
-      )
-      .required(),
-    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    occupation: Joi.string().valid("student", "teacher").required(),
-    schoolName: Joi.string().required(),
-    schoolCountry: Joi.string().required(),
-    educationLevel: Joi.string().when("occupation", {
-      is: "student",
-      then: Joi.required(),
-      otherwise: Joi.allow(""),
-    }),
-    grade: Joi.string().when("occupation", {
-      is: "student",
-      then: Joi.string()
-        .pattern(/^(10|11|12|100|200|300|400)$/)
-        .required(),
-      otherwise: Joi.allow(""),
-    }),
-    program: Joi.string().when("occupation", {
-      is: "student",
-      then: Joi.required(),
-      otherwise: Joi.allow(""),
-    }),
-    teacherGrade: Joi.string().when("occupation", {
-      is: "teacher",
-      then: Joi.required(),
-      otherwise: Joi.allow(""),
-    }),
-    teacherSubject: Joi.string().when("occupation", {
-      is: "teacher",
-      then: Joi.required(),
-      otherwise: Joi.allow(""),
-    }),
-  });
+  // ---------- SCHEMAS ----------
+  const signupOtpSchema = Joi.object({
+    phone: Joi.string()
+      .pattern(/^\+?[1-9]\d{1,14}$/)
+      .required(),
+    email: Joi.string().email().required(),
+    firstname: Joi.string().min(2).max(50).required(),
+    lastname: Joi.string().min(2).max(50).required(),
+    password: Joi.string()
+      .min(8)
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+      .message(
+        "Password must be at least 8 characters, with one uppercase, one number, one special char."
+      )
+      .required(),
+    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+    occupation: Joi.string().valid("student", "teacher").required(),
+    schoolName: Joi.string().required(),
+    schoolCountry: Joi.string().required(),
+    educationLevel: Joi.string().when("occupation", {
+      is: "student",
+      then: Joi.required(),
+      otherwise: Joi.allow(""),
+    }),
+    grade: Joi.string().when("occupation", {
+      is: "student",
+      then: Joi.string()
+        .pattern(/^(10|11|12|100|200|300|400)$/)
+        .required(),
+      otherwise: Joi.allow(""),
+    }),
+    program: Joi.string().when("occupation", {
+      is: "student",
+      then: Joi.required(),
+      otherwise: Joi.allow(""),
+    }),
+    teacherGrade: Joi.string().when("occupation", {
+      is: "teacher",
+      then: Joi.required(),
+      otherwise: Joi.allow(""),
+    }),
+    teacherSubject: Joi.string().when("occupation", {
+      is: "teacher",
+      then: Joi.required(),
+      otherwise: Joi.allow(""),
+    }),
+  });
 
-  const verifyOtpSchema = Joi.object({
-    code: Joi.string().length(6).pattern(/^\d+$/).required(),
-    email: Joi.string().email().required(),
-    password: Joi.string().required(),
-    otpToken: Joi.string().required(),
-  });
+  const verifyOtpSchema = Joi.object({
+    code: Joi.string().length(6).pattern(/^\d+$/).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().required(),
+    otpToken: Joi.string().required(),
+  });
 
-  const loginSchema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string()
-      .min(8)
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-      .required(),
-  });
+  const loginSchema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string()
+      .min(8)
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+      .required(),
+  });
 
-  const forgotPasswordSchema = Joi.object({
-    email: Joi.string().email().required(),
-  });
+  const forgotPasswordSchema = Joi.object({
+    email: Joi.string().email().required(),
+  });
 
-  const resetPasswordSchema = Joi.object({
-    token: Joi.string().required(),
-    newPassword: Joi.string()
-      .min(8)
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-      .required(),
-  });
+  const resetPasswordSchema = Joi.object({
+    token: Joi.string().required(),
+    newPassword: Joi.string()
+      .min(8)
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+      .required(),
+  });
 
-  const contactSchema = Joi.object({
-    name: Joi.string().min(2).max(100).required(),
-    email: Joi.string().email().required(),
-    message: Joi.string().min(5).max(2000).required(),
-  });
+  const contactSchema = Joi.object({
+    name: Joi.string().min(2).max(100).required(),
+    email: Joi.string().email().required(),
+    message: Joi.string().min(5).max(2000).required(),
+  });
 
-  const validate = (schema) => (req, res, next) => {
-    const { error } = schema.validate(req.body, { abortEarly: false });
-    if (error) {
-      logger.error("Validation failed", { errors: error.details });
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: error.details.map((d) => d.message),
-      });
-    }
-    next();
-  };
+  const validate = (schema) => (req, res, next) => {
+    const { error } = schema.validate(req.body, { abortEarly: false });
+    if (error) {
+      logger.error("Validation failed", { errors: error.details });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: error.details.map((d) => d.message),
+      });
+    }
+    next();
+  };
 
-  
-  publicRouter.post(
-    "/users/signup-otp",
-    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
-    validate(signupOtpSchema),
-    async (req, res) => {
-      try {
-        const payload = {
-          ...req.body,
-          temporaryUserId: crypto.randomUUID(),
-          code: Math.floor(100000 + Math.random() * 900000).toString(),
-        };
+  publicRouter.post(
+    "/users/signup-otp",
+    rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
+    validate(signupOtpSchema),
+    async (req, res) => {
+      try {
+        const payload = {
+          ...req.body,
+          temporaryUserId: crypto.randomUUID(),
+          code: Math.floor(100000 + Math.random() * 900000).toString(),
+        };
 
-        const existingUser = await User.findOne({ email: payload.email });
-        const otpToken = jwt.sign(payload, JWT_SECRET, { expiresIn: "10m" });
-        await sendOTPEmail(payload.email, payload.firstname, payload.code);
-
-        return res.status(200).json({
-          status: "success",
-          message: existingUser
-            ? "OTP sent to existing user."
-            : "OTP sent. Please verify to complete signup.",
-          otpToken,
-        });
-      } catch (err) {
-        logger.error("❌ Signup-OTP error:", err);
-        res.status(500).json({ message: "Signup failed." });
-      }
-    }
-  );
-
-  
-publicRouter.post(
-  "/users/verify-otp",
-  validate(verifyOtpSchema),
-  async (req, res) => {
-    const { code, email, password, otpToken } = req.body;
-
-    try {
-      const decoded = jwt.verify(otpToken, JWT_SECRET);
-      logger.info("Decoded OTP payload:", decoded);
-
-      if (decoded.email !== email || decoded.code !== code) {
-        return res.status(400).json({ message: "Invalid email or OTP." });
-      }
-
-      let user = await User.findOne({ email }).select("+password");
-
-      if (user) {
-        if (!user.password) {
-          user.password = password;
-          await user.save();
-        }
-
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-        user.refreshToken = refreshToken;
-        await user.save();
-
-        setAuthCookies(res, accessToken, refreshToken);
+        const existingUser = await User.findOne({ email: payload.email });
+        const otpToken = jwt.sign(payload, JWT_SECRET, { expiresIn: "10m" });
+        await sendOTPEmail(payload.email, payload.firstname, payload.code);
 
         return res.status(200).json({
           status: "success",
-          message: "User verified.",
-          redirectUrl: getRedirectUrl(user, true),
+          message: existingUser
+            ? "OTP sent to existing user."
+            : "OTP sent. Please verify to complete signup.",
+          otpToken,
         });
-      } else {
-        let school = await School.findOne({
-          name: decoded.schoolName?.trim(),
-          schoolCountry: decoded.schoolCountry?.toUpperCase(),
-        });
+      } catch (err) {
+        logger.error("❌ Signup-OTP error:", err);
+        res.status(500).json({ message: "Signup failed." });
+      }
+    }
+  );
 
-        if (!school) {
-          school = new School({
-            name: decoded.schoolName?.trim() || "Unknown School",
-            schoolCountry: decoded.schoolCountry?.toUpperCase() || "UNKNOWN",
-            tier: 1,
+  publicRouter.post(
+    "/users/verify-otp",
+    validate(verifyOtpSchema),
+    async (req, res) => {
+      const { code, email, password, otpToken } = req.body;
+
+      try {
+        const decoded = jwt.verify(otpToken, JWT_SECRET);
+        logger.info("Decoded OTP payload:", decoded);
+
+        if (decoded.email !== email || decoded.code !== code) {
+          return res.status(400).json({ message: "Invalid email or OTP." });
+        }
+
+        let user = await User.findOne({ email }).select("+password");
+
+        if (user) {
+          if (!user.password) {
+            user.password = password;
+            await user.save();
+          }
+
+          const accessToken = generateAccessToken(user);
+          const refreshToken = generateRefreshToken(user);
+          user.refreshToken = refreshToken;
+          await user.save();
+
+          setAuthCookies(res, accessToken, refreshToken);
+
+          return res.status(200).json({
+            status: "success",
+            message: "User verified.",
+            redirectUrl: getRedirectUrl(user, true),
           });
-          await school.save();
-        }
+        } else {
+          let school = await School.findOne({
+            name: decoded.schoolName?.trim(),
+            schoolCountry: decoded.schoolCountry?.toUpperCase(),
+          });
 
-        const now = new Date();
-        const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+          if (!school) {
+            school = new School({
+              name: decoded.schoolName?.trim() || "Unknown School",
+              schoolCountry: decoded.schoolCountry?.toUpperCase() || "UNKNOWN",
+              tier: 1,
+            });
+            await school.save();
+          }
 
-        
-        const newUserData = {
-          firstname: decoded.firstname || "User",
-          lastname: decoded.lastname || "Unknown",
-          email: decoded.email,
-          phone: decoded.phone || "",
-          password, 
-          verified: true,
-          role: decoded.occupation || "student",
-          occupation: decoded.occupation || "student",
-          educationLevel: decoded.educationLevel || "high",
-          grade: decoded.grade,
-          school: school._id,
-          program: decoded.program || "",
-          is_on_trial: true,
-          trial_start_at: now,
-          trial_end_at: trialEndAt,
-          subscription_status: "inactive",
-        };
+          const now = new Date();
+          const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-        if (newUserData.occupation === "teacher") {
-          newUserData.teacherGrade = decoded.teacherGrade?.length
-            ? decoded.teacherGrade
-            : ["1"];
-          newUserData.teacherSubject =
-            decoded.teacherSubject || "General Studies";
-        }
+          const newUserData = {
+            firstname: decoded.firstname || "User",
+            lastname: decoded.lastname || "Unknown",
+            email: decoded.email,
+            phone: decoded.phone || "",
+            password,
+            verified: true,
+            role: decoded.occupation || "student",
+            occupation: decoded.occupation || "student",
+            educationLevel: decoded.educationLevel || "high",
+            grade: Number(decoded.grade), // Cast to Number to match schema
+            school: school._id,
+            program: decoded.program || "",
+            is_on_trial: true,
+            trial_start_at: now,
+            trial_end_at: trialEndAt,
+            subscription_status: "inactive",
+          };
 
-        if (newUserData.occupation === "student") {
-          if (newUserData.educationLevel === "university") {
-            newUserData.university = decoded.university || "Unknown University";
-            newUserData.uniLevel = decoded.uniLevel || "100";
-          } else {
-            newUserData.grade = decoded.grade || 1;
+          if (newUserData.occupation === "teacher") {
+            newUserData.teacherGrade = decoded.teacherGrade?.length
+              ? decoded.teacherGrade
+              : ["1"];
+            newUserData.teacherSubject =
+              decoded.teacherSubject || "General Studies";
+          }
+
+          if (newUserData.occupation === "student") {
+            if (newUserData.educationLevel === "university") {
+              newUserData.university = decoded.university || "Unknown University";
+              newUserData.uniLevel = decoded.uniLevel || "100";
+            } else {
+              newUserData.grade = Number(decoded.grade) || 1;
+            }
+          }
+
+          const newUser = new User(newUserData);
+          
+          try {
+            await newUser.save();
+
+            const accessToken = generateAccessToken(newUser);
+            const refreshToken = generateRefreshToken(newUser);
+            newUser.refreshToken = refreshToken;
+            await newUser.save();
+
+            setAuthCookies(res, accessToken, refreshToken);
+            sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
+
+            return res.status(201).json({
+              status: "success",
+              message: "User created & verified.",
+              redirectUrl: getRedirectUrl(newUser, true),
+            });
+          } catch (saveErr) {
+            // Check for duplicate key error (code 11000)
+            if (saveErr.name === 'MongoError' && saveErr.code === 11000) {
+              return res.status(409).json({ message: "A user with this email or phone already exists." });
+            }
+            // Check for Mongoose validation errors
+            if (saveErr.name === 'ValidationError') {
+              const errors = Object.values(saveErr.errors).map(err => err.message);
+              return res.status(400).json({ message: "Validation failed.", errors: errors });
+            }
+            // Log the full error to the server console for debugging
+            logger.error("❌ Mongoose save error:", saveErr);
+            // Return a generic error for other issues
+            return res.status(500).json({ message: "Failed to create user." });
           }
         }
-
-        const newUser = new User(newUserData);
-        await newUser.save();
-
-        const accessToken = generateAccessToken(newUser);
-        const refreshToken = generateRefreshToken(newUser);
-        newUser.refreshToken = refreshToken;
-        await newUser.save();
-
-        setAuthCookies(res, accessToken, refreshToken);
-        sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
-
-        return res.status(201).json({
-          status: "success",
-          message: "User created & verified.",
-          redirectUrl: getRedirectUrl(newUser, true),
-        });
+      } catch (err) {
+        logger.error("❌ Verify-OTP error:", err);
+        if (err.name === "TokenExpiredError") {
+          return res.status(400).json({ message: "OTP expired." });
+        }
+        return res.status(500).json({ message: "OTP verification failed." });
       }
-    } catch (err) {
-      logger.error("❌ Verify-OTP error:", err);
-      if (err.name === "TokenExpiredError") {
-        return res.status(400).json({ message: "OTP expired." });
-      }
-      return res.status(500).json({ message: "OTP verification failed." });
     }
-  }
-);
+  );
 
 
-  
+ 
   publicRouter.post(
     "/users/login",
     loginLimiter,
