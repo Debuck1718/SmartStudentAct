@@ -786,8 +786,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const btn = document.getElementById("profile-menu-button");
     const menu = document.getElementById("profile-dropdown-menu");
-    btn.addEventListener("click", (e) => { e.stopPropagation(); menu.classList.toggle("hidden"); });
-    document.addEventListener("click", (e) => { if (!btn.contains(e.target) && !menu.contains(e.target)) menu.classList.add("hidden"); });
+
+    if (btn && menu) {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            menu.classList.toggle("hidden");
+            menu.classList.toggle("opacity-0");
+            menu.classList.toggle("scale-95");
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add("hidden", "opacity-0", "scale-95");
+            }
+        });
+    }
 
     document.getElementById("logoutButton").addEventListener("click", async () => {
         await fetchAPI("/users/logout", { method: "POST" });
