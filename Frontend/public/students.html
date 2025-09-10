@@ -476,7 +476,7 @@
           method: "PATCH"
         });
         showToast("Task marked as completed!", "success");
-        fetchAssignments(); // Refresh the list
+        fetchAssignments(); 
       } catch (e) {
         showToast(e.message, "error");
       }
