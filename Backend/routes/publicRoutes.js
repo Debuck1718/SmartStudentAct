@@ -180,100 +180,121 @@ module.exports = (eventBus) => {
   );
 
   
-  publicRouter.post("/users/verify-otp", validate(verifyOtpSchema), async (req, res) => {
-  const { code, email, password, otpToken } = req.body;
+publicRouter.post(
+  "/users/verify-otp",
+  validate(verifyOtpSchema),
+  async (req, res) => {
+    const { code, email, password, otpToken } = req.body;
 
-  try {
-    const decoded = jwt.verify(otpToken, JWT_SECRET);
-    logger.info("Decoded OTP payload:", decoded);
+    try {
+      const decoded = jwt.verify(otpToken, JWT_SECRET);
+      logger.info("Decoded OTP payload:", decoded);
 
-    if (decoded.email !== email || decoded.code !== code) {
-      return res.status(400).json({ message: "Invalid email or OTP." });
-    }
+      if (decoded.email !== email || decoded.code !== code) {
+        return res.status(400).json({ message: "Invalid email or OTP." });
+      }
 
-    let user = await User.findOne({ email }).select("+password");
+      let user = await User.findOne({ email }).select("+password");
 
-    if (user) {
-      if (!user.password) {
-        user.password = password;
+      if (user) {
+        if (!user.password) {
+          user.password = password;
+          await user.save();
+        }
+
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+        user.refreshToken = refreshToken;
         await user.save();
-      }
 
-      const accessToken = generateAccessToken(user);
-      const refreshToken = generateRefreshToken(user);
-      user.refreshToken = refreshToken;
-      await user.save();
+        setAuthCookies(res, accessToken, refreshToken);
 
-      return res.status(200).json({
-        status: "success",
-        message: "User verified.",
-        redirectUrl: getRedirectUrl(user, true),
-      });
-    } else {
-    
-      let school = await School.findOne({
-        name: decoded.schoolName.trim(),
-        schoolCountry: decoded.schoolCountry.toUpperCase(),
-      });
-
-      if (!school) {
-        school = new School({
-          name: decoded.schoolName.trim(),
-          schoolCountry: decoded.schoolCountry.toUpperCase(),
-          tier: 1,
+        return res.status(200).json({
+          status: "success",
+          message: "User verified.",
+          redirectUrl: getRedirectUrl(user, true),
         });
-        await school.save();
+      } else {
+        let school = await School.findOne({
+          name: decoded.schoolName?.trim(),
+          schoolCountry: decoded.schoolCountry?.toUpperCase(),
+        });
+
+        if (!school) {
+          school = new School({
+            name: decoded.schoolName?.trim() || "Unknown School",
+            schoolCountry: decoded.schoolCountry?.toUpperCase() || "UNKNOWN",
+            tier: 1,
+          });
+          await school.save();
+        }
+
+        const now = new Date();
+        const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        
+        const newUserData = {
+          firstname: decoded.firstname || "User",
+          lastname: decoded.lastname || "Unknown",
+          email: decoded.email,
+          phone: decoded.phone || "",
+          password, 
+          verified: true,
+          role: decoded.occupation || "student",
+          occupation: decoded.occupation || "student",
+          educationLevel: decoded.educationLevel || "high",
+          grade: decoded.grade,
+          school: school._id,
+          program: decoded.program || "",
+          is_on_trial: true,
+          trial_start_at: now,
+          trial_end_at: trialEndAt,
+          subscription_status: "inactive",
+        };
+
+        if (newUserData.occupation === "teacher") {
+          newUserData.teacherGrade = decoded.teacherGrade?.length
+            ? decoded.teacherGrade
+            : ["1"];
+          newUserData.teacherSubject =
+            decoded.teacherSubject || "General Studies";
+        }
+
+        if (newUserData.occupation === "student") {
+          if (newUserData.educationLevel === "university") {
+            newUserData.university = decoded.university || "Unknown University";
+            newUserData.uniLevel = decoded.uniLevel || "100";
+          } else {
+            newUserData.grade = decoded.grade || 1;
+          }
+        }
+
+        const newUser = new User(newUserData);
+        await newUser.save();
+
+        const accessToken = generateAccessToken(newUser);
+        const refreshToken = generateRefreshToken(newUser);
+        newUser.refreshToken = refreshToken;
+        await newUser.save();
+
+        setAuthCookies(res, accessToken, refreshToken);
+        sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
+
+        return res.status(201).json({
+          status: "success",
+          message: "User created & verified.",
+          redirectUrl: getRedirectUrl(newUser, true),
+        });
       }
-
-      
-      const now = new Date();
-      const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-      const newUser = new User({
-        firstname: decoded.firstname || "User",
-        lastname: decoded.lastname || "Unknown",
-        email: decoded.email,
-        phone: decoded.phone || "",
-        password,
-        verified: true,
-        role: decoded.occupation || "student",
-        occupation: decoded.occupation || "student",
-        educationLevel: decoded.educationLevel || "high",
-        grade: decoded.grade,
-        school: school._id,
-        teacherGrade: decoded.teacherGrade || [],
-        teacherSubject: decoded.teacherSubject || "",
-        program: decoded.program || "",
-        is_on_trial: true,
-        trial_start_at: now,
-        trial_end_at: trialEndAt,
-        subscription_status: "inactive",
-      });
-
-      await newUser.save(); 
-
-      const accessToken = generateAccessToken(newUser);
-      const refreshToken = generateRefreshToken(newUser);
-      newUser.refreshToken = refreshToken;
-      await newUser.save();
-
-      setAuthCookies(res, accessToken, refreshToken);
-      sendWelcomeEmail(newUser.email, newUser.firstname).catch(logger.error);
-
-      return res.status(201).json({
-        status: "success",
-        message: "User created & verified.",
-        redirectUrl: getRedirectUrl(newUser, true),
-      });
+    } catch (err) {
+      logger.error("❌ Verify-OTP error:", err);
+      if (err.name === "TokenExpiredError") {
+        return res.status(400).json({ message: "OTP expired." });
+      }
+      return res.status(500).json({ message: "OTP verification failed." });
     }
-  } catch (err) {
-    logger.error("❌ Verify-OTP error:", err);
-    if (err.name === "TokenExpiredError") {
-      return res.status(400).json({ message: "OTP expired." });
-    }
-    return res.status(500).json({ message: "OTP verification failed." });
   }
-});
+);
 
 
   
