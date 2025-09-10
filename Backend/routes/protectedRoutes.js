@@ -1490,17 +1490,20 @@ protectedRouter.get(
   hasRole("student"),
   async (req, res) => {
     try {
-      const studentId = req.user.id; 
+      const studentId = req.user.id || req.user._id; // safer
+
       if (!studentId) {
         return res.status(400).json({ message: "Student ID missing from request." });
       }
 
       const tasks = await StudentTask.find({ student_id: studentId }).lean();
-
-      res.status(200).json(tasks); 
+      return res.status(200).json(tasks);
     } catch (error) {
-      logger.error("Error fetching tasks:", error);
-      res.status(500).json({ message: "Failed to fetch tasks." });
+      logger.error("Error fetching tasks:", error.message, error.stack);
+      return res.status(500).json({
+        message: "Failed to fetch tasks.",
+        error: error.message, 
+      });
     }
   }
 );
