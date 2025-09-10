@@ -229,7 +229,7 @@ module.exports = (eventBus) => {
 
           const now = new Date();
           const trialEndAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
+          
           const newUserData = {
             firstname: decoded.firstname || "User",
             lastname: decoded.lastname || "Unknown",
@@ -239,29 +239,24 @@ module.exports = (eventBus) => {
             verified: true,
             role: decoded.occupation || "student",
             occupation: decoded.occupation || "student",
-            educationLevel: decoded.educationLevel || "high",
-            grade: Number(decoded.grade), // Cast to Number to match schema
             school: school._id,
-            program: decoded.program || "",
             is_on_trial: true,
             trial_start_at: now,
             trial_end_at: trialEndAt,
             subscription_status: "inactive",
+            program: decoded.program || "",
           };
 
+          // Conditionally add fields based on occupation and education level
           if (newUserData.occupation === "teacher") {
-            newUserData.teacherGrade = decoded.teacherGrade?.length
-              ? decoded.teacherGrade
-              : ["1"];
-            newUserData.teacherSubject =
-              decoded.teacherSubject || "General Studies";
-          }
-
-          if (newUserData.occupation === "student") {
-            if (newUserData.educationLevel === "university") {
+            newUserData.teacherGrade = decoded.teacherGrade;
+            newUserData.teacherSubject = decoded.teacherSubject;
+          } else if (newUserData.occupation === "student") {
+            newUserData.educationLevel = decoded.educationLevel;
+            if (decoded.educationLevel === "university") {
               newUserData.university = decoded.university || "Unknown University";
               newUserData.uniLevel = decoded.uniLevel || "100";
-            } else {
+            } else { // Student is not university
               newUserData.grade = Number(decoded.grade) || 1;
             }
           }
@@ -285,18 +280,16 @@ module.exports = (eventBus) => {
               redirectUrl: getRedirectUrl(newUser, true),
             });
           } catch (saveErr) {
-            // Check for duplicate key error (code 11000)
             if (saveErr.name === 'MongoError' && saveErr.code === 11000) {
               return res.status(409).json({ message: "A user with this email or phone already exists." });
             }
-            // Check for Mongoose validation errors
             if (saveErr.name === 'ValidationError') {
               const errors = Object.values(saveErr.errors).map(err => err.message);
+              // Log the specific validation errors to the console for debugging
+              logger.error("❌ Mongoose Validation Error:", errors);
               return res.status(400).json({ message: "Validation failed.", errors: errors });
             }
-            // Log the full error to the server console for debugging
             logger.error("❌ Mongoose save error:", saveErr);
-            // Return a generic error for other issues
             return res.status(500).json({ message: "Failed to create user." });
           }
         }
@@ -309,6 +302,7 @@ module.exports = (eventBus) => {
       }
     }
   );
+
 
 
  
