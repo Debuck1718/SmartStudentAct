@@ -79,6 +79,7 @@
 
     <script src="translate.js"></script>
     <script>
+      const API_BASE_URL = "https://api.smartstudentact.com/api";
       document.addEventListener("DOMContentLoaded", async () => {
         const teachersList = document.getElementById("teachers-list");
         const loadingSkeleton = document.getElementById("loading-skeleton");
@@ -153,7 +154,7 @@
           loadingSkeleton.classList.remove("hidden");
 
           try {
-            const res = await fetch("/api/my-school/teachers", {
+            const res = await fetch("/my-school/teachers", {
               method: "GET",
               credentials: "include",
               headers: { "Content-Type": "application/json" },

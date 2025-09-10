@@ -368,7 +368,7 @@
       try {
         const due_date = new Date(`${dueDate}T${dueTime}`).toISOString();
 
-        // Use the /student/tasks route for student-created tasks
+ 
         await fetchWithAuth("/student/tasks", {
           method: "POST",
           headers: {
@@ -391,14 +391,14 @@
     }
 
     async function handleSubmission(assignmentId) {
-      // You'll need a modal or form to get the submission text and file
+
       const submissionText = prompt("Enter your submission text:");
-      if (submissionText === null) return; // User canceled
+      if (submissionText === null) return; 
 
       const formData = new FormData();
       formData.append("assignmentId", assignmentId);
       formData.append("submissionText", submissionText);
-      // You can add a file input here and append the file to the formData
+ 
 
       try {
         await fetchWithAuth("/student/submissions", {
@@ -406,7 +406,7 @@
           body: formData,
         });
         showToast("Assignment submitted successfully!", "success");
-        fetchAssignments(); // Refresh the list
+        fetchAssignments(); 
       } catch (e) {
         showToast(e.message, "error");
       }
@@ -640,7 +640,7 @@
       }
     }
 
-    // 📈 Analytics Chart
+    
     function renderChart() {
       if (!DOM.chartCanvas) return;
       const ctx = DOM.chartCanvas.getContext("2d");
