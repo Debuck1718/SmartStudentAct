@@ -16,7 +16,13 @@ async function listAllUsers() {
     } else {
       console.log(`Found ${users.length} users:\n`);
       users.forEach((user, index) => {
-        console.log(`${index + 1}. Email: ${user.email || "N/A"} | _id: ${user._id} | School: ${user.school || "N/A"} | Role: ${user.role || "N/A"}`);
+        console.log(
+          `${index + 1}. Name: ${user.firstname || "N/A"} ${user.lastname || ""} | ` +
+          `Email: ${user.email || "N/A"} | ` +
+          `_id: ${user._id} | ` +
+          `School: ${user.school || "N/A"} | ` +
+          `Role: ${user.role || "N/A"}`
+        );
       });
     }
 
@@ -29,5 +35,6 @@ async function listAllUsers() {
 }
 
 listAllUsers();
+
 
 

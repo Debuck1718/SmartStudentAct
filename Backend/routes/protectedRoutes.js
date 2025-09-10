@@ -1770,7 +1770,7 @@ protectedRouter.get(
         role: "teacher",
         school: student.school._id, 
       })
-        .select("firstName lastName email teacherSubject imageUrl")
+        .select("firstname lastname email teacherSubject imageUrl")
         .lean();
       res.status(200).json({ teachers: teachers || [] });
     } catch (err) {
