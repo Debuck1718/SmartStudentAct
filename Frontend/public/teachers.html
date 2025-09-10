@@ -562,6 +562,104 @@ function translateText(key) {
     return key;
 }
 
+function wireAssignmentForm() {
+    const studentSelect = document.getElementById("student-select");
+    const titleInput = document.getElementById("assignmentTitle");
+    const dueDateInput = document.getElementById("assignmentDueDate");
+    const textArea = document.getElementById("assignmentText");
+    const fileInput = document.getElementById("assignmentFile");
+    const sendBtn = document.getElementById("sendAssignmentButton");
+    const wordCountText = document.getElementById("wordCountText");
+    const fileNameSpan = document.getElementById("fileName");
+    const clearFileBtn = document.getElementById("clearFileButton");
+
+    if (!studentSelect || !titleInput || !dueDateInput || !textArea || !sendBtn) return;
+
+    function updateSendBtn() {
+        sendBtn.disabled = !(studentSelect.value && titleInput.value.trim() && (textArea.value.trim() || fileInput.files.length));
+    }
+
+    function updateWordCount() {
+        const words = textArea.value.trim().split(/\s+/).filter(Boolean).length;
+        wordCountText.textContent = `Word count: ${words}`;
+        updateSendBtn();
+    }
+
+    textArea.addEventListener("input", updateWordCount);
+    titleInput.addEventListener("input", updateSendBtn);
+    studentSelect.addEventListener("change", updateSendBtn);
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files.length) {
+            fileNameSpan.textContent = fileInput.files[0].name;
+            clearFileBtn.classList.remove("hidden");
+        } else {
+            fileNameSpan.textContent = "No file selected.";
+            clearFileBtn.classList.add("hidden");
+        }
+        updateSendBtn();
+    });
+
+    clearFileBtn.addEventListener("click", () => {
+        fileInput.value = "";
+        fileNameSpan.textContent = "No file selected.";
+        clearFileBtn.classList.add("hidden");
+        updateSendBtn();
+    });
+
+    sendBtn.addEventListener("click", async () => {
+        const studentId = studentSelect.value;
+        const title = titleInput.value.trim();
+        const dueDate = dueDateInput.value;
+        const text = textArea.value.trim();
+        const file = fileInput.files[0];
+
+        if (!studentId || !title || (!text && !file)) {
+            showToast("Please fill in all required fields", "error");
+            return;
+        }
+
+        sendBtn.disabled = true;
+        sendBtn.textContent = "Sending...";
+
+        try {
+            const formData = new FormData();
+            formData.append("studentId", studentId);
+            formData.append("title", title);
+            formData.append("dueDate", dueDate);
+            formData.append("text", text);
+            if (file) formData.append("file", file);
+
+            const res = await fetchAPI("/teacher/assignment", {
+                method: "POST",
+                body: formData
+            });
+
+            if (res && res.ok) {
+                showToast("Assignment sent successfully", "success");
+                titleInput.value = "";
+                dueDateInput.value = "";
+                textArea.value = "";
+                fileInput.value = "";
+                fileNameSpan.textContent = "No file selected.";
+                clearFileBtn.classList.add("hidden");
+                updateWordCount();
+            } else {
+                const data = await res.json();
+                showToast(data?.message || "Failed to send assignment", "error");
+            }
+        } catch (err) {
+            console.error("Assignment send error:", err);
+            showToast("Network error", "error");
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.textContent = "Send Assignment";
+        }
+    });
+
+    updateWordCount();
+}
+
 async function init() {
     try {
         await checkAuth();
