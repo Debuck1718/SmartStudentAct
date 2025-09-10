@@ -1585,29 +1585,27 @@ protectedRouter.get(
     try {
       const studentId = req.user.id;
       if (!studentId) {
-        return res.status(400).json({ message: "Student ID missing from token" });
+        return res.status(400).json({ message: "Student ID missing" });
       }
 
-      const student = await User.findById(studentId).populate("school");
-      if (!student || !student.school) {
+      // Find the student's school
+      const student = await Student.findById(studentId).populate("school_id");
+      if (!student || !student.school_id) {
         return res.status(404).json({ message: "Student school not found" });
       }
 
-      const teachers = await User.find({
-        role: "teacher",
-        school: student.school._id, 
-      })
-        .select("firstName lastName email teacherSubject imageUrl")
+      // Fetch teachers in the same school
+      const teachers = await Teacher.find({ school_id: student.school_id._id })
+        .select("firstName lastName email teacherSubject")
         .lean();
 
-      res.status(200).json({ teachers: teachers || [] });
+      res.status(200).json({ teachers });
     } catch (err) {
       logger.error("Error fetching teachers:", err);
       res.status(500).json({ message: "Failed to fetch teachers" });
     }
   }
 );
-
 
 
 protectedRouter.get(
