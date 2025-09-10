@@ -334,6 +334,41 @@ async function fetchTeacherProfile() {
     }
 }
 
+function wireProfilePhotoUpload() {
+    const avatarImg = document.getElementById("profileAvatar");
+    const uploadInput = document.getElementById("profilePhotoInput");
+
+    if (!avatarImg || !uploadInput) return;
+
+    avatarImg.addEventListener("click", () => uploadInput.click());
+
+    uploadInput.addEventListener("change", async () => {
+        const file = uploadInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("profile_picture", file);
+
+        try {
+            const res = await fetchAPI("/profile/upload-photo", {
+                method: "POST",
+                body: formData
+            });
+
+            if (res && res.ok) {
+                const data = await res.json();
+                avatarImg.src = data.profile_picture_url;
+                showToast("Profile photo updated!", "success");
+            } else {
+                showToast("Failed to upload profile photo", "error");
+            }
+        } catch (err) {
+            console.error("Photo upload error:", err);
+            showToast("Network error", "error");
+        }
+    });
+}
+
 function renderStudents(students = []) {
     const container = document.getElementById("studentsList");
     if (!container) return;
@@ -737,6 +772,7 @@ async function init() {
         wirePointsForm();
         wireCalendar();
         wireMessageForm();
+        wireProfilePhotoUpload();
     } catch (err) {
         console.error("Init error:", err);
         showToast(translateText('dashboard_load_error'), "error");
