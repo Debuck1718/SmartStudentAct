@@ -163,7 +163,7 @@
         </button>
       </section>
 
-      <!-- Add Points Section -->
+    
       <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="addPointsTitle">
           ➕ Add Student Points
@@ -191,7 +191,6 @@
         </button>
       </section>
 
-      <!-- Send Message Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="sendMessageTitle">
           💌 Send Message to Student
@@ -220,7 +219,6 @@
         </button>
       </section>
 
-      <!-- Overdue Tasks Section -->
       <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="overdueTasks">
           📌 Overdue Tasks
@@ -228,7 +226,6 @@
         <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
       </section>
 
-      <!-- Assigned Tasks & Feedback -->
       <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="assignedTasks">
           📝 Assigned Tasks & Feedback
@@ -236,7 +233,6 @@
         <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
       </section>
 
-      <!-- Student Feedback Overview -->
       <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentFeedback">
           💬 Student Feedback Overview
@@ -244,7 +240,6 @@
         <div id="feedbackList" class="divide-y divide-gray-200"></div>
       </section>
 
-      <!-- Academic Calendar -->
       <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">📅 Academic Calendar</h2>
         <input type="text" id="academicYear"
@@ -659,6 +654,64 @@ function wireAssignmentForm() {
 
     updateWordCount();
 }
+
+function wirePointsForm() {
+    const studentSelect = document.getElementById("points-student-select");
+    const pointsInput = document.getElementById("pointsInput");
+    const reasonText = document.getElementById("reasonText");
+    const addBtn = document.getElementById("addPointsButton");
+
+    if (!studentSelect || !pointsInput || !addBtn) return;
+
+    function validateForm() {
+        addBtn.disabled = !(studentSelect.value && parseInt(pointsInput.value) > 0);
+    }
+
+    studentSelect.addEventListener("change", validateForm);
+    pointsInput.addEventListener("input", validateForm);
+
+    addBtn.addEventListener("click", async () => {
+        const studentId = studentSelect.value;
+        const points = parseInt(pointsInput.value);
+        const reason = reasonText.value.trim();
+
+        if (!studentId || !points || points <= 0) {
+            showToast(translateText("fill_points_fields") || "Please select a student and enter valid points.", "error");
+            return;
+        }
+
+        addBtn.disabled = true;
+        addBtn.textContent = translateText("adding_points") || "Adding...";
+
+        try {
+            const res = await fetchAPI("/rewards/teacher/add-points", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ studentId, points, reason })
+            });
+
+            if (res && res.ok) {
+                showToast(translateText("points_added") || "Points added successfully!", "success");
+                pointsInput.value = "";
+                reasonText.value = "";
+                studentSelect.value = "";
+                validateForm();
+            } else {
+                const data = await res.json();
+                showToast(data?.message || translateText("failed_add_points") || "Failed to add points.", "error");
+            }
+        } catch (err) {
+            console.error("Add points error:", err);
+            showToast(translateText("network_error") || "Network error, please try again.", "error");
+        } finally {
+            addBtn.disabled = false;
+            addBtn.textContent = translateText("addPointsButton") || "Add Points";
+        }
+    });
+
+    validateForm();
+}
+
 
 async function init() {
     try {
