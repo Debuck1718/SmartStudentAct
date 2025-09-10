@@ -1576,40 +1576,6 @@ protectedRouter.post(
   }
 );
 
-
-protectedRouter.get(
-  "/student/teachers",
-  authenticateJWT,
-  hasRole("student"),
-  async (req, res) => {
-    try {
-
-      const studentId = req.user.id;
-      if (!studentId) {
-        return res.status(400).json({ message: "Student ID missing from token" });
-      }
-
-      const student = await User.findById(studentId).populate("school");
-      if (!student || !student.school) {
-        return res.status(404).json({ message: "Student school not found" });
-      }
-
-      const teachers = await User.find({
-        role: "teacher",
-        school: student.school._id, 
-      })
-        .select("firstName lastName email teacherSubject imageUrl")
-        .lean();
-      res.status(200).json({ teachers: teachers || [] });
-    } catch (err) {
-      logger.error("Error fetching teachers:", err);
-      res.status(500).json({ message: "Failed to fetch teachers" });
-    }
-  }
-);
-
-
-
 protectedRouter.get(
   "/student/quizzes",
   authenticateJWT,
