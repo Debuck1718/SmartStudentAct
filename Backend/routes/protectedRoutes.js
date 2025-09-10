@@ -1589,7 +1589,6 @@ protectedRouter.get(
         return res.status(400).json({ message: "Student ID missing" });
       }
 
-      // Example: find student’s school and list teachers
       const student = await Student.findById(studentId).populate("school_id");
       if (!student || !student.school_id) {
         return res.status(404).json({ message: "Student school not found" });
