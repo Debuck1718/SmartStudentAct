@@ -26,8 +26,13 @@
         animation: pulse 1.5s infinite;
       }
       @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
       }
     </style>
   </head>
@@ -85,7 +90,9 @@
         const teachersList = document.getElementById("teachers-list");
         const loadingSkeleton = document.getElementById("loading-skeleton");
         const errorMessage = document.getElementById("error-message");
-        const noTeachersMessage = document.getElementById("no-teachers-message");
+        const noTeachersMessage = document.getElementById(
+          "no-teachers-message"
+        );
         const langSelect = document.getElementById("language-select");
 
         let currentLang = "en";
@@ -110,11 +117,15 @@
 
           card.setAttribute(
             "aria-label",
-            `${t("teacherLabel", "Teacher")} ${teacher.firstName} ${teacher.lastName}, ${t("subjectLabel", "Subject")}: ${teacher.teacherSubject}`
+            `${t("teacherLabel", "Teacher")} ${teacher.firstname || ""} ${
+              teacher.lastname || ""
+            }, ${t("subjectLabel", "Subject")}: ${teacher.teacherSubject}`
           );
 
           const nameEl = document.createElement("p");
-          nameEl.textContent = `${teacher.firstName} ${teacher.lastName}`;
+          nameEl.textContent = `${teacher.firstname || ""} ${
+            teacher.lastname || ""
+          }`;
           nameEl.classList.add("text-lg", "font-semibold", "text-gray-800");
 
           const subjectEl = document.createElement("p");
@@ -166,7 +177,9 @@
                 throw new Error(t("unauthorized", "Unauthorized"));
               if (res.status === 403)
                 throw new Error(t("forbidden", "Forbidden"));
-              throw new Error(`${t("httpError", "HTTP error")} status: ${res.status}`);
+              throw new Error(
+                `${t("httpError", "HTTP error")} status: ${res.status}`
+              );
             }
 
             const data = await res.json();
@@ -181,7 +194,9 @@
             }
           } catch (err) {
             console.error("Failed to fetch teachers:", err);
-            errorMessage.textContent = `${t("failedLoad", "Failed to load")}: ${err.message}`;
+            errorMessage.textContent = `${t("failedLoad", "Failed to load")}: ${
+              err.message
+            }`;
             errorMessage.classList.remove("hidden");
           } finally {
             loadingSkeleton.classList.add("hidden");
@@ -200,5 +215,3 @@
     </script>
   </body>
 </html>
-
-
