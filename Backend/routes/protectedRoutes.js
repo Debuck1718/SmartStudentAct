@@ -1577,36 +1577,36 @@ protectedRouter.post(
 );
 
 
+// routes/student.js or similar
 protectedRouter.get(
   "/student/teachers/my-school",
   authenticateJWT,
   hasRole("student"),
   async (req, res) => {
     try {
-      const student = await User.findById(req.user.id);
-      if (!student || (!student.school && !student.schoolName)) {
-        return res.status(400).json({ message: "Student school information is missing." });
+      const studentId = req.user.id;
+      if (!studentId) {
+        return res.status(400).json({ message: "Student ID missing" });
       }
 
-      let query = {
-        role: "teacher"
-      };
-
-      if (student.school) {
-        query.school = student.school;
-      } else if (student.schoolName) {
-        query.schoolName = student.schoolName;
+      // Example: find student’s school and list teachers
+      const student = await Student.findById(studentId).populate("school_id");
+      if (!student || !student.school_id) {
+        return res.status(404).json({ message: "Student school not found" });
       }
 
-      const teachers = await User.find(query).select("firstName lastName email");
+      const teachers = await Teacher.find({ school_id: student.school_id._id })
+        .select("firstName lastName email teacherSubject")
+        .lean();
 
-      res.status(200).json({ teachers });
-    } catch (error) {
-      logger.error("Error fetching teachers for student's school:", error);
-      res.status(500).json({ message: "Server error" });
+      res.json({ teachers });
+    } catch (err) {
+      logger.error("Error fetching teachers:", err);
+      res.status(500).json({ message: "Failed to fetch teachers" });
     }
   }
 );
+
 
 
 protectedRouter.get(
