@@ -1579,7 +1579,7 @@ protectedRouter.post(
 
 // routes/student.js or similar
 protectedRouter.get(
-  "/student/teachers/my-school",
+  "/my-school/teachers",
   authenticateJWT,
   hasRole("student"),
   async (req, res) => {
