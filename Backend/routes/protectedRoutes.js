@@ -1491,7 +1491,7 @@ protectedRouter.get(
   hasRole("student"),
   async (req, res) => {
     try {
-      const studentId = req.user.id || req.user._id; // safer
+      const studentId = req.user.id || req.user._id; 
 
       if (!studentId) {
         return res.status(400).json({ message: "Student ID missing from request." });
@@ -1755,30 +1755,41 @@ protectedRouter.get(
   hasRole("student"),
   async (req, res) => {
     try {
+      const student = await User.findById(req.user.id);
 
-      const studentId = req.user.id;
-      if (!studentId) {
-        return res.status(400).json({ message: "Student ID missing from token" });
+      if (!student || (!student.school && !student.schoolName)) {
+        return res.status(200).json([]);
       }
 
-      const student = await User.findById(studentId).populate("school");
-      if (!student || !student.school) {
-        return res.status(404).json({ message: "Student school not found" });
+      const { search } = req.query;
+      const schoolQuery = { role: "teacher" };
+
+      if (student.school) {
+        schoolQuery.school = student.school;
+      } else if (student.schoolName) {
+        schoolQuery.schoolName = student.schoolName;
       }
 
-      const teachers = await User.find({
-        role: "teacher",
-        school: student.school._id, 
-      })
-        .select("firstname lastname email teacherSubject imageUrl")
-        .lean();
+      if (search) {
+        schoolQuery.$or = [
+          { firstname: { $regex: search, $options: "i" } },
+          { lastname: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { teacherSubject: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const teachers = await User.find(schoolQuery)
+        .select("firstname lastname email teacherSubject imageUrl");
+
       res.status(200).json({ teachers: teachers || [] });
     } catch (err) {
-      logger.error("Error fetching teachers:", err);
+      logger.error("Error fetching teachers for student:", err);
       res.status(500).json({ message: "Failed to fetch teachers" });
     }
   }
 );
+
 
 protectedRouter.post(
   "/upload/local",
