@@ -155,7 +155,7 @@
           loadingSkeleton.classList.remove("hidden");
 
           try {
-            const res = await fetch(`${API_BASE_URL}/rewards/student/teachers`, {
+            const res = await fetch(`${API_BASE_URL}/student/teachers`, {
               method: "GET",
               credentials: "include",
               headers: { "Content-Type": "application/json" },
