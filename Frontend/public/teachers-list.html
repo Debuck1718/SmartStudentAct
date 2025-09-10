@@ -112,7 +112,10 @@
             "border-gray-200",
             "shadow-sm",
             "hover:shadow-md",
-            "transition-shadow"
+            "transition-shadow",
+            "flex",
+            "items-center",
+            "space-x-4"
           );
 
           card.setAttribute(
@@ -121,6 +124,22 @@
               teacher.lastname || ""
             }, ${t("subjectLabel", "Subject")}: ${teacher.teacherSubject}`
           );
+
+          // Profile image with default fallback
+          const img = document.createElement("img");
+          img.src = teacher.imageUrl || "./images/default-avatar.png";
+          img.alt = `${teacher.firstname || ""} ${teacher.lastname || ""}`;
+          img.classList.add(
+            "w-16",
+            "h-16",
+            "rounded-full",
+            "object-cover",
+            "flex-shrink-0"
+          );
+
+          // Info container
+          const infoDiv = document.createElement("div");
+          infoDiv.classList.add("flex-1");
 
           const nameEl = document.createElement("p");
           nameEl.textContent = `${teacher.firstname || ""} ${
@@ -145,9 +164,12 @@
             "block"
           );
 
-          card.appendChild(nameEl);
-          card.appendChild(subjectEl);
-          card.appendChild(emailEl);
+          infoDiv.appendChild(nameEl);
+          infoDiv.appendChild(subjectEl);
+          infoDiv.appendChild(emailEl);
+
+          card.appendChild(img);
+          card.appendChild(infoDiv);
           teachersList.appendChild(card);
         }
 
