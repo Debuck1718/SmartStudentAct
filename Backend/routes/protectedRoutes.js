@@ -1484,22 +1484,27 @@ protectedRouter.post(
   }
 );
 
-protectedRouter.get("/student/tasks", authenticateJWT, async (req, res) => {
+protectedRouter.get(
+  "/student/tasks",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
     try {
-        const studentId = req.userId; 
-        if (!studentId) {
-            return res.status(400).json({ message: "Student ID missing from request." });
-        }
+      const studentId = req.user.id; 
+      if (!studentId) {
+        return res.status(400).json({ message: "Student ID missing from request." });
+      }
 
-        const tasks = await Task.find({ studentId: studentId });
+      const tasks = await StudentTask.find({ student_id: studentId }).lean();
 
-        res.status(200).json({ tasks });
+      res.status(200).json(tasks); 
     } catch (error) {
-     
-        logger.error("Error fetching tasks:", error);
-        res.status(500).json({ message: "Failed to fetch tasks." });
+      logger.error("Error fetching tasks:", error);
+      res.status(500).json({ message: "Failed to fetch tasks." });
     }
-});
+  }
+);
+
 
 protectedRouter.patch(
   "/student/tasks/:id/complete",
