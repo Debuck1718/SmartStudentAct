@@ -1,353 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title data-i18n="pageTitle">Quiz Dashboard - SmartStudentAct</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-  </head>
-  <body class="bg-gray-100 min-h-screen flex flex-col">
-    <!-- NAVIGATION -->
-    <nav class="bg-blue-600 text-white p-4 flex justify-between items-center">
-      <h1 class="text-xl font-bold" data-i18n="pageTitle">
-        SmartStudentAct | Quiz Dashboard
-      </h1>
-      <div class="flex items-center gap-4">
-        <a
-          href="teachers.html"
-          class="bg-white text-blue-600 px-4 py-2 rounded shadow hover:bg-gray-200"
-          data-i18n="backToTeacherDashboard"
-        >
-          Back to Teacher Dashboard
-        </a>
-        <select id="languageSelector" class="rounded p-1 text-black">
-          <option value="en">English</option>
-          <option value="fr">Français</option>
-          <option value="es">Español</option>
-          <option value="tr">Türkçe</option>
-          <option value="ar">العربية</option>
-          <option value="ru">Русский</option>
-        </select>
-      </div>
-    </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="pageTitle">Quiz Dashboard - SmartStudentAct</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
 
-    <!-- MAIN CONTENT -->
-    <div class="flex-1 container mx-auto p-6">
-      <!-- CREATE QUIZ FORM -->
-      <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 class="text-2xl font-bold mb-4" data-i18n="createNewQuiz">
-          Create New Quiz
-        </h2>
-        <form id="quizForm" class="space-y-4">
-          <input
-            type="text"
-            id="quizTitle"
-            data-i18n-placeholder="quizTitlePlaceholder"
-            placeholder="Quiz Title"
-            class="w-full border p-2 rounded"
-            required
-          />
-          <textarea
-            id="quizDescription"
-            data-i18n-placeholder="quizDescriptionPlaceholder"
-            placeholder="Quiz Description"
-            class="w-full border p-2 rounded"
-          ></textarea>
-          <input
-            type="date"
-            id="quizDueDate"
-            class="w-full border p-2 rounded"
-            required
-          />
-          <input
-            type="number"
-            id="quizTimeLimit"
-            placeholder="Time Limit (minutes, optional)"
-            min="1"
-            class="w-full border p-2 rounded mb-2"
-            data-i18n-placeholder="timeLimitPlaceholder"
-          />
+  <!-- NAVIGATION -->
+  <nav class="bg-blue-600 text-white p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold" data-i18n="pageTitle">SmartStudentAct | Quiz Dashboard</h1>
+    <div class="flex items-center gap-4">
+      <a href="teachers.html" class="bg-white text-blue-600 px-4 py-2 rounded shadow hover:bg-gray-200" data-i18n="backToTeacherDashboard">Back to Teacher Dashboard</a>
+      <select id="languageSelector" class="rounded p-1 text-black">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="tr">Türkçe</option>
+        <option value="ar">العربية</option>
+        <option value="ru">Русский</option>
+      </select>
+    </div>
+  </nav>
 
-          <div id="questionsContainer" class="space-y-6"></div>
+  <div class="flex-1 container mx-auto p-6">
 
-          <button
-            type="button"
-            id="addQuestionBtn"
-            class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700"
-            data-i18n="addQuestion"
-          >
-            ➕ Add Question
-          </button>
+    <!-- CREATE QUIZ FORM -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+      <h2 class="text-2xl font-bold mb-4" data-i18n="createNewQuiz">Create New Quiz</h2>
+      <form id="quizForm" class="space-y-4">
+        <input type="text" id="quizTitle" data-i18n-placeholder="quizTitlePlaceholder" placeholder="Quiz Title" class="w-full border p-2 rounded" required />
+        <textarea id="quizDescription" data-i18n-placeholder="quizDescriptionPlaceholder" placeholder="Quiz Description" class="w-full border p-2 rounded"></textarea>
+        <input type="date" id="quizDueDate" class="w-full border p-2 rounded" required />
+        <input type="number" id="quizTimeLimit" placeholder="Time Limit (minutes, optional)" min="1" class="w-full border p-2 rounded mb-2" data-i18n-placeholder="timeLimitPlaceholder" />
 
-          <div class="mt-6">
-            <h3 class="text-lg font-semibold mb-2" data-i18n="assignTo">
-              Assign To:
-            </h3>
-            <input
-              type="text"
-              id="assignEmails"
-              data-i18n-placeholder="studentEmailsPlaceholder"
-              placeholder="Student Emails (comma separated)"
-              class="w-full border p-2 rounded mb-2"
-            />
-            <input
-              type="text"
-              id="assignGrade"
-              data-i18n-placeholder="gradePlaceholder"
-              placeholder="Grade / Level (optional)"
-              class="w-full border p-2 rounded mb-2"
-            />
-            <input
-              type="text"
-              id="assignProgram"
-              data-i18n-placeholder="programPlaceholder"
-              placeholder="Program / Section (optional)"
-              class="w-full border p-2 rounded mb-2"
-            />
-            <input
-              type="text"
-              id="assignSchool"
-              data-i18n-placeholder="schoolNamePlaceholder"
-              placeholder="School Name (optional)"
-              class="w-full border p-2 rounded"
-            />
+        <!-- QUESTIONS -->
+        <div id="questionsContainer" class="space-y-6"></div>
+        <button type="button" id="addQuestionBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700" data-i18n="addQuestion">➕ Add Question</button>
+
+        <!-- ASSIGN QUIZ -->
+        <div class="mt-6">
+          <h3 class="text-lg font-semibold mb-2" data-i18n="assignTo">Assign To:</h3>
+
+          <!-- Select by grade -->
+          <div class="mb-2">
+            <label class="block mb-1 font-semibold" data-i18n="assignByGrade">By Grade:</label>
+            <select id="assignGradeDropdown" class="w-full border p-2 rounded" multiple></select>
           </div>
 
-          <button
-            type="submit"
-            class="mt-6 bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700"
-            data-i18n="saveAndAssign"
-          >
-            📤 Save & Assign Quiz
-          </button>
-        </form>
-      </div>
+          <!-- Select by program -->
+          <div class="mb-2">
+            <label class="block mb-1 font-semibold" data-i18n="assignByProgram">By Program / Section:</label>
+            <select id="assignProgramDropdown" class="w-full border p-2 rounded" multiple></select>
+          </div>
 
-      <!-- QUIZ LIST -->
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4" data-i18n="myQuizzes">
-          My Quizzes
-        </h2>
-        <ul id="quizList" class="space-y-3"></ul>
-      </div>
+          <!-- Specific students -->
+          <div class="mb-2">
+            <label class="block mb-1 font-semibold" data-i18n="assignByStudent">Specific Students:</label>
+            <div id="studentsCheckboxes" class="space-y-2 border p-2 rounded bg-gray-50"></div>
+          </div>
+        </div>
+
+        <button type="submit" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700" data-i18n="saveAndAssign">📤 Save & Assign Quiz</button>
+      </form>
     </div>
 
-    <script>
-      const API_BASE_URL = "https://api.smartstudentact.com/api";
-      const questionsContainer = document.getElementById("questionsContainer");
-      const addQuestionBtn = document.getElementById("addQuestionBtn");
-      const quizList = document.getElementById("quizList");
-      let questionCount = 0;
-      let translations = {};
-      let currentLang = "en";
+    <!-- QUIZ LIST -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-4" data-i18n="myQuizzes">My Quizzes</h2>
+      <ul id="quizList" class="space-y-3"></ul>
+    </div>
+  </div>
 
-      async function loadTranslations() {
-        try {
-          const res = await fetch("/locales/quiz-dashboard.json");
-          if (!res.ok) throw new Error("Translation file not found");
-          translations = await res.json();
-        } catch (err) {
-          console.warn(
-            "⚠️ Could not load translations, using defaults:",
-            err.message
-          );
-          translations = {};
-        }
-        translatePage();
-      }
+<script>
+const API_BASE_URL = "https://api.smartstudentact.com/api";
+let translations = {};
+let currentLang = "en";
+let studentsCache = [];
+let gradesCache = [];
+let programsCache = [];
+let questionCount = 0;
 
-      function translatePage() {
-        document.querySelectorAll("[data-i18n]").forEach((el) => {
-          const key = el.getAttribute("data-i18n");
-          if (translations[key] && translations[key][currentLang]) {
-            el.textContent = translations[key][currentLang];
-          }
-        });
-        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
-          const key = el.getAttribute("data-i18n-placeholder");
-          if (translations[key] && translations[key][currentLang]) {
-            el.placeholder = translations[key][currentLang];
-          }
-        });
-      }
+const questionsContainer = document.getElementById("questionsContainer");
+const addQuestionBtn = document.getElementById("addQuestionBtn");
+const quizList = document.getElementById("quizList");
 
-      function getTranslation(key) {
-        return translations[key]?.[currentLang] || key;
-      }
+// ---------------- TRANSLATION ----------------
+async function loadTranslations() {
+    try {
+        const res = await fetch("/locales/quiz-dashboard.json");
+        translations = res.ok ? await res.json() : {};
+    } catch (err) {
+        console.warn("⚠️ Could not load translations:", err.message);
+        translations = {};
+    }
+    translatePage();
+}
+function translatePage() {
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (translations[key]?.[currentLang]) el.textContent = translations[key][currentLang];
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        const key = el.getAttribute("data-i18n-placeholder");
+        if (translations[key]?.[currentLang]) el.placeholder = translations[key][currentLang];
+    });
+}
+function t(key){ return translations[key]?.[currentLang] || key; }
+document.getElementById("languageSelector").addEventListener("change", e=>{
+    currentLang=e.target.value;
+    translatePage();
+    populateStudentSelects(studentsCache);
+});
 
-      document
-        .getElementById("languageSelector")
-        .addEventListener("change", (e) => {
-          currentLang = e.target.value;
-          translatePage();
-        });
+// ---------------- FETCH STUDENTS, GRADES, PROGRAMS ----------------
+async function fetchStudents() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/teacher/students`, { credentials: "include" });
+        const resOther = await fetch(`${API_BASE_URL}/teacher/students/other`, { credentials: "include" });
+        const myGrade = res.ok ? await res.json() : [];
+        const otherGrade = resOther.ok ? await resOther.json() : [];
+        studentsCache = [...myGrade, ...otherGrade];
 
-      function createQuestionBlock() {
-        questionCount++;
-        const qDiv = document.createElement("div");
-        qDiv.className = "border p-4 rounded bg-gray-50";
-        qDiv.innerHTML = `
-        <label class="block font-semibold">${getTranslation(
-          "questionLabel"
-        )} ${questionCount}</label>
-        <input type="text" name="questionText" placeholder="${getTranslation(
-          "questionPlaceholder"
-        )}" class="w-full border p-2 rounded mb-2" required>
+        // Extract unique grades and programs
+        gradesCache = [...new Set(studentsCache.map(s => s.grade).filter(Boolean))];
+        programsCache = [...new Set(studentsCache.map(s => s.program).filter(Boolean))];
+
+        populateStudentSelects(studentsCache, myGrade, otherGrade);
+        populateDropdowns();
+    } catch (err) {
+        console.error("Failed to fetch students:", err);
+    }
+}
+
+// ---------------- POPULATE CHECKBOXES & DROPDOWNS ----------------
+function populateStudentSelects(allStudents, myGrade=[], otherGrade=[]) {
+    const container = document.getElementById("studentsCheckboxes");
+    if(!container) return;
+    container.innerHTML="";
+
+    const createCheckbox = s=>`
+        <label class="inline-flex items-center gap-2">
+            <input type="checkbox" class="target-checkbox" value="${s._id || s.id}"/>
+            ${s.firstname} ${s.lastname} (${t('grade')} ${s.grade || '-'})
+        </label>
+    `;
+
+    container.innerHTML=`
+        <fieldset>
+            <legend class="font-semibold mb-2">${t('myClass')}</legend>
+            ${myGrade.map(createCheckbox).join("")}
+        </fieldset>
+        <fieldset class="mt-2">
+            <legend class="font-semibold mb-2">${t('other_students')}</legend>
+            ${otherGrade.map(createCheckbox).join("")}
+        </fieldset>
+    `;
+}
+
+function populateDropdowns() {
+    const gradeDropdown = document.getElementById("assignGradeDropdown");
+    const programDropdown = document.getElementById("assignProgramDropdown");
+    gradeDropdown.innerHTML = gradesCache.map(g=>`<option value="${g}">${g}</option>`).join("");
+    programDropdown.innerHTML = programsCache.map(p=>`<option value="${p}">${p}</option>`).join("");
+}
+
+// ---------------- QUESTIONS ----------------
+function createQuestionBlock() {
+    questionCount++;
+    const qDiv = document.createElement("div");
+    qDiv.className="border p-4 rounded bg-gray-50";
+    qDiv.innerHTML=`
+        <label class="block font-semibold">${t('questionLabel')} ${questionCount}</label>
+        <input type="text" name="questionText" placeholder="${t('questionPlaceholder')}" class="w-full border p-2 rounded mb-2" required>
         <div class="space-y-2">
-          <input type="text" name="option1" placeholder="${getTranslation(
-            "optionA"
-          )}" class="w-full border p-2 rounded" required>
-          <input type="text" name="option2" placeholder="${getTranslation(
-            "optionB"
-          )}" class="w-full border p-2 rounded" required>
-          <input type="text" name="option3" placeholder="${getTranslation(
-            "optionC"
-          )}" class="w-full border p-2 rounded">
-          <input type="text" name="option4" placeholder="${getTranslation(
-            "optionD"
-          )}" class="w-full border p-2 rounded">
+            <input type="text" name="option1" placeholder="${t('optionA')}" class="w-full border p-2 rounded" required>
+            <input type="text" name="option2" placeholder="${t('optionB')}" class="w-full border p-2 rounded" required>
+            <input type="text" name="option3" placeholder="${t('optionC')}" class="w-full border p-2 rounded">
+            <input type="text" name="option4" placeholder="${t('optionD')}" class="w-full border p-2 rounded">
         </div>
-        <label class="block mt-2">${getTranslation("correctAnswer")}</label>
+        <label class="block mt-2">${t('correctAnswer')}</label>
         <select name="correctAnswer" class="w-full border p-2 rounded">
-          <option value="A">${getTranslation("optionA")}</option>
-          <option value="B">${getTranslation("optionB")}</option>
-          <option value="C">${getTranslation("optionC")}</option>
-          <option value="D">${getTranslation("optionD")}</option>
+            <option value="A">${t('optionA')}</option>
+            <option value="B">${t('optionB')}</option>
+            <option value="C">${t('optionC')}</option>
+            <option value="D">${t('optionD')}</option>
         </select>
-      `;
-        questionsContainer.appendChild(qDiv);
-      }
+    `;
+    questionsContainer.appendChild(qDiv);
+}
+addQuestionBtn.addEventListener("click", createQuestionBlock);
 
-      addQuestionBtn.addEventListener("click", createQuestionBlock);
+document.getElementById("quizForm").addEventListener("submit", async e=>{
+    e.preventDefault();
 
-      document
-        .getElementById("quizForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
 
-          const quizData = {
-            title: document.getElementById("quizTitle").value,
-            description: document.getElementById("quizDescription").value,
-            dueDate: document.getElementById("quizDueDate").value,
-            timeLimitMinutes:
-              document.getElementById("quizTimeLimit").value || null,
-            questions: [],
-            assignTo: {
-              users: document
-                .getElementById("assignEmails")
-                .value.split(",")
-                .map((e) => e.trim())
-                .filter((e) => e),
-              grades: document.getElementById("assignGrade").value
-                ? [Number(document.getElementById("assignGrade").value)]
-                : [],
-              programs: document.getElementById("assignProgram").value
-                ? [document.getElementById("assignProgram").value.trim()]
-                : [],
-              schools: document.getElementById("assignSchool").value
-                ? [document.getElementById("assignSchool").value]
-                : [],
-            },
-          };
+    const selectedStudents = Array.from(document.querySelectorAll(".target-checkbox:checked")).map(cb=>cb.value);
 
-          document
-            .querySelectorAll("#questionsContainer > div")
-            .forEach((qDiv) => {
-              const qText = qDiv.querySelector(
-                'input[name="questionText"]'
-              ).value;
-              const options = [
-                qDiv.querySelector('input[name="option1"]').value,
-                qDiv.querySelector('input[name="option2"]').value,
-                qDiv.querySelector('input[name="option3"]').value,
-                qDiv.querySelector('input[name="option4"]').value,
-              ].filter((o) => o);
-              const correct = qDiv.querySelector(
-                'select[name="correctAnswer"]'
-              ).value;
-              quizData.questions.push({ question: qText, options, correct });
-            });
+   
+    const selectedGrades = Array.from(document.getElementById("assignGradeDropdown").selectedOptions).map(opt=>opt.value);
+    const selectedPrograms = Array.from(document.getElementById("assignProgramDropdown").selectedOptions).map(opt=>opt.value);
 
-          try {
-            const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify(quizData),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to save quiz");
-            alert(
-              getTranslation("quizSuccessAlert") || "Quiz created successfully!"
-            );
-            fetchQuizzes();
-            document.getElementById("quizForm").reset();
-            questionsContainer.innerHTML = "";
-            questionCount = 0;
-          } catch (err) {
-            alert(
-              (getTranslation("quizSaveErrorAlert") || "Error saving quiz") +
-                ": " +
-                err.message
-            );
-          }
+    const quizData = {
+        title: document.getElementById("quizTitle").value,
+        description: document.getElementById("quizDescription").value,
+        dueDate: document.getElementById("quizDueDate").value,
+        timeLimitMinutes: document.getElementById("quizTimeLimit").value || null,
+        questions: [],
+        assignTo: { users: selectedStudents, grades: selectedGrades, programs: selectedPrograms }
+    };
+
+    document.querySelectorAll("#questionsContainer > div").forEach(qDiv=>{
+        const qText = qDiv.querySelector('input[name="questionText"]').value;
+        const options = [
+            qDiv.querySelector('input[name="option1"]').value,
+            qDiv.querySelector('input[name="option2"]').value,
+            qDiv.querySelector('input[name="option3"]').value,
+            qDiv.querySelector('input[name="option4"]').value
+        ].filter(Boolean);
+        const correct = qDiv.querySelector('select[name="correctAnswer"]').value;
+        quizData.questions.push({ question:qText, options, correct });
+    });
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            credentials:"include",
+            body:JSON.stringify(quizData)
         });
-
-      async function fetchQuizzes() {
-        quizList.innerHTML = `<li>${
-          getTranslation("loading") || "Loading..."
-        }</li>`;
-        try {
-          const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
-            method: "GET",
-            credentials: "include",
-          });
-          const data = await res.json();
-          if (!res.ok)
-            throw new Error(
-              data.message ||
-                getTranslation("quizLoadErrorAlert") ||
-                "Error loading quizzes"
-            );
-
-          quizList.innerHTML = "";
-          if (!data.length) {
-            quizList.innerHTML = `<li>${
-              getTranslation("noQuizzesYet") || "No quizzes yet"
-            }</li>`;
-          } else {
-            data.forEach((quiz) => {
-              const li = document.createElement("li");
-              li.className =
-                "p-4 border rounded flex justify-between items-center";
-              li.innerHTML = `
-              <div>
-                <h3 class="font-bold">${quiz.title}</h3>
-                <p class="text-gray-600">${quiz.description || ""}</p>
-                <p class="text-sm text-gray-500">
-                  Due: ${quiz.due_date ? new Date(quiz.due_date).toLocaleDateString() : "N/A"}
-                </p>
-              </div>
-              <span class="text-sm text-green-600">${
-                quiz.questions?.length || 0
-              } ${getTranslation("questionsCount") || "questions"}</span>
-            `;
-              quizList.appendChild(li);
-            });
-          }
-        } catch (err) {
-          quizList.innerHTML = `<li class="text-red-600">Error: ${err.message}</li>`;
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-        loadTranslations();
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.message || t('quizSaveErrorAlert'));
+        alert(t('quizSuccessAlert'));
         fetchQuizzes();
-      });
-    </script>
-  </body>
+        document.getElementById("quizForm").reset();
+        questionsContainer.innerHTML="";
+        questionCount=0;
+    } catch(err) {
+        alert(`${t('quizSaveErrorAlert')}: ${err.message}`);
+    }
+});
+
+
+async function fetchQuizzes(){
+    quizList.innerHTML=`<li>${t('loading')}...</li>`;
+    try{
+        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {credentials:"include"});
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.message || t('quizLoadErrorAlert'));
+        quizList.innerHTML=data.length ? data.map(quiz=>`
+            <li class="p-4 border rounded flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold">${quiz.title}</h3>
+                    <p class="text-gray-600">${quiz.description||''}</p>
+                    <p class="text-sm text-gray-500">${t('due')}: ${quiz.due_date? new Date(quiz.due_date).toLocaleDateString():'N/A'}</p>
+                </div>
+                <span class="text-sm text-green-600">${quiz.questions?.length||0} ${t('questionsCount')}</span>
+            </li>`).join("") : `<li>${t('noQuizzesYet')}</li>`;
+    }catch(err){ quizList.innerHTML=`<li class="text-red-600">Error: ${err.message}</li>`; }
+}
+
+// ---------------- INIT ----------------
+document.addEventListener("DOMContentLoaded", ()=>{
+    loadTranslations();
+    fetchStudents();
+    fetchQuizzes();
+});
+</script>
+
+</body>
 </html>
+
+
