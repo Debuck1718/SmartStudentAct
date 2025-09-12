@@ -18,11 +18,10 @@ const essaySchema = Joi.object({
   }).optional(),
 });
 
-// --- Safe JSON parse with logging for debugging
+// --- Safe JSON parse
 function safeJSONParse(text) {
   try {
-    const parsed = JSON.parse(text);
-    return parsed;
+    return JSON.parse(text);
   } catch (err) {
     logger.error("Failed to parse JSON:", err, "Text:", text);
     return null;
@@ -61,32 +60,32 @@ Essay chunk:
 `;
 }
 
-// --- Retry wrapper
+// --- Retry wrapper for a single Gemini API call
 async function generateFeedbackWithRetry(payload, retries = 3) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
+      // Assuming geminiClient.generateContent is a function that makes the API call.
       const result = await geminiClient.generateContent(payload);
-
-      // Defensive check for a valid response structure
-      if (!result || !result.text) {
-        logger.warn(`Gemini API returned an unexpected response structure on attempt ${attempt}:`, result);
-        throw new Error("Invalid response from Gemini API");
-      }
       
-      const feedback = safeJSONParse(result.text);
-
-      if (!feedback) {
-        throw new Error("Invalid JSON format from Gemini API");
+      // Check for an empty or invalid response before parsing
+      if (!result || !result.text) {
+        logger.error(`Gemini API returned an empty or invalid response on attempt ${attempt}.`);
+        throw new Error("Invalid or empty response from Gemini API.");
       }
 
+      const feedback = safeJSONParse(result.text);
+      if (!feedback) {
+        throw new Error("Invalid JSON format in API response.");
+      }
       return feedback;
     } catch (err) {
       logger.warn(`Gemini API attempt ${attempt} failed:`, err);
       if (attempt === retries) {
+        logger.error("All Gemini API attempts failed.");
         throw err;
       }
-      // Implement exponential backoff for retries
-      const delay = Math.pow(2, attempt) * 1000;
+      // Implement exponential backoff
+      const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -128,10 +127,7 @@ router.post("/check", authenticateJWT, checkSubscription, async (req, res) => {
 
   try {
     const chunks = splitEssay(essayText);
-    const feedbackArray = [];
-
-    // Use Promise.all to process chunks in parallel for better performance
-    const chunkPromises = chunks.map(chunk => {
+    const feedbackPromises = chunks.map(chunk => {
       const prompt = generatePrompt(chunk, citationData);
       const payload = {
         contents: [{ parts: [{ text: prompt }] }],
@@ -151,7 +147,7 @@ router.post("/check", authenticateJWT, checkSubscription, async (req, res) => {
       return generateFeedbackWithRetry(payload, 3);
     });
 
-    const feedbackResults = await Promise.all(chunkPromises);
+    const feedbackResults = await Promise.all(feedbackPromises);
 
     const feedback = mergeFeedback(feedbackResults);
 
@@ -161,7 +157,7 @@ router.post("/check", authenticateJWT, checkSubscription, async (req, res) => {
 
     res.json({ feedback });
   } catch (err) {
-    logger.error("Error analyzing essay:", err);
+    logger.error("Top-level error analyzing essay:", err);
     res
       .status(500)
       .json({ message: "Failed to analyze essay. Please try again later." });
