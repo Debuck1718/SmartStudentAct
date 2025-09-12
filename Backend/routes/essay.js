@@ -7,9 +7,7 @@ const { authenticateJWT } = require("../middlewares/auth");
 const checkSubscription = require("../middlewares/checkSubscription");
 
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
-// NOTE: The API key is assumed to be available from the environment variables.
 
-// --- Validation schema
 const essaySchema = Joi.object({
   essayText: Joi.string().min(50).required(),
   citationData: Joi.object({
@@ -20,7 +18,7 @@ const essaySchema = Joi.object({
   }).optional(),
 });
 
-// --- Safe JSON parse
+
 function safeJSONParse(text) {
   try {
     return JSON.parse(text);
@@ -30,7 +28,7 @@ function safeJSONParse(text) {
   }
 }
 
-// --- Generate prompt
+
 function generatePrompt(essayText, citationData) {
   const citationText = citationData
     ? `
@@ -62,9 +60,9 @@ Essay chunk:
 `;
 }
 
-// --- Retry wrapper for a single Gemini API call using fetch
+
 async function generateFeedbackWithRetry(payload, retries = 3) {
-  const apiKey = process.env.GEMINI_API_KEY; // Assuming API key is an environment variable.
+  const apiKey = process.env.GEMINI_API_KEY; 
   if (!apiKey) {
     throw new Error("API key is not configured.");
   }
@@ -113,7 +111,6 @@ async function generateFeedbackWithRetry(payload, retries = 3) {
   }
 }
 
-// --- Split long essay into chunks (~2000 chars per chunk)
 function splitEssay(essayText, maxChunkLength = 2000) {
   const chunks = [];
   let start = 0;
@@ -124,7 +121,6 @@ function splitEssay(essayText, maxChunkLength = 2000) {
   return chunks;
 }
 
-// --- Merge feedback arrays
 function mergeFeedback(feedbackArray) {
   const merged = { grammar: [], clarity: [], argument: [], style: [] };
   feedbackArray.forEach((f) => {

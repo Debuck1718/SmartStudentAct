@@ -1,22 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const Joi = require('joi'); 
+const Joi = require('joi');
 const logger = require('../utils/logger');
-const geminiClient = require('../utils/geminiClient');
 const eventBus = require('../utils/eventBus');
 
 const StudentRewards = require('../models/StudentRewards');
-const User = require('../models/User'); 
+const User = require('../models/User');
 const Reward = require('../models/Reward');
 const BudgetEntry = require('../models/BudgetEntry');
 const { authenticateJWT, requireAdmin } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
 
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
 
 function hasRole(allowedRoles = []) {
   return (req, res, next) => {
     try {
-      const userRole = req.user?.role; 
+      const userRole = req.user?.role;
       if (!userRole) {
         return res.status(403).json({ message: "No role assigned. Forbidden." });
       }
@@ -30,8 +30,6 @@ function hasRole(allowedRoles = []) {
     }
   };
 }
-
-
 
 const studentGoalSchema = Joi.object({
     description: Joi.string().required(),
@@ -54,11 +52,10 @@ const goalUpdateSchema = Joi.object({
 
 async function grantReward({ userId, type, points, description, source = 'System', grantedBy = null }) {
     try {
-
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { $inc: { smart_points: points || 0 } },
-            { new: true } 
+            { new: true }
         );
 
         if (!updatedUser) return;
@@ -172,166 +169,213 @@ const calculateAllRewards = (student, user) => {
 };
 
 
-const generateGeminiAdvice = async (student, budgetEntries) => {
-    
-    const studentInfo = `Student Name: ${student.name}
-    Term Percentage: ${student.termPercentage}%
-    Consistent Months: ${student.consistentMonths}
-    Weekly Goals Achieved: ${student.weeklyGoalsAchieved}
-    Current Goals: ${student.goals.map(g => g.description).join(', ')}`;
-    
-    const spendingByCategory = {};
-    budgetEntries.filter(e => e.type === 'expense').forEach(entry => {
-        spendingByCategory[entry.category] = (spendingByCategory[entry.category] || 0) + entry.amount;
-    });
+async function generateGeminiAdviceWithRetry(payload, retries = 3) {
+  const apiKey = process.env.GEMINI_API_KEY; 
+  if (!apiKey) {
+    throw new Error("API key is not configured.");
+  }
+  const apiUrlWithKey = `${API_URL}${apiKey}`;
 
-    const budgetInfo = `Budgeting Data (past month):
-    Total Expenses: $${budgetEntries.reduce((sum, entry) => entry.type === 'expense' ? sum + entry.amount : sum, 0)}
-    Spending by Category: ${JSON.stringify(spendingByCategory, null, 2)}`;
-
-    const prompt = `Based on the following user data, provide concise and actionable advice on their goals and spending habits.
-    
-    Student Data:
-    ${studentInfo}
-
-    Budget Data:
-    ${budgetInfo}
-
-    Please provide a short, encouraging message for their study goals and a clear, helpful tip for their financial habits. Format the response as a JSON object with two keys: "studyAdvice" and "spendingAdvice". Example: {"studyAdvice": "...", "spendingAdvice": "..."}
-    `;
-
+  for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-        const geminiResponse = await geminiClient.generateContent(prompt);
-        return JSON.parse(geminiResponse.text);
+      const response = await fetch(apiUrlWithKey, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
 
-    } catch (error) {
-        logger.error('Error with Gemini API:', error);
-        return {
-            studyAdvice: "Keep working hard on your goals!",
-            spendingAdvice: "Track your expenses to stay on top of your budget."
-        };
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error(`API call failed with status ${response.status}: ${errorText}`);
+        throw new Error(`API call failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!generatedText) {
+        logger.error(`Gemini API returned an empty or invalid response on attempt ${attempt}. Full response: ${JSON.stringify(result)}`);
+        throw new Error("Invalid or empty response from Gemini API.");
+      }
+
+      const advice = JSON.parse(generatedText);
+      if (!advice || !advice.studyAdvice || !advice.spendingAdvice) {
+          throw new Error("Invalid JSON format or missing keys in API response.");
+      }
+
+      return advice;
+    } catch (err) {
+      logger.warn(`Gemini API attempt ${attempt} failed:`, err.message);
+      if (attempt === retries) {
+        logger.error("All Gemini API attempts failed. Final error:", err);
+        throw err;
+      }
+      const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-};
+  }
+}
 
 router.get('/advice', authenticateJWT, async (req, res) => {
-  try {
-    const userId = req.user.id; 
-    const user = await User.findById(userId);
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        if (user.is_on_trial && user.trialInsightsUsed >= user.trialInsightsLimit) {
+            return res.status(403).json({
+                message: `Trial limit reached. You can only generate ${user.trialInsightsLimit} AI insights. Please subscribe to continue.`,
+            });
+        }
+
+        const studentData = await StudentRewards.findOne({ studentId: userId });
+        const budgetData = await BudgetEntry.find({ userId });
+
+        let advice;
+        if (!studentData) {
+            advice = {
+                studyAdvice: "Start setting goals to get personalized advice!",
+                spendingAdvice: "Log your first budget entry to get financial tips!",
+            };
+        } else {
+            const studentInfo = `Student Name: ${studentData.name}
+                Term Percentage: ${studentData.termPercentage}%
+                Consistent Months: ${studentData.consistentMonths}
+                Weekly Goals Achieved: ${studentData.weeklyGoalsAchieved}
+                Current Goals: ${studentData.goals.map(g => g.description).join(', ')}`;
+
+            const spendingByCategory = {};
+            budgetData.filter(e => e.type === 'expense').forEach(entry => {
+                spendingByCategory[entry.category] = (spendingByCategory[entry.category] || 0) + entry.amount;
+            });
+
+            const budgetInfo = `Budgeting Data (past month):
+                Total Expenses: $${budgetData.reduce((sum, entry) => entry.type === 'expense' ? sum + entry.amount : sum, 0)}
+                Spending by Category: ${JSON.stringify(spendingByCategory, null, 2)}`;
+
+            const prompt = `Based on the following user data, provide concise and actionable advice on their goals and spending habits.
+                
+                Student Data:
+                ${studentInfo}
+
+                Budget Data:
+                ${budgetInfo}
+
+                Please provide a short, encouraging message for their study goals and a clear, helpful tip for their financial habits. Format the response as a JSON object with two keys: "studyAdvice" and "spendingAdvice". Example: {"studyAdvice": "...", "spendingAdvice": "..."}
+                `;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "studyAdvice": { type: "STRING" },
+                            "spendingAdvice": { type: "STRING" }
+                        }
+                    }
+                }
+            };
+            advice = await generateGeminiAdviceWithRetry(payload, 3);
+        }
+
+        if (user.is_on_trial) {
+            user.trialInsightsUsed = (user.trialInsightsUsed || 0) + 1;
+            await user.save();
+        }
+
+        res.status(200).json({ advice });
+    } catch (error) {
+        logger.error('Error fetching personalized advice:', error);
+        res.status(500).json({ message: 'Failed to fetch advice.' });
     }
-
-    if (user.is_on_trial && user.trialInsightsUsed >= user.trialInsightsLimit) {
-      return res.status(403).json({
-        message: `Trial limit reached. You can only generate ${user.trialInsightsLimit} AI insights. Please subscribe to continue.`,
-      });
-    }
-
-    const studentData = await StudentRewards.findOne({ studentId: userId });
-    const budgetData = await BudgetEntry.find({ userId });
-
-    let advice;
-    if (!studentData) {
-      advice = {
-        studyAdvice: "Start setting goals to get personalized advice!",
-        spendingAdvice: "Log your first budget entry to get financial tips!",
-      };
-    } else {
-      advice = await generateGeminiAdvice(studentData, budgetData);
-    }
-
-    if (user.is_on_trial) {
-      user.trialInsightsUsed = (user.trialInsightsUsed || 0) + 1;
-      await user.save();
-    }
-
-    res.status(200).json({ advice });
-  } catch (error) {
-    logger.error('Error fetching personalized advice:', error);
-    res.status(500).json({ message: 'Failed to fetch advice.' });
-  }
 });
 
 
 router.post(
-  "/teacher/add-points",
-  authenticateJWT,
-  hasRole(["teacher", "admin"]), 
-  async (req, res) => {
-    try {
-      const { studentId, points, reason } = req.body;
+    "/teacher/add-points",
+    authenticateJWT,
+    hasRole(["teacher", "admin"]),
+    async (req, res) => {
+        try {
+            const { studentId, points, reason } = req.body;
 
-      if (!studentId || points === undefined || !reason) {
-        return res.status(400).json({ message: "Missing required fields." });
-      }
+            if (!studentId || points === undefined || !reason) {
+                return res.status(400).json({ message: "Missing required fields." });
+            }
 
-      const student = await User.findById(studentId);
-      if (!student) {
-        return res.status(404).json({ message: "Student not found." });
-      }
+            const student = await User.findById(studentId);
+            if (!student) {
+                return res.status(404).json({ message: "Student not found." });
+            }
 
-      await User.findByIdAndUpdate(student._id, {
-        $inc: { smart_points: parseInt(points, 10) },
-      });
+            await User.findByIdAndUpdate(student._id, {
+                $inc: { smart_points: parseInt(points, 10) },
+            });
 
-      let studentRewards = await StudentRewards.findOne({ studentId: student._id });
-      if (!studentRewards) {
-        studentRewards = new StudentRewards({
-          studentId: student._id,
-          pointsLog: [],
-        });
-      }
+            let studentRewards = await StudentRewards.findOne({ studentId: student._id });
+            if (!studentRewards) {
+                studentRewards = new StudentRewards({
+                    studentId: student._id,
+                    pointsLog: [],
+                });
+            }
 
-      const sourceRole = req.user.role === "admin" ? "Admin" : "Teacher";
+            const sourceRole = req.user.role === "admin" ? "Admin" : "Teacher";
 
-      studentRewards.pointsLog.push({
-        points,
-        source: sourceRole,
-        description: reason,
-        date: new Date(),
-      });
+            studentRewards.pointsLog.push({
+                points,
+                source: sourceRole,
+                description: reason,
+                date: new Date(),
+            });
 
-      await studentRewards.save();
+            await studentRewards.save();
 
-      res.status(200).json({
-        message: `Successfully added ${points} points to ${student.firstname}.`,
-      });
-    } catch (error) {
-      logger.error("Error adding points:", error);
-      res.status(500).json({ message: "Server error occurred while adding points." });
+            res.status(200).json({
+                message: `Successfully added ${points} points to ${student.firstname}.`,
+            });
+        } catch (error) {
+            logger.error("Error adding points:", error);
+            res.status(500).json({ message: "Server error occurred while adding points." });
+        }
     }
-  }
 );
 
 router.get(
-  "/teacher/view-points/:studentId",
-  authenticateJWT,
-  hasRole(["teacher", "admin"]),
-  async (req, res) => {
-    try {
-      const { studentId } = req.params;
+    "/teacher/view-points/:studentId",
+    authenticateJWT,
+    hasRole(["teacher", "admin"]),
+    async (req, res) => {
+        try {
+            const { studentId } = req.params;
 
-      const student = await User.findById(studentId).select("firstname lastname smart_points");
-      if (!student) {
-        return res.status(404).json({ message: "Student not found." });
-      }
+            const student = await User.findById(studentId).select("firstname lastname smart_points");
+            if (!student) {
+                return res.status(404).json({ message: "Student not found." });
+            }
 
-      const studentRewards = await StudentRewards.findOne({ studentId: student._id });
+            const studentRewards = await StudentRewards.findOne({ studentId: student._id });
 
-      res.status(200).json({
-        student: {
-          id: student._id,
-          name: `${student.firstname} ${student.lastname}`,
-          smart_points: student.smart_points || 0,
-        },
-        pointsLog: studentRewards ? studentRewards.pointsLog : [],
-      });
-    } catch (error) {
-      logger.error("Error fetching student points:", error);
-      res.status(500).json({ message: "Server error occurred while fetching points." });
+            res.status(200).json({
+                student: {
+                    id: student._id,
+                    name: `${student.firstname} ${student.lastname}`,
+                    smart_points: student.smart_points || 0,
+                },
+                pointsLog: studentRewards ? studentRewards.pointsLog : [],
+            });
+        } catch (error) {
+            logger.error("Error fetching student points:", error);
+            res.status(500).json({ message: "Server error occurred while fetching points." });
+        }
     }
-  }
 );
 
 router.post('/milestone-completed', authenticateJWT, checkSubscription, async (req, res) => {
