@@ -267,8 +267,6 @@ const academicCalendarSchema = Joi.object({
     .required(),
 });
 
-const Joi = require("joi");
-
 const settingsSchema = Joi.object({
   firstname: Joi.string().min(2).max(50).optional(),
   lastname: Joi.string().min(2).max(50).optional(),
