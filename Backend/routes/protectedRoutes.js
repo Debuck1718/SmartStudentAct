@@ -443,7 +443,7 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
   try {
     const user = await User.findById(userId)
       .select(
-        "firstname lastname email phone occupation educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url School"
+        "firstname lastname email phone occupation educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url school"
       )
       .populate("School", "schoolName schoolCountry");
 
