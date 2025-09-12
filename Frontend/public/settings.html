@@ -644,11 +644,8 @@
           document.getElementById("phone").value = profile.phone || "";
           document.getElementById("occupation").value =
             profile.occupation || "";
-          document.getElementById("schoolName").value =
-            profile.schoolName || "";
-          document.getElementById("schoolCountry").value =
-            profile.schoolCountry || "";
-
+          document.getElementById("schoolName").value = profile.school?.schoolName || "";
+          document.getElementById("schoolCountry").value = profile.school?.schoolCountry || "";
           if (profile.occupation === "student") {
             document.getElementById("educationLevel").value =
               profile.educationLevel || "";
