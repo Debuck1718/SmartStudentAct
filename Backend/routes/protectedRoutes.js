@@ -438,14 +438,14 @@ protectedRouter.patch(
 );
 
 
-protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
+router.get("/profile", authenticateJWT, async (req, res) => {
   const userId = req.userId;
   try {
     const user = await User.findById(userId)
       .select(
-        "firstname lastname email phone occupation educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
+        "firstname lastname email phone occupation educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url school"
       )
-      .populate("school", "schoolName schoolCountry"); // 🔑 get fields from School
+      .populate("school", "schoolName schoolCountry");
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
