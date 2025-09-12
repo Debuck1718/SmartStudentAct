@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>⚙️ Account Settings</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      };
+    </script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
@@ -491,13 +496,12 @@
 
        
     <script>
-  // Translation function for your nested JSON structure
+  
   const translate = async (lang) => {
     try {
       const response = await fetch(`/locales/settings.json`);
       const data = await response.json();
 
-      // Iterate through all elements with data-i18n
       document.querySelectorAll("[data-i18n]").forEach((element) => {
         const key = element.getAttribute("data-i18n");
         if (data[key] && data[key][lang]) {
@@ -505,7 +509,7 @@
         }
       });
 
-      // Optionally handle placeholders
+      
       document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
         const key = element.getAttribute("data-i18n-placeholder");
         if (data[key] && data[key][lang]) {
@@ -518,7 +522,7 @@
     }
   };
 
-  // Initialize language switcher
+  
   document.addEventListener("DOMContentLoaded", () => {
     const languageSwitcher = document.getElementById("language-switcher");
     const savedLang = localStorage.getItem("language") || "en";
@@ -534,8 +538,7 @@
   });
 </script>
 
-
-       
+   
     <script>
       
       const sidebar = document.getElementById("sidebar");
@@ -875,22 +878,23 @@
         .addEventListener("click", handleLogout);
       checkAuthAndLoad();
 
-      const darkModeToggle = document.getElementById("darkModeToggle");
-
-      if (localStorage.getItem("theme") === "dark") {
+     if (localStorage.getItem("theme") === "dark") {
         document.documentElement.classList.add("dark");
-        darkModeToggle.checked = true;
       }
 
-      darkModeToggle.addEventListener("change", () => {
-        if (darkModeToggle.checked) {
-          document.documentElement.classList.add("dark");
-          localStorage.setItem("theme", "dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-          localStorage.setItem("theme", "light");
-        }
-      });
+      const darkModeToggle = document.getElementById("darkModeToggle");
+      if (darkModeToggle) {
+        darkModeToggle.checked = localStorage.getItem("theme") === "dark";
+        darkModeToggle.addEventListener("change", () => {
+          if (darkModeToggle.checked) {
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("theme", "light");
+          }
+        });
+      }
     </script>
      
   </body>
