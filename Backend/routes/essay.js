@@ -18,10 +18,11 @@ const essaySchema = Joi.object({
   }).optional(),
 });
 
-// --- Safe JSON parse
+// --- Safe JSON parse with logging for debugging
 function safeJSONParse(text) {
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    return parsed;
   } catch (err) {
     logger.error("Failed to parse JSON:", err, "Text:", text);
     return null;
@@ -61,16 +62,32 @@ Essay chunk:
 }
 
 // --- Retry wrapper
-async function generateFeedbackWithRetry(payload, retries = 2) {
+async function generateFeedbackWithRetry(payload, retries = 3) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const result = await geminiClient.generateContent(payload);
+
+      // Defensive check for a valid response structure
+      if (!result || !result.text) {
+        logger.warn(`Gemini API returned an unexpected response structure on attempt ${attempt}:`, result);
+        throw new Error("Invalid response from Gemini API");
+      }
+      
       const feedback = safeJSONParse(result.text);
-      if (!feedback) throw new Error("Invalid JSON from Gemini API");
+
+      if (!feedback) {
+        throw new Error("Invalid JSON format from Gemini API");
+      }
+
       return feedback;
     } catch (err) {
       logger.warn(`Gemini API attempt ${attempt} failed:`, err);
-      if (attempt === retries) throw err;
+      if (attempt === retries) {
+        throw err;
+      }
+      // Implement exponential backoff for retries
+      const delay = Math.pow(2, attempt) * 1000;
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 }
@@ -113,7 +130,8 @@ router.post("/check", authenticateJWT, checkSubscription, async (req, res) => {
     const chunks = splitEssay(essayText);
     const feedbackArray = [];
 
-    for (const chunk of chunks) {
+    // Use Promise.all to process chunks in parallel for better performance
+    const chunkPromises = chunks.map(chunk => {
       const prompt = generatePrompt(chunk, citationData);
       const payload = {
         contents: [{ parts: [{ text: prompt }] }],
@@ -130,11 +148,12 @@ router.post("/check", authenticateJWT, checkSubscription, async (req, res) => {
           },
         },
       };
-      const feedbackChunk = await generateFeedbackWithRetry(payload, 3);
-      feedbackArray.push(feedbackChunk);
-    }
+      return generateFeedbackWithRetry(payload, 3);
+    });
 
-    const feedback = mergeFeedback(feedbackArray);
+    const feedbackResults = await Promise.all(chunkPromises);
+
+    const feedback = mergeFeedback(feedbackResults);
 
     feedback.citation = citationData
       ? `"${citationData.title}". ${citationData.source}, ${citationData.accessDate}, ${citationData.url}.`
