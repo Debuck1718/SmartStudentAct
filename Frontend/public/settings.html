@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'class',
+        darkMode: "class",
       };
     </script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -496,51 +496,48 @@
 
        
     <script>
-  
-  const translate = async (lang) => {
-    try {
-      const response = await fetch(`/locales/settings.json`);
-      const data = await response.json();
+      const translate = async (lang) => {
+        try {
+          const response = await fetch(`/locales/settings.json`);
+          const data = await response.json();
 
-      document.querySelectorAll("[data-i18n]").forEach((element) => {
-        const key = element.getAttribute("data-i18n");
-        if (data[key] && data[key][lang]) {
-          element.textContent = data[key][lang];
+          document.querySelectorAll("[data-i18n]").forEach((element) => {
+            const key = element.getAttribute("data-i18n");
+            if (data[key] && data[key][lang]) {
+              element.textContent = data[key][lang];
+            }
+          });
+
+          document
+            .querySelectorAll("[data-i18n-placeholder]")
+            .forEach((element) => {
+              const key = element.getAttribute("data-i18n-placeholder");
+              if (data[key] && data[key][lang]) {
+                element.placeholder = data[key][lang];
+              }
+            });
+        } catch (error) {
+          console.error("Error fetching or parsing translations:", error);
         }
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const languageSwitcher = document.getElementById("language-switcher");
+        const savedLang = localStorage.getItem("language") || "en";
+        if (languageSwitcher) languageSwitcher.value = savedLang;
+
+        translate(savedLang);
+
+        languageSwitcher?.addEventListener("change", (event) => {
+          const newLang = event.target.value;
+          localStorage.setItem("language", newLang);
+          translate(newLang);
+        });
       });
+    </script>
 
-      
-      document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
-        const key = element.getAttribute("data-i18n-placeholder");
-        if (data[key] && data[key][lang]) {
-          element.placeholder = data[key][lang];
-        }
-      });
-
-    } catch (error) {
-      console.error("Error fetching or parsing translations:", error);
-    }
-  };
-
-  
-  document.addEventListener("DOMContentLoaded", () => {
-    const languageSwitcher = document.getElementById("language-switcher");
-    const savedLang = localStorage.getItem("language") || "en";
-    if (languageSwitcher) languageSwitcher.value = savedLang;
-
-    translate(savedLang);
-
-    languageSwitcher?.addEventListener("change", (event) => {
-      const newLang = event.target.value;
-      localStorage.setItem("language", newLang);
-      translate(newLang);
-    });
-  });
-</script>
-
-   
+       
     <script>
-      
       const sidebar = document.getElementById("sidebar");
       const sidebarOverlay = document.getElementById("sidebar-overlay");
       const mobileMenuBtn = document.getElementById("mobile-menu-btn");
@@ -553,39 +550,37 @@
         profile: document.getElementById("tab-profile"),
         security: document.getElementById("tab-security"),
         preferences: document.getElementById("tab-preferences"),
-      }; 
+      };
 
       function toggleSidebar() {
         sidebar.classList.toggle("-translate-x-full");
         sidebarOverlay.classList.toggle("hidden");
         sidebarOverlay.classList.toggle("opacity-0");
-      } 
+      }
 
-      mobileMenuBtn.addEventListener("click", toggleSidebar); 
+      mobileMenuBtn.addEventListener("click", toggleSidebar);
 
-      sidebarOverlay.addEventListener("click", toggleSidebar); 
+      sidebarOverlay.addEventListener("click", toggleSidebar);
 
       function switchTab(tab) {
-        
         Object.values(tabs).forEach((section) =>
           section.classList.add("hidden")
-        ); 
+        );
         Object.values(tabButtons).forEach((btn) =>
           btn.classList.remove("bg-gray-200", "dark:bg-gray-700")
         );
         Object.values(tabButtons).forEach((btn) =>
           btn.classList.add("bg-gray-100", "dark:bg-gray-800")
-        ); 
+        );
 
-        tabs[tab].classList.remove("hidden"); 
+        tabs[tab].classList.remove("hidden");
         tabButtons[tab].classList.remove("bg-gray-100", "dark:bg-gray-800");
-        tabButtons[tab].classList.add("bg-gray-200", "dark:bg-gray-700"); 
+        tabButtons[tab].classList.add("bg-gray-200", "dark:bg-gray-700");
 
         if (window.innerWidth < 640) {
-          
           toggleSidebar();
         }
-      } 
+      }
 
       document
         .getElementById("tab-profile")
@@ -643,7 +638,6 @@
           }
           const profile = await res.json();
 
-          
           document.getElementById("firstname").value = profile.firstname || "";
           document.getElementById("lastname").value = profile.lastname || "";
           document.getElementById("email").value = profile.email || "";
@@ -655,7 +649,6 @@
           document.getElementById("schoolCountry").value =
             profile.schoolCountry || "";
 
-          
           if (profile.occupation === "student") {
             document.getElementById("educationLevel").value =
               profile.educationLevel || "";
@@ -670,7 +663,6 @@
             }
           }
 
-          
           if (profile.occupation === "teacher") {
             document.getElementById("teacherGrade").value = (
               profile.teacherGrade || []
@@ -704,8 +696,10 @@
             email: document.getElementById("email").value,
             phone: document.getElementById("phone").value,
             occupation: occupation,
-            schoolName: document.getElementById("schoolName").value,
-            schoolCountry: document.getElementById("schoolCountry").value,
+            school: {
+              schoolName: document.getElementById("schoolName").value,
+              schoolCountry: document.getElementById("schoolCountry").value,
+            },
           };
 
           if (occupation === "student") {
@@ -720,7 +714,7 @@
             } else if (payload.educationLevel === "university") {
               payload.university = document.getElementById("university").value;
               payload.uniLevel = document.getElementById("uniLevel").value;
-              payload.program = document.getElementById("program").value; // ✅ added
+              payload.program = document.getElementById("program").value;
             }
           } else if (occupation === "teacher") {
             payload.teacherGrade = document
@@ -878,7 +872,7 @@
         .addEventListener("click", handleLogout);
       checkAuthAndLoad();
 
-     if (localStorage.getItem("theme") === "dark") {
+      if (localStorage.getItem("theme") === "dark") {
         document.documentElement.classList.add("dark");
       }
 
