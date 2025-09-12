@@ -126,113 +126,113 @@
   <div id="toast" class="message-box"></div>
 
   <script>
-    const API_BASE_URL = "https://api.smartstudentact.com/api";
-    let currentLang = localStorage.getItem("lang") || "en";
-    let userData = {};
+  const API_BASE_URL = "https://api.smartstudentact.com/api";
+  let currentLang = localStorage.getItem("lang") || "en";
+  let userData = {};
 
-    const $ = (id) => document.getElementById(id);
-    const toast = (msg, type = "success") => {
-      const box = $("toast");
-      box.textContent = msg;
-      box.className = `message-box ${type} show`;
-      setTimeout(() => box.classList.remove("show"), 2600);
+  const $ = (id) => document.getElementById(id);
+  const toast = (msg, type = "success") => {
+    const box = $("toast");
+    box.textContent = msg;
+    box.className = `message-box ${type} show`;
+    setTimeout(() => box.classList.remove("show"), 2600);
+  };
+
+  async function loadProfile() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      userData = await res.json();
+
+      $("avatar").src =
+        userData.profile_picture_url ||
+        "https://placehold.co/128x128/e5e7eb/111?text=👤";
+      $("profile-name").textContent = `${userData.firstname || ""} ${userData.lastname || ""}`;
+      $("profile-role").textContent = userData.occupation || "";
+
+      ["firstname", "lastname", "email", "phone", "occupation"].forEach((k) => {
+        if ($(k)) $(k).value = userData[k] ?? "";
+      });
+
+      toggleSections(userData.occupation);
+    } catch (err) {
+      console.error(err);
+      toast("Could not fetch profile", "error");
+    } finally {
+      $("loading").classList.add("hidden");
+    }
+  }
+
+  $("profile-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("spinner").classList.remove("hidden");
+
+    const payload = {
+      firstname: $("firstname").value.trim(),
+      lastname: $("lastname").value.trim(),
+      phone: $("phone").value.trim(),
     };
 
-
-    async function loadProfile() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/profile`, { credentials: "include" });
-        if (!res.ok) throw new Error("Failed to fetch profile");
-        userData = await res.json();
-
-        $("avatar").src = userData.profile_picture_url || "https://placehold.co/128x128/e5e7eb/111?text=👤";
-        $("profile-name").textContent = `${userData.firstname || ""} ${userData.lastname || ""}`;
-        $("profile-role").textContent = userData.occupation || "";
-
-        ["firstname","lastname","email","phone","occupation"].forEach(k => {
-          if($(k)) $(k).value = userData[k] ?? "";
-        });
-
-        toggleSections(userData.occupation);
-      } catch (err) {
-        console.error(err);
-        toast("Could not fetch profile", "error");
-      } finally {
-        $("loading").classList.add("hidden");
-      }
-    }
-
-    $("profile-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      $("spinner").classList.remove("hidden");
-
-      const payload = {
-        firstname: $("firstname").value.trim(),
-        lastname: $("lastname").value.trim(),
-        phone: $("phone").value.trim(),
-      };
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/profile`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        });
-
-        if (!res.ok) throw new Error("Failed to update profile");
-        toast("Profile updated successfully!", "success");
-        loadProfile();
-      } catch (err) {
-        console.error(err);
-        toast("Error saving profile", "error");
-      } finally {
-        $("spinner").classList.add("hidden");
-      }
-    });
-
-
-    $("change-pic").addEventListener("click", () => $("avatar-input").click());
-    $("avatar-input").addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append("avatar", file);
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        });
-        if (!res.ok) throw new Error("Upload failed");
-        toast("Profile picture updated!", "success");
-        loadProfile();
-      } catch (err) {
-        console.error(err);
-        toast("Error uploading picture", "error");
-      }
-    });
-
-    function toggleSections(role) {
-      $("student-section").classList.toggle("hidden", role !== "student");
-      $("teacher-section").classList.toggle("hidden", role !== "teacher");
-      $("admin-section").classList.toggle("hidden", role !== "admin");
-    }
-
-    // Init
-    document.addEventListener("DOMContentLoaded", () => {
-      $("lang").value = currentLang;
-      if(typeof translatePage === "function") translatePage("profile", currentLang);
-      $("lang").addEventListener("change", (e) => {
-        currentLang = e.target.value;
-        localStorage.setItem("lang", currentLang);
-        if(typeof translatePage === "function") translatePage("profile", currentLang);
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile`, {
+        method: "PATCH", // 🔥 Changed from PUT → PATCH
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
       });
+
+      if (!res.ok) throw new Error("Failed to update profile");
+      toast("Profile updated successfully!", "success");
       loadProfile();
+    } catch (err) {
+      console.error(err);
+      toast("Error saving profile", "error");
+    } finally {
+      $("spinner").classList.add("hidden");
+    }
+  });
+
+  $("change-pic").addEventListener("click", () => $("avatar-input").click());
+  $("avatar-input").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      toast("Profile picture updated!", "success");
+      loadProfile();
+    } catch (err) {
+      console.error(err);
+      toast("Error uploading picture", "error");
+    }
+  });
+
+  function toggleSections(role) {
+    $("student-section").classList.toggle("hidden", role !== "student");
+    $("teacher-section").classList.toggle("hidden", role !== "teacher");
+    $("admin-section").classList.toggle("hidden", role !== "admin");
+  }
+
+  // Init
+  document.addEventListener("DOMContentLoaded", () => {
+    $("lang").value = currentLang;
+    if (typeof translatePage === "function") translatePage("profile", currentLang);
+    $("lang").addEventListener("change", (e) => {
+      currentLang = e.target.value;
+      localStorage.setItem("lang", currentLang);
+      if (typeof translatePage === "function") translatePage("profile", currentLang);
     });
-  </script>
+    loadProfile();
+  });
+</script>
 </body>
 </html>
 

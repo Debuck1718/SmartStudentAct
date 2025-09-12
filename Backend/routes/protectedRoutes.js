@@ -267,6 +267,8 @@ const academicCalendarSchema = Joi.object({
     .required(),
 });
 
+const Joi = require("joi");
+
 const settingsSchema = Joi.object({
   firstname: Joi.string().min(2).max(50).optional(),
   lastname: Joi.string().min(2).max(50).optional(),
@@ -274,13 +276,13 @@ const settingsSchema = Joi.object({
   phone: Joi.string()
     .pattern(/^\+?[0-9]{7,15}$/)
     .optional(),
-  occupation: Joi.string().valid("student", "teacher").required(),
 
+  occupation: Joi.string().valid("student", "teacher").required(),
 
   schoolName: Joi.string().max(100).required(),
   schoolCountry: Joi.string().max(100).required(),
 
-
+  
   educationLevel: Joi.string()
     .valid("junior", "high", "university")
     .when("occupation", {
@@ -288,18 +290,38 @@ const settingsSchema = Joi.object({
       then: Joi.required(),
       otherwise: Joi.optional(),
     }),
-  grade: Joi.string().when("occupation", {
-    is: "student",
+
+  grade: Joi.number().integer().min(1).max(12).when("educationLevel", {
+    is: Joi.valid("junior", "high"),
     then: Joi.required(),
-    otherwise: Joi.optional(),
+    otherwise: Joi.forbidden(), 
   }),
 
-
-  teacherGrade: Joi.string().when("occupation", {
-    is: "teacher",
+  university: Joi.string().max(150).when("educationLevel", {
+    is: "university",
     then: Joi.required(),
-    otherwise: Joi.optional(),
+    otherwise: Joi.forbidden(),
   }),
+
+  uniLevel: Joi.string()
+    .valid("100", "200", "300", "400")
+    .when("educationLevel", {
+      is: "university",
+      then: Joi.required(),
+      otherwise: Joi.forbidden(),
+    }),
+
+  program: Joi.string().max(100).optional(),
+
+  // Teachers
+  teacherGrade: Joi.array()
+    .items(Joi.string())
+    .when("occupation", {
+      is: "teacher",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+
   teacherSubject: Joi.string()
     .max(100)
     .when("occupation", {
@@ -308,6 +330,7 @@ const settingsSchema = Joi.object({
       otherwise: Joi.optional(),
     }),
 }).min(1);
+
 
 const passwordUpdateSchema = Joi.object({
   currentPassword: Joi.string().required(),
@@ -381,31 +404,54 @@ protectedRouter.patch(
   }
 );
 
+protectedRouter.patch(
+  "/settings/password",
+  authenticateJWT,
+  validate(passwordUpdateSchema),
+  async (req, res) => {
+    const userId = req.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    try {
+      // Find the user and select password
+      const user = await User.findById(userId).select("+password");
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      // Compare current password
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid current password." });
+      }
+
+      // Set the new password raw, let pre-save hook hash it
+      user.password = newPassword;
+
+      await user.save();
+
+      res.status(200).json({ message: "Password updated successfully." });
+    } catch (error) {
+      logger.error("Error updating password:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+
 protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
   const userId = req.userId;
   try {
     const user = await User.findById(userId).select(
-      "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade teacherGrade teacherSubject profile_picture_url"
+      "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
     );
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    res.status(200).json({
-      firstname: user.firstname,
-      lastname: user.lastname,
-      email: user.email,
-      phone: user.phone,
-      occupation: user.occupation,
-      schoolName: user.schoolName,
-      schoolCountry: user.schoolCountry,
-      educationLevel: user.educationLevel,
-      grade: user.grade,
-      teacherGrade: user.teacherGrade,
-      teacherSubject: user.teacherSubject,
-      profile_picture_url: user.profile_picture_url,
-    });
+    res.status(200).json(user);
   } catch (error) {
     logger.error("Error fetching user profile:", error);
     res.status(500).json({ message: "Server error" });
@@ -419,7 +465,7 @@ protectedRouter.patch(
   validate(settingsSchema),
   async (req, res) => {
     const userId = req.userId || req.body.userId;
-    const updateData = req.body;
+    let updateData = req.body;
 
     if (!userId) {
       return res
@@ -428,11 +474,45 @@ protectedRouter.patch(
     }
 
     try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      // 1. Conditionally filter the updateData based on the user's occupation.
+      // This prevents saving of forbidden fields.
+      const currentOccupation = updateData.occupation || user.occupation;
+
+      if (currentOccupation === "student") {
+        updateData = {
+          ...updateData,
+          teacherGrade: undefined,
+          teacherSubject: undefined,
+        };
+      } else if (currentOccupation === "teacher") {
+        updateData = {
+          ...updateData,
+          educationLevel: undefined,
+          grade: undefined,
+          university: undefined,
+          uniLevel: undefined,
+          program: undefined,
+        };
+      }
+
+      // 2. Check for email uniqueness if the email is being updated.
+      if (updateData.email && updateData.email !== user.email) {
+        const existingUser = await User.findOne({ email: updateData.email });
+        if (existingUser) {
+          return res.status(409).json({ message: "Email already in use." });
+        }
+      }
+
       const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
         new: true,
         runValidators: true,
       }).select(
-        "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade teacherGrade teacherSubject profile_picture_url"
+        "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
       );
 
       if (!updatedUser) {
@@ -452,6 +532,9 @@ protectedRouter.patch(
           schoolCountry: updatedUser.schoolCountry,
           educationLevel: updatedUser.educationLevel,
           grade: updatedUser.grade,
+          university: updatedUser.university,
+          uniLevel: updatedUser.uniLevel,
+          program: updatedUser.program,
           teacherGrade: updatedUser.teacherGrade,
           teacherSubject: updatedUser.teacherSubject,
           profile_picture_url: updatedUser.profile_picture_url,
@@ -474,7 +557,6 @@ protectedRouter.patch(
     }
   }
 );
-
 
 
 protectedRouter.post(

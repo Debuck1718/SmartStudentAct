@@ -1,66 +1,85 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const Joi = require('joi');
-const logger = require('../utils/logger');
-const geminiClient = require('../utils/geminiClient');
+const Joi = require("joi");
+const logger = require("../utils/logger");
+const geminiClient = require("../utils/geminiClient");
 
-const { authenticateJWT } = require('../middlewares/auth');
-const checkSubscription = require('../middlewares/checkSubscription');
-
+const { authenticateJWT } = require("../middlewares/auth");
+const checkSubscription = require("../middlewares/checkSubscription");
 
 const essaySchema = Joi.object({
-    essayText: Joi.string().min(50).required() 
+  essayText: Joi.string().min(50).required(),
+  citationData: Joi.object({
+    accessDate: Joi.string().required(),
+    source: Joi.string().required(),
+    url: Joi.string().uri().required(),
+    title: Joi.string().required(),
+  }).optional(), 
 });
 
-router.post('/check', authenticateJWT, checkSubscription, async (req, res) => {
+router.post("/check", authenticateJWT, checkSubscription, async (req, res) => {
+  const { error, value } = essaySchema.validate(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .json({ status: "Validation Error", message: error.details[0].message });
+  }
 
-    const { error, value } = essaySchema.validate(req.body);
-    if (error) {
-        return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
-    }
+  try {
+    const { essayText, citationData } = value;
+    const citationText = citationData
+      ? `
+            **Citation**:
+            This feedback was generated using the ${citationData.source} accessed on ${citationData.accessDate} from ${citationData.url}. Please use the following citation format if required:
+            "${citationData.title}". ${citationData.source}, ${citationData.accessDate}, ${citationData.url}.`
+      : "";
 
-    try {
-        const { essayText } = value;
+    const prompt = `
+            You are a helpful and detailed academic writing tutor. Analyze the following essay and provide constructive feedback on:
+            1.  **Grammar & Spelling**: Point out specific errors and suggest corrections.
+            2.  **Clarity & Coherence**: Is the writing easy to follow? Do the ideas flow logically?
+            3.  **Argument Strength**: Is the thesis clear? Is the argument well-supported by evidence?
+            4.  **Tone & Style**: Is the tone appropriate for an academic paper?
 
-        const prompt = `
-            You are a helpful and detailed academic writing tutor. Analyze the following essay and provide constructive feedback on:
-            1.  **Grammar & Spelling**: Point out specific errors and suggest corrections.
-            2.  **Clarity & Coherence**: Is the writing easy to follow? Do the ideas flow logically?
-            3.  **Argument Strength**: Is the thesis clear? Is the argument well-supported by evidence?
-            4.  **Tone & Style**: Is the tone appropriate for an academic paper?
+            Format your response as a JSON object with keys for 'grammar', 'clarity', 'argument', and 'style'. Each key should contain an array of feedback strings. If a section has no feedback, return an empty array.
+            
+            ${citationText}
 
-            Format your response as a JSON object with keys for 'grammar', 'clarity', 'argument', and 'style'. Each key should contain an array of feedback strings. If a section has no feedback, return an empty array.
+            Essay to analyze:
+            "${essayText}"
+        `;
 
-            Essay to analyze:
-            "${essayText}"
-        `;
+    const payload = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            grammar: { type: "ARRAY", items: { type: "STRING" } },
+            clarity: { type: "ARRAY", items: { type: "STRING" } },
+            argument: { type: "ARRAY", items: { type: "STRING" } },
+            style: { type: "ARRAY", items: { type: "STRING" } },
+          },
+        },
+      },
+    };
 
-        const payload = {
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: "OBJECT",
-                    properties: {
-                        "grammar": { "type": "ARRAY", "items": { "type": "STRING" } },
-                        "clarity": { "type": "ARRAY", "items": { "type": "STRING" } },
-                        "argument": { "type": "ARRAY", "items": { "type": "STRING" } },
-                        "style": { "type": "ARRAY", "items": { "type": "STRING" } }
-                    },
-                }
-            }
-        };
+    const result = await geminiClient.generateContent(payload);
 
-        const result = await geminiClient.generateContent(payload);
+    const feedback = JSON.parse(result.text); // Append the citation to the feedback object before sending it to the front-end
 
-        const feedback = JSON.parse(result.text);
+    feedback.citation = citationData
+      ? `"${citationData.title}". ${citationData.source}, ${citationData.accessDate}, ${citationData.url}.`
+      : "";
 
-        res.json({ feedback });
-
-    } catch (error) {
-        logger.error('Error analyzing essay:', error);
-        res.status(500).json({ message: 'Failed to analyze essay. Please try again later.' });
-    }
+    res.json({ feedback });
+  } catch (error) {
+    logger.error("Error analyzing essay:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to analyze essay. Please try again later." });
+  }
 });
 
 module.exports = router;

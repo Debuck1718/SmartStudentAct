@@ -1,567 +1,883 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⚙️ Account Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚙️ Account Settings</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      body {
+        font-family: 'Inter', sans-serif;
+      }
 
-    body {
-      font-family: 'Inter', sans-serif;
-    }
+      /* Custom styles for the mobile sidebar and overlay */
+      .sidebar-overlay {
+        background-color: rgba(0, 0, 0, 0.5);
+        transition: opacity 0.3s ease-in-out;
+      }
 
-    /* Custom styles for the mobile sidebar and overlay */
-    .sidebar-overlay {
-      background-color: rgba(0, 0, 0, 0.5);
-      transition: opacity 0.3s ease-in-out;
-    }
+      .sidebar-menu {
+        transition: transform 0.3s ease-in-out;
+      }
+    </style>
+  </head>
 
-    .sidebar-menu {
-      transition: transform 0.3s ease-in-out;
-    }
-  </style>
-</head>
+  <body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+    <div class="min-h-screen flex flex-col">
+      <div class="flex flex-1 relative">
+        <button
+          id="mobile-menu-btn"
+          class="sm:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white dark:bg-gray-800 shadow-md text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16m-7 6h7"
+            />
+          </svg>
+        </button>
 
-<body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-  <div class="min-h-screen flex flex-col">
-    <div class="flex flex-1 relative">
+        <div
+          id="sidebar-overlay"
+          class="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden hidden opacity-0 transition-opacity"
+        ></div>
 
-      <button id="mobile-menu-btn"
-        class="sm:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white dark:bg-gray-800 shadow-md text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
-      </button>
+        <aside
+          id="sidebar"
+          class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl p-6 space-y-6 transform -translate-x-full sm:relative sm:translate-x-0 sm:shadow-md sm:flex-shrink-0 z-50 sidebar-menu"
+        >
+          <h1
+            class="text-2xl font-bold text-gray-800 dark:text-gray-100"
+            data-i18n="mainTitle"
+          >
+            ⚙️ Account Settings
+          </h1>
+          <nav class="flex flex-col space-y-3">
+            <button
+              id="tab-profile"
+              class="text-left py-2 px-4 rounded-lg font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              data-i18n="profileSectionTitle"
+            >
+              👤 Profile
+            </button>
+            <button
+              id="tab-security"
+              class="text-left py-2 px-4 rounded-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              data-i18n="changePasswordSectionTitle"
+            >
+              🔒 Security
+            </button>
+            <button
+              id="tab-preferences"
+              class="text-left py-2 px-4 rounded-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              data-i18n="preferencesSectionTitle"
+            >
+              🌐 Preferences
+            </button>
+          </nav>
+        </aside>
 
-      <div id="sidebar-overlay"
-        class="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden hidden opacity-0 transition-opacity"></div>
-
-      <aside id="sidebar"
-        class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl p-6 space-y-6 transform -translate-x-full sm:relative sm:translate-x-0 sm:shadow-md sm:flex-shrink-0 z-50 sidebar-menu">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100" data-i18n="mainTitle">⚙️ Account Settings</h1>
-        <nav class="flex flex-col space-y-3">
-          <button id="tab-profile"
-            class="text-left py-2 px-4 rounded-lg font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            data-i18n="profileSectionTitle">👤 Profile</button>
-          <button id="tab-security"
-            class="text-left py-2 px-4 rounded-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            data-i18n="changePasswordSectionTitle">🔒 Security</button>
-          <button id="tab-preferences"
-            class="text-left py-2 px-4 rounded-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            data-i18n="preferencesSectionTitle">🌐 Preferences</button>
-        </nav>
-      </aside>
-
-      <main class="flex-1 p-4 sm:p-8 space-y-8 overflow-y-auto">
-        <div class="max-w-4xl mx-auto">
-
-          <section id="section-profile" class="space-y-6">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 sm:p-8">
-              <h2 class="text-xl font-semibold mb-4" data-i18n="profileInfoTitle">👤 Profile Information</h2>
-              <form id="profile-form" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      data-i18n="firstNameLabel">First Name</label>
-                    <input type="text" id="firstName"
-                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
-                      required />
+        <main class="flex-1 p-4 sm:p-8 space-y-8 overflow-y-auto">
+          <div class="max-w-4xl mx-auto">
+            <section id="section-profile" class="space-y-6">
+              <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 sm:p-8"
+              >
+                <h2
+                  class="text-xl font-semibold mb-4"
+                  data-i18n="profileInfoTitle"
+                >
+                  👤 Profile Information
+                </h2>
+                <form id="profile-form" class="space-y-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        data-i18n="firstNameLabel"
+                        >First Name</label
+                      >
+                      <input
+                        type="text"
+                        id="firstname"
+                        class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        data-i18n="lastNameLabel"
+                        >Last Name</label
+                      >
+                      <input
+                        type="text"
+                        id="lastname"
+                        class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                        required
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      data-i18n="lastNameLabel">Last Name</label>
-                    <input type="text" id="lastName"
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      data-i18n="emailLabel"
+                      >Email</label
+                    >
+                    <input
+                      type="email"
+                      id="email"
                       class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
-                      required />
+                      required
+                    />
                   </div>
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      data-i18n="phoneLabel"
+                      >Phone Number</label
+                    >
+                    <input
+                      type="tel"
+                      id="phone"
+                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      data-i18n="occupationLabel"
+                      >Occupation</label
+                    >
+                    <select
+                      id="occupation"
+                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                    >
+                      <option value="" data-i18n="selectOccupation">
+                        Select Occupation
+                      </option>
+                      <option value="student" data-i18n="studentOption">
+                        Student
+                      </option>
+                      <option value="teacher" data-i18n="teacherOption">
+                        Teacher
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      data-i18n="schoolNameLabel"
+                      >School Name</label
+                    >
+                    <input
+                      type="text"
+                      id="schoolName"
+                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      data-i18n="schoolCountryLabel"
+                      >School Country</label
+                    >
+                    <input
+                      type="text"
+                      id="schoolCountry"
+                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                    />
+                  </div>
+
+                  <div id="student-fields" class="hidden space-y-6">
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        data-i18n="educationLevelLabel"
+                        >Education Level</label
+                      >
+                      <select
+                        id="educationLevel"
+                        class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                      >
+                        <option value="" data-i18n="selectEducationLevel">
+                          Select Education Level
+                        </option>
+                        <option value="junior" data-i18n="juniorOption">
+                          Junior High
+                        </option>
+                        <option value="high" data-i18n="seniorOption">
+                          Senior High
+                        </option>
+                        <option value="university" data-i18n="universityOption">
+                          University
+                        </option>
+                      </select>
+                    </div>
+                    <div id="grade-group" class="hidden">
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        data-i18n="gradeLabel"
+                        >Grade</label
+                      >
+                      <input
+                        type="text"
+                        id="grade"
+                        class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                      />
+                    </div>
+                    <div id="university-fields" class="hidden space-y-6">
+                      <div>
+                        <label
+                          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                          data-i18n="universityNameLabel"
+                          >University Name</label
+                        >
+                        <input
+                          type="text"
+                          id="university"
+                          class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                          data-i18n="universityLevelLabel"
+                          >University Level</label
+                        >
+                        <select
+                          id="uniLevel"
+                          class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                        >
+                          <option value="" data-i18n="selectUniLevel">
+                            Select Level
+                          </option>
+                          <option value="100">100 Level</option>
+                          <option value="200">200 Level</option>
+                          <option value="300">300 Level</option>
+                          <option value="400">400 Level</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                          data-i18n="programLabel"
+                          >Program</label
+                        >
+                        <input
+                          type="text"
+                          id="program"
+                          class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="teacher-fields" class="hidden space-y-6">
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        data-i18n="teacherGradeLabel"
+                        >Teacher Grade</label
+                      >
+                      <input
+                        type="text"
+                        id="teacherGrade"
+                        class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        data-i18n="teacherSubjectLabel"
+                        >Teacher Subject</label
+                      >
+                      <input
+                        type="text"
+                        id="teacherSubject"
+                        class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      data-i18n="profilePhotoLabel"
+                      >Profile Picture</label
+                    >
+                    <input
+                      type="file"
+                      id="profilePhoto"
+                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                      accept="image/*"
+                    />
+                    <img
+                      id="profilePhotoPreview"
+                      src=""
+                      alt="Profile Preview"
+                      class="mt-4 w-24 h-24 rounded-full object-cover hidden"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    id="saveProfileBtn"
+                    class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                    data-i18n="saveProfileBtn"
+                  >
+                    Save Profile
+                  </button>
+                </form>
+              </div>
+            </section>
+
+            <section id="section-security" class="space-y-6 hidden">
+              <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 sm:p-8"
+              >
+                <h2
+                  class="text-xl font-semibold mb-4"
+                  data-i18n="changePasswordTitle"
+                >
+                  🔒 Change Password
+                </h2>
+                <form class="space-y-6">
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      data-i18n="currentPasswordLabel"
+                      >Current Password</label
+                    >
+                    <input
+                      type="password"
+                      id="currentPassword"
+                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-green-200 focus:border-green-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      data-i18n="newPasswordLabel"
+                      >New Password</label
+                    >
+                    <input
+                      type="password"
+                      id="newPassword"
+                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-green-200 focus:border-green-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      data-i18n="confirmNewPasswordLabel"
+                      >Confirm New Password</label
+                    >
+                    <input
+                      type="password"
+                      id="confirmNewPassword"
+                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-green-200 focus:border-green-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    id="submitPasswordBtn"
+                    class="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+                    data-i18n="updatePasswordBtn"
+                  >
+                    Update Password
+                  </button>
+                </form>
+              </div>
+              <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 sm:p-8"
+              >
+                <h2 class="text-xl font-semibold mb-4" data-i18n="logoutTitle">
+                  🚪 Logout
+                </h2>
+                <p
+                  class="text-sm text-gray-600 dark:text-gray-400 mb-4"
+                  data-i18n="logoutDescription"
+                >
+                  You can log out of your account here.
+                </p>
+                <button
+                  id="logoutBtn"
+                  class="w-full sm:w-auto px-6 py-2.5 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
+                  data-i18n="logoutBtn"
+                >
+                  Log Out
+                </button>
+              </div>
+            </section>
+
+            <section id="section-preferences" class="space-y-6 hidden">
+              <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 sm:p-8"
+              >
+                <h2
+                  class="text-xl font-semibold mb-4"
+                  data-i18n="preferencesTitle"
+                >
+                  🌐 Preferences
+                </h2>
+                <div
+                  class="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 mb-4"
+                >
+                  <span
+                    class="text-gray-700 dark:text-gray-200 font-medium"
+                    data-i18n="darkModeLabel"
+                    >Dark Mode</span
+                  >
+                  <input
+                    type="checkbox"
+                    id="darkModeToggle"
+                    class="h-6 w-11 rounded-full appearance-none bg-gray-300 checked:bg-blue-600 transition-all cursor-pointer relative after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:h-5 after:w-5 after:bg-white after:rounded-full after:transition-all after:shadow-sm checked:after:translate-x-5"
+                  />
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="emailLabel">Email</label>
-                  <input type="email" id="email"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
-                    required />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="phoneLabel">Phone Number</label>
-                  <input type="tel" id="phone"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="occupationLabel">Occupation</label>
-                  <input type="text" id="occupation"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="educationLevelLabel">Education Level</label>
-                  <select id="educationLevel"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors">
-                    <option value="" data-i18n="selectEducationLevel">Select Education Level</option>
-                    <option value="juniorHigh" data-i18n="juniorHighOption">Junior High</option>
-                    <option value="seniorHigh" data-i18n="seniorHighOption">Senior High</option>
-                    <option value="university" data-i18n="universityOption">University</option>
+                <div
+                  class="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                >
+                  <span
+                    class="text-gray-700 dark:text-gray-200 font-medium"
+                    data-i18n="languageLabel"
+                    >Language</span
+                  >
+                  <select
+                    id="language-switcher"
+                    class="w-auto border rounded-lg px-2 py-1 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                  >
+                    <option value="en">English</option>
+                    <option value="fr">French</option>
+                    <option value="es">Spanish</option>
                   </select>
                 </div>
-                <div id="gradeGroup" class="hidden">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="gradeLabel">Grade</label>
-                  <input type="text" id="grade"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-                <div id="schoolGroup" class="hidden">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="schoolNameLabel">School Name</label>
-                  <input type="text" id="schoolName"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-                <div id="universityGroup" class="hidden">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="universityLabel">University</label>
-                  <input type="text" id="university"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-                <div id="uniLevelGroup" class="hidden">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="uniLevelLabel">University Level</label>
-                  <input type="text" id="uniLevel"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-                <div id="programGroup" class="hidden">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="programLabel">Program</label>
-                  <input type="text" id="program"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="profilePhotoLabel">Profile Picture</label>
-                  <input type="file" id="profilePhoto"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
-                    accept="image/*" />
-                  <img id="profilePhotoPreview" src="" alt="Profile Preview"
-                    class="mt-4 w-24 h-24 rounded-full object-cover hidden" />
-                </div>
-
-                <button type="button" id="saveProfileBtn"
-                  class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-                  data-i18n="saveProfileBtn">
-                  Save Profile
-                </button>
-              </form>
-            </div>
-          </section>
-
-          <section id="section-security" class="space-y-6 hidden">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 sm:p-8">
-              <h2 class="text-xl font-semibold mb-4" data-i18n="changePasswordTitle">🔒 Change Password</h2>
-              <form class="space-y-6">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="currentPasswordLabel">Current Password</label>
-                  <input type="password" id="currentPassword"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-green-200 focus:border-green-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="newPasswordLabel">New Password</label>
-                  <input type="password" id="newPassword"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-green-200 focus:border-green-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    data-i18n="confirmNewPasswordLabel">Confirm New Password</label>
-                  <input type="password" id="confirmNewPassword"
-                    class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-green-200 focus:border-green-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors" />
-                </div>
-                <button type="button" id="submitPasswordBtn"
-                  class="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
-                  data-i18n="updatePasswordBtn">
-                  Update Password
-                </button>
-              </form>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 sm:p-8">
-              <h2 class="text-xl font-semibold mb-4" data-i18n="logoutTitle">🚪 Logout</h2>
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4" data-i18n="logoutDescription">You can log out
-                of your account here.</p>
-              <button id="logoutBtn"
-                class="w-full sm:w-auto px-6 py-2.5 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
-                data-i18n="logoutBtn">
-                Log Out
-              </button>
-            </div>
-          </section>
-
-          <section id="section-preferences" class="space-y-6 hidden">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 sm:p-8">
-              <h2 class="text-xl font-semibold mb-4" data-i18n="preferencesTitle">🌐 Preferences</h2>
-              <div
-                class="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 mb-4">
-                <span class="text-gray-700 dark:text-gray-200 font-medium" data-i18n="darkModeLabel">Dark Mode</span>
-                <input type="checkbox" id="darkModeToggle"
-                  class="h-6 w-11 rounded-full appearance-none bg-gray-300 checked:bg-blue-600 transition-all cursor-pointer relative after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:h-5 after:w-5 after:bg-white after:rounded-full after:transition-all after:shadow-sm checked:after:translate-x-5" />
               </div>
-              <div
-                class="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
-                <span class="text-gray-700 dark:text-gray-200 font-medium"
-                  data-i18n="languageLabel">Language</span>
-                <select id="language-switcher"
-                  class="w-auto border rounded-lg px-2 py-1 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors">
-                  <option value="en">English</option>
-                  <option value="fr">French</option>
-                  <option value="es">Spanish</option>
-                </select>
-              </div>
-            </div>
-          </section>
-        </div>
-      </main>
+            </section>
+          </div>
+        </main>
+      </div>
     </div>
-  </div>
 
-  <footer class="bg-white dark:bg-gray-800 text-center py-4 border-t border-gray-200 dark:border-gray-700">
-    <p class="text-sm text-gray-500 dark:text-gray-400" data-i18n="copyright">
-      © 2025 SmartStudentAct
-    </p>
-  </footer>
+    <footer
+      class="bg-white dark:bg-gray-800 text-center py-4 border-t border-gray-200 dark:border-gray-700"
+    >
+      <p class="text-sm text-gray-500 dark:text-gray-400" data-i18n="copyright">
+        © 2025 SmartStudentAct
+      </p>
+    </footer>
 
-  <div id="toast-container" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+    <div
+      id="toast-container"
+      class="fixed bottom-4 right-4 space-y-2 z-50"
+    ></div>
 
-  <script>
-    // Define the translation function
-    const translate = async (lang) => {
-      try {
-        const response = await fetch(`/locales/settings.json`);
-        const data = await response.json();
-        const translations = data[lang];
+       
+    <script>
+      // Define the translation function
+      const translate = async (lang) => {
+        try {
+          const response = await fetch(`/locales/settings.json`);
+          const data = await response.json();
+          const translations = data[lang];
 
-        if (!translations) {
-          console.error(`Translations for language '${lang}' not found.`);
-          return;
+          if (!translations) {
+            console.error(`Translations for language '${lang}' not found.`);
+            return;
+          }
+
+          document.querySelectorAll("[data-i18n]").forEach((element) => {
+            const key = element.getAttribute("data-i18n");
+            if (translations[key]) {
+              element.textContent = translations[key];
+            }
+          });
+        } catch (error) {
+          console.error("Error fetching or parsing translations:", error);
         }
+      }; // Initialize the language switcher
 
-        document.querySelectorAll('[data-i18n]').forEach(element => {
-          const key = element.getAttribute('data-i18n');
-          if (translations[key]) {
-            element.textContent = translations[key];
+      document.addEventListener("DOMContentLoaded", () => {
+        const languageSwitcher = document.getElementById("language-switcher");
+        const savedLang = localStorage.getItem("language") || "en";
+        languageSwitcher.value = savedLang;
+        translate(savedLang);
+
+        languageSwitcher.addEventListener("change", (event) => {
+          const newLang = event.target.value;
+          localStorage.setItem("language", newLang);
+          translate(newLang);
+        });
+      });
+    </script>
+
+       
+    <script>
+      // DOM Elements
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebar-overlay");
+      const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+      const tabs = {
+        profile: document.getElementById("section-profile"),
+        security: document.getElementById("section-security"),
+        preferences: document.getElementById("section-preferences"),
+      };
+      const tabButtons = {
+        profile: document.getElementById("tab-profile"),
+        security: document.getElementById("tab-security"),
+        preferences: document.getElementById("tab-preferences"),
+      }; // Function to toggle the mobile sidebar
+
+      function toggleSidebar() {
+        sidebar.classList.toggle("-translate-x-full");
+        sidebarOverlay.classList.toggle("hidden");
+        sidebarOverlay.classList.toggle("opacity-0");
+      } // Add event listener for the mobile menu button
+
+      mobileMenuBtn.addEventListener("click", toggleSidebar); // Add event listener for the overlay to close the sidebar
+
+      sidebarOverlay.addEventListener("click", toggleSidebar); // Function to switch tabs and update active state
+
+      function switchTab(tab) {
+        // Hide all content sections
+        Object.values(tabs).forEach((section) =>
+          section.classList.add("hidden")
+        ); // De-select all tab buttons
+        Object.values(tabButtons).forEach((btn) =>
+          btn.classList.remove("bg-gray-200", "dark:bg-gray-700")
+        );
+        Object.values(tabButtons).forEach((btn) =>
+          btn.classList.add("bg-gray-100", "dark:bg-gray-800")
+        ); // Show the selected section
+
+        tabs[tab].classList.remove("hidden"); // Select the clicked tab button
+        tabButtons[tab].classList.remove("bg-gray-100", "dark:bg-gray-800");
+        tabButtons[tab].classList.add("bg-gray-200", "dark:bg-gray-700"); // Close the sidebar on mobile after a tab is selected
+
+        if (window.innerWidth < 640) {
+          // Tailwind's 'sm' breakpoint is 640px
+          toggleSidebar();
+        }
+      } // Add event listeners for the tab buttons
+
+      document
+        .getElementById("tab-profile")
+        .addEventListener("click", () => switchTab("profile"));
+      document
+        .getElementById("tab-security")
+        .addEventListener("click", () => switchTab("security"));
+      document
+        .getElementById("tab-preferences")
+        .addEventListener("click", () => switchTab("preferences")); // Default tab on load
+
+      switchTab("profile");
+    </script>
+
+       
+    <script>
+      const API_BASE_URL = "https://api.smartstudentact.com/api";
+
+      function showToast(message, type = "info") {
+        const toastContainer =
+          document.getElementById("toast-container") || createToastContainer();
+        const toast = document.createElement("div");
+        toast.className = `px-4 py-2 rounded-lg text-white mb-2 ${
+          type === "success"
+            ? "bg-green-500"
+            : type === "error"
+            ? "bg-red-500"
+            : "bg-blue-500"
+        }`;
+        toast.innerText = message;
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+      }
+
+      function createToastContainer() {
+        const container = document.createElement("div");
+        container.id = "toast-container";
+        container.className = "fixed bottom-4 right-4 z-50 space-y-2";
+        document.body.appendChild(container);
+        return container;
+      }
+
+      async function loadProfile() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/profile`, {
+            method: "GET",
+            credentials: "include",
+          });
+          if (!res.ok) {
+            if (res.status === 404) {
+              console.warn("User profile not found. User is likely new.");
+              return;
+            }
+            throw new Error("Failed to load profile");
+          }
+          const profile = await res.json();
+
+          // Common fields
+          document.getElementById("firstname").value = profile.firstname || "";
+          document.getElementById("lastname").value = profile.lastname || "";
+          document.getElementById("email").value = profile.email || "";
+          document.getElementById("phone").value = profile.phone || "";
+          document.getElementById("occupation").value =
+            profile.occupation || "";
+          document.getElementById("schoolName").value =
+            profile.schoolName || "";
+          document.getElementById("schoolCountry").value =
+            profile.schoolCountry || "";
+
+          // Student-specific
+          if (profile.occupation === "student") {
+            document.getElementById("educationLevel").value =
+              profile.educationLevel || "";
+            document.getElementById("grade").value = profile.grade || "";
+
+            if (profile.educationLevel === "university") {
+              document.getElementById("university").value =
+                profile.university || "";
+              document.getElementById("uniLevel").value =
+                profile.uniLevel || "";
+              document.getElementById("program").value = profile.program || "";
+            }
+          }
+
+          // Teacher-specific
+          if (profile.occupation === "teacher") {
+            document.getElementById("teacherGrade").value = (
+              profile.teacherGrade || []
+            ).join(", ");
+            document.getElementById("teacherSubject").value =
+              profile.teacherSubject || "";
+          }
+
+          if (profile.profile_picture_url) {
+            document.getElementById("profilePhotoPreview").src =
+              profile.profile_picture_url;
+            document
+              .getElementById("profilePhotoPreview")
+              .classList.remove("hidden");
+          }
+
+          updateOccupationFields();
+        } catch (err) {
+          showToast(err.message, "error");
+        }
+      }
+
+      document
+        .getElementById("saveProfileBtn")
+        .addEventListener("click", async () => {
+          const occupation = document.getElementById("occupation").value;
+
+          const payload = {
+            firstname: document.getElementById("firstname").value,
+            lastname: document.getElementById("lastname").value,
+            email: document.getElementById("email").value,
+            phone: document.getElementById("phone").value,
+            occupation: occupation,
+            schoolName: document.getElementById("schoolName").value,
+            schoolCountry: document.getElementById("schoolCountry").value,
+          };
+
+          if (occupation === "student") {
+            payload.educationLevel =
+              document.getElementById("educationLevel").value;
+
+            if (
+              payload.educationLevel === "junior" ||
+              payload.educationLevel === "high"
+            ) {
+              payload.grade = document.getElementById("grade").value;
+            } else if (payload.educationLevel === "university") {
+              payload.university = document.getElementById("university").value;
+              payload.uniLevel = document.getElementById("uniLevel").value;
+              payload.program = document.getElementById("program").value; // ✅ added
+            }
+          } else if (occupation === "teacher") {
+            payload.teacherGrade = document
+              .getElementById("teacherGrade")
+              .value.split(",")
+              .map((g) => g.trim());
+            payload.teacherSubject =
+              document.getElementById("teacherSubject").value;
+          }
+
+          try {
+            const res = await fetch(`${API_BASE_URL}/profile`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!res.ok)
+              throw new Error(data.message || "Failed to update profile");
+            showToast("✅ Profile updated successfully", "success");
+          } catch (err) {
+            showToast(err.message, "error");
           }
         });
 
-      } catch (error) {
-        console.error('Error fetching or parsing translations:', error);
-      }
-    };
+      document
+        .getElementById("submitPasswordBtn")
+        .addEventListener("click", async () => {
+          const payload = {
+            currentPassword: document.getElementById("currentPassword").value,
+            newPassword: document.getElementById("newPassword").value,
+          };
+          const confirmNewPassword =
+            document.getElementById("confirmNewPassword").value;
 
-    // Initialize the language switcher
-    document.addEventListener('DOMContentLoaded', () => {
-      const languageSwitcher = document.getElementById('language-switcher');
-      const savedLang = localStorage.getItem('language') || 'en';
-      languageSwitcher.value = savedLang;
-      translate(savedLang);
+          if (payload.newPassword !== confirmNewPassword) {
+            showToast("❌ Passwords do not match", "error");
+            return;
+          }
 
-      languageSwitcher.addEventListener('change', (event) => {
-        const newLang = event.target.value;
-        localStorage.setItem('language', newLang);
-        translate(newLang);
-      });
-    });
-  </script>
-
-  <script>
-    // DOM Elements
-    const sidebar = document.getElementById("sidebar");
-    const sidebarOverlay = document.getElementById("sidebar-overlay");
-    const mobileMenuBtn = document.getElementById("mobile-menu-btn");
-    const tabs = {
-      profile: document.getElementById("section-profile"),
-      security: document.getElementById("section-security"),
-      preferences: document.getElementById("section-preferences"),
-    };
-    const tabButtons = {
-      profile: document.getElementById("tab-profile"),
-      security: document.getElementById("tab-security"),
-      preferences: document.getElementById("tab-preferences"),
-    };
-
-    // Function to toggle the mobile sidebar
-    function toggleSidebar() {
-      sidebar.classList.toggle("-translate-x-full");
-      sidebarOverlay.classList.toggle("hidden");
-      sidebarOverlay.classList.toggle("opacity-0");
-    }
-
-    // Add event listener for the mobile menu button
-    mobileMenuBtn.addEventListener("click", toggleSidebar);
-
-    // Add event listener for the overlay to close the sidebar
-    sidebarOverlay.addEventListener("click", toggleSidebar);
-
-    // Function to switch tabs and update active state
-    function switchTab(tab) {
-      // Hide all content sections
-      Object.values(tabs).forEach((section) => section.classList.add("hidden"));
-      // De-select all tab buttons
-      Object.values(tabButtons).forEach(btn => btn.classList.remove("bg-gray-200"));
-
-      // Show the selected section
-      tabs[tab].classList.remove("hidden");
-      // Select the clicked tab button
-      tabButtons[tab].classList.add("bg-gray-200");
-
-      // Close the sidebar on mobile after a tab is selected
-      if (window.innerWidth < 640) { // Tailwind's 'sm' breakpoint is 640px
-        toggleSidebar();
-      }
-    }
-
-    // Add event listeners for the tab buttons
-    document.getElementById("tab-profile").addEventListener("click", () => switchTab("profile"));
-    document.getElementById("tab-security").addEventListener("click", () => switchTab("security"));
-    document.getElementById("tab-preferences").addEventListener("click", () => switchTab("preferences"));
-
-    // Default tab on load
-    switchTab("profile");
-  </script>
-
-  <script>
-    const API_BASE_URL = "https://api.smartstudentact.com/api";
-
-    function showToast(message, type = "info") {
-      const toastContainer = document.getElementById("toast-container") || createToastContainer();
-      const toast = document.createElement("div");
-      toast.className = `px-4 py-2 rounded-lg text-white mb-2 ${
-					type === "success"
-						? "bg-green-500"
-						: type === "error"
-						? "bg-red-500"
-						: "bg-blue-500"
-				}`;
-      toast.innerText = message;
-      toastContainer.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    function createToastContainer() {
-      const container = document.createElement("div");
-      container.id = "toast-container";
-      container.className = "fixed bottom-4 right-4 z-50 space-y-2";
-      document.body.appendChild(container);
-      return container;
-    }
-
-    async function loadProfile() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/profile`, {
-          method: "GET",
-          credentials: "include",
+          try {
+            const res = await fetch(`${API_BASE_URL}/settings/password`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!res.ok)
+              throw new Error(data.message || "Failed to update password");
+            showToast("🔑 Password updated successfully", "success");
+          } catch (err) {
+            showToast(err.message, "error");
+          }
         });
-        if (!res.ok) throw new Error("Failed to load profile");
-        const profile = await res.json();
 
-        document.getElementById("firstName").value = profile.firstName || "";
-        document.getElementById("lastName").value = profile.lastName || "";
-        document.getElementById("email").value = profile.email || "";
-        document.getElementById("phone").value = profile.phone || "";
-        document.getElementById("occupation").value = profile.occupation || "";
-        document.getElementById("educationLevel").value =
-          profile.educationLevel || "";
-        document.getElementById("grade").value = profile.grade || "";
-        document.getElementById("schoolName").value = profile.schoolName || "";
-        document.getElementById("university").value = profile.university || "";
-        document.getElementById("uniLevel").value = profile.uniLevel || "";
-        document.getElementById("program").value = profile.program || "";
+      document
+        .getElementById("profilePhoto")
+        .addEventListener("change", async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
 
-        initEducationFields(profile);
-      } catch (err) {
-        showToast(err.message, "error");
+          const formData = new FormData();
+          formData.append("profilePhoto", file);
+
+          try {
+            const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+              method: "POST",
+              credentials: "include",
+              body: formData,
+            });
+            const data = await res.json();
+            if (!res.ok)
+              throw new Error(data.message || "Failed to upload photo");
+
+            document.getElementById("profilePhotoPreview").src = data.photoUrl;
+            document
+              .getElementById("profilePhotoPreview")
+              .classList.remove("hidden");
+            showToast("📸 Profile picture updated", "success");
+          } catch (err) {
+            showToast(err.message, "error");
+          }
+        });
+
+      const occupationSelect = document.getElementById("occupation");
+      const studentFields = document.getElementById("student-fields");
+      const teacherFields = document.getElementById("teacher-fields");
+      const educationLevelSelect = document.getElementById("educationLevel");
+      const gradeGroup = document.getElementById("grade-group");
+      const universityFields = document.getElementById("university-fields");
+
+      function updateOccupationFields() {
+        const occupation = occupationSelect.value;
+        studentFields.classList.add("hidden");
+        teacherFields.classList.add("hidden");
+        if (occupation === "student") {
+          studentFields.classList.remove("hidden");
+          updateEducationFields();
+        } else if (occupation === "teacher") {
+          teacherFields.classList.remove("hidden");
+        }
       }
-    }
 
-    document
-      .getElementById("saveProfileBtn")
-      .addEventListener("click", async () => {
-        const payload = {
-          firstName: document.getElementById("firstname").value,
-          lastName: document.getElementById("lastname").value,
-          email: document.getElementById("email").value,
-          phone: document.getElementById("phone").value,
-          occupation: document.getElementById("occupation").value,
-          educationLevel: document.getElementById("educationLevel").value,
-          grade: document.getElementById("grade").value,
-          schoolName: document.getElementById("schoolName").value,
-          university: document.getElementById("university").value,
-          uniLevel: document.getElementById("uniLevel").value,
-          program: document.getElementById("program").value,
-        };
+      function updateEducationFields() {
+        const level = educationLevelSelect.value;
+        gradeGroup.classList.add("hidden");
+        universityFields.classList.add("hidden");
 
-        try {
-          const res = await fetch(`${API_BASE_URL}/profile`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.message || "Failed to update profile");
-          showToast("✅ Profile updated successfully", "success");
-        } catch (err) {
-          showToast(err.message, "error");
+        if (level === "junior" || level === "high") {
+          gradeGroup.classList.remove("hidden");
+        } else if (level === "university") {
+          universityFields.classList.remove("hidden");
         }
-      });
+      }
+      occupationSelect.addEventListener("change", updateOccupationFields);
+      educationLevelSelect.addEventListener("change", updateEducationFields);
 
-    document
-      .getElementById("submitPasswordBtn")
-      .addEventListener("click", async () => {
-        const payload = {
-          currentPassword: document.getElementById("currentPassword").value,
-          newPassword: document.getElementById("newPassword").value,
-          confirmNewPassword: document.getElementById("confirmNewPassword").value,
-        };
-
-        if (payload.newPassword !== payload.confirmNewPassword) {
-          showToast("❌ Passwords do not match", "error");
-          return;
-        }
-
+      async function handleLogout() {
         try {
-          const res = await fetch(`${API_BASE_URL}/settings`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.message || "Failed to update password");
-          showToast("🔑 Password updated successfully", "success");
-        } catch (err) {
-          showToast(err.message, "error");
-        }
-      });
-
-    document
-      .getElementById("profilePhoto")
-      .addEventListener("change", async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append("profilePhoto", file);
-
-        try {
-          const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+          const res = await fetch(`${API_BASE_URL}/users/logout`, {
             method: "POST",
             credentials: "include",
-            body: formData,
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.message || "Failed to upload photo");
-
-          document.getElementById("profilePhotoPreview").src = data.photoUrl;
-          showToast("📸 Profile picture updated", "success");
+          if (res.ok) {
+            window.location.href = "/login.html";
+          } else {
+            showToast("Failed to log out.", "error");
+          }
         } catch (err) {
-          showToast(err.message, "error");
+          showToast("An error occurred during logout.", "error");
+        }
+      }
+
+      async function checkAuthAndLoad() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/auth/check`, {
+            method: "GET",
+            credentials: "include",
+          });
+          if (!res.ok) {
+            window.location.href = "/login.html";
+            return;
+          }
+          loadProfile();
+        } catch (error) {
+          console.error("Authentication check failed:", error);
+          window.location.href = "/login.html";
+        }
+      }
+
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", handleLogout);
+      checkAuthAndLoad();
+
+      const darkModeToggle = document.getElementById("darkModeToggle");
+
+      if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.classList.add("dark");
+        darkModeToggle.checked = true;
+      }
+
+      darkModeToggle.addEventListener("change", () => {
+        if (darkModeToggle.checked) {
+          document.documentElement.classList.add("dark");
+          localStorage.setItem("theme", "dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+          localStorage.setItem("theme", "light");
         }
       });
-
-    const educationLevelSelect = document.getElementById("educationLevel");
-    const gradeGroup = document.getElementById("gradeGroup");
-    const schoolGroup = document.getElementById("schoolGroup");
-    const universityGroup = document.getElementById("universityGroup");
-    const uniLevelGroup = document.getElementById("uniLevelGroup");
-    const programGroup = document.getElementById("programGroup");
-
-    function updateEducationFields() {
-      const level = educationLevelSelect.value;
-      gradeGroup.classList.add("hidden");
-      schoolGroup.classList.add("hidden");
-      universityGroup.classList.add("hidden");
-      uniLevelGroup.classList.add("hidden");
-      programGroup.classList.add("hidden");
-
-      if (level === "junior" || level === "high") {
-        gradeGroup.classList.remove("hidden");
-        schoolGroup.classList.remove("hidden");
-      } else if (level === "university") {
-        universityGroup.classList.remove("hidden");
-        uniLevelGroup.classList.remove("hidden");
-        programGroup.classList.remove("hidden");
-      }
-    }
-
-    educationLevelSelect.addEventListener("change", updateEducationFields);
-
-    function initEducationFields(profile) {
-      if (profile && profile.educationLevel) {
-        educationLevelSelect.value = profile.educationLevel;
-      }
-      updateEducationFields();
-    }
-
-    async function handleLogout() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/users/logout`, {
-          method: "POST",
-          credentials: "include",
-        });
-        if (res.ok) {
-          window.location.href = "/login.html";
-        } else {
-          showToast("Failed to log out.", "error");
-        }
-      } catch (err) {
-        showToast("An error occurred during logout.", "error");
-      }
-    }
-
-    async function checkAuthAndLoad() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/auth/check`, {
-          method: 'GET',
-          credentials: 'include'
-        });
-        if (!res.ok) {
-          window.location.href = "/login.html";
-          return;
-        }
-        loadProfile();
-      } catch (error) {
-        console.error("Authentication check failed:", error);
-        window.location.href = "/login.html";
-      }
-    }
-
-    document.getElementById("logoutBtn").addEventListener("click", handleLogout);
-
-    checkAuthAndLoad();
-
-    const darkModeToggle = document.getElementById("darkModeToggle");
-
-
-    if (localStorage.getItem("theme") === "dark") {
-      document.documentElement.classList.add("dark");
-      darkModeToggle.checked = true;
-    }
-
-
-    darkModeToggle.addEventListener("change", () => {
-      if (darkModeToggle.checked) {
-        document.documentElement.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-      }
-    });
-  </script>
-</body>
-
+    </script>
+     
+  </body>
 </html>
-
