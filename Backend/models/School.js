@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const schoolSchema = new mongoose.Schema(
   {
-    name: {
+    schoolName: {
       type: String,
       required: true,
       unique: true,
@@ -27,4 +27,5 @@ const schoolSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('School', schoolSchema);
+
 

@@ -445,7 +445,7 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
       .select(
         "firstname lastname email phone occupation educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url school"
       )
-      .populate("school", "name schoolCountry");
+      .populate("school", "schoolName schoolCountry");
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
