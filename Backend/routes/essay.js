@@ -2,10 +2,12 @@ const express = require("express");
 const router = express.Router();
 const Joi = require("joi");
 const logger = require("../utils/logger");
-const geminiClient = require("../utils/geminiClient");
 
 const { authenticateJWT } = require("../middlewares/auth");
 const checkSubscription = require("../middlewares/checkSubscription");
+
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
+// NOTE: The API key is assumed to be available from the environment variables.
 
 // --- Validation schema
 const essaySchema = Joi.object({
@@ -60,25 +62,43 @@ Essay chunk:
 `;
 }
 
-// --- Retry wrapper for a single Gemini API call
+// --- Retry wrapper for a single Gemini API call using fetch
 async function generateFeedbackWithRetry(payload, retries = 3) {
+  const apiKey = process.env.GEMINI_API_KEY; // Assuming API key is an environment variable.
+  if (!apiKey) {
+    throw new Error("API key is not configured.");
+  }
+  const apiUrlWithKey = `${API_URL}${apiKey}`;
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      if (!geminiClient || typeof geminiClient.generateContent !== 'function') {
-        throw new Error("geminiClient is not properly configured or not available.");
+      const response = await fetch(apiUrlWithKey, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error(`API call failed with status ${response.status}: ${errorText}`);
+        throw new Error(`API call failed with status ${response.status}`);
       }
 
-      const result = await geminiClient.generateContent(payload);
-      
-      if (!result || !result.text) {
-        logger.error(`Gemini API returned an empty or invalid response on attempt ${attempt}.`);
+      const result = await response.json();
+      const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!generatedText) {
+        logger.error(`Gemini API returned an empty or invalid response on attempt ${attempt}. Full response: ${JSON.stringify(result)}`);
         throw new Error("Invalid or empty response from Gemini API.");
       }
 
-      const feedback = safeJSONParse(result.text);
+      const feedback = safeJSONParse(generatedText);
       if (!feedback) {
         throw new Error("Invalid JSON format in API response.");
       }
+
       return feedback;
     } catch (err) {
       logger.warn(`Gemini API attempt ${attempt} failed:`, err.message);
