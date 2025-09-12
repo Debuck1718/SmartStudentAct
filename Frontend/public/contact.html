@@ -52,13 +52,13 @@
             </div>
         </form>
 
-        <!-- Message display area for success or error -->
+        
         <div id="messageBox" class="mt-6 p-4 rounded-lg text-center font-medium hidden"></div>
 
     </div>
 
     <script>
-        // Get the form, button, and message box elements from the DOM
+
         const form = document.getElementById('contactForm');
         const submitBtn = document.getElementById('submitBtn');
         const messageBox = document.getElementById('messageBox');
@@ -75,24 +75,23 @@
             messageBox.classList.remove('hidden');
         };
 
-        // Add an event listener for form submission
+     
         form.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Prevent the default form submission (page reload)
+            event.preventDefault(); 
 
-            // Get form data
+          
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
-            // Disable button and show loading text
             submitBtn.disabled = true;
             submitBtn.textContent = 'Sending...';
             submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
-            // Hide previous messages
+            
             messageBox.classList.add('hidden');
 
             try {
-                // Send a POST request to the /contact endpoint
+
                 const response = await fetch('/contact', {
                     method: 'POST',
                     headers: {
@@ -105,17 +104,17 @@
 
                 if (response.ok) {
                     showMessage(result.message, 'success');
-                    form.reset(); // Clear the form on success
+                    form.reset(); 
                 } else {
-                    // Handle server-side errors
+                    
                     showMessage(result.error || 'Something went wrong. Please try again.', 'error');
                 }
             } catch (error) {
-                // Handle network or other unexpected errors
+             
                 console.error('Submission error:', error);
                 showMessage('Failed to connect to the server. Please check your network.', 'error');
             } finally {
-                // Re-enable the button and reset its text
+                
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Send Message';
                 submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');

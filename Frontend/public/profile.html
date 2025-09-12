@@ -178,7 +178,7 @@
 
     try {
       const res = await fetch(`${API_BASE_URL}/profile`, {
-        method: "PATCH", // 🔥 Changed from PUT → PATCH
+        method: "PATCH", 
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(payload),

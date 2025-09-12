@@ -411,20 +411,20 @@ protectedRouter.patch(
     const { currentPassword, newPassword } = req.body;
 
     try {
-      // Find the user and select password
+      
       const user = await User.findById(userId).select("+password");
 
       if (!user) {
         return res.status(404).json({ message: "User not found." });
       }
 
-      // Compare current password
+     
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) {
         return res.status(401).json({ message: "Invalid current password." });
       }
 
-      // Set the new password raw, let pre-save hook hash it
+      
       user.password = newPassword;
 
       await user.save();
@@ -441,9 +441,11 @@ protectedRouter.patch(
 protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
   const userId = req.userId;
   try {
-    const user = await User.findById(userId).select(
-      "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
-    );
+    const user = await User.findById(userId)
+      .select(
+        "firstname lastname email phone occupation educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
+      )
+      .populate("school", "schoolName schoolCountry"); // 🔑 get fields from School
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
@@ -455,6 +457,7 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 
 protectedRouter.patch(

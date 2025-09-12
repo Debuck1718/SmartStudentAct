@@ -425,29 +425,33 @@
   const apiUrl = `${API_BASE_URL}/essay/check`;
 
   async function getEssayFeedback(essayText, citationData) {
-    const payload = {
-      essayText,
-      citationData,
-    };
+  const payload = {
+    essayText,
+    citationData,
+  };
 
-    let response;
-    try {
-      response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "API request failed.");
-      }
-      const result = await response.json();
-      return result.feedback;
-    } catch (error) {
-      console.error("API call failed:", error);
-      throw new Error(`API call failed: ${error.message}`);
+  let response;
+  try {
+    response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      credentials: "include",  
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "API request failed.");
     }
+
+    const result = await response.json();
+    return result.feedback;
+  } catch (error) {
+    console.error("API call failed:", error);
+    throw new Error(`API call failed: ${error.message}`);
   }
+}
+
 
       essayForm.addEventListener("submit", async (e) => {
         e.preventDefault();
