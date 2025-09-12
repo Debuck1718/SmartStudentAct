@@ -438,7 +438,7 @@ protectedRouter.patch(
 );
 
 
-router.get("/profile", authenticateJWT, async (req, res) => {
+protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
   const userId = req.userId;
   try {
     const user = await User.findById(userId)
