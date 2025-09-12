@@ -64,10 +64,12 @@ Essay chunk:
 async function generateFeedbackWithRetry(payload, retries = 3) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      // Assuming geminiClient.generateContent is a function that makes the API call.
+      if (!geminiClient || typeof geminiClient.generateContent !== 'function') {
+        throw new Error("geminiClient is not properly configured or not available.");
+      }
+
       const result = await geminiClient.generateContent(payload);
       
-      // Check for an empty or invalid response before parsing
       if (!result || !result.text) {
         logger.error(`Gemini API returned an empty or invalid response on attempt ${attempt}.`);
         throw new Error("Invalid or empty response from Gemini API.");
@@ -79,9 +81,9 @@ async function generateFeedbackWithRetry(payload, retries = 3) {
       }
       return feedback;
     } catch (err) {
-      logger.warn(`Gemini API attempt ${attempt} failed:`, err);
+      logger.warn(`Gemini API attempt ${attempt} failed:`, err.message);
       if (attempt === retries) {
-        logger.error("All Gemini API attempts failed.");
+        logger.error("All Gemini API attempts failed. Final error:", err);
         throw err;
       }
       // Implement exponential backoff
