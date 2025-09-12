@@ -842,7 +842,7 @@
 
       async function handleLogout() {
         try {
-          const res = await fetch(`${API_BASE_URL}/users/logout`, {
+          const res = await fetch(`/users/logout`, {
             method: "POST",
             credentials: "include",
           });
