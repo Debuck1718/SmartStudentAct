@@ -29,6 +29,8 @@ const budgetRouter = require("./budget");
 const schoolRouter = require("./schoolRoutes");
 const uploadRouter = require("./uploadRoutes");
 
+const { toIsoCountryCode } = require("./utils/countryHelper");
+
 const paymentController = require("../controllers/paymentController");
 const { getUserPrice } = require('../services/pricingService');
 
@@ -450,22 +452,39 @@ protectedRouter.patch(
 
 
 protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
-  const userId = req.userId;
   try {
-    const user = await User.findById(userId)
-      .select(
-        "firstname lastname email phone occupation educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url school"
-      )
-      .populate("school", "schoolName schoolCountry");
+    const user = await User.findById(req.userId).select(
+      "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
+    );
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    res.status(200).json(user);
+    res.status(200).json({
+      user: {
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        phone: user.phone,
+        occupation: user.occupation,
+        school: {
+          schoolName: user.schoolName,
+          schoolCountry: user.schoolCountry,
+        },
+        educationLevel: user.educationLevel,
+        grade: user.grade,
+        university: user.university,
+        uniLevel: user.uniLevel,
+        program: user.program,
+        teacherGrade: user.teacherGrade,
+        teacherSubject: user.teacherSubject,
+        profile_picture_url: user.profile_picture_url,
+      },
+    });
   } catch (error) {
-    logger.error("Error fetching user profile:", error);
-    res.status(500).json({ message: "Server error" });
+    logger.error("Error fetching profile:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
@@ -480,9 +499,7 @@ protectedRouter.patch(
     let updateData = req.body;
 
     if (!userId) {
-      return res
-        .status(401)
-        .json({ message: "Authentication failed. User ID not found." });
+      return res.status(401).json({ message: "Authentication failed. User ID not found." });
     }
 
     try {
@@ -491,10 +508,8 @@ protectedRouter.patch(
         return res.status(404).json({ message: "User not found." });
       }
 
-      
       const currentOccupation = updateData.occupation || user.occupation;
 
-      
       if (currentOccupation === "student") {
         updateData.teacherGrade = undefined;
         updateData.teacherSubject = undefined;
@@ -506,10 +521,11 @@ protectedRouter.patch(
         updateData.program = undefined;
       }
 
+      // ✅ Normalize school
       if (updateData.school) {
         updateData.schoolName = updateData.school.schoolName;
-        updateData.schoolCountry = updateData.school.schoolCountry;
-        delete updateData.school; 
+        updateData.schoolCountry = toIsoCountryCode(updateData.school.schoolCountry);
+        delete updateData.school;
       }
 
       if (updateData.email && updateData.email !== user.email) {
@@ -536,7 +552,7 @@ protectedRouter.patch(
           occupation: updatedUser.occupation,
           school: {
             schoolName: updatedUser.schoolName,
-            schoolCountry: updatedUser.schoolCountry,
+            schoolCountry: updatedUser.schoolCountry, // now ISO code
           },
           educationLevel: updatedUser.educationLevel,
           grade: updatedUser.grade,
@@ -551,14 +567,10 @@ protectedRouter.patch(
     } catch (error) {
       if (error.name === "ValidationError") {
         const messages = Object.values(error.errors).map((val) => val.message);
-        return res
-          .status(400)
-          .json({ message: "Validation failed", errors: messages });
+        return res.status(400).json({ message: "Validation failed", errors: messages });
       }
       if (error.code === 11000) {
-        return res
-          .status(409)
-          .json({ message: "A user with this data already exists." });
+        return res.status(409).json({ message: "A user with this data already exists." });
       }
       logger.error("Error updating user profile:", error);
       res.status(500).json({ message: "Server error", error: error.message });
