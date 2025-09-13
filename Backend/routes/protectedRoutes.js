@@ -254,20 +254,6 @@ const assignRegionSchema = Joi.object({
   region: Joi.string().required(),
 });
 
-const academicCalendarSchema = Joi.object({
-  schoolName: Joi.string().required(),
-  academicYear: Joi.string().required(),
-  terms: Joi.array()
-    .items(
-      Joi.object({
-        termName: Joi.string().required(),
-        startDate: Joi.date().iso().required(),
-        endDate: Joi.date().iso().required(),
-      })
-    )
-    .min(1)
-    .required(),
-});
 
 const settingsSchema = Joi.object({
   firstname: Joi.string().min(2).max(50).optional(),
@@ -1145,7 +1131,11 @@ protectedRouter.post(
   hasRole("teacher"),
   async (req, res) => {
     const { academicYear, terms } = req.body;
-    const teacherId = req.user.id;
+    const teacherId = req.user.id || req.user._id;
+
+    if (!academicYear || !Array.isArray(terms) || terms.length === 0) {
+      return res.status(400).json({ message: "Academic year and at least one term are required." });
+    }
 
     try {
       const teacher = await User.findById(teacherId).populate("school");
@@ -1153,31 +1143,58 @@ protectedRouter.post(
         return res.status(400).json({ message: "Teacher school not found." });
       }
 
-      const school = teacher.school; 
+      const school = teacher.school;
 
-      let schoolCalendar = await SchoolCalendar.findOne({
-        school: school._id,
-        academicYear,
+      // Validate each term
+      const formattedTerms = terms.map((term, idx) => {
+        const termName = term.termName?.trim() || term.name?.trim();
+        const startDate = term.startDate || term.date; // handle legacy "date"
+        const endDate = term.endDate || term.date;     // fallback to same date if endDate missing
+        if (!termName || !startDate || !endDate) {
+          throw new Error(`Term ${idx + 1} is missing required fields.`);
+        }
+        return {
+          termName,
+          startDate: new Date(startDate),
+          endDate: new Date(endDate),
+        };
       });
+
+      // Check if a calendar already exists for this school & year
+      let schoolCalendar = await SchoolCalendar.findOne({ school: school._id, academicYear });
 
       if (schoolCalendar) {
         schoolCalendar.teacher_id = teacherId;
-        schoolCalendar.terms = terms;
-        await schoolCalendar.save();
+        schoolCalendar.terms = formattedTerms;
+
+        try {
+          await schoolCalendar.save();
+        } catch (e) {
+          logger.error("Update save failed:", e);
+          return res.status(500).json({ message: e.message });
+        }
+
         return res.status(200).json({
           message: "Academic calendar updated successfully.",
           calendar: schoolCalendar,
         });
       }
 
+      // Create new calendar
       schoolCalendar = new SchoolCalendar({
         teacher_id: teacherId,
         school: school._id,
-        schoolName: school.name, 
+        schoolName: school.name,
         academicYear,
-        terms,
+        terms: formattedTerms,
       });
-      await schoolCalendar.save();
+
+      try {
+        await schoolCalendar.save();
+      } catch (e) {
+        logger.error("New save failed:", e);
+        return res.status(500).json({ message: e.message });
+      }
 
       return res.status(201).json({
         message: "Academic calendar submitted successfully.",
@@ -1191,7 +1208,6 @@ protectedRouter.post(
 );
 
 
-
 protectedRouter.post(
   "/teacher/assignments",
   authenticateJWT,
@@ -1200,24 +1216,36 @@ protectedRouter.post(
   async (req, res) => {
     try {
       const teacherId = req.user.id;
-      const {
+      let {
         title,
         description,
         due_date,
-        assigned_to_users,
-        assigned_to_grades,
-        assigned_to_programs,
-        assigned_to_schools,
-        assigned_to_other_grades, // New field for other grades
+        assigned_to_users = [],
+        assigned_to_grades = [],
+        assigned_to_programs = [],
+        assigned_to_schools = [],
+        assigned_to_other_grades = [],
+        recipientType, // new field from frontend: 'single', 'multiple', 'class', 'otherGrade'
+        grade,         // used if recipientType is 'otherGrade'
       } = req.body;
 
-      // New validation logic to handle different assignment targets
+      // Map "entire class" to assigned_to_users automatically
+      if (recipientType === "class") {
+        // Fetch students in the teacher's class
+        const students = await User.find({ isMyClass: true, role: "student" });
+        assigned_to_users = students.map(s => s._id.toString());
+      } else if (recipientType === "otherGrade" && grade) {
+        const students = await User.find({ grade, role: "student" });
+        assigned_to_other_grades = students.map(s => s._id.toString());
+      }
+
+      // Validation: must have at least one target
       if (
-        !assigned_to_users &&
-        !assigned_to_grades &&
-        !assigned_to_programs &&
-        !assigned_to_schools &&
-        !assigned_to_other_grades
+        !assigned_to_users.length &&
+        !assigned_to_grades.length &&
+        !assigned_to_programs.length &&
+        !assigned_to_schools.length &&
+        !assigned_to_other_grades.length
       ) {
         return res.status(400).json({
           message:
@@ -1231,11 +1259,11 @@ protectedRouter.post(
         description,
         file_path: req.file ? `/uploads/assignments/${req.file.filename}` : null,
         due_date,
-        assigned_to_users: assigned_to_users || [],
-        assigned_to_grades: assigned_to_grades || [],
-        assigned_to_programs: assigned_to_programs || [],
-        assigned_to_schools: assigned_to_schools || [],
-        assigned_to_other_grades: assigned_to_other_grades || [],
+        assigned_to_users,
+        assigned_to_grades,
+        assigned_to_programs,
+        assigned_to_schools,
+        assigned_to_other_grades,
       });
 
       await newAssignment.save();
@@ -1249,6 +1277,7 @@ protectedRouter.post(
     }
   }
 );
+
 
 protectedRouter.get(
   "/teacher/assignments",
@@ -1456,18 +1485,41 @@ protectedRouter.post(
   authenticateJWT,
   hasRole(["teacher"]),
   async (req, res) => {
-    const { to, text } = req.body;
+    const { assigned_to_users, assigned_to_grades, message } = req.body;
 
     try {
-      const student = await User.findOne({ email: to, role: "student" });
-      if (!student) {
-        return res.status(404).json({ message: "Student not found." });
+      let studentIds = [];
+
+      if (assigned_to_users && assigned_to_users.length > 0) {
+        // Validate users exist
+        const students = await User.find({
+          _id: { $in: assigned_to_users },
+          role: "student",
+        });
+        if (!students.length) {
+          return res.status(404).json({ message: "No students found for the given IDs." });
+        }
+        studentIds = students.map(s => s._id);
       }
 
-      eventBus.emit("teacher_message", {
-        userId: student._id,
-        message: text,
-        teacherName: req.user.firstname,
+      if (assigned_to_grades && assigned_to_grades.length > 0) {
+        const gradeStudents = await User.find({
+          grade: { $in: assigned_to_grades },
+          role: "student",
+        });
+        studentIds.push(...gradeStudents.map(s => s._id));
+      }
+
+      if (!studentIds.length) {
+        return res.status(400).json({ message: "No students selected." });
+      }
+
+      studentIds.forEach(id => {
+        eventBus.emit("teacher_message", {
+          userId: id,
+          message,
+          teacherName: req.user.firstname,
+        });
       });
 
       res.status(200).json({ message: "Message sent successfully!" });
@@ -1477,8 +1529,6 @@ protectedRouter.post(
     }
   }
 );
-
-
 
 protectedRouter.get(
   "/teacher/students/other",

@@ -615,82 +615,65 @@
     }
 
     function wireCalendar() {
-        const addTermBtn = document.getElementById("addTermButton");
-        const saveCalendarBtn = document.getElementById("saveCalendarButton");
-        const termsContainer = document.getElementById("termsContainer");
+    const addTermBtn = document.getElementById("addTermButton");
+    const saveCalendarBtn = document.getElementById("saveCalendarButton");
+    const termsContainer = document.getElementById("termsContainer");
 
-        addTermBtn?.addEventListener("click", () => {
-            const termDiv = document.createElement("div");
-            termDiv.className = "flex gap-2 mb-2";
-            termDiv.innerHTML = `
-                <input type="text" placeholder="Term Name" class="w-1/2 p-2 border rounded"/>
-                <input type="date" class="w-1/2 p-2 border rounded"/>
-                <button class="remove-term px-2 bg-red-500 text-white rounded">❌</button>
-            `;
-            termsContainer.appendChild(termDiv);
-            termDiv.querySelector(".remove-term").addEventListener("click", () => termDiv.remove());
-        });
+    addTermBtn?.addEventListener("click", () => {
+        const termDiv = document.createElement("div");
+        termDiv.className = "flex gap-2 mb-2";
+        termDiv.innerHTML = `
+            <input type="text" placeholder="Term Name" class="w-1/3 p-2 border rounded"/>
+            <input type="date" placeholder="Start Date" class="w-1/3 p-2 border rounded"/>
+            <input type="date" placeholder="End Date" class="w-1/3 p-2 border rounded"/>
+            <button class="remove-term px-2 bg-red-500 text-white rounded">❌</button>
+        `;
+        termsContainer.appendChild(termDiv);
+        termDiv.querySelector(".remove-term").addEventListener("click", () => termDiv.remove());
+    });
 
-        saveCalendarBtn?.addEventListener("click", async () => {
-            const academicYear = document.getElementById("academicYear").value.trim();
-            if (!academicYear) return showToast(translateText("enter_academic_year"), "error");
+    saveCalendarBtn?.addEventListener("click", async () => {
+        const academicYear = document.getElementById("academicYear").value.trim();
+        if (!academicYear) return showToast(translateText("enter_academic_year"), "error");
 
-            const terms = Array.from(termsContainer.children).map(div => {
-                const name = div.querySelector("input[type=text]").value.trim();
-                const date = div.querySelector("input[type=date]").value;
+        const terms = Array.from(termsContainer.children)
+            .map(div => {
+                const termName = div.querySelector("input[type=text]").value.trim();
+                const startDate = div.querySelectorAll("input[type=date]")[0].value;
+                const endDate = div.querySelectorAll("input[type=date]")[1].value;
                 return {
-                    name,
-                    date,
-                    assignments: []
+                    termName,
+                    startDate,
+                    endDate
                 };
-            }).filter(t => t.name && t.date);
+            })
+            .filter(t => t.termName && t.startDate && t.endDate);
 
-            try {
-                const res = await fetchAPI("/teacher/calendar", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        academicYear,
-                        terms,
-                        assignments: []
-                    })
-                });
-                if (res && res.ok) showToast(translateText("calendar_saved"), "success");
-                else showToast(translateText("failed_save_calendar"), "error");
-            } catch (err) {
-                console.error("Calendar save error:", err);
-                showToast(translateText("network_error"), "error");
-            }
-        });
-    }
+        if (!terms.length) return showToast(translateText("add_at_least_one_term"), "error");
 
-    function updateFormUI(formId) {
-        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
-        const studentSelectGroup = document.getElementById(`${formId}-select-group`);
-        const gradeSelectGroup = document.getElementById(`${formId}-grade-select-group`);
-        const studentSelect = document.getElementById(`${formId}-student-select`);
-
-        recipientRadios.forEach(radio => {
-            radio.addEventListener("change", () => {
-                studentSelect.removeAttribute("multiple");
-                studentSelectGroup.classList.add("hidden");
-                gradeSelectGroup.classList.add("hidden");
-
-                if (radio.value === "single") {
-                    studentSelectGroup.classList.remove("hidden");
-                    studentSelect.setAttribute("size", "1");
-                } else if (radio.value === "multiple") {
-                    studentSelectGroup.classList.remove("hidden");
-                    studentSelect.setAttribute("multiple", "");
-                    studentSelect.setAttribute("size", "5");
-                } else if (radio.value === "otherGrade") {
-                    gradeSelectGroup.classList.remove("hidden");
-                }
+        try {
+            const res = await fetchAPI("/teacher/calendar", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    academicYear,
+                    terms
+                })
             });
-        });
-    }
+
+            if (res && res.ok) {
+                showToast(translateText("calendar_saved"), "success");
+            } else {
+                showToast(translateText("failed_save_calendar"), "error");
+            }
+        } catch (err) {
+            console.error("Calendar save error:", err);
+            showToast(translateText("network_error"), "error");
+        }
+    });
+}
 
     function wireMessageForm() { 
     const formId = "message";
@@ -783,10 +766,12 @@
     updateFormUI(formId);
 }
 
-   function wireAssignmentForm() {
+  function wireAssignmentForm() {
     const formId = "assignment";
     const studentSelect = document.getElementById(`${formId}-student-select`);
     const gradeSelect = document.getElementById(`${formId}-grade-select`);
+    const programSelect = document.getElementById(`${formId}-program-select`);
+    const schoolSelect = document.getElementById(`${formId}-school-select`);
     const titleInput = document.getElementById("assignmentTitle");
     const dueDateInput = document.getElementById("assignmentDueDate");
     const textArea = document.getElementById("assignmentText");
@@ -845,9 +830,15 @@
 
     sendBtn.addEventListener("click", async () => {
         const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+
+        // Initialize all backend arrays
         let assigned_to_users = [];
         let assigned_to_grades = [];
+        let assigned_to_programs = [];
+        let assigned_to_schools = [];
+        let assigned_to_other_grades = [];
 
+        // Map frontend selections to backend arrays
         if (recipientType === "single") {
             assigned_to_users = [studentSelect.value];
         } else if (recipientType === "multiple") {
@@ -855,11 +846,22 @@
         } else if (recipientType === "class") {
             assigned_to_users = studentsCache.filter(s => s.isMyClass).map(s => s._id);
         } else if (recipientType === "otherGrade") {
-            assigned_to_grades = [gradeSelect.value];
+            assigned_to_other_grades = [gradeSelect.value];
             assigned_to_users = studentsCache.filter(s => s.grade === gradeSelect.value).map(s => s._id);
         }
 
-        if (!assigned_to_users.length && !assigned_to_grades.length) {
+        // Optional: populate program or school if dropdown exists
+        if (programSelect && programSelect.value) assigned_to_programs = [programSelect.value];
+        if (schoolSelect && schoolSelect.value) assigned_to_schools = [schoolSelect.value];
+
+        // Validation: must assign at least one target
+        if (
+            !assigned_to_users.length &&
+            !assigned_to_grades.length &&
+            !assigned_to_programs.length &&
+            !assigned_to_schools.length &&
+            !assigned_to_other_grades.length
+        ) {
             showToast(translateText('select_at_least_one'), "error");
             return;
         }
@@ -881,9 +883,13 @@
             const formData = new FormData();
             if (assigned_to_users.length) formData.append("assigned_to_users", JSON.stringify(assigned_to_users));
             if (assigned_to_grades.length) formData.append("assigned_to_grades", JSON.stringify(assigned_to_grades));
+            if (assigned_to_programs.length) formData.append("assigned_to_programs", JSON.stringify(assigned_to_programs));
+            if (assigned_to_schools.length) formData.append("assigned_to_schools", JSON.stringify(assigned_to_schools));
+            if (assigned_to_other_grades.length) formData.append("assigned_to_other_grades", JSON.stringify(assigned_to_other_grades));
+            formData.append("recipientType", recipientType);
             formData.append("title", title);
-            formData.append("dueDate", dueDate);
-            formData.append("text", text);
+            formData.append("due_date", dueDate);
+            formData.append("description", text);
             if (file) formData.append("file", file);
 
             const res = await fetchAPI("/teacher/assignments", {
@@ -990,7 +996,7 @@
         addBtn.textContent = translateText('adding_points');
 
         try {
-            const res = await fetchAPI("/teacher/add-points", {
+            const res = await fetchAPI("/rewards/teacher/add-points", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
