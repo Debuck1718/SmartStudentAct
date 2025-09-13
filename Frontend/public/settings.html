@@ -624,63 +624,67 @@
       }
 
       async function loadProfile() {
-        try {
-          const res = await fetch(`${API_BASE_URL}/profile`, {
-            method: "GET",
-            credentials: "include",
-          });
-          if (!res.ok) {
-            if (res.status === 404) {
-              console.warn("User profile not found. User is likely new.");
-              return;
-            }
-            throw new Error("Failed to load profile");
-          }
-          const profile = await res.json();
-
-          document.getElementById("firstname").value = profile.firstname || "";
-          document.getElementById("lastname").value = profile.lastname || "";
-          document.getElementById("email").value = profile.email || "";
-          document.getElementById("phone").value = profile.phone || "";
-          document.getElementById("occupation").value =
-            profile.occupation || "";
-          document.getElementById("schoolName").value = profile.school?.schoolName || "";
-          document.getElementById("schoolCountry").value = profile.school?.schoolCountry || "";
-          if (profile.occupation === "student") {
-            document.getElementById("educationLevel").value =
-              profile.educationLevel || "";
-            document.getElementById("grade").value = profile.grade || "";
-
-            if (profile.educationLevel === "university") {
-              document.getElementById("university").value =
-                profile.university || "";
-              document.getElementById("uniLevel").value =
-                profile.uniLevel || "";
-              document.getElementById("program").value = profile.program || "";
-            }
-          }
-
-          if (profile.occupation === "teacher") {
-            document.getElementById("teacherGrade").value = (
-              profile.teacherGrade || []
-            ).join(", ");
-            document.getElementById("teacherSubject").value =
-              profile.teacherSubject || "";
-          }
-
-          if (profile.profile_picture_url) {
-            document.getElementById("profilePhotoPreview").src =
-              profile.profile_picture_url;
-            document
-              .getElementById("profilePhotoPreview")
-              .classList.remove("hidden");
-          }
-
-          updateOccupationFields();
-        } catch (err) {
-          showToast(err.message, "error");
-        }
+  try {
+    const res = await fetch(`${API_BASE_URL}/profile`, {
+      method: "GET",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      if (res.status === 404) {
+        console.warn("User profile not found. User is likely new.");
+        return;
       }
+      throw new Error("Failed to load profile");
+    }
+
+    const data = await res.json();
+    const profile = data.user; 
+
+    document.getElementById("firstname").value = profile.firstname || "";
+    document.getElementById("lastname").value = profile.lastname || "";
+    document.getElementById("email").value = profile.email || "";
+    document.getElementById("phone").value = profile.phone || "";
+    document.getElementById("occupation").value = profile.occupation || "";
+    document.getElementById("schoolName").value =
+      profile.school?.schoolName || "";
+    document.getElementById("schoolCountry").value =
+      profile.school?.schoolCountry || "";
+
+    if (profile.occupation === "student") {
+      document.getElementById("educationLevel").value =
+        profile.educationLevel || "";
+      document.getElementById("grade").value = profile.grade || "";
+
+      if (profile.educationLevel === "university") {
+        document.getElementById("university").value =
+          profile.university || "";
+        document.getElementById("uniLevel").value = profile.uniLevel || "";
+        document.getElementById("program").value = profile.program || "";
+      }
+    }
+
+    if (profile.occupation === "teacher") {
+      document.getElementById("teacherGrade").value = (
+        profile.teacherGrade || []
+      ).join(", ");
+      document.getElementById("teacherSubject").value =
+        profile.teacherSubject || "";
+    }
+
+    if (profile.profile_picture_url) {
+      document.getElementById("profilePhotoPreview").src =
+        profile.profile_picture_url;
+      document
+        .getElementById("profilePhotoPreview")
+        .classList.remove("hidden");
+    }
+
+    updateOccupationFields();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
 
       document
         .getElementById("saveProfileBtn")
