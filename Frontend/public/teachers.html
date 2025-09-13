@@ -118,48 +118,31 @@
       </section>
 
       <!-- Assignment Section -->
-      <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
-          ✏️ Create and Send Assignment
-        </h2>
-        <label for="student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student:</label>
-        <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-          <select id="student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
-        </div>
+      <section class="bg-white rounded-xl p-6 shadow-lg">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">✏️ Create and Send Assignment</h2>
+      <label for="student-select" data-i18n="selectStudent">Select Student:</label>
+      <select id="student-select" class="w-full p-3 mb-4 border rounded"></select>
 
-        <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle">Assignment Title:</label>
-        <input type="text" id="assignmentTitle" maxlength="100"
-               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-               placeholder="e.g., History Essay on World War II" />
+      <label for="assignmentTitle" data-i18n="assignmentTitle">Assignment Title:</label>
+      <input type="text" id="assignmentTitle" maxlength="100" class="w-full p-3 mb-4 border rounded" placeholder="e.g., History Essay" />
 
-        <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2" data-i18n="dueDate">Due Date:</label>
-        <input type="datetime-local" id="assignmentDueDate"
-               class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <label for="assignmentDueDate" data-i18n="dueDate">Due Date:</label>
+      <input type="datetime-local" id="assignmentDueDate" class="w-full p-3 mb-4 border rounded" />
 
-        <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails">
-          Assignment Details (max 1000 words or attach file):
-        </label>
-        <textarea id="assignmentText" maxlength="5000"
-                  class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-                  placeholder="Type your assignment here..."></textarea>
-        <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
+      <label for="assignmentText" data-i18n="assignmentDetails">Assignment Details:</label>
+      <textarea id="assignmentText" maxlength="5000" class="w-full min-h-[150px] p-4 mb-2 border rounded" placeholder="Type your assignment here..."></textarea>
+      <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
 
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-          <label class="custom-file-input cursor-pointer text-base">
-            <input type="file" id="assignmentFile" class="custom-file-input" />
-          </label>
-          <div id="fileStatus" class="flex items-center gap-2">
-            <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
-            <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">Clear</button>
-          </div>
-        </div>
+      <label class="custom-file-input cursor-pointer text-base">
+        <input type="file" id="assignmentFile" />
+      </label>
+      <div id="fileStatus" class="flex items-center gap-2 mb-4">
+        <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
+        <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">Clear</button>
+      </div>
 
-        <button id="sendAssignmentButton"
-                class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled data-i18n="sendAssignment">
-          Send Assignment
-        </button>
-      </section>
+      <button id="sendAssignmentButton" class="w-full py-4 bg-blue-600 text-white rounded-lg" disabled data-i18n="sendAssignment">Send Assignment</button>
+    </section>
 
     
       <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
@@ -189,33 +172,16 @@
         </button>
       </section>
 
-      <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="sendMessageTitle">
-          💌 Send Message to Student
-        </h2>
+     <section class="bg-white rounded-xl p-6 shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4 border-b pb-2" data-i18n="sendMessageTitle">💌 Send Message to Student</h2>
+      <label for="message-student-select" data-i18n="selectStudent">Select Student/Group:</label>
+      <select id="message-student-select" class="w-full p-3 mb-4 border rounded"></select>
 
-        <label for="message-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">
-          Select Student:
-        </label>
-        <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-          <select id="message-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none">
-            <option value="">Select Student</option>
-          </select>
-        </div>
+      <label for="messageText" data-i18n="messageText">Message:</label>
+      <textarea id="messageText" rows="4" class="w-full p-4 mb-4 border rounded" placeholder="Type your message here..."></textarea>
 
-        <label for="messageText" class="block text-gray-700 font-bold mb-2" data-i18n="messageText">
-          Message:
-        </label>
-        <textarea id="messageText" rows="4"
-                  class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-                  placeholder="Type your message here..."></textarea>
-
-        <button id="sendMessageButton"
-                class="w-full py-4 bg-purple-600 text-white font-bold rounded-lg shadow-md hover:bg-purple-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled data-i18n="sendMessage">
-          Send Message
-        </button>
-      </section>
+      <button id="sendMessageButton" class="w-full py-4 bg-purple-600 text-white rounded-lg" disabled data-i18n="sendMessage">Send Message</button>
+    </section>
 
       <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="overdueTasks">
@@ -238,26 +204,14 @@
         <div id="feedbackList" class="divide-y divide-gray-200"></div>
       </section>
 
-      <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">📅 Academic Calendar</h2>
-        <input type="text" id="academicYear"
-               class="w-full p-3 mb-4 border border-gray-300 rounded-lg"
-               placeholder="Academic Year (e.g. 2025/2026)" />
+<section class="bg-white rounded-xl p-6 shadow-lg">
+      <h2 class="text-2xl font-semibold mb-4 border-b pb-2">📅 Academic Calendar</h2>
+      <input type="text" id="academicYear" placeholder="Academic Year (e.g., 2025/2026)" class="w-full p-3 mb-4 border rounded"/>
+      <div id="termsContainer" class="space-y-4"></div>
+      <button id="addTermButton" class="w-full py-2 mb-3 bg-blue-600 text-white rounded-lg">➕ Add Term</button>
+      <button id="saveCalendarButton" class="w-full py-3 bg-green-600 text-white rounded-lg">Save Calendar</button>
+    </section>
 
-        <div id="termsContainer" class="space-y-4"></div>
-
-        <button id="addTermButton"
-                class="w-full py-2 mb-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
-          ➕ Add Term
-        </button>
-
-        <button id="saveCalendarButton"
-                class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-300">
-          Save Calendar
-        </button>
-
-        <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
-      </section>
 
     </main>
 
@@ -481,45 +435,32 @@ async function fetchOverdueTasks() {
     }
 }
 
-function wireCalendar() {
-    const addTermBtn = document.getElementById("addTermButton");
-    const saveCalendarBtn = document.getElementById("saveCalendarButton");
-    const termsContainer = document.getElementById("termsContainer");
+function wireCalendar(){
+    const addBtn=document.getElementById("addTermButton");
+    const saveBtn=document.getElementById("saveCalendarButton");
+    const container=document.getElementById("termsContainer");
 
-    addTermBtn?.addEventListener("click", () => {
-        const termDiv = document.createElement("div");
-        termDiv.className = "flex gap-2 mb-2";
-        termDiv.innerHTML = `
-            <input type="text" placeholder="Term Name" class="w-1/2 p-2 border rounded"/>
-            <input type="date" class="w-1/2 p-2 border rounded"/>
-            <button class="remove-term px-2 bg-red-500 text-white rounded">❌</button>
-        `;
-        termsContainer.appendChild(termDiv);
-        termDiv.querySelector(".remove-term").addEventListener("click", () => termDiv.remove());
+    addBtn?.addEventListener("click", ()=>{
+        const div=document.createElement("div");
+        div.className="flex gap-2 mb-2";
+        div.innerHTML=`<input type="text" placeholder="Term Name" class="w-1/3 p-2 border rounded"/><input type="date" class="w-1/3 p-2 border rounded"/><input type="date" class="w-1/3 p-2 border rounded"/><button class="remove-term px-2 bg-red-500 text-white rounded">❌</button>`;
+        container.appendChild(div);
+        div.querySelector(".remove-term").addEventListener("click",()=>div.remove());
     });
 
-    saveCalendarBtn?.addEventListener("click", async () => {
-        const academicYear = document.getElementById("academicYear").value.trim();
-        if (!academicYear) return showToast(translateText("enter_academic_year"), "error");
-
-        const terms = Array.from(termsContainer.children).map(div => {
-            const name = div.querySelector("input[type=text]").value.trim();
-            const date = div.querySelector("input[type=date]").value;
-            return { name, date, assignments: [] };
-        }).filter(t => t.name && t.date);
-
-        try {
-            const res = await fetchAPI("/teacher/calendar", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ academicYear, terms, assignments: [] })
-            });
-            if (res && res.ok) showToast(translateText("calendar_saved"), "success");
-            else showToast(translateText("failed_save_calendar"), "error");
-        } catch (err) {
-            console.error("Calendar save error:", err);
-            showToast(translateText("network_error"), "error");
-        }
+    saveBtn?.addEventListener("click", async ()=>{
+        const academicYear=document.getElementById("academicYear").value.trim();
+        if(!academicYear){ showToast("Enter academic year","error"); return; }
+        const terms=Array.from(container.children).map(div=>{
+            const name=div.querySelector("input[type=text]").value.trim();
+            const begin=div.querySelectorAll("input[type=date]")[0].value;
+            const end=div.querySelectorAll("input[type=date]")[1].value;
+            return { name, begin, end };
+        }).filter(t=>t.name && t.begin && t.end);
+        try{
+            const res=await fetchAPI("/teacher/calendar",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({academicYear, terms})});
+            if(res?.ok) showToast("Calendar saved","success"); else showToast("Failed to save calendar","error");
+        } catch(e){ showToast("Network error","error"); }
     });
 }
 
@@ -527,54 +468,27 @@ function wireMessageForm() {
     const studentSelect = document.getElementById("message-student-select");
     const messageText = document.getElementById("messageText");
     const sendBtn = document.getElementById("sendMessageButton");
-
     if (!studentSelect || !messageText || !sendBtn) return;
-
-    function validateMessageForm() {
-        sendBtn.disabled = !(studentSelect.value && messageText.value.trim());
-    }
-
-    studentSelect.addEventListener("change", validateMessageForm);
-    messageText.addEventListener("input", validateMessageForm);
-
+    function validate() { sendBtn.disabled = !(studentSelect.value && messageText.value.trim()); }
+    studentSelect.addEventListener("change", validate);
+    messageText.addEventListener("input", validate);
     sendBtn.addEventListener("click", async () => {
-        const toEmail = studentSelect.options[studentSelect.selectedIndex]?.dataset.email;
         const text = messageText.value.trim();
-
-        if (!toEmail || !text) {
-            showToast(translateText('fill_message_fields'), "error");
-            return;
-        }
-
-        sendBtn.disabled = true;
-        sendBtn.textContent = translateText('sending');
-
+        if (!text) { showToast("Fill message fields","error"); return; }
+        sendBtn.disabled = true; sendBtn.textContent = "Sending...";
         try {
+            const selected = Array.from(studentSelect.selectedOptions).map(o => o.dataset.email);
             const res = await fetchAPI("/teacher/message", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ to: toEmail, text, assignments: [] })
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ to: selected, text })
             });
-
-            if (res && res.ok) {
-                showToast(translateText('message_sent'), "success");
-                messageText.value = "";
-                studentSelect.value = "";
-                validateMessageForm();
-            } else {
-                const data = await res.json();
-                showToast(data?.message || translateText('failed_send_message'), "error");
-            }
-        } catch (err) {
-            console.error("Send message error:", err);
-            showToast(translateText('network_error'), "error");
-        } finally {
-            sendBtn.disabled = false;
-            sendBtn.textContent = translateText('sendMessage');
-        }
+            if (res?.ok) { showToast("Message sent","success"); messageText.value=""; studentSelect.value=""; }
+            else { const data = await res.json(); showToast(data?.message || "Failed", "error"); }
+        } catch(e){ showToast("Network error","error"); }
+        finally{ sendBtn.disabled=false; sendBtn.textContent="Send Message"; }
     });
 }
-
 function populateMessageStudentSelect(students = []) {
     const select = document.getElementById("message-student-select");
     if (!select) return;
@@ -590,114 +504,71 @@ function translateText(key) {
 }
 
 function wireAssignmentForm() {
-    const studentSelect = document.getElementById("student-select");
-    const titleInput = document.getElementById("assignmentTitle");
-    const dueDateInput = document.getElementById("assignmentDueDate");
-    const textArea = document.getElementById("assignmentText");
-    const fileInput = document.getElementById("assignmentFile");
-    const sendBtn = document.getElementById("sendAssignmentButton");
-    const wordCountText = document.getElementById("wordCountText");
-    const fileNameSpan = document.getElementById("fileName");
-    const clearFileBtn = document.getElementById("clearFileButton");
+    const studentSelect=document.getElementById("student-select");
+    const titleInput=document.getElementById("assignmentTitle");
+    const dueDateInput=document.getElementById("assignmentDueDate");
+    const textArea=document.getElementById("assignmentText");
+    const fileInput=document.getElementById("assignmentFile");
+    const sendBtn=document.getElementById("sendAssignmentButton");
+    const wordCountText=document.getElementById("wordCountText");
+    const fileNameSpan=document.getElementById("fileName");
+    const clearFileBtn=document.getElementById("clearFileButton");
 
-    if (!studentSelect || !titleInput || !dueDateInput || !textArea || !sendBtn) return;
-
-    function updateSendBtn() {
-        sendBtn.disabled = !(studentSelect.value && titleInput.value.trim() && (textArea.value.trim() || fileInput.files.length));
+    function updateSendBtn(){
+        sendBtn.disabled=!(studentSelect.value && titleInput.value.trim() && (textArea.value.trim() || fileInput.files.length));
     }
-
-    function updateWordCount() {
-        const words = textArea.value.trim().split(/\s+/).filter(Boolean).length;
-        wordCountText.textContent = `Word count: ${words}`;
+    function updateWordCount(){
+        const words=textArea.value.trim().split(/\s+/).filter(Boolean).length;
+        wordCountText.textContent=`Word count: ${words}`;
         updateSendBtn();
     }
-
     textArea.addEventListener("input", updateWordCount);
     titleInput.addEventListener("input", updateSendBtn);
     studentSelect.addEventListener("change", updateSendBtn);
 
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files.length) {
-            fileNameSpan.textContent = fileInput.files[0].name;
-            clearFileBtn.classList.remove("hidden");
-        } else {
-            fileNameSpan.textContent = "No file selected.";
-            clearFileBtn.classList.add("hidden");
-        }
+    fileInput.addEventListener("change",()=>{
+        if(fileInput.files.length){ fileNameSpan.textContent=fileInput.files[0].name; clearFileBtn.classList.remove("hidden"); }
+        else{ fileNameSpan.textContent="No file selected."; clearFileBtn.classList.add("hidden"); }
         updateSendBtn();
     });
+    clearFileBtn.addEventListener("click",()=>{ fileInput.value=""; fileNameSpan.textContent="No file selected."; clearFileBtn.classList.add("hidden"); updateSendBtn(); });
 
-    clearFileBtn.addEventListener("click", () => {
-        fileInput.value = "";
-        fileNameSpan.textContent = "No file selected.";
-        clearFileBtn.classList.add("hidden");
-        updateSendBtn();
-    });
-
-    sendBtn.addEventListener("click", async () => {
-        const studentId = studentSelect.value;
-        const title = titleInput.value.trim();
-        const dueDate = dueDateInput.value;
-        const text = textArea.value.trim();
-        const file = fileInput.files[0];
-
-        if (!studentId || !title || (!text && !file)) {
-            showToast("Please fill in all required fields", "error");
-            return;
-        }
-
-        sendBtn.disabled = true;
-        sendBtn.textContent = "Sending...";
-
-        try {
-            const formData = new FormData();
+    sendBtn.addEventListener("click", async ()=>{
+        const studentId=studentSelect.value;
+        const title=titleInput.value.trim();
+        const dueDate=dueDateInput.value;
+        const text=textArea.value.trim();
+        const file=fileInput.files[0];
+        if(!studentId || !title || (!text && !file)){ showToast("Fill required fields","error"); return; }
+        sendBtn.disabled=true; sendBtn.textContent="Sending...";
+        try{
+            const formData=new FormData();
             formData.append("studentId", studentId);
             formData.append("title", title);
             formData.append("dueDate", dueDate);
             formData.append("text", text);
-            formData.append("assignments", JSON.stringify([]));
-            if (file) formData.append("file", file);
-
-            const res = await fetchAPI("/teacher/assignments", {
-                method: "POST",
-                body: formData
-            });
-
-            if (res && res.ok) {
-                showToast("Assignment sent successfully", "success");
-                titleInput.value = "";
-                dueDateInput.value = "";
-                textArea.value = "";
-                fileInput.value = "";
-                fileNameSpan.textContent = "No file selected.";
-                clearFileBtn.classList.add("hidden");
-                updateWordCount();
-            } else {
-                const data = await res.json();
-                showToast(data?.message || "Failed to send assignment", "error");
-            }
-        } catch (err) {
-            console.error("Assignment send error:", err);
-            showToast("Network error", "error");
-        } finally {
-            sendBtn.disabled = false;
-            sendBtn.textContent = "Send Assignment";
-        }
+            if(file) formData.append("file", file);
+            const res=await fetchAPI("/teacher/assignments",{method:"POST", body: formData});
+            if(res?.ok){ showToast("Assignment sent","success"); titleInput.value=""; dueDateInput.value=""; textArea.value=""; fileInput.value=""; fileNameSpan.textContent="No file selected."; clearFileBtn.classList.add("hidden"); updateWordCount(); }
+            else{ const data=await res.json(); showToast(data?.message || "Failed", "error"); }
+        } catch(e){ showToast("Network error","error"); }
+        finally{ sendBtn.disabled=false; sendBtn.textContent="Send Assignment"; }
     });
 
     updateWordCount();
 }
 
-function wirePointsForm() {
+function wireAddPointsForm() {
     const studentSelect = document.getElementById("points-student-select");
     const pointsInput = document.getElementById("pointsInput");
-    const reasonText = document.getElementById("reasonText");
+    const reasonInput = document.getElementById("reasonText");
     const addBtn = document.getElementById("addPointsButton");
 
     if (!studentSelect || !pointsInput || !addBtn) return;
 
     function validateForm() {
-        addBtn.disabled = !(studentSelect.value && parseInt(pointsInput.value) > 0);
+        const points = parseInt(pointsInput.value, 10) || 0;
+        addBtn.disabled = !(studentSelect.value && points > 0);
     }
 
     studentSelect.addEventListener("change", validateForm);
@@ -705,45 +576,55 @@ function wirePointsForm() {
 
     addBtn.addEventListener("click", async () => {
         const studentId = studentSelect.value;
-        const points = parseInt(pointsInput.value);
-        const reason = reasonText.value.trim();
+        const points = parseInt(pointsInput.value, 10) || 0;
+        const reason = reasonInput.value.trim();
 
-        if (!studentId || !points || points <= 0) {
-            showToast(translateText("fill_points_fields") || "Please select a student and enter valid points.", "error");
+        if (!studentId || points <= 0 || !reason) {
+            showToast("Please select a student, enter valid points, and provide a reason", "error");
             return;
         }
 
         addBtn.disabled = true;
-        addBtn.textContent = translateText("adding_points") || "Adding...";
+        addBtn.textContent = "Adding...";
 
         try {
-            const res = await fetchAPI("/rewards/teacher/add-points", {
+            const token = localStorage.getItem("token"); // Adjust based on your auth storage
+            const res = await fetch("/teacher/add-points", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ studentId, points, reason, assignments: [] })
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ studentId, points, reason }) // corrected field name
             });
 
-            if (res && res.ok) {
-                showToast(translateText("points_added") || "Points added successfully!", "success");
+            if (res.ok) {
+                showToast("Points added successfully", "success");
                 pointsInput.value = "";
-                reasonText.value = "";
+                reasonInput.value = "";
                 studentSelect.value = "";
                 validateForm();
             } else {
                 const data = await res.json();
-                showToast(data?.message || translateText("failed_add_points") || "Failed to add points.", "error");
+                showToast(data?.message || "Failed to add points", "error");
             }
         } catch (err) {
             console.error("Add points error:", err);
-            showToast(translateText("network_error") || "Network error, please try again.", "error");
+            showToast("Network error", "error");
         } finally {
             addBtn.disabled = false;
-            addBtn.textContent = translateText("addPointsButton") || "Add Points";
+            addBtn.textContent = "Add Points";
         }
     });
-
-    validateForm();
 }
+
+function populatePointsStudentSelect(students = []) {
+    const select = document.getElementById("points-student-select");
+    if (!select) return;
+    select.innerHTML = `<option value="">Select Student</option>` +
+        students.map(s => `<option value="${s._id}">${s.firstname} ${s.lastname} (${translateText('grade')} ${s.grade || '-'})</option>`).join("");
+}
+
 
 async function init() {
     try {
