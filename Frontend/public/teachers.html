@@ -344,206 +344,198 @@
 
     <script src="translate.js"></script>
 <script>
-    const API_BASE_URL = "https://api.smartstudentact.com/api";
-    let translations = {};
-    let currentLang = "en";
-    let studentsCache = [];
+const API_BASE_URL = "https://api.smartstudentact.com/api";
+let translations = {};
+let currentLang = "en";
+let studentsCache = [];
 
-    // Load translations from teachers.json
-    async function loadTranslations(lang = "en") {
-        try {
-            const res = await fetch(`/locales/teachers.json`);
-            if (!res.ok) throw new Error("Failed to load translations");
-            const allTranslations = await res.json();
-            translations = allTranslations[lang] || {};
-        } catch (err) {
-            console.error("Translation load error:", err);
-            translations = {}; // fallback to empty
-        }
+// Load translations from teachers.json
+async function loadTranslations(lang = "en") {
+    try {
+        const res = await fetch(`/locales/teachers.json`);
+        if (!res.ok) throw new Error("Failed to load translations");
+        const allTranslations = await res.json();
+        translations = allTranslations[lang] || {};
+    } catch (err) {
+        console.error("Translation load error:", err);
+        translations = {}; // fallback to empty
     }
+}
 
-    // Get translation string by key
-    function translateText(key) {
-        return translations[key] || key;
-    }
+// Get translation string by key
+function translateText(key) {
+    return translations[key] || key;
+}
 
-    // Apply translations to DOM elements
-    function applyTranslations() {
-        document.querySelectorAll("[data-i18n]").forEach(el => {
-            const key = el.getAttribute("data-i18n");
-            if (translations[key]) {
-                const translatedText = translations[key][currentLang];
-                if (translatedText) {
-                    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
-                        el.placeholder = translatedText;
-                    } else {
-                        el.innerHTML = translatedText;
-                    }
+// Apply translations to DOM elements
+function applyTranslations() {
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (translations[key]) {
+            const translatedText = translations[key][currentLang];
+            if (translatedText) {
+                if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+                    el.placeholder = translatedText;
+                } else {
+                    el.innerHTML = translatedText;
                 }
             }
+        }
+    });
+}
+
+function showToast(message, type = "info") {
+    const container = document.getElementById("toast-container") || (() => {
+        const el = document.createElement("div");
+        el.id = "toast-container";
+        el.className = "fixed top-4 right-4 z-[1000] space-y-2";
+        document.body.appendChild(el);
+        return el;
+    })();
+    const colors = {
+        success: "bg-green-600",
+        error: "bg-red-600",
+        info: "bg-blue-600",
+        warning: "bg-yellow-500 text-gray-900"
+    };
+    const toast = document.createElement("div");
+    toast.className = `px-4 py-2 rounded text-white shadow ${colors[type] || colors.info}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+function hideLoadingOverlay() {
+    const el = document.getElementById("loadingOverlay");
+    if (el) el.style.display = "none";
+}
+
+async function fetchAPI(endpoint, options = {}) {
+    try {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            credentials: "include",
+            headers: { ...(options.headers || {}) }
         });
-    }
-
-    function showToast(message, type = "info") {
-        const container = document.getElementById("toast-container") || (() => {
-            const el = document.createElement("div");
-            el.id = "toast-container";
-            el.className = "fixed top-4 right-4 z-[1000] space-y-2";
-            document.body.appendChild(el);
-            return el;
-        })();
-        const colors = {
-            success: "bg-green-600",
-            error: "bg-red-600",
-            info: "bg-blue-600",
-            warning: "bg-yellow-500 text-gray-900"
-        };
-        const toast = document.createElement("div");
-        toast.className = `px-4 py-2 rounded text-white shadow ${colors[type] || colors.info}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-    }
-
-    function hideLoadingOverlay() {
-        const el = document.getElementById("loadingOverlay");
-        if (el) el.style.display = "none";
-    }
-
-    async function fetchAPI(endpoint, options = {}) {
-        try {
-            const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-                ...options,
-                credentials: "include",
-                headers: { ...(options.headers || {}) }
-            });
-            if (res.status === 401) {
-                window.location.href = "/login.html";
-                return null;
-            }
-            return res;
-        } catch (err) {
-            console.error("Fetch error:", err);
-            showToast("Network error, please try again.", "error");
+        if (res.status === 401) {
+            window.location.href = "/login.html";
             return null;
         }
+        return res;
+    } catch (err) {
+        console.error("Fetch error:", err);
+        showToast("Network error, please try again.", "error");
+        return null;
     }
+}
 
-    async function checkAuth() {
-        const res = await fetchAPI("/auth/check");
-        if (!res || !res.ok) window.location.href = "/login.html";
+async function checkAuth() {
+    const res = await fetchAPI("/auth/check");
+    if (!res || !res.ok) window.location.href = "/login.html";
+}
+
+async function fetchTeacherProfile() {
+    const res = await fetchAPI("/teacher/profile");
+    if (res && res.ok) {
+        const data = await res.json();
+        document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
+        document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
     }
+}
 
-    async function fetchTeacherProfile() {
-        const res = await fetchAPI("/teacher/profile");
-        if (res && res.ok) {
+function wireProfilePhotoUpload() {
+    const avatarImg = document.getElementById("profileAvatar");
+    const uploadInput = document.getElementById("profilePhotoInput");
+    if (!avatarImg || !uploadInput) return;
+
+    avatarImg.addEventListener("click", () => uploadInput.click());
+
+    uploadInput.addEventListener("change", async () => {
+        const file = uploadInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("profilePhoto", file);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+                method: "POST",
+                credentials: "include",
+                body: formData,
+            });
+            if (!res.ok) throw new Error("Upload failed");
             const data = await res.json();
-            document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
-            document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
+            avatarImg.src = data.photoUrl;
+            showToast("Profile photo updated!", "success");
+        } catch (err) {
+            console.error("Photo upload error:", err);
+            showToast("Error uploading picture", "error");
         }
+    });
+}
+
+function renderStudents(students = []) {
+    const container = document.getElementById("studentsList");
+    if (!container) return;
+    if (!students.length) {
+        container.innerHTML = `<div class="p-4 text-center text-gray-500">${translateText('no_students')}</div>`;
+        return;
     }
-
-    function wireProfilePhotoUpload() {
-        const avatarImg = document.getElementById("profileAvatar");
-        const uploadInput = document.getElementById("profilePhotoInput");
-
-        if (!avatarImg || !uploadInput) return;
-
-        // Clicking avatar opens file picker
-        avatarImg.addEventListener("click", () => uploadInput.click());
-
-        uploadInput.addEventListener("change", async () => {
-            const file = uploadInput.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append("profilePhoto", file); // must match backend
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-                    method: "POST",
-                    credentials: "include",
-                    body: formData,
-                });
-
-                if (!res.ok) throw new Error("Upload failed");
-
-                const data = await res.json();
-                avatarImg.src = data.photoUrl; // update avatar with new URL
-                showToast("Profile photo updated!", "success");
-            } catch (err) {
-                console.error("Photo upload error:", err);
-                showToast("Error uploading picture", "error");
-            }
-        });
-    }
-
-    function renderStudents(students = []) {
-        const container = document.getElementById("studentsList");
-        if (!container) return;
-        if (!students.length) {
-            container.innerHTML = `<div class="p-4 text-center text-gray-500">${translateText('no_students')}</div>`;
-            return;
-        }
-        container.innerHTML = students.map(s => `
-            <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
-                <div class="flex items-center gap-3">
-                    <img src="${s.imageUrl || './images/default-avatar.png'}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
-                    <div>
-                        <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
-                        <p class="text-sm text-gray-500">${translateText('grade')} ${s.grade || "-"}</p>
-                    </div>
+    container.innerHTML = students.map(s => `
+        <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+            <div class="flex items-center gap-3">
+                <img src="${s.imageUrl || './images/default-avatar.png'}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
+                <div>
+                    <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
+                    <p class="text-sm text-gray-500">${translateText('grade')} ${s.grade || "-"}</p>
                 </div>
-                <span class="text-xs text-gray-400">${s.email}</span>
             </div>
-        `).join("");
-    }
+            <span class="text-xs text-gray-400">${s.email}</span>
+        </div>
+    `).join("");
+}
 
-    async function fetchStudents() {
-        let myGrade = [],
-            otherGrade = [];
-        const res = await fetchAPI("/teacher/students");
-        if (res && res.ok) myGrade = (await res.json()) || [];
-        const resOther = await fetchAPI("/teacher/students/other");
-        if (resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
-        studentsCache = [...myGrade, ...otherGrade];
-        renderStudents(myGrade);
-        populateSelects(studentsCache, myGrade, otherGrade);
-    }
+async function fetchStudents() {
+    let myGrade = [], otherGrade = [];
+    const res = await fetchAPI("/teacher/students");
+    if (res && res.ok) myGrade = (await res.json()) || [];
+    const resOther = await fetchAPI("/teacher/students/other");
+    if (resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
+    studentsCache = [...myGrade, ...otherGrade];
+    renderStudents(myGrade);
+    populateSelects(studentsCache, myGrade, otherGrade);
+}
 
-    function populateSelects(allStudents, myGrade = [], otherGrade = []) {
-        const studentSelects = [
-            document.getElementById("assignment-student-select"),
-            document.getElementById("points-student-select"),
-            document.getElementById("message-student-select"),
-        ];
+function populateSelects(allStudents, myGrade = [], otherGrade = []) {
+    const studentSelects = [
+        document.getElementById("assignment-student-select"),
+        document.getElementById("points-student-select"),
+        document.getElementById("message-student-select"),
+    ];
 
-        const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (${translateText('grade')} ${s.grade || '-'})</option>`).join("");
-        const toOptionsMulti = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname}</option>`).join("");
-        const toGradeOptions = () => [...new Set(allStudents.map(s => s.grade))].filter(Boolean).map(grade => `<option value="${grade}">${translateText('grade')} ${grade}</option>`).join("");
+    const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (${translateText('grade')} ${s.grade || '-'})</option>`).join("");
+    const toGradeOptions = () => [...new Set(allStudents.map(s => s.grade))].filter(Boolean).map(grade => `<option value="${grade}">${translateText('grade')} ${grade}</option>`).join("");
 
+    studentSelects.forEach(select => {
+        if (!select) return;
+        select.innerHTML = `
+            <optgroup label="${translateText('myClass')}">${toOptions(myGrade)}</optgroup>
+            <optgroup label="${translateText('other_students')}">${toOptions(otherGrade)}</optgroup>
+        `;
+    });
 
-        studentSelects.forEach(select => {
-            if (!select) return;
-            select.innerHTML = `
-                <optgroup label="${translateText('myClass')}">${toOptions(myGrade)}</optgroup>
-                <optgroup label="${translateText('other_students')}">${toOptions(otherGrade)}</optgroup>
-            `;
-        });
+    const gradeSelects = [
+        document.getElementById("assignment-grade-select"),
+        document.getElementById("points-grade-select"),
+        document.getElementById("message-grade-select"),
+    ];
+    gradeSelects.forEach(select => {
+        if (!select) return;
+        select.innerHTML = `<option value="">${translateText('select_grade')}</option>` + toGradeOptions();
+    });
+}
 
-        // Populate grade selects
-        const gradeSelects = [
-            document.getElementById("assignment-grade-select"),
-            document.getElementById("points-grade-select"),
-            document.getElementById("message-grade-select"),
-        ];
-        gradeSelects.forEach(select => {
-            if (!select) return;
-            select.innerHTML = `<option value="">${translateText('select_grade')}</option>` + toGradeOptions();
-        });
-    }
-
-    async function fetchAssignedTasks() {
+async function fetchAssignedTasks() {
         const container = document.getElementById("assignedTasksList");
         if (!container) return;
         container.innerHTML = `<div class="p-4 text-gray-500">${translateText('loading')}...</div>`;
@@ -1025,65 +1017,58 @@
     updateFormUI(formId);
 }
 
-    window.onload = async () => {
-        await checkAuth();
-        await loadTranslations(currentLang);
-        applyTranslations();
-        
-        await fetchTeacherProfile();
-        await fetchStudents();
-        fetchAssignedTasks();
-        fetchFeedback();
-        fetchOverdueTasks();
-        wireAssignmentForm();
-        wireAddPointsForm();
-        wireMessageForm();
-        wireCalendar();
-        wireProfilePhotoUpload();
-        hideLoadingOverlay();
-        document.getElementById("currentYear").textContent = new Date().getFullYear();
+window.onload = async () => {
+    await checkAuth();
+    await loadTranslations(currentLang);
+    applyTranslations();
+    
+    await fetchTeacherProfile();
+    await fetchStudents();
+    fetchAssignedTasks();
+    fetchFeedback();
+    fetchOverdueTasks();
+    wireAssignmentForm();
+    wireAddPointsForm();
+    wireMessageForm();
+    wireCalendar();
+    wireProfilePhotoUpload();
+    hideLoadingOverlay();
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
 
-        document.getElementById("logoutButton").addEventListener("click", async () => {
-            const res = await fetchAPI("/auth/logout", {
-                method: "POST",
-            });
-            if (res && res.ok) window.location.href = "/login.html";
-        });
+    document.getElementById("logoutButton").addEventListener("click", async () => {
+        const res = await fetchAPI("/auth/logout", { method: "POST" });
+        if (res && res.ok) window.location.href = "/login.html";
+    });
 
-        // Toggle profile dropdown
-        const profileMenuButton = document.getElementById("profile-menu-button");
-        const profileDropdownMenu = document.getElementById("profile-dropdown-menu");
-        profileMenuButton.addEventListener("click", () => {
-            const isHidden = profileDropdownMenu.classList.contains("hidden");
-            if (isHidden) {
-                profileDropdownMenu.classList.remove("hidden");
-                setTimeout(() => {
-                    profileDropdownMenu.classList.remove("scale-95", "opacity-0");
-                }, 10);
-            } else {
-                profileDropdownMenu.classList.add("scale-95", "opacity-0");
-                setTimeout(() => {
-                    profileDropdownMenu.classList.add("hidden");
-                }, 300);
-            }
-        });
-
-        // Language switch
-        const langSelect = document.getElementById("language-select");
-        if (langSelect) {
-            langSelect.addEventListener("change", async (e) => {
-                currentLang = e.target.value;
-                await loadTranslations(currentLang);
-                applyTranslations();
-                renderStudents(studentsCache.filter(s => s.isMyClass));
-                populateSelects(studentsCache, studentsCache.filter(s => s.isMyClass), studentsCache.filter(s => !s.isMyClass));
-                fetchAssignedTasks();
-                fetchFeedback();
-                fetchOverdueTasks();
-            });
+    const profileMenuButton = document.getElementById("profile-menu-button");
+    const profileDropdownMenu = document.getElementById("profile-dropdown-menu");
+    profileMenuButton.addEventListener("click", () => {
+        const isHidden = profileDropdownMenu.classList.contains("hidden");
+        if (isHidden) {
+            profileDropdownMenu.classList.remove("hidden");
+            setTimeout(() => profileDropdownMenu.classList.remove("scale-95", "opacity-0"), 10);
+        } else {
+            profileDropdownMenu.classList.add("scale-95", "opacity-0");
+            setTimeout(() => profileDropdownMenu.classList.add("hidden"), 300);
         }
-    };
+    });
+
+    const langSelect = document.getElementById("language-select");
+    if (langSelect) {
+        langSelect.addEventListener("change", async (e) => {
+            currentLang = e.target.value;
+            await loadTranslations(currentLang);
+            applyTranslations();
+            renderStudents(studentsCache.filter(s => s.isMyClass));
+            populateSelects(studentsCache, studentsCache.filter(s => s.isMyClass), studentsCache.filter(s => !s.isMyClass));
+            fetchAssignedTasks();
+            fetchFeedback();
+            fetchOverdueTasks();
+        });
+    }
+};
 </script>
+
   </body>
 </html>
 
