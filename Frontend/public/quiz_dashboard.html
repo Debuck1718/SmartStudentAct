@@ -12,7 +12,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-  <!-- NAVIGATION -->
+ 
   <nav class="bg-blue-600 text-white p-4 flex justify-between items-center">
     <h1 class="text-xl font-bold" data-i18n="pageTitle">SmartStudentAct | Quiz Dashboard</h1>
     <div class="flex items-center gap-4">
@@ -30,7 +30,7 @@
 
   <div class="flex-1 container mx-auto p-6">
 
-    <!-- CREATE QUIZ FORM -->
+    
     <div class="bg-white p-6 rounded-lg shadow-md mb-8">
       <h2 class="text-2xl font-bold mb-4" data-i18n="createNewQuiz">Create New Quiz</h2>
       <form id="quizForm" class="space-y-4">
@@ -39,27 +39,27 @@
         <input type="date" id="quizDueDate" class="w-full border p-2 rounded" required />
         <input type="number" id="quizTimeLimit" placeholder="Time Limit (minutes, optional)" min="1" class="w-full border p-2 rounded mb-2" data-i18n-placeholder="timeLimitPlaceholder" />
 
-        <!-- QUESTIONS -->
+      
         <div id="questionsContainer" class="space-y-6"></div>
         <button type="button" id="addQuestionBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700" data-i18n="addQuestion">➕ Add Question</button>
 
-        <!-- ASSIGN QUIZ -->
+       
         <div class="mt-6">
           <h3 class="text-lg font-semibold mb-2" data-i18n="assignTo">Assign To:</h3>
 
-          <!-- Select by grade -->
+        
           <div class="mb-2">
             <label class="block mb-1 font-semibold" data-i18n="assignByGrade">By Grade:</label>
             <select id="assignGradeDropdown" class="w-full border p-2 rounded" multiple></select>
           </div>
 
-          <!-- Select by program -->
+         
           <div class="mb-2">
             <label class="block mb-1 font-semibold" data-i18n="assignByProgram">By Program / Section:</label>
             <select id="assignProgramDropdown" class="w-full border p-2 rounded" multiple></select>
           </div>
 
-          <!-- Specific students -->
+          
           <div class="mb-2">
             <label class="block mb-1 font-semibold" data-i18n="assignByStudent">Specific Students:</label>
             <div id="studentsCheckboxes" class="space-y-2 border p-2 rounded bg-gray-50"></div>
@@ -70,7 +70,7 @@
       </form>
     </div>
 
-    <!-- QUIZ LIST -->
+    
     <div class="bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-2xl font-bold mb-4" data-i18n="myQuizzes">My Quizzes</h2>
       <ul id="quizList" class="space-y-3"></ul>
@@ -90,7 +90,7 @@ const questionsContainer = document.getElementById("questionsContainer");
 const addQuestionBtn = document.getElementById("addQuestionBtn");
 const quizList = document.getElementById("quizList");
 
-// ---------------- TRANSLATION ----------------
+
 async function loadTranslations() {
     try {
         const res = await fetch("/locales/quiz-dashboard.json");
@@ -118,7 +118,7 @@ document.getElementById("languageSelector").addEventListener("change", e=>{
     populateStudentSelects(studentsCache);
 });
 
-// ---------------- FETCH STUDENTS, GRADES, PROGRAMS ----------------
+
 async function fetchStudents() {
     try {
         const res = await fetch(`${API_BASE_URL}/teacher/students`, { credentials: "include" });
@@ -127,7 +127,6 @@ async function fetchStudents() {
         const otherGrade = resOther.ok ? await resOther.json() : [];
         studentsCache = [...myGrade, ...otherGrade];
 
-        // Extract unique grades and programs
         gradesCache = [...new Set(studentsCache.map(s => s.grade).filter(Boolean))];
         programsCache = [...new Set(studentsCache.map(s => s.program).filter(Boolean))];
 
@@ -138,7 +137,6 @@ async function fetchStudents() {
     }
 }
 
-// ---------------- POPULATE CHECKBOXES & DROPDOWNS ----------------
 function populateStudentSelects(allStudents, myGrade=[], otherGrade=[]) {
     const container = document.getElementById("studentsCheckboxes");
     if(!container) return;
@@ -170,7 +168,6 @@ function populateDropdowns() {
     programDropdown.innerHTML = programsCache.map(p=>`<option value="${p}">${p}</option>`).join("");
 }
 
-// ---------------- QUESTIONS ----------------
 function createQuestionBlock() {
     questionCount++;
     const qDiv = document.createElement("div");
@@ -196,23 +193,25 @@ function createQuestionBlock() {
 }
 addQuestionBtn.addEventListener("click", createQuestionBlock);
 
+
 document.getElementById("quizForm").addEventListener("submit", async e=>{
     e.preventDefault();
 
-
     const selectedStudents = Array.from(document.querySelectorAll(".target-checkbox:checked")).map(cb=>cb.value);
-
-   
     const selectedGrades = Array.from(document.getElementById("assignGradeDropdown").selectedOptions).map(opt=>opt.value);
     const selectedPrograms = Array.from(document.getElementById("assignProgramDropdown").selectedOptions).map(opt=>opt.value);
 
+ 
     const quizData = {
         title: document.getElementById("quizTitle").value,
         description: document.getElementById("quizDescription").value,
-        dueDate: document.getElementById("quizDueDate").value,
+        due_date: document.getElementById("quizDueDate").value,
         timeLimitMinutes: document.getElementById("quizTimeLimit").value || null,
         questions: [],
-        assignTo: { users: selectedStudents, grades: selectedGrades, programs: selectedPrograms }
+        assigned_to_users: selectedStudents,
+        assigned_to_grades: selectedGrades,
+        assigned_to_programs: selectedPrograms,
+        assigned_to_schools: [] 
     };
 
     document.querySelectorAll("#questionsContainer > div").forEach(qDiv=>{
@@ -272,7 +271,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
     fetchQuizzes();
 });
 </script>
-
 </body>
 </html>
 

@@ -293,7 +293,6 @@ function showToast(message, type = "info") {
     setTimeout(() => toast.remove(), 4000);
 }
 
-
 function hideLoadingOverlay() {
     const el = document.getElementById("loadingOverlay");
     if (el) el.style.display = "none";
@@ -505,14 +504,14 @@ function wireCalendar() {
         const terms = Array.from(termsContainer.children).map(div => {
             const name = div.querySelector("input[type=text]").value.trim();
             const date = div.querySelector("input[type=date]").value;
-            return { name, date };
+            return { name, date, assignments: [] };
         }).filter(t => t.name && t.date);
 
         try {
             const res = await fetchAPI("/teacher/calendar", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ academicYear, terms })
+                body: JSON.stringify({ academicYear, terms, assignments: [] })
             });
             if (res && res.ok) showToast(translateText("calendar_saved"), "success");
             else showToast(translateText("failed_save_calendar"), "error");
@@ -553,7 +552,7 @@ function wireMessageForm() {
             const res = await fetchAPI("/teacher/message", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ to: toEmail, text })
+                body: JSON.stringify({ to: toEmail, text, assignments: [] })
             });
 
             if (res && res.ok) {
@@ -581,7 +580,6 @@ function populateMessageStudentSelect(students = []) {
     select.innerHTML = `<option value="">${translateText('select_student')}</option>` +
         students.map(s => `<option value="${s._id}" data-email="${s.email}">${s.firstname} ${s.lastname} (${translateText('grade')} ${s.grade || '-'})</option>`).join("");
 }
-
 
 function translateText(key) {
     if (typeof translations !== "undefined" && translations[key] && translations[key][currentLang]) {
@@ -656,9 +654,10 @@ function wireAssignmentForm() {
             formData.append("title", title);
             formData.append("dueDate", dueDate);
             formData.append("text", text);
+            formData.append("assignments", JSON.stringify([]));
             if (file) formData.append("file", file);
 
-            const res = await fetchAPI("/teacher/assignment", {
+            const res = await fetchAPI("/teacher/assignments", {
                 method: "POST",
                 body: formData
             });
@@ -720,7 +719,7 @@ function wirePointsForm() {
             const res = await fetchAPI("/rewards/teacher/add-points", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ studentId, points, reason })
+                body: JSON.stringify({ studentId, points, reason, assignments: [] })
             });
 
             if (res && res.ok) {
@@ -744,7 +743,6 @@ function wirePointsForm() {
 
     validateForm();
 }
-
 
 async function init() {
     try {
