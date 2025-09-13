@@ -620,25 +620,36 @@
 
 
     async function handleProfileUpload(e) {
-      e.preventDefault();
-      const formData = new FormData(DOM.profileForm);
+  e.preventDefault();
 
-      try {
-        const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Upload failed");
+  const formData = new FormData();
+  const file = DOM.profileForm.querySelector('input[type="file"]').files[0];
+  if (!file) {
+    showToast("No file selected.", "error");
+    return;
+  }
 
-        DOM.profilePreview.src = data.imageUrl || "./images/default-avatar.png";
-        showToast("Profile updated!", "success");
-      } catch (e) {
-        DOM.profilePreview.src = "./images/default-avatar.png";
-        showToast(e.message, "error");
-      }
-    }
+  formData.append("profilePhoto", file); 
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Upload failed");
+
+    DOM.profilePreview.src = data.photoUrl || "./images/default-avatar.png";
+    showToast("Profile updated!", "success");
+  } catch (err) {
+    console.error(err);
+    DOM.profilePreview.src = "./images/default-avatar.png";
+    showToast(err.message, "error");
+  }
+}
+
 
     
     function renderChart() {
