@@ -451,6 +451,7 @@ protectedRouter.patch(
 );
 
 
+
 protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select(
@@ -468,10 +469,12 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
         email: user.email,
         phone: user.phone,
         occupation: user.occupation,
-        school: {
-          schoolName: user.schoolName,
-          schoolCountry: user.schoolCountry,
-        },
+        school: user.schoolName
+          ? {
+              schoolName: user.schoolName,
+              schoolCountry: fromIsoCountryCode(user.schoolCountry), // ✅ human-readable
+            }
+          : null,
         educationLevel: user.educationLevel,
         grade: user.grade,
         university: user.university,
