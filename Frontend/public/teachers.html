@@ -692,323 +692,332 @@
         });
     }
 
-    function wireMessageForm() {
-        const formId = "message";
-        const studentSelect = document.getElementById(`${formId}-student-select`);
-        const gradeSelect = document.getElementById(`${formId}-grade-select`);
-        const messageText = document.getElementById("messageText");
-        const sendBtn = document.getElementById("sendMessageButton");
-        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
+    function wireMessageForm() { 
+    const formId = "message";
+    const studentSelect = document.getElementById(`${formId}-student-select`);
+    const gradeSelect = document.getElementById(`${formId}-grade-select`);
+    const messageText = document.getElementById("messageText");
+    const sendBtn = document.getElementById("sendMessageButton");
+    const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
 
-        if (!studentSelect || !gradeSelect || !messageText || !sendBtn || !recipientRadios.length) return;
+    if (!studentSelect || !gradeSelect || !messageText || !sendBtn || !recipientRadios.length) return;
 
-        function validateForm() {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-            let isValid = false;
-            if (recipientType === "single" || recipientType === "multiple") {
-                isValid = studentSelect.value && messageText.value.trim();
-            } else if (recipientType === "otherGrade") {
-                isValid = gradeSelect.value && messageText.value.trim();
-            } else if (recipientType === "class") {
-                isValid = messageText.value.trim();
-            }
-            sendBtn.disabled = !isValid;
+    function validateForm() {
+        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+        let isValid = false;
+        if (recipientType === "single" || recipientType === "multiple") {
+            isValid = studentSelect.value && messageText.value.trim();
+        } else if (recipientType === "otherGrade") {
+            isValid = gradeSelect.value && messageText.value.trim();
+        } else if (recipientType === "class") {
+            isValid = messageText.value.trim();
         }
-
-        recipientRadios.forEach(radio => radio.addEventListener("change", validateForm));
-        studentSelect.addEventListener("change", validateForm);
-        gradeSelect.addEventListener("change", validateForm);
-        messageText.addEventListener("input", validateForm);
-
-        sendBtn.addEventListener("click", async () => {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-            let recipientIds = [];
-            if (recipientType === "single") {
-                recipientIds = [studentSelect.value];
-            } else if (recipientType === "multiple") {
-                recipientIds = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
-            } else if (recipientType === "class") {
-                recipientIds = studentsCache.filter(s => s.isMyClass).map(s => s._id);
-            } else if (recipientType === "otherGrade") {
-                const selectedGrade = gradeSelect.value;
-                recipientIds = studentsCache.filter(s => s.grade === selectedGrade).map(s => s._id);
-            }
-
-            if (!recipientIds.length) {
-                showToast(translateText('select_at_least_one'), "error");
-                return;
-            }
-
-            const message = messageText.value.trim();
-            if (!message) {
-                showToast(translateText('fill_message_fields'), "error");
-                return;
-            }
-
-            sendBtn.disabled = true;
-            sendBtn.textContent = translateText('sending');
-
-            try {
-                const res = await fetchAPI("/teacher/message", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        recipientIds,
-                        message,
-                    })
-                });
-
-                if (res && res.ok) {
-                    showToast(translateText('message_sent'), "success");
-                    messageText.value = "";
-                    validateForm();
-                } else {
-                    const data = await res.json();
-                    showToast(data?.message || translateText('failed_send_message'), "error");
-                }
-            } catch (err) {
-                console.error("Send message error:", err);
-                showToast(translateText('network_error'), "error");
-            } finally {
-                sendBtn.disabled = false;
-                sendBtn.textContent = translateText('sendMessage');
-            }
-        });
-
-        updateFormUI(formId);
+        sendBtn.disabled = !isValid;
     }
 
-    function wireAssignmentForm() {
-        const formId = "assignment";
-        const studentSelect = document.getElementById(`${formId}-student-select`);
-        const gradeSelect = document.getElementById(`${formId}-grade-select`);
-        const titleInput = document.getElementById("assignmentTitle");
-        const dueDateInput = document.getElementById("assignmentDueDate");
-        const textArea = document.getElementById("assignmentText");
-        const fileInput = document.getElementById("assignmentFile");
-        const sendBtn = document.getElementById("sendAssignmentButton");
-        const wordCountText = document.getElementById("wordCountText");
-        const fileNameSpan = document.getElementById("fileName");
-        const clearFileBtn = document.getElementById("clearFileButton");
-        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
+    recipientRadios.forEach(radio => radio.addEventListener("change", validateForm));
+    studentSelect.addEventListener("change", validateForm);
+    gradeSelect.addEventListener("change", validateForm);
+    messageText.addEventListener("input", validateForm);
 
+    sendBtn.addEventListener("click", async () => {
+        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+        let assigned_to_users = [];
+        let assigned_to_grades = [];
 
-        if (!studentSelect || !gradeSelect || !titleInput || !dueDateInput || !textArea || !sendBtn) return;
-
-        function updateSendBtn() {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-            let hasRecipient = false;
-            if (recipientType === "single" || recipientType === "multiple") {
-                hasRecipient = studentSelect.value;
-            } else if (recipientType === "otherGrade") {
-                hasRecipient = gradeSelect.value;
-            } else if (recipientType === "class") {
-                hasRecipient = true; // Always true for entire class
-            }
-            sendBtn.disabled = !(hasRecipient && titleInput.value.trim() && (textArea.value.trim() || fileInput.files.length));
+        if (recipientType === "single") {
+            assigned_to_users = [studentSelect.value];
+        } else if (recipientType === "multiple") {
+            assigned_to_users = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
+        } else if (recipientType === "class") {
+            assigned_to_users = studentsCache.filter(s => s.isMyClass).map(s => s._id);
+        } else if (recipientType === "otherGrade") {
+            assigned_to_grades = [gradeSelect.value];
+            assigned_to_users = studentsCache.filter(s => s.grade === gradeSelect.value).map(s => s._id);
         }
 
-        function updateWordCount() {
-            const words = textArea.value.trim().split(/\s+/).filter(Boolean).length;
-            wordCountText.textContent = translateText("wordCount").replace("0", words);
-            updateSendBtn();
+        if (!assigned_to_users.length && !assigned_to_grades.length) {
+            showToast(translateText('select_at_least_one'), "error");
+            return;
         }
 
-        textArea.addEventListener("input", updateWordCount);
-        titleInput.addEventListener("input", updateSendBtn);
-        dueDateInput.addEventListener("input", updateSendBtn);
-        recipientRadios.forEach(radio => radio.addEventListener("change", updateSendBtn));
-        studentSelect.addEventListener("change", updateSendBtn);
-        gradeSelect.addEventListener("change", updateSendBtn);
+        const message = messageText.value.trim();
+        if (!message) {
+            showToast(translateText('fill_message_fields'), "error");
+            return;
+        }
 
+        sendBtn.disabled = true;
+        sendBtn.textContent = translateText('sending');
 
-        fileInput.addEventListener("change", () => {
-            if (fileInput.files.length) {
-                fileNameSpan.textContent = fileInput.files[0].name;
-                clearFileBtn.classList.remove("hidden");
+        try {
+            const res = await fetchAPI("/teacher/message", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    assigned_to_users,
+                    assigned_to_grades,
+                    message,
+                })
+            });
+
+            if (res && res.ok) {
+                showToast(translateText('message_sent'), "success");
+                messageText.value = "";
+                validateForm();
             } else {
-                fileNameSpan.textContent = translateText("noFileSelected");
-                clearFileBtn.classList.add("hidden");
+                const data = await res.json();
+                showToast(data?.message || translateText('failed_send_message'), "error");
             }
-            updateSendBtn();
-        });
+        } catch (err) {
+            console.error("Send message error:", err);
+            showToast(translateText('network_error'), "error");
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.textContent = translateText('sendMessage');
+        }
+    });
 
-        clearFileBtn.addEventListener("click", () => {
-            fileInput.value = "";
+    updateFormUI(formId);
+}
+
+   function wireAssignmentForm() {
+    const formId = "assignment";
+    const studentSelect = document.getElementById(`${formId}-student-select`);
+    const gradeSelect = document.getElementById(`${formId}-grade-select`);
+    const titleInput = document.getElementById("assignmentTitle");
+    const dueDateInput = document.getElementById("assignmentDueDate");
+    const textArea = document.getElementById("assignmentText");
+    const fileInput = document.getElementById("assignmentFile");
+    const sendBtn = document.getElementById("sendAssignmentButton");
+    const wordCountText = document.getElementById("wordCountText");
+    const fileNameSpan = document.getElementById("fileName");
+    const clearFileBtn = document.getElementById("clearFileButton");
+    const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
+
+    if (!studentSelect || !gradeSelect || !titleInput || !dueDateInput || !textArea || !sendBtn) return;
+
+    function updateSendBtn() {
+        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+        let hasRecipient = false;
+        if (recipientType === "single" || recipientType === "multiple") {
+            hasRecipient = studentSelect.value;
+        } else if (recipientType === "otherGrade") {
+            hasRecipient = gradeSelect.value;
+        } else if (recipientType === "class") {
+            hasRecipient = true; // Always true for entire class
+        }
+        sendBtn.disabled = !(hasRecipient && titleInput.value.trim() && (textArea.value.trim() || fileInput.files.length));
+    }
+
+    function updateWordCount() {
+        const words = textArea.value.trim().split(/\s+/).filter(Boolean).length;
+        wordCountText.textContent = translateText("wordCount").replace("0", words);
+        updateSendBtn();
+    }
+
+    textArea.addEventListener("input", updateWordCount);
+    titleInput.addEventListener("input", updateSendBtn);
+    dueDateInput.addEventListener("input", updateSendBtn);
+    recipientRadios.forEach(radio => radio.addEventListener("change", updateSendBtn));
+    studentSelect.addEventListener("change", updateSendBtn);
+    gradeSelect.addEventListener("change", updateSendBtn);
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files.length) {
+            fileNameSpan.textContent = fileInput.files[0].name;
+            clearFileBtn.classList.remove("hidden");
+        } else {
             fileNameSpan.textContent = translateText("noFileSelected");
             clearFileBtn.classList.add("hidden");
-            updateSendBtn();
-        });
+        }
+        updateSendBtn();
+    });
 
-        sendBtn.addEventListener("click", async () => {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-            let recipientIds = [];
-            let grade = null;
-            if (recipientType === "single") {
-                recipientIds = [studentSelect.value];
-            } else if (recipientType === "multiple") {
-                recipientIds = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
-            } else if (recipientType === "class") {
-                recipientIds = studentsCache.filter(s => s.isMyClass).map(s => s._id);
-            } else if (recipientType === "otherGrade") {
-                grade = gradeSelect.value;
-                recipientIds = studentsCache.filter(s => s.grade === grade).map(s => s._id);
-            }
+    clearFileBtn.addEventListener("click", () => {
+        fileInput.value = "";
+        fileNameSpan.textContent = translateText("noFileSelected");
+        clearFileBtn.classList.add("hidden");
+        updateSendBtn();
+    });
 
-            if (!recipientIds.length) {
-                showToast(translateText('select_at_least_one'), "error");
-                return;
-            }
+    sendBtn.addEventListener("click", async () => {
+        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+        let assigned_to_users = [];
+        let assigned_to_grades = [];
 
-            const title = titleInput.value.trim();
-            const dueDate = dueDateInput.value;
-            const text = textArea.value.trim();
-            const file = fileInput.files[0];
-
-            if (!title || (!text && !file)) {
-                showToast(translateText("fill_title_and_content"), "error");
-                return;
-            }
-
-            sendBtn.disabled = true;
-            sendBtn.textContent = translateText("sending");
-
-            try {
-                const formData = new FormData();
-                formData.append("recipientIds", JSON.stringify(recipientIds));
-                if (grade) formData.append("grade", grade);
-                formData.append("title", title);
-                formData.append("dueDate", dueDate);
-                formData.append("text", text);
-                if (file) formData.append("file", file);
-
-                const res = await fetchAPI("/teacher/assignments", {
-                    method: "POST",
-                    body: formData
-                });
-
-                if (res && res.ok) {
-                    showToast(translateText("assignment_sent"), "success");
-                    titleInput.value = "";
-                    dueDateInput.value = "";
-                    textArea.value = "";
-                    fileInput.value = "";
-                    fileNameSpan.textContent = translateText("noFileSelected");
-                    clearFileBtn.classList.add("hidden");
-                    updateWordCount();
-                    updateSendBtn();
-                } else {
-                    const data = await res.json();
-                    showToast(data?.message || translateText("failed_send_assignment"), "error");
-                }
-            } catch (err) {
-                console.error("Assignment send error:", err);
-                showToast(translateText("network_error"), "error");
-            } finally {
-                sendBtn.disabled = false;
-                sendBtn.textContent = translateText("sendAssignment");
-            }
-        });
-
-        updateFormUI(formId);
-        updateWordCount();
-    }
-
-    function wireAddPointsForm() {
-        const formId = "points";
-        const studentSelect = document.getElementById(`${formId}-student-select`);
-        const gradeSelect = document.getElementById(`${formId}-grade-select`);
-        const pointsInput = document.getElementById("pointsInput");
-        const reasonInput = document.getElementById("reasonText");
-        const addBtn = document.getElementById("addPointsButton");
-        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
-
-        if (!studentSelect || !gradeSelect || !pointsInput || !addBtn) return;
-
-        function validateForm() {
-            const points = parseInt(pointsInput.value, 10) || 0;
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-            let hasRecipient = false;
-            if (recipientType === "single" || recipientType === "multiple") {
-                hasRecipient = studentSelect.value;
-            } else if (recipientType === "otherGrade") {
-                hasRecipient = gradeSelect.value;
-            } else if (recipientType === "class") {
-                hasRecipient = true;
-            }
-            addBtn.disabled = !(hasRecipient && points > 0);
+        if (recipientType === "single") {
+            assigned_to_users = [studentSelect.value];
+        } else if (recipientType === "multiple") {
+            assigned_to_users = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
+        } else if (recipientType === "class") {
+            assigned_to_users = studentsCache.filter(s => s.isMyClass).map(s => s._id);
+        } else if (recipientType === "otherGrade") {
+            assigned_to_grades = [gradeSelect.value];
+            assigned_to_users = studentsCache.filter(s => s.grade === gradeSelect.value).map(s => s._id);
         }
 
-        recipientRadios.forEach(radio => radio.addEventListener("change", validateForm));
-        studentSelect.addEventListener("change", validateForm);
-        gradeSelect.addEventListener("change", validateForm);
-        pointsInput.addEventListener("input", validateForm);
+        if (!assigned_to_users.length && !assigned_to_grades.length) {
+            showToast(translateText('select_at_least_one'), "error");
+            return;
+        }
 
-        addBtn.addEventListener("click", async () => {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-            let recipientIds = [];
-            let grade = null;
-            if (recipientType === "single") {
-                recipientIds = [studentSelect.value];
-            } else if (recipientType === "multiple") {
-                recipientIds = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
-            } else if (recipientType === "class") {
-                recipientIds = studentsCache.filter(s => s.isMyClass).map(s => s._id);
-            } else if (recipientType === "otherGrade") {
-                grade = gradeSelect.value;
-                recipientIds = studentsCache.filter(s => s.grade === grade).map(s => s._id);
+        const title = titleInput.value.trim();
+        const dueDate = dueDateInput.value;
+        const text = textArea.value.trim();
+        const file = fileInput.files[0];
+
+        if (!title || (!text && !file)) {
+            showToast(translateText("fill_title_and_content"), "error");
+            return;
+        }
+
+        sendBtn.disabled = true;
+        sendBtn.textContent = translateText("sending");
+
+        try {
+            const formData = new FormData();
+            if (assigned_to_users.length) formData.append("assigned_to_users", JSON.stringify(assigned_to_users));
+            if (assigned_to_grades.length) formData.append("assigned_to_grades", JSON.stringify(assigned_to_grades));
+            formData.append("title", title);
+            formData.append("dueDate", dueDate);
+            formData.append("text", text);
+            if (file) formData.append("file", file);
+
+            const res = await fetchAPI("/teacher/assignments", {
+                method: "POST",
+                body: formData
+            });
+
+            if (res && res.ok) {
+                showToast(translateText("assignment_sent"), "success");
+                titleInput.value = "";
+                dueDateInput.value = "";
+                textArea.value = "";
+                fileInput.value = "";
+                fileNameSpan.textContent = translateText("noFileSelected");
+                clearFileBtn.classList.add("hidden");
+                updateWordCount();
+                updateSendBtn();
+            } else {
+                const data = await res.json();
+                showToast(data?.message || translateText("failed_send_assignment"), "error");
             }
+        } catch (err) {
+            console.error("Assignment send error:", err);
+            showToast(translateText("network_error"), "error");
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.textContent = translateText("sendAssignment");
+        }
+    });
 
-            if (!recipientIds.length) {
-                showToast(translateText('select_at_least_one'), "error");
-                return;
-            }
+    updateFormUI(formId);
+    updateWordCount();
+}
 
-            const points = parseInt(pointsInput.value, 10);
-            const reason = reasonInput.value.trim();
+    function wireAddPointsForm() {
+    const formId = "points";
+    const studentSelect = document.getElementById(`${formId}-student-select`);
+    const gradeSelect = document.getElementById(`${formId}-grade-select`);
+    const pointsInput = document.getElementById("pointsInput");
+    const reasonInput = document.getElementById("reasonText");
+    const addBtn = document.getElementById("addPointsButton");
+    const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
 
-            if (isNaN(points) || points <= 0) {
-                showToast(translateText('points_must_be_positive'), "error");
-                return;
-            }
+    if (!studentSelect || !gradeSelect || !pointsInput || !addBtn) return;
 
-            addBtn.disabled = true;
-            addBtn.textContent = translateText('adding_points');
+    function validateForm() {
+        const points = parseInt(pointsInput.value, 10) || 0;
+        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+        let hasRecipient = false;
 
-            try {
-                const res = await fetchAPI("/teacher/points", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        recipientIds,
-                        points,
-                        reason,
-                    })
-                });
-                if (res && res.ok) {
-                    showToast(translateText('points_added'), "success");
-                    pointsInput.value = "";
-                    reasonInput.value = "";
-                    validateForm();
-                } else {
-                    const data = await res.json();
-                    showToast(data?.message || translateText('failed_add_points'), "error");
-                }
-            } catch (err) {
-                console.error("Add points error:", err);
-                showToast(translateText('network_error'), "error");
-            } finally {
-                addBtn.disabled = false;
-                addBtn.textContent = translateText('addPointsButton');
-            }
-        });
+        if (recipientType === "single" || recipientType === "multiple") {
+            hasRecipient = studentSelect.value;
+        } else if (recipientType === "otherGrade") {
+            hasRecipient = gradeSelect.value;
+        } else if (recipientType === "class") {
+            hasRecipient = true;
+        }
 
-        updateFormUI(formId);
+        addBtn.disabled = !(hasRecipient && points > 0 && reasonInput.value.trim().length > 0);
     }
+
+    recipientRadios.forEach(radio => radio.addEventListener("change", validateForm));
+    studentSelect.addEventListener("change", validateForm);
+    gradeSelect.addEventListener("change", validateForm);
+    pointsInput.addEventListener("input", validateForm);
+    reasonInput.addEventListener("input", validateForm);
+
+    addBtn.addEventListener("click", async () => {
+        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+        const points = parseInt(pointsInput.value, 10);
+        const reason = reasonInput.value.trim();
+
+        if (isNaN(points) || points <= 0) {
+            showToast(translateText('points_must_be_positive'), "error");
+            return;
+        }
+        if (!reason) {
+            showToast(translateText('reason_required'), "error");
+            return;
+        }
+
+        let payload = { points, reason };
+
+        // Assign the correct field based on recipient type (matches backend schema)
+        if (recipientType === "single") {
+            payload.studentIds = [studentSelect.value];
+        } else if (recipientType === "multiple") {
+            payload.studentIds = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
+        } else if (recipientType === "class") {
+            payload.studentIds = studentsCache.filter(s => s.isMyClass).map(s => s._id);
+        } else if (recipientType === "otherGrade") {
+            payload.otherGrade = gradeSelect.value;
+        }
+
+        if (
+            (!payload.studentIds || payload.studentIds.length === 0) &&
+            !payload.otherGrade
+        ) {
+            showToast(translateText('select_at_least_one'), "error");
+            return;
+        }
+
+        addBtn.disabled = true;
+        addBtn.textContent = translateText('adding_points');
+
+        try {
+            const res = await fetchAPI("/teacher/add-points", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res && res.ok) {
+                showToast(translateText('points_added'), "success");
+                pointsInput.value = "";
+                reasonInput.value = "";
+                validateForm();
+            } else {
+                const data = await res.json();
+                showToast(data?.message || translateText('failed_add_points'), "error");
+            }
+        } catch (err) {
+            console.error("Add points error:", err);
+            showToast(translateText('network_error'), "error");
+        } finally {
+            addBtn.disabled = false;
+            addBtn.textContent = translateText('addPointsButton');
+        }
+    });
+
+    updateFormUI(formId);
+}
 
     window.onload = async () => {
         await checkAuth();
