@@ -125,7 +125,6 @@
             }, ${t("subjectLabel", "Subject")}: ${teacher.teacherSubject}`
           );
 
-          // Profile image with default fallback
           const img = document.createElement("img");
           img.src = teacher.imageUrl || "./images/default-avatar.png";
           img.alt = `${teacher.firstname || ""} ${teacher.lastname || ""}`;
@@ -137,7 +136,6 @@
             "flex-shrink-0"
           );
 
-          // Info container
           const infoDiv = document.createElement("div");
           infoDiv.classList.add("flex-1");
 

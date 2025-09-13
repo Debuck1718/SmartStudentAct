@@ -703,39 +703,37 @@
     }
 
     const payload = {
-      firstname: document.getElementById("firstname").value.trim(),
-      lastname: document.getElementById("lastname").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      phone: document.getElementById("phone").value.trim(),
-      occupation: occupation,
-      school: {
-        schoolName,
-        schoolCountry,
-      },
-    };
+  firstname: document.getElementById("firstname").value.trim(),
+  lastname: document.getElementById("lastname").value.trim(),
+  email: document.getElementById("email").value.trim(),
+  phone: document.getElementById("phone").value.trim(),
+  occupation,
+};
 
-    if (occupation === "student") {
-      payload.educationLevel = document.getElementById("educationLevel").value;
+if (occupation === "teacher" || occupation === "student") {
+  const schoolName = document.getElementById("schoolName").value.trim();
+  const schoolCountry = document.getElementById("schoolCountry").value.trim();
 
-      if (
-        payload.educationLevel === "junior" ||
-        payload.educationLevel === "high"
-      ) {
-        payload.grade = document.getElementById("grade").value;
-      } else if (payload.educationLevel === "university") {
-        payload.university = document.getElementById("university").value;
-        payload.uniLevel = document.getElementById("uniLevel").value;
-        payload.program = document.getElementById("program").value;
-      }
-    } else if (occupation === "teacher") {
-      payload.teacherGrade = document
-        .getElementById("teacherGrade")
-        .value.split(",")
-        .map((g) => g.trim())
-        .filter((g) => g !== ""); 
-      payload.teacherSubject =
-        document.getElementById("teacherSubject").value.trim();
-    }
+  payload.school = { schoolName, schoolCountry };
+}
+
+if (occupation === "student") {
+  payload.educationLevel = document.getElementById("educationLevel").value;
+  if (payload.educationLevel === "junior" || payload.educationLevel === "high") {
+    payload.grade = document.getElementById("grade").value;
+  } else if (payload.educationLevel === "university") {
+    payload.university = document.getElementById("university").value;
+    payload.uniLevel = document.getElementById("uniLevel").value;
+    payload.program = document.getElementById("program").value;
+  }
+} else if (occupation === "teacher") {
+  payload.teacherGrade = document
+    .getElementById("teacherGrade")
+    .value.split(",")
+    .map((g) => g.trim())
+    .filter((g) => g !== "");
+  payload.teacherSubject = document.getElementById("teacherSubject").value.trim();
+}
 
     try {
       const res = await fetch(`${API_BASE_URL}/profile`, {

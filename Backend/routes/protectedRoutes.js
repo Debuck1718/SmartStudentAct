@@ -454,9 +454,11 @@ protectedRouter.patch(
 
 protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select(
-      "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
-    );
+    const user = await User.findById(req.userId)
+      .populate("school", "schoolName schoolCountry") 
+      .select(
+        "firstname lastname email phone occupation school educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
+      );
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
@@ -469,10 +471,12 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
         email: user.email,
         phone: user.phone,
         occupation: user.occupation,
-        school: {
-          schoolName: user.schoolName || "",
-          schoolCountry: fromIsoCountryCode(user.schoolCountry) || "",
-        },
+        school: user.school
+          ? {
+              schoolName: user.school.schoolName,
+              schoolCountry: fromIsoCountryCode(user.school.schoolCountry),
+            }
+          : null,
         educationLevel: user.educationLevel,
         grade: user.grade,
         university: user.university,
@@ -489,17 +493,18 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
   }
 });
 
-
 protectedRouter.patch(
   "/profile",
   authenticateJWT,
   validate(settingsSchema),
   async (req, res) => {
     const userId = req.userId || req.body.userId;
-    let updateData = req.body;
+    let updateData = { ...req.body };
 
     if (!userId) {
-      return res.status(401).json({ message: "Authentication failed. User ID not found." });
+      return res
+        .status(401)
+        .json({ message: "Authentication failed. User ID not found." });
     }
 
     try {
@@ -521,27 +526,49 @@ protectedRouter.patch(
         updateData.program = undefined;
       }
 
-      // ✅ Normalize school (accepts ISO or full name)
       if (updateData.school) {
-        updateData.schoolName = updateData.school.schoolName;
-        updateData.schoolCountry = toIsoCountryCode(updateData.school.schoolCountry);
-        delete updateData.school;
+        const schoolName = updateData.school.schoolName?.trim();
+        const schoolCountry = updateData.school.schoolCountry
+          ? toIsoCountryCode(updateData.school.schoolCountry)
+          : null;
+
+        if (schoolName && schoolCountry) {
+          let schoolDoc = await School.findOne({
+            schoolName,
+            schoolCountry,
+          });
+
+          if (!schoolDoc) {
+            schoolDoc = await School.create({
+              schoolName,
+              schoolCountry,
+              tier: 1, 
+            });
+          }
+
+          updateData.school = schoolDoc._id;
+        } else {
+          delete updateData.school;
+        }
       }
 
-      // ✅ Ensure email is unique
       if (updateData.email && updateData.email !== user.email) {
         const existingUser = await User.findOne({ email: updateData.email });
         if (existingUser) {
-          return res.status(409).json({ message: "Email already in use." });
+          return res
+            .status(409)
+            .json({ message: "Email already in use." });
         }
       }
 
       const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
         new: true,
         runValidators: true,
-      }).select(
-        "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
-      );
+      })
+        .populate("school", "schoolName schoolCountry")
+        .select(
+          "firstname lastname email phone occupation school educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
+        );
 
       res.status(200).json({
         message: "Profile updated successfully.",
@@ -551,10 +578,12 @@ protectedRouter.patch(
           email: updatedUser.email,
           phone: updatedUser.phone,
           occupation: updatedUser.occupation,
-          school: {
-            schoolName: updatedUser.schoolName || "",
-            schoolCountry: fromIsoCountryCode(updatedUser.schoolCountry) || "",
-          },
+          school: updatedUser.school
+            ? {
+                schoolName: updatedUser.school.schoolName,
+                schoolCountry: fromIsoCountryCode(updatedUser.school.schoolCountry),
+              }
+            : null,
           educationLevel: updatedUser.educationLevel,
           grade: updatedUser.grade,
           university: updatedUser.university,
@@ -568,16 +597,23 @@ protectedRouter.patch(
     } catch (error) {
       if (error.name === "ValidationError") {
         const messages = Object.values(error.errors).map((val) => val.message);
-        return res.status(400).json({ message: "Validation failed", errors: messages });
+        return res
+          .status(400)
+          .json({ message: "Validation failed", errors: messages });
       }
       if (error.code === 11000) {
-        return res.status(409).json({ message: "A user with this data already exists." });
+        return res
+          .status(409)
+          .json({ message: "A user with this data already exists." });
       }
       logger.error("Error updating user profile:", error);
-      res.status(500).json({ message: "Server error", error: error.message });
+      res
+        .status(500)
+        .json({ message: "Server error", error: error.message });
     }
   }
 );
+
 
 protectedRouter.post(
   "/profile/upload-photo",
