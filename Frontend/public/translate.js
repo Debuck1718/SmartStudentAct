@@ -1,21 +1,21 @@
 
 const translationCache = {};
 
-async function translatePage(teachers, lang = "en") {
-  const filePath = `./locales/${teachers}.json`;
+async function translatePage(dashboardName, lang = "en") {
+  const filePath = `./locales/${dashboardName}.json`;
 
   try {
     let translations;
 
     // Cache translations so we don’t re-fetch
-    if (translationCache[teachers]) {
-      translations = translationCache[teachers];
+    if (translationCache[dashboardName]) {
+      translations = translationCache[dashboardName];
     } else {
       const response = await fetch(filePath);
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       translations = await response.json();
-      translationCache[teachers] = translations;
+      translationCache[dashboardName] = translations;
     }
 
     // Replace text content
@@ -42,7 +42,7 @@ async function translatePage(teachers, lang = "en") {
       }
     });
 
-    console.log(`Translations applied for ${teachers} in ${lang}`);
+    console.log(`Translations applied for ${dashboardName} in ${lang}`);
   } catch (error) {
     console.error("Error fetching or applying translations:", error);
   }
