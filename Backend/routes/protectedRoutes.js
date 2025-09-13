@@ -277,10 +277,11 @@ const settingsSchema = Joi.object({
 
   occupation: Joi.string().valid("student", "teacher").required(),
 
-  schoolName: Joi.string().max(100).required(),
-  schoolCountry: Joi.string().max(100).required(),
+  school: Joi.object({
+    schoolName: Joi.string().max(100).required(),
+    schoolCountry: Joi.string().max(100).required()
+  }).required(),
 
-  
   educationLevel: Joi.string()
     .valid("junior", "high", "university")
     .when("occupation", {
@@ -292,7 +293,7 @@ const settingsSchema = Joi.object({
   grade: Joi.number().integer().min(1).max(12).when("educationLevel", {
     is: Joi.valid("junior", "high"),
     then: Joi.required(),
-    otherwise: Joi.forbidden(), 
+    otherwise: Joi.forbidden(),
   }),
 
   university: Joi.string().max(150).when("educationLevel", {
@@ -311,7 +312,6 @@ const settingsSchema = Joi.object({
 
   program: Joi.string().max(100).optional(),
 
- 
   teacherGrade: Joi.array()
     .items(Joi.string())
     .when("occupation", {
@@ -328,6 +328,7 @@ const settingsSchema = Joi.object({
       otherwise: Joi.optional(),
     }),
 }).min(1);
+
 
 
 const passwordUpdateSchema = Joi.object({
