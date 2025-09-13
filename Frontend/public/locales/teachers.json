@@ -1,11 +1,11 @@
 {
   "dashboardTitle": {
-    "en": "Teacher Dashboard",
-    "fr": "Tableau de bord enseignant",
-    "es": "Panel de Profesor",
-    "tr": "Öğretmen Kontrol Paneli",
-    "ar": "لوحة تحكم المعلم",
-    "ru": "Панель учителя"
+    "en": "📚 Teacher Dashboard",
+    "fr": "📚 Tableau de bord enseignant",
+    "es": "📚 Panel de Profesor",
+    "tr": "📚 Öğretmen Kontrol Paneli",
+    "ar": "📚 لوحة تحكم المعلم",
+    "ru": "📚 Панель учителя"
   },
   "loadingMessage": {
     "en": "Loading teacher dashboard...",
@@ -350,5 +350,181 @@
     "tr": "Mesaj",
     "ar": "رسالة",
     "ru": "Сообщение"
+  },
+  "singleStudent": {
+    "en": "Single Student",
+    "fr": "Un Seul Étudiant",
+    "es": "Un solo estudiante",
+    "tr": "Tek Öğrenci",
+    "ar": "طالب واحد",
+    "ru": "Один студент"
+  },
+  "multipleStudents": {
+    "en": "Multiple Students",
+    "fr": "Plusieurs Étudiants",
+    "es": "Múltiples estudiantes",
+    "tr": "Birden Çok Öğrenci",
+    "ar": "عدة طلاب",
+    "ru": "Несколько студентов"
+  },
+  "entireClass": {
+    "en": "Entire Class",
+    "fr": "Toute la Classe",
+    "es": "Toda la clase",
+    "tr": "Tüm Sınıf",
+    "ar": "الصف بالكامل",
+    "ru": "Весь класс"
+  },
+  "otherGrade": {
+    "en": "Another Grade",
+    "fr": "Une Autre Classe",
+    "es": "Otro grado",
+    "tr": "Başka Bir Sınıf",
+    "ar": "صف آخر",
+    "ru": "Другой класс"
+  },
+  "selectRecipient": {
+    "en": "Select Recipient:",
+    "fr": "Sélectionner le Destinataire :",
+    "es": "Seleccionar destinatario:",
+    "tr": "Alıcı Seçin:",
+    "ar": "اختر المستلم:",
+    "ru": "Выберите получателя:"
+  },
+  "contact": {
+    "en": "📩 Contact",
+    "fr": "📩 Contact",
+    "es": "📩 Contacto",
+    "tr": "📩 İletişim",
+    "ar": "📩 تواصل",
+    "ru": "📩 Контакты"
+  },
+  "select_grade": {
+    "en": "Select Grade",
+    "fr": "Sélectionnez une classe",
+    "es": "Seleccionar grado",
+    "tr": "Sınıf Seçin",
+    "ar": "اختر الصف",
+    "ru": "Выберите класс"
+  },
+  "no_students": {
+    "en": "No students found.",
+    "fr": "Aucun étudiant trouvé.",
+    "es": "No se encontraron estudiantes.",
+    "tr": "Öğrenci bulunamadı.",
+    "ar": "لم يتم العثور على أي طالب.",
+    "ru": "Студенты не найдены."
+  },
+  "grade": {
+    "en": "Grade",
+    "fr": "Classe",
+    "es": "Grado",
+    "tr": "Sınıf",
+    "ar": "الصف",
+    "ru": "Класс"
+  },
+  "other_students": {
+    "en": "Other Students",
+    "fr": "Autres Étudiants",
+    "es": "Otros estudiantes",
+    "tr": "Diğer Öğrenciler",
+    "ar": "طلاب آخرون",
+    "ru": "Другие студенты"
+  },
+  "loading": {
+    "en": "Loading...",
+    "fr": "Chargement...",
+    "es": "Cargando...",
+    "tr": "Yükleniyor...",
+    "ar": "جارٍ التحميل...",
+    "ru": "Загрузка..."
+  },
+  "no_assigned_tasks": {
+    "en": "No assigned tasks.",
+    "fr": "Aucune tâche assignée.",
+    "es": "No hay tareas asignadas.",
+    "tr": "Atanmış görev yok.",
+    "ar": "لا توجد مهام معينة.",
+    "ru": "Нет назначенных заданий."
+  },
+  "failed_load_tasks": {
+    "en": "Failed to load assigned tasks.",
+    "fr": "Échec du chargement des tâches assignées.",
+    "es": "No se pudieron cargar las tareas asignadas.",
+    "tr": "Atanan görevler yüklenemedi.",
+    "ar": "فشل في تحميل المهام المعينة.",
+    "ru": "Не удалось загрузить назначенные задания."
+  },
+  "due": {
+    "en": "Due",
+    "fr": "Dû",
+    "es": "Vence",
+    "tr": "Son tarih",
+    "ar": "مستحق",
+    "ru": "Срок"
+  },
+  "no_feedback": {
+    "en": "No feedback found.",
+    "fr": "Aucun commentaire trouvé.",
+    "es": "No se encontraron comentarios.",
+    "tr": "Geri bildirim bulunamadı.",
+    "ar": "لم يتم العثور على ملاحظات.",
+    "ru": "Отзывы не найдены."
+  },
+  "failed_load_feedback": {
+    "en": "Failed to load feedback.",
+    "fr": "Échec du chargement des commentaires.",
+    "es": "No se pudieron cargar los comentarios.",
+    "tr": "Geri bildirim yüklenemedi.",
+    "ar": "فشل في تحميل الملاحظات.",
+    "ru": "Не удалось загрузить отзывы."
+  },
+  "no_overdue_tasks": {
+    "en": "No overdue tasks.",
+    "fr": "Aucune tâche en retard.",
+    "es": "No hay tareas atrasadas.",
+    "tr": "Gecikmiş görev yok.",
+    "ar": "لا توجد مهام متأخرة.",
+    "ru": "Нет просроченных заданий."
+  },
+  "failed_load_overdue": {
+    "en": "Failed to load overdue tasks.",
+    "fr": "Échec du chargement des tâches en retard.",
+    "es": "No se pudieron cargar las tareas atrasadas.",
+    "tr": "Gecikmiş görevler yüklenemedi.",
+    "ar": "فشل في تحميل المهام المتأخرة.",
+    "ru": "Не удалось загрузить просроченные задания."
+  },
+  "enter_academic_year": {
+    "en": "Please enter the academic year.",
+    "fr": "Veuillez entrer l'année académique.",
+    "es": "Por favor, introduzca el año académico.",
+    "tr": "Lütfen akademik yılı girin.",
+    "ar": "يرجى إدخال العام الأكاديمي.",
+    "ru": "Пожалуйста, введите учебный год."
+  },
+  "sendMessageTitle": {
+    "en": "💌 Send Message to Student",
+    "fr": "💌 Envoyer un message à l'élève",
+    "es": "💌 Enviar mensaje al estudiante",
+    "tr": "💌 Öğrenciye Mesaj Gönder",
+    "ar": "💌 إرسال رسالة إلى الطالب",
+    "ru": "💌 Отправить сообщение студенту"
+  },
+  "messageText": {
+    "en": "Message:",
+    "fr": "Message :",
+    "es": "Mensaje:",
+    "tr": "Mesaj:",
+    "ar": "رسالة:",
+    "ru": "Сообщение:"
+  },
+  "sendMessage": {
+    "en": "Send Message",
+    "fr": "Envoyer le message",
+    "es": "Enviar mensaje",
+    "tr": "Mesaj Gönder",
+    "ar": "إرسال رسالة",
+    "ru": "Отправить сообщение"
   }
 }
