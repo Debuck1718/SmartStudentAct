@@ -242,8 +242,8 @@ const paymentSuccessSchema = Joi.object({
 });
 
 const schoolSchema = Joi.object({
-  name: Joi.string().min(2).required(),
-  country: Joi.string().length(2).uppercase().required(),
+  schoolName: Joi.string().min(2).required(),
+  schoolCountry: Joi.string().length(2).uppercase().required(),
   tier: Joi.number().integer().min(1).required(),
 });
 
@@ -279,57 +279,67 @@ const settingsSchema = Joi.object({
 
   school: Joi.object({
     schoolName: Joi.string().max(100).required(),
-    schoolCountry: Joi.string().max(100).required()
+    schoolCountry: Joi.string().max(100).required(),
   }).required(),
 
-  educationLevel: Joi.string()
-    .valid("junior", "high", "university")
-    .when("occupation", {
-      is: "student",
-      then: Joi.required(),
-      otherwise: Joi.optional(),
-    }),
-
-  grade: Joi.number().integer().min(1).max(12).when("educationLevel", {
-    is: Joi.valid("junior", "high"),
-    then: Joi.required(),
+  // === Student-only fields ===
+  educationLevel: Joi.when("occupation", {
+    is: "student",
+    then: Joi.string()
+      .valid("junior", "high", "university")
+      .required(),
     otherwise: Joi.forbidden(),
   }),
 
-  university: Joi.string().max(150).when("educationLevel", {
-    is: "university",
-    then: Joi.required(),
-    otherwise: Joi.forbidden(),
-  }),
-
-  uniLevel: Joi.string()
-    .valid("100", "200", "300", "400")
-    .when("educationLevel", {
-      is: "university",
-      then: Joi.required(),
+  grade: Joi.when("occupation", {
+    is: "student",
+    then: Joi.when("educationLevel", {
+      is: Joi.valid("junior", "high"),
+      then: Joi.number().integer().min(1).max(12).required(),
       otherwise: Joi.forbidden(),
     }),
+    otherwise: Joi.forbidden(),
+  }),
 
-  program: Joi.string().max(100).optional(),
-
-  teacherGrade: Joi.array()
-    .items(Joi.string())
-    .when("occupation", {
-      is: "teacher",
-      then: Joi.required(),
-      otherwise: Joi.optional(),
+  university: Joi.when("occupation", {
+    is: "student",
+    then: Joi.when("educationLevel", {
+      is: "university",
+      then: Joi.string().max(150).required(),
+      otherwise: Joi.forbidden(),
     }),
+    otherwise: Joi.forbidden(),
+  }),
 
-  teacherSubject: Joi.string()
-    .max(100)
-    .when("occupation", {
-      is: "teacher",
-      then: Joi.required(),
-      otherwise: Joi.optional(),
+  uniLevel: Joi.when("occupation", {
+    is: "student",
+    then: Joi.when("educationLevel", {
+      is: "university",
+      then: Joi.string().valid("100", "200", "300", "400").required(),
+      otherwise: Joi.forbidden(),
     }),
+    otherwise: Joi.forbidden(),
+  }),
+
+  program: Joi.when("occupation", {
+    is: "student",
+    then: Joi.string().max(100).optional(),
+    otherwise: Joi.forbidden(),
+  }),
+
+  // === Teacher-only fields ===
+  teacherGrade: Joi.when("occupation", {
+    is: "teacher",
+    then: Joi.array().items(Joi.string()).required(),
+    otherwise: Joi.forbidden(),
+  }),
+
+  teacherSubject: Joi.when("occupation", {
+    is: "teacher",
+    then: Joi.string().max(100).required(),
+    otherwise: Joi.forbidden(),
+  }),
 }).min(1);
-
-
 
 const passwordUpdateSchema = Joi.object({
   currentPassword: Joi.string().required(),
