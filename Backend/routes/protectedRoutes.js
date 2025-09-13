@@ -1200,7 +1200,30 @@ protectedRouter.post(
   async (req, res) => {
     try {
       const teacherId = req.user.id;
-      const { title, description, due_date, assigned_to_users, assigned_to_grades, assigned_to_levels, assigned_to_programs, assigned_to_schools } = req.body;
+      const {
+        title,
+        description,
+        due_date,
+        assigned_to_users,
+        assigned_to_grades,
+        assigned_to_programs,
+        assigned_to_schools,
+        assigned_to_other_grades, // New field for other grades
+      } = req.body;
+
+      // New validation logic to handle different assignment targets
+      if (
+        !assigned_to_users &&
+        !assigned_to_grades &&
+        !assigned_to_programs &&
+        !assigned_to_schools &&
+        !assigned_to_other_grades
+      ) {
+        return res.status(400).json({
+          message:
+            "Assignment must be assigned to at least one user, grade, program, or school.",
+        });
+      }
 
       const newAssignment = new Assignment({
         teacher_id: teacherId,
@@ -1210,20 +1233,22 @@ protectedRouter.post(
         due_date,
         assigned_to_users: assigned_to_users || [],
         assigned_to_grades: assigned_to_grades || [],
-        assigned_to_levels: assigned_to_levels || [],
         assigned_to_programs: assigned_to_programs || [],
         assigned_to_schools: assigned_to_schools || [],
+        assigned_to_other_grades: assigned_to_other_grades || [],
       });
 
       await newAssignment.save();
-      res.status(201).json({ message: "Assignment created successfully", assignment: newAssignment });
+      res.status(201).json({
+        message: "Assignment created successfully",
+        assignment: newAssignment,
+      });
     } catch (error) {
       logger.error("Error creating assignment:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
-
 
 protectedRouter.get(
   "/teacher/assignments",
@@ -1300,7 +1325,32 @@ protectedRouter.post(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const { title, description, due_date, timeLimitMinutes, questions, assigned_to_users, assigned_to_grades, assigned_to_programs, assigned_to_schools } = req.body;
+      const {
+        title,
+        description,
+        due_date,
+        timeLimitMinutes,
+        questions,
+        assigned_to_users,
+        assigned_to_grades,
+        assigned_to_programs,
+        assigned_to_schools,
+        assigned_to_other_grades, // New field for other grades
+      } = req.body;
+
+      // New validation logic to handle different assignment targets
+      if (
+        !assigned_to_users &&
+        !assigned_to_grades &&
+        !assigned_to_programs &&
+        !assigned_to_schools &&
+        !assigned_to_other_grades
+      ) {
+        return res.status(400).json({
+          message:
+            "Quiz must be assigned to at least one user, grade, program, or school.",
+        });
+      }
 
       const quiz = new Quiz({
         teacher_id: req.user.id,
@@ -1313,17 +1363,19 @@ protectedRouter.post(
         assigned_to_grades: assigned_to_grades || [],
         assigned_to_programs: assigned_to_programs || [],
         assigned_to_schools: assigned_to_schools || [],
+        assigned_to_other_grades: assigned_to_other_grades || [],
       });
 
       await quiz.save();
-      res.status(201).json({ message: "Quiz created successfully", quiz });
+      res
+        .status(201)
+        .json({ message: "Quiz created successfully", quiz });
     } catch (error) {
       logger.error("Error creating quiz:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
-
 
 protectedRouter.get(
   "/teacher/overdue-tasks",

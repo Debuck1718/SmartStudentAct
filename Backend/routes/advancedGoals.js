@@ -49,37 +49,66 @@ const goalUpdateSchema = Joi.object({
     points: Joi.number().integer().min(0).optional()
 });
 
+// New Joi schema for the add-points route
+const addPointsSchema = Joi.object({
+  points: Joi.number().integer().required(),
+  reason: Joi.string().required(),
+  studentIds: Joi.array().items(Joi.string().alphanum().length(24)).optional(),
+  grade: Joi.string().optional(),
+  program: Joi.string().optional(),
+  otherGrade: Joi.string().optional(),
+}).oxor('studentIds', 'grade', 'program', 'otherGrade'); // Ensures only one of these fields is present
 
-async function grantReward({ userId, type, points, description, source = 'System', grantedBy = null }) {
+async function grantReward({ userIds, type, points, description, source = 'System', grantedBy = null }) {
+    if (!userIds || userIds.length === 0) {
+        logger.warn('No user IDs provided to grantReward function.');
+        return;
+    }
+
     try {
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { $inc: { smart_points: points || 0 } },
-            { new: true }
-        );
+        const parsedPoints = parseInt(points, 10);
+        if (isNaN(parsedPoints)) {
+            logger.error('Invalid points value provided to grantReward.');
+            return;
+        }
 
-        if (!updatedUser) return;
+        // Loop through each user ID and grant the reward
+        for (const userId of userIds) {
+            const updatedUser = await User.findByIdAndUpdate(
+                userId,
+                { $inc: { smart_points: parsedPoints } },
+                { new: true }
+            );
 
-        let studentRewards = await StudentRewards.findOne({ studentId: userId });
-        if (studentRewards) {
+            if (!updatedUser) {
+                logger.warn(`User with ID ${userId} not found, skipping.`);
+                continue;
+            }
+
+            let studentRewards = await StudentRewards.findOne({ studentId: userId });
+            if (!studentRewards) {
+                studentRewards = new StudentRewards({ studentId: userId, pointsLog: [] });
+            }
+
             studentRewards.pointsLog.push({
-                points,
+                points: parsedPoints,
                 source,
                 description,
                 date: new Date()
             });
             await studentRewards.save();
+
+            const reward = new Reward({
+                user_id: userId,
+                type,
+                points: parsedPoints,
+                description,
+                granted_by: grantedBy
+            });
+            await reward.save();
         }
 
-        const reward = new Reward({
-            user_id: userId,
-            type,
-            points,
-            description,
-            granted_by: grantedBy
-        });
-        await reward.save();
-
+        logger.info(`Successfully granted ${parsedPoints} points to ${userIds.length} users.`);
     } catch (err) {
         logger.error('Error in grantReward helper:', err);
     }
@@ -304,42 +333,54 @@ router.post(
     hasRole(["teacher", "admin"]),
     async (req, res) => {
         try {
-            const { studentId, points, reason } = req.body;
-
-            if (!studentId || points === undefined || !reason) {
-                return res.status(400).json({ message: "Missing required fields." });
-            }
-
-            const student = await User.findById(studentId);
-            if (!student) {
-                return res.status(404).json({ message: "Student not found." });
-            }
-
-            await User.findByIdAndUpdate(student._id, {
-                $inc: { smart_points: parseInt(points, 10) },
-            });
-
-            let studentRewards = await StudentRewards.findOne({ studentId: student._id });
-            if (!studentRewards) {
-                studentRewards = new StudentRewards({
-                    studentId: student._id,
-                    pointsLog: [],
+            // Validate with Joi schema
+            const { error, value } = addPointsSchema.validate(req.body);
+            if (error) {
+                return res.status(400).json({
+                    status: 'Validation Error',
+                    message: error.details[0].message
                 });
+            }
+
+            const { points, reason, studentIds, grade, program, otherGrade } = value;
+            let studentsToUpdate = [];
+
+            if (studentIds) {
+                // Find students by an array of IDs
+                const students = await User.find({ _id: { $in: studentIds } });
+                studentsToUpdate = students.map(s => s._id);
+            } else if (grade) {
+                // Find students by an entire grade
+                const students = await User.find({ grade: grade, role: "student" });
+                studentsToUpdate = students.map(s => s._id);
+            } else if (program) {
+                // Find students by program
+                const students = await User.find({ program: program, role: "student" });
+                studentsToUpdate = students.map(s => s._id);
+            } else if (otherGrade) {
+                // Find students in another grade
+                const students = await User.find({ grade: otherGrade, role: "student" });
+                studentsToUpdate = students.map(s => s._id);
+            }
+
+            if (studentsToUpdate.length === 0) {
+                return res.status(404).json({ message: "No students found for the given criteria." });
             }
 
             const sourceRole = req.user.role === "admin" ? "Admin" : "Teacher";
 
-            studentRewards.pointsLog.push({
-                points,
-                source: sourceRole,
+            // Call the updated grantReward function
+            await grantReward({
+                userIds: studentsToUpdate,
+                type: 'teacher_grant',
+                points: points,
                 description: reason,
-                date: new Date(),
+                source: sourceRole,
+                grantedBy: req.user.id
             });
 
-            await studentRewards.save();
-
             res.status(200).json({
-                message: `Successfully added ${points} points to ${student.firstname}.`,
+                message: `Successfully added ${points} points to ${studentsToUpdate.length} students.`,
             });
         } catch (error) {
             logger.error("Error adding points:", error);
