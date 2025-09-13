@@ -128,7 +128,7 @@
 
   <div id="toast" class="message-box"></div>
 
-  <script>
+<script>
   const API_BASE_URL = "https://api.smartstudentact.com/api";
   let currentLang = localStorage.getItem("lang") || "en";
   let userData = {};
@@ -145,17 +145,44 @@
     try {
       const res = await fetch(`${API_BASE_URL}/profile`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch profile");
-      userData = await res.json();
+      const data = await res.json();
+      userData = data.user || {};
 
+      // Avatar & Basic Info
       $("avatar").src =
         userData.profile_picture_url ||
         "https://placehold.co/128x128/e5e7eb/111?text=👤";
       $("profile-name").textContent = `${userData.firstname || ""} ${userData.lastname || ""}`;
       $("profile-role").textContent = userData.occupation || "";
 
+      // Basic fields
       ["firstname", "lastname", "email", "phone", "occupation"].forEach((k) => {
         if ($(k)) $(k).value = userData[k] ?? "";
       });
+
+      // School
+      if (userData.school) {
+        $("schoolName").value = userData.school.schoolName || "";
+        $("schoolCountry").value = userData.school.schoolCountry || "";
+      }
+
+      // Student fields
+      if (userData.occupation === "student") {
+        $("educationLevel").value = userData.educationLevel || "";
+        $("grade").value = userData.grade || "";
+
+        if (userData.educationLevel === "university") {
+          $("university").value = userData.university || "";
+          $("uniLevel").value = userData.uniLevel || "";
+          $("program").value = userData.program || "";
+        }
+      }
+
+      // Teacher fields
+      if (userData.occupation === "teacher") {
+        $("teacherGrade").value = (userData.teacherGrade || []).join(", ");
+        $("teacherSubject").value = userData.teacherSubject || "";
+      }
 
       toggleSections(userData.occupation);
     } catch (err) {
@@ -170,15 +197,40 @@
     e.preventDefault();
     $("spinner").classList.remove("hidden");
 
+    const occupation = $("occupation").value;
+
     const payload = {
       firstname: $("firstname").value.trim(),
       lastname: $("lastname").value.trim(),
+      email: $("email").value.trim(),
       phone: $("phone").value.trim(),
+      occupation: occupation,
+      school: {
+        schoolName: $("schoolName").value.trim(),
+        schoolCountry: $("schoolCountry").value.trim(),
+      },
     };
+
+    if (occupation === "student") {
+      payload.educationLevel = $("educationLevel").value;
+      if (payload.educationLevel === "junior" || payload.educationLevel === "high") {
+        payload.grade = $("grade").value;
+      } else if (payload.educationLevel === "university") {
+        payload.university = $("university").value;
+        payload.uniLevel = $("uniLevel").value;
+        payload.program = $("program").value;
+      }
+    } else if (occupation === "teacher") {
+      payload.teacherGrade = $("teacherGrade")
+        .value.split(",")
+        .map((g) => g.trim())
+        .filter((g) => g);
+      payload.teacherSubject = $("teacherSubject").value;
+    }
 
     try {
       const res = await fetch(`${API_BASE_URL}/profile`, {
-        method: "PATCH", 
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(payload),

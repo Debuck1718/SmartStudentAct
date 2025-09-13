@@ -687,60 +687,71 @@
 
 
       document
-        .getElementById("saveProfileBtn")
-        .addEventListener("click", async () => {
-          const occupation = document.getElementById("occupation").value;
+  .getElementById("saveProfileBtn")
+  .addEventListener("click", async () => {
+    const occupation = document.getElementById("occupation").value;
 
-          const payload = {
-            firstname: document.getElementById("firstname").value,
-            lastname: document.getElementById("lastname").value,
-            email: document.getElementById("email").value,
-            phone: document.getElementById("phone").value,
-            occupation: occupation,
-            school: {
-              schoolName: document.getElementById("schoolName").value,
-              schoolCountry: document.getElementById("schoolCountry").value,
-            },
-          };
+    const schoolName = document.getElementById("schoolName").value.trim();
+    const schoolCountry = document.getElementById("schoolCountry").value.trim();
 
-          if (occupation === "student") {
-            payload.educationLevel =
-              document.getElementById("educationLevel").value;
+    if (
+      (occupation === "teacher" || occupation === "student") &&
+      (!schoolName || !schoolCountry)
+    ) {
+      showToast("❌ Please fill in both School Name and School Country", "error");
+      return;
+    }
 
-            if (
-              payload.educationLevel === "junior" ||
-              payload.educationLevel === "high"
-            ) {
-              payload.grade = document.getElementById("grade").value;
-            } else if (payload.educationLevel === "university") {
-              payload.university = document.getElementById("university").value;
-              payload.uniLevel = document.getElementById("uniLevel").value;
-              payload.program = document.getElementById("program").value;
-            }
-          } else if (occupation === "teacher") {
-            payload.teacherGrade = document
-              .getElementById("teacherGrade")
-              .value.split(",")
-              .map((g) => g.trim());
-            payload.teacherSubject =
-              document.getElementById("teacherSubject").value;
-          }
+    const payload = {
+      firstname: document.getElementById("firstname").value.trim(),
+      lastname: document.getElementById("lastname").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
+      occupation: occupation,
+      school: {
+        schoolName,
+        schoolCountry,
+      },
+    };
 
-          try {
-            const res = await fetch(`${API_BASE_URL}/profile`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify(payload),
-            });
-            const data = await res.json();
-            if (!res.ok)
-              throw new Error(data.message || "Failed to update profile");
-            showToast("✅ Profile updated successfully", "success");
-          } catch (err) {
-            showToast(err.message, "error");
-          }
-        });
+    if (occupation === "student") {
+      payload.educationLevel = document.getElementById("educationLevel").value;
+
+      if (
+        payload.educationLevel === "junior" ||
+        payload.educationLevel === "high"
+      ) {
+        payload.grade = document.getElementById("grade").value;
+      } else if (payload.educationLevel === "university") {
+        payload.university = document.getElementById("university").value;
+        payload.uniLevel = document.getElementById("uniLevel").value;
+        payload.program = document.getElementById("program").value;
+      }
+    } else if (occupation === "teacher") {
+      payload.teacherGrade = document
+        .getElementById("teacherGrade")
+        .value.split(",")
+        .map((g) => g.trim())
+        .filter((g) => g !== ""); 
+      payload.teacherSubject =
+        document.getElementById("teacherSubject").value.trim();
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.message || "Failed to update profile");
+      showToast("✅ Profile updated successfully", "success");
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
 
       document
         .getElementById("submitPasswordBtn")
