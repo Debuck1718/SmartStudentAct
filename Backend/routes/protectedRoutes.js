@@ -494,92 +494,99 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
 });
 
 protectedRouter.patch("/profile", authenticateJWT, validate(settingsSchema), async (req, res) => {
-  const userId = req.userId || req.body.userId;
-  let updateData = req.body;
+  const userId = req.userId || req.body.userId;
+  let updateData = req.body;
 
-  if (!userId) {
-    return res.status(401).json({ message: "Authentication failed. User ID not found." });
-  }
+  if (!userId) {
+    return res.status(401).json({ message: "Authentication failed. User ID not found." });
+  }
 
-  try {
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found." });
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
 
-    const currentOccupation = updateData.occupation || user.occupation;
+    const currentOccupation = updateData.occupation || user.occupation;
 
-    // Clear irrelevant fields
-    if (currentOccupation === "student") {
-      updateData.teacherGrade = undefined;
-      updateData.teacherSubject = undefined;
-    } else if (currentOccupation === "teacher") {
-      updateData.educationLevel = undefined;
-      updateData.grade = undefined;
-      updateData.university = undefined;
-      updateData.uniLevel = undefined;
-      updateData.program = undefined;
-    }
+    // Clear irrelevant fields
+    if (currentOccupation === "student") {
+      updateData.teacherGrade = undefined;
+      updateData.teacherSubject = undefined;
+    } else if (currentOccupation === "teacher" || currentOccupation === "admin") {
+      updateData.educationLevel = undefined;
+      updateData.grade = undefined;
+      updateData.university = undefined;
+      updateData.uniLevel = undefined;
+      updateData.program = undefined;
+    }
 
-    // ✅ Handle School reference
-    if (updateData.school) {
-      const { schoolName, schoolCountry, tier = 1 } = updateData.school;
-      const isoCountry = toIsoCountryCode(schoolCountry);
+    // Handle School reference
+    if (currentOccupation === "student" || currentOccupation === "teacher" || currentOccupation === "admin") {
+      if (!updateData.school || !updateData.school.schoolName || !updateData.school.schoolCountry) {
+        return res.status(400).json({ message: "School name and country are required for this occupation." });
+      }
+      const { schoolName, schoolCountry, tier = 1 } = updateData.school;
+      const isoCountry = toIsoCountryCode(schoolCountry);
 
-      let schoolDoc = await School.findOne({ schoolName, schoolCountry: isoCountry });
-      if (!schoolDoc) {
-        schoolDoc = await School.create({ schoolName, schoolCountry: isoCountry, tier });
-      }
-      updateData.school = schoolDoc._id;
-    }
+      let schoolDoc = await School.findOne({ schoolName, schoolCountry: isoCountry });
+      if (!schoolDoc) {
+        schoolDoc = await School.create({ schoolName, schoolCountry: isoCountry, tier });
+      }
+      updateData.school = schoolDoc._id;
+    } else {
+      // If occupation is not student, teacher, or admin, remove the school field
+      updateData.school = undefined;
+    }
 
-    // ✅ Ensure email is unique
-    if (updateData.email && updateData.email !== user.email) {
-      const existingUser = await User.findOne({ email: updateData.email });
-      if (existingUser) {
-        return res.status(409).json({ message: "Email already in use." });
-      }
-    }
+    // ... rest of the logic is unchanged
+    // ✅ Ensure email is unique
+    if (updateData.email && updateData.email !== user.email) {
+      const existingUser = await User.findOne({ email: updateData.email });
+      if (existingUser) {
+        return res.status(409).json({ message: "Email already in use." });
+      }
+    }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
-      new: true,
-      runValidators: true,
-    }).populate("school");
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+      runValidators: true,
+    }).populate("school");
 
-    res.status(200).json({
-      message: "Profile updated successfully.",
-      user: {
-        firstname: updatedUser.firstname,
-        lastname: updatedUser.lastname,
-        email: updatedUser.email,
-        phone: updatedUser.phone,
-        occupation: updatedUser.occupation,
-        school: updatedUser.school
-          ? {
-              schoolName: updatedUser.school.schoolName,
-              schoolCountry: fromIsoCountryCode(updatedUser.school.schoolCountry),
-              tier: updatedUser.school.tier,
-            }
-          : null,
-        educationLevel: updatedUser.educationLevel,
-        grade: updatedUser.grade,
-        university: updatedUser.university,
-        uniLevel: updatedUser.uniLevel,
-        program: updatedUser.program,
-        teacherGrade: updatedUser.teacherGrade,
-        teacherSubject: updatedUser.teacherSubject,
-        profile_picture_url: updatedUser.profile_picture_url,
-      },
-    });
-  } catch (error) {
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((val) => val.message);
-      return res.status(400).json({ message: "Validation failed", errors: messages });
-    }
-    if (error.code === 11000) {
-      return res.status(409).json({ message: "A user with this data already exists." });
-    }
-    logger.error("Error updating user profile:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
+    res.status(200).json({
+      message: "Profile updated successfully.",
+      user: {
+        firstname: updatedUser.firstname,
+        lastname: updatedUser.lastname,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        occupation: updatedUser.occupation,
+        school: updatedUser.school
+          ? {
+              schoolName: updatedUser.school.schoolName,
+              schoolCountry: fromIsoCountryCode(updatedUser.school.schoolCountry),
+              tier: updatedUser.school.tier,
+            }
+          : null,
+        educationLevel: updatedUser.educationLevel,
+        grade: updatedUser.grade,
+        university: updatedUser.university,
+        uniLevel: updatedUser.uniLevel,
+        program: updatedUser.program,
+        teacherGrade: updatedUser.teacherGrade,
+        teacherSubject: updatedUser.teacherSubject,
+        profile_picture_url: updatedUser.profile_picture_url,
+      },
+    });
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((val) => val.message);
+      return res.status(400).json({ message: "Validation failed", errors: messages });
+    }
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "A user with this data already exists." });
+    }
+    logger.error("Error updating user profile:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 });
 
 
