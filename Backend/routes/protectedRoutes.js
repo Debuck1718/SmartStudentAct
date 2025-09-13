@@ -481,28 +481,27 @@ protectedRouter.patch(
         return res.status(404).json({ message: "User not found." });
       }
 
-      // 1. Conditionally filter the updateData based on the user's occupation.
-      // This prevents saving of forbidden fields.
+      
       const currentOccupation = updateData.occupation || user.occupation;
 
+      
       if (currentOccupation === "student") {
-        updateData = {
-          ...updateData,
-          teacherGrade: undefined,
-          teacherSubject: undefined,
-        };
+        updateData.teacherGrade = undefined;
+        updateData.teacherSubject = undefined;
       } else if (currentOccupation === "teacher") {
-        updateData = {
-          ...updateData,
-          educationLevel: undefined,
-          grade: undefined,
-          university: undefined,
-          uniLevel: undefined,
-          program: undefined,
-        };
+        updateData.educationLevel = undefined;
+        updateData.grade = undefined;
+        updateData.university = undefined;
+        updateData.uniLevel = undefined;
+        updateData.program = undefined;
       }
 
-      // 2. Check for email uniqueness if the email is being updated.
+      if (updateData.school) {
+        updateData.schoolName = updateData.school.schoolName;
+        updateData.schoolCountry = updateData.school.schoolCountry;
+        delete updateData.school; 
+      }
+
       if (updateData.email && updateData.email !== user.email) {
         const existingUser = await User.findOne({ email: updateData.email });
         if (existingUser) {
@@ -517,11 +516,6 @@ protectedRouter.patch(
         "firstname lastname email phone occupation schoolName schoolCountry educationLevel grade university uniLevel program teacherGrade teacherSubject profile_picture_url"
       );
 
-      if (!updatedUser) {
-        logger.warn(`User with ID ${userId} not found during profile update.`);
-        return res.status(404).json({ message: "User not found." });
-      }
-
       res.status(200).json({
         message: "Profile updated successfully.",
         user: {
@@ -530,8 +524,10 @@ protectedRouter.patch(
           email: updatedUser.email,
           phone: updatedUser.phone,
           occupation: updatedUser.occupation,
-          schoolName: updatedUser.schoolName,
-          schoolCountry: updatedUser.schoolCountry,
+          school: {
+            schoolName: updatedUser.schoolName,
+            schoolCountry: updatedUser.schoolCountry,
+          },
           educationLevel: updatedUser.educationLevel,
           grade: updatedUser.grade,
           university: updatedUser.university,
