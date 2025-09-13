@@ -1,40 +1,24 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const User = require('./models/User');
+const School = require('./models/School');
 
-const MONGODB_URI = "mongodb+srv://Smartstudentadmin:IAjFedj31EADYiZQ@cluster0.qtnlydx.mongodb.net/smartstudentact?retryWrites=true&w=majority";
-
-async function listAllUsers() {
+(async () => {
   try {
-    await mongoose.connect(MONGODB_URI);
-    console.log("Database connected successfully.\n");
+    await mongoose.connect(process.env.MONGODB_URI);
 
-    const users = await User.find({}).lean();
+    const schools = await School.find({}, { schoolName: 1, schoolCountry: 1, _id: 0 }).limit(10);
+    console.log('Sample schools:', schools);
 
-    if (users.length === 0) {
-      console.log("No users found in the database.");
-    } else {
-      console.log(`Found ${users.length} users:\n`);
-      users.forEach((user, index) => {
-        console.log(
-          `${index + 1}. Name: ${user.firstname || "N/A"} ${user.lastname || ""} | ` +
-          `Email: ${user.email || "N/A"} | ` +
-          `_id: ${user._id} | ` +
-          `School: ${user.school || "N/A"} | ` +
-          `Role: ${user.role || "N/A"}`
-        );
-      });
-    }
-
+    process.exit();
   } catch (err) {
-    console.error("Error:", err);
-  } finally {
-    await mongoose.disconnect();
-    console.log("\nDatabase connection closed.");
+    console.error(err);
+    process.exit(1);
   }
-}
+})();
 
-listAllUsers();
+
+
+
 
 
 

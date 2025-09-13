@@ -141,7 +141,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// --- Password hashing ---
+
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   if (this._rawPassword) {
@@ -167,7 +167,7 @@ userSchema.methods.setRawHashedPassword = function (hashedPassword) {
   this.password = hashedPassword;
 };
 
-// Remove sensitive fields when converting to JSON
+
 userSchema.set("toJSON", {
   transform: function (doc, ret) {
     delete ret.password;

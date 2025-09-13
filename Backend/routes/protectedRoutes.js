@@ -311,7 +311,7 @@ const settingsSchema = Joi.object({
 
   program: Joi.string().max(100).optional(),
 
-  // Teachers
+ 
   teacherGrade: Joi.array()
     .items(Joi.string())
     .when("occupation", {

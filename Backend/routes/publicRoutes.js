@@ -214,13 +214,13 @@ module.exports = (eventBus) => {
           });
         } else {
           let school = await School.findOne({
-            name: decoded.schoolName?.trim(),
+            schoolName: decoded.schoolName?.trim(),
             schoolCountry: decoded.schoolCountry?.toUpperCase(),
           });
 
           if (!school) {
             school = new School({
-              name: decoded.schoolName?.trim() || "Unknown School",
+              schoolName: decoded.schoolName?.trim() || "Unknown School",
               schoolCountry: decoded.schoolCountry?.toUpperCase() || "UNKNOWN",
               tier: 1,
             });
