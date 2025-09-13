@@ -1,55 +1,49 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const User = require('./models/User');
-const School = require('./models/School');
+// fillMissingUserSchoolInfo.js
+const mongoose = require("mongoose");
+const User = require("./models/User");
+const School = require("./models/School");
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://Smartstudentadmin:IAjFedj31EADYiZQ@cluster0.qtnlydx.mongodb.net/smartstudentact?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGODB_URI || "mongodb+srv://Smartstudentadmin:IAjFedj31EADYiZQ@cluster0.qtnlydx.mongodb.net/smartstudentact?retryWrites=true&w=majority";
 
-async function fixSchoolsAndUsers() {
+async function fillUserSchoolInfo() {
   try {
-    await mongoose.connect(MONGODB_URI);
-    console.log("Database connected successfully.");
+    await mongoose.connect(MONGO_URI);
+    console.log("✅ Database connected");
 
-    // Step 1: Update schools with the correct schoolName
-    const schoolUpdates = [
-      { _id: '68c0aa46f7292157143db603', schoolName: 'Nabes International School' },
-      { _id: '68c1d10fbcf3275501b57132', schoolName: 'Openlabs gh' }
-    ];
+    const users = await User.find({ $or: [{ schoolName: { $exists: false } }, { schoolCountry: { $exists: false } }] });
+    console.log(`Found ${users.length} users with missing school info.`);
 
-    for (let s of schoolUpdates) {
-      const school = await School.findById(s._id);
-      if (school) {
-        school.schoolName = s.schoolName;
-        await school.save();
-        console.log(`Updated school ${s._id} with schoolName: ${s.schoolName}`);
-      } else {
-        console.log(`School ${s._id} not found.`);
+    let updatedCount = 0;
+
+    for (const user of users) {
+      if (!user.school) {
+        console.log(`⚠️ Skipping ${user.email}: no school reference`);
+        continue;
       }
-    }
 
-    // Step 2: Update users with schoolName from linked school
-    const users = await User.find({ school: { $exists: true, $ne: null } });
-    for (let user of users) {
       const school = await School.findById(user.school);
-      if (school) {
-        user.schoolName = school.schoolName;
-        await user.save();
-        console.log(`Updated user ${user.email} with schoolName: ${school.schoolName}`);
-      } else {
-        console.log(`User ${user.email} has linked school ID ${user.school} which was not found`);
+      if (!school) {
+        console.log(`⚠️ Skipping ${user.email}: school ID ${user.school} not found`);
+        continue;
       }
+
+      user.schoolName = school.schoolName;
+      user.schoolCountry = school.schoolCountry;
+      await user.save();
+      updatedCount++;
+      console.log(`✅ Updated ${user.email} with school info: ${school.schoolName}, ${school.schoolCountry}`);
     }
 
+    console.log(`\n🎯 Done! Updated ${updatedCount} users.`);
   } catch (err) {
-    console.error("Error:", err);
+    console.error("❌ Error updating users:", err);
   } finally {
     await mongoose.disconnect();
-    console.log("Database connection closed.");
+    console.log("🔒 Database connection closed");
   }
 }
 
-fixSchoolsAndUsers();
-
+fillUserSchoolInfo();
 
 
 
