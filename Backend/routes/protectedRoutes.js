@@ -469,12 +469,10 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
         email: user.email,
         phone: user.phone,
         occupation: user.occupation,
-        school: user.schoolName
-          ? {
-              schoolName: user.schoolName,
-              schoolCountry: fromIsoCountryCode(user.schoolCountry), // ✅ human-readable
-            }
-          : null,
+        school: {
+          schoolName: user.schoolName || "",
+          schoolCountry: fromIsoCountryCode(user.schoolCountry) || "",
+        },
         educationLevel: user.educationLevel,
         grade: user.grade,
         university: user.university,
@@ -490,7 +488,6 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-
 
 
 protectedRouter.patch(
@@ -524,13 +521,14 @@ protectedRouter.patch(
         updateData.program = undefined;
       }
 
-      // ✅ Normalize school
+      // ✅ Normalize school (accepts ISO or full name)
       if (updateData.school) {
         updateData.schoolName = updateData.school.schoolName;
         updateData.schoolCountry = toIsoCountryCode(updateData.school.schoolCountry);
         delete updateData.school;
       }
 
+      // ✅ Ensure email is unique
       if (updateData.email && updateData.email !== user.email) {
         const existingUser = await User.findOne({ email: updateData.email });
         if (existingUser) {
@@ -554,8 +552,8 @@ protectedRouter.patch(
           phone: updatedUser.phone,
           occupation: updatedUser.occupation,
           school: {
-            schoolName: updatedUser.schoolName,
-            schoolCountry: updatedUser.schoolCountry, // now ISO code
+            schoolName: updatedUser.schoolName || "",
+            schoolCountry: fromIsoCountryCode(updatedUser.schoolCountry) || "",
           },
           educationLevel: updatedUser.educationLevel,
           grade: updatedUser.grade,
@@ -580,7 +578,6 @@ protectedRouter.patch(
     }
   }
 );
-
 
 protectedRouter.post(
   "/profile/upload-photo",

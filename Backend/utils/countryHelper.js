@@ -1,20 +1,24 @@
+// ✅ utils/countryHelpers.js
 const countries = require("i18n-iso-countries");
+
 countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
 
-function toIsoCountryCode(countryInput) {
-  if (!countryInput) return null;
+function toIsoCountryCode(input) {
+  if (!input) return "";
+  const upper = input.toUpperCase();
 
-  // If already ISO code
-  if (
-    countryInput.length === 2 &&
-    countries.isValid(countryInput.toUpperCase())
-  ) {
-    return countryInput.toUpperCase();
-  }
+  
+  if (countries.isValid(upper)) return upper;
 
-  // Convert from full country name → ISO code
-  const code = countries.getAlpha2Code(countryInput, "en");
-  return code || countryInput; // fallback if not found
+  
+  const code = countries.getAlpha2Code(input, "en");
+  return code || input; 
 }
 
-module.exports = { toIsoCountryCode };
+function fromIsoCountryCode(iso) {
+  if (!iso) return "";
+  return countries.getName(iso, "en") || iso;
+}
+
+module.exports = { toIsoCountryCode, fromIsoCountryCode };
+
