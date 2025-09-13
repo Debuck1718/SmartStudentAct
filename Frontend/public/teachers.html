@@ -344,198 +344,198 @@
 
     <script src="translate.js"></script>
 <script>
-const API_BASE_URL = "https://api.smartstudentact.com/api";
-let translations = {};
-let currentLang = "en";
-let studentsCache = [];
+    const API_BASE_URL = "https://api.smartstudentact.com/api";
+    let translations = {};
+    let currentLang = "en";
+    let studentsCache = [];
 
-// Load translations from teachers.json
-async function loadTranslations(lang = "en") {
-    try {
-        const res = await fetch(`/locales/teachers.json`);
-        if (!res.ok) throw new Error("Failed to load translations");
-        const allTranslations = await res.json();
-        translations = allTranslations[lang] || {};
-    } catch (err) {
-        console.error("Translation load error:", err);
-        translations = {}; // fallback to empty
+    // Load translations from teachers.json
+    async function loadTranslations(lang = "en") {
+        try {
+            const res = await fetch(`/locales/teachers.json`);
+            if (!res.ok) throw new Error("Failed to load translations");
+            const allTranslations = await res.json();
+            translations = allTranslations[lang] || {};
+        } catch (err) {
+            console.error("Translation load error:", err);
+            translations = {}; // fallback to empty
+        }
     }
-}
 
-// Get translation string by key
-function translateText(key) {
-    return translations[key] || key;
-}
+    // Get translation string by key
+    function translateText(key) {
+        return translations[key] || key;
+    }
 
-// Apply translations to DOM elements
-function applyTranslations() {
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        if (translations[key]) {
-            const translatedText = translations[key][currentLang];
-            if (translatedText) {
-                if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
-                    el.placeholder = translatedText;
-                } else {
-                    el.innerHTML = translatedText;
+    // Apply translations to DOM elements
+    function applyTranslations() {
+        document.querySelectorAll("[data-i18n]").forEach(el => {
+            const key = el.getAttribute("data-i18n");
+            if (translations[key]) {
+                const translatedText = translations[key][currentLang];
+                if (translatedText) {
+                    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+                        el.placeholder = translatedText;
+                    } else {
+                        el.innerHTML = translatedText;
+                    }
                 }
             }
-        }
-    });
-}
-
-function showToast(message, type = "info") {
-    const container = document.getElementById("toast-container") || (() => {
-        const el = document.createElement("div");
-        el.id = "toast-container";
-        el.className = "fixed top-4 right-4 z-[1000] space-y-2";
-        document.body.appendChild(el);
-        return el;
-    })();
-    const colors = {
-        success: "bg-green-600",
-        error: "bg-red-600",
-        info: "bg-blue-600",
-        warning: "bg-yellow-500 text-gray-900"
-    };
-    const toast = document.createElement("div");
-    toast.className = `px-4 py-2 rounded text-white shadow ${colors[type] || colors.info}`;
-    toast.textContent = message;
-    container.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-}
-
-function hideLoadingOverlay() {
-    const el = document.getElementById("loadingOverlay");
-    if (el) el.style.display = "none";
-}
-
-async function fetchAPI(endpoint, options = {}) {
-    try {
-        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
-            credentials: "include",
-            headers: { ...(options.headers || {}) }
         });
-        if (res.status === 401) {
-            window.location.href = "/login.html";
+    }
+
+    function showToast(message, type = "info") {
+        const container = document.getElementById("toast-container") || (() => {
+            const el = document.createElement("div");
+            el.id = "toast-container";
+            el.className = "fixed top-4 right-4 z-[1000] space-y-2";
+            document.body.appendChild(el);
+            return el;
+        })();
+        const colors = {
+            success: "bg-green-600",
+            error: "bg-red-600",
+            info: "bg-blue-600",
+            warning: "bg-yellow-500 text-gray-900"
+        };
+        const toast = document.createElement("div");
+        toast.className = `px-4 py-2 rounded text-white shadow ${colors[type] || colors.info}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    function hideLoadingOverlay() {
+        const el = document.getElementById("loadingOverlay");
+        if (el) el.style.display = "none";
+    }
+
+    async function fetchAPI(endpoint, options = {}) {
+        try {
+            const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                credentials: "include",
+                headers: { ...(options.headers || {}) }
+            });
+            if (res.status === 401) {
+                window.location.href = "/login.html";
+                return null;
+            }
+            return res;
+        } catch (err) {
+            console.error("Fetch error:", err);
+            showToast("Network error, please try again.", "error");
             return null;
         }
-        return res;
-    } catch (err) {
-        console.error("Fetch error:", err);
-        showToast("Network error, please try again.", "error");
-        return null;
     }
-}
 
-async function checkAuth() {
-    const res = await fetchAPI("/auth/check");
-    if (!res || !res.ok) window.location.href = "/login.html";
-}
-
-async function fetchTeacherProfile() {
-    const res = await fetchAPI("/teacher/profile");
-    if (res && res.ok) {
-        const data = await res.json();
-        document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
-        document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
+    async function checkAuth() {
+        const res = await fetchAPI("/auth/check");
+        if (!res || !res.ok) window.location.href = "/login.html";
     }
-}
 
-function wireProfilePhotoUpload() {
-    const avatarImg = document.getElementById("profileAvatar");
-    const uploadInput = document.getElementById("profilePhotoInput");
-    if (!avatarImg || !uploadInput) return;
-
-    avatarImg.addEventListener("click", () => uploadInput.click());
-
-    uploadInput.addEventListener("change", async () => {
-        const file = uploadInput.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append("profilePhoto", file);
-
-        try {
-            const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-                method: "POST",
-                credentials: "include",
-                body: formData,
-            });
-            if (!res.ok) throw new Error("Upload failed");
+    async function fetchTeacherProfile() {
+        const res = await fetchAPI("/teacher/profile");
+        if (res && res.ok) {
             const data = await res.json();
-            avatarImg.src = data.photoUrl;
-            showToast("Profile photo updated!", "success");
-        } catch (err) {
-            console.error("Photo upload error:", err);
-            showToast("Error uploading picture", "error");
+            document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
+            document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
         }
-    });
-}
-
-function renderStudents(students = []) {
-    const container = document.getElementById("studentsList");
-    if (!container) return;
-    if (!students.length) {
-        container.innerHTML = `<div class="p-4 text-center text-gray-500">${translateText('no_students')}</div>`;
-        return;
     }
-    container.innerHTML = students.map(s => `
-        <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
-            <div class="flex items-center gap-3">
-                <img src="${s.imageUrl || './images/default-avatar.png'}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
-                <div>
-                    <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
-                    <p class="text-sm text-gray-500">${translateText('grade')} ${s.grade || "-"}</p>
+
+    function wireProfilePhotoUpload() {
+        const avatarImg = document.getElementById("profileAvatar");
+        const uploadInput = document.getElementById("profilePhotoInput");
+        if (!avatarImg || !uploadInput) return;
+
+        avatarImg.addEventListener("click", () => uploadInput.click());
+
+        uploadInput.addEventListener("change", async () => {
+            const file = uploadInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append("profilePhoto", file);
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+                    method: "POST",
+                    credentials: "include",
+                    body: formData,
+                });
+                if (!res.ok) throw new Error("Upload failed");
+                const data = await res.json();
+                avatarImg.src = data.photoUrl;
+                showToast("Profile photo updated!", "success");
+            } catch (err) {
+                console.error("Photo upload error:", err);
+                showToast("Error uploading picture", "error");
+            }
+        });
+    }
+
+    function renderStudents(students = []) {
+        const container = document.getElementById("studentsList");
+        if (!container) return;
+        if (!students.length) {
+            container.innerHTML = `<div class="p-4 text-center text-gray-500">${translateText('no_students')}</div>`;
+            return;
+        }
+        container.innerHTML = students.map(s => `
+            <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
+                <div class="flex items-center gap-3">
+                    <img src="${s.imageUrl || './images/default-avatar.png'}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
+                    <div>
+                        <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
+                        <p class="text-sm text-gray-500">${translateText('grade')} ${s.grade || "-"}</p>
+                    </div>
                 </div>
+                <span class="text-xs text-gray-400">${s.email}</span>
             </div>
-            <span class="text-xs text-gray-400">${s.email}</span>
-        </div>
-    `).join("");
-}
+        `).join("");
+    }
 
-async function fetchStudents() {
-    let myGrade = [], otherGrade = [];
-    const res = await fetchAPI("/teacher/students");
-    if (res && res.ok) myGrade = (await res.json()) || [];
-    const resOther = await fetchAPI("/teacher/students/other");
-    if (resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
-    studentsCache = [...myGrade, ...otherGrade];
-    renderStudents(myGrade);
-    populateSelects(studentsCache, myGrade, otherGrade);
-}
+    async function fetchStudents() {
+        let myGrade = [], otherGrade = [];
+        const res = await fetchAPI("/teacher/students");
+        if (res && res.ok) myGrade = (await res.json()) || [];
+        const resOther = await fetchAPI("/teacher/students/other");
+        if (resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
+        studentsCache = [...myGrade, ...otherGrade];
+        renderStudents(myGrade);
+        populateSelects(studentsCache, myGrade, otherGrade);
+    }
 
-function populateSelects(allStudents, myGrade = [], otherGrade = []) {
-    const studentSelects = [
-        document.getElementById("assignment-student-select"),
-        document.getElementById("points-student-select"),
-        document.getElementById("message-student-select"),
-    ];
+    function populateSelects(allStudents, myGrade = [], otherGrade = []) {
+        const studentSelects = [
+            document.getElementById("assignment-student-select"),
+            document.getElementById("points-student-select"),
+            document.getElementById("message-student-select"),
+        ];
 
-    const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (${translateText('grade')} ${s.grade || '-'})</option>`).join("");
-    const toGradeOptions = () => [...new Set(allStudents.map(s => s.grade))].filter(Boolean).map(grade => `<option value="${grade}">${translateText('grade')} ${grade}</option>`).join("");
+        const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (${translateText('grade')} ${s.grade || '-'})</option>`).join("");
+        const toGradeOptions = () => [...new Set(allStudents.map(s => s.grade))].filter(Boolean).map(grade => `<option value="${grade}">${translateText('grade')} ${grade}</option>`).join("");
 
-    studentSelects.forEach(select => {
-        if (!select) return;
-        select.innerHTML = `
-            <optgroup label="${translateText('myClass')}">${toOptions(myGrade)}</optgroup>
-            <optgroup label="${translateText('other_students')}">${toOptions(otherGrade)}</optgroup>
-        `;
-    });
+        studentSelects.forEach(select => {
+            if (!select) return;
+            select.innerHTML = `
+                <optgroup label="${translateText('myClass')}">${toOptions(myGrade)}</optgroup>
+                <optgroup label="${translateText('other_students')}">${toOptions(otherGrade)}</optgroup>
+            `;
+        });
 
-    const gradeSelects = [
-        document.getElementById("assignment-grade-select"),
-        document.getElementById("points-grade-select"),
-        document.getElementById("message-grade-select"),
-    ];
-    gradeSelects.forEach(select => {
-        if (!select) return;
-        select.innerHTML = `<option value="">${translateText('select_grade')}</option>` + toGradeOptions();
-    });
-}
+        const gradeSelects = [
+            document.getElementById("assignment-grade-select"),
+            document.getElementById("points-grade-select"),
+            document.getElementById("message-grade-select"),
+        ];
+        gradeSelects.forEach(select => {
+            if (!select) return;
+            select.innerHTML = `<option value="">${translateText('select_grade')}</option>` + toGradeOptions();
+        });
+    }
 
-async function fetchAssignedTasks() {
+    async function fetchAssignedTasks() {
         const container = document.getElementById("assignedTasksList");
         if (!container) return;
         container.innerHTML = `<div class="p-4 text-gray-500">${translateText('loading')}...</div>`;
@@ -598,7 +598,7 @@ async function fetchAssignedTasks() {
             container.innerHTML = tasks.map(t => `
                 <div class="p-4 border-b last:border-b-0">
                     <p class="font-semibold">${t.title}</p>
-                    <p class="text-gray-500 text-xs">${translateText('due')}: ${new Date(t.due_date).toLocaleString()}</p>
+                    <p class="text-gray-500 text-xs">${new Date(t.due_date).toLocaleString()}</p>
                 </div>
             `).join("");
         } else {
@@ -607,468 +607,489 @@ async function fetchAssignedTasks() {
     }
 
     function wireCalendar() {
-    const addTermBtn = document.getElementById("addTermButton");
-    const saveCalendarBtn = document.getElementById("saveCalendarButton");
-    const termsContainer = document.getElementById("termsContainer");
+        const addTermBtn = document.getElementById("addTermButton");
+        const saveCalendarBtn = document.getElementById("saveCalendarButton");
+        const termsContainer = document.getElementById("termsContainer");
 
-    addTermBtn?.addEventListener("click", () => {
-        const termDiv = document.createElement("div");
-        termDiv.className = "flex gap-2 mb-2";
-        termDiv.innerHTML = `
-            <input type="text" placeholder="Term Name" class="w-1/3 p-2 border rounded"/>
-            <input type="date" placeholder="Start Date" class="w-1/3 p-2 border rounded"/>
-            <input type="date" placeholder="End Date" class="w-1/3 p-2 border rounded"/>
-            <button class="remove-term px-2 bg-red-500 text-white rounded">❌</button>
-        `;
-        termsContainer.appendChild(termDiv);
-        termDiv.querySelector(".remove-term").addEventListener("click", () => termDiv.remove());
-    });
+        addTermBtn?.addEventListener("click", () => {
+            const termDiv = document.createElement("div");
+            termDiv.className = "flex gap-2 mb-2";
+            termDiv.innerHTML = `
+                <input type="text" placeholder="Term Name" class="w-1/3 p-2 border rounded"/>
+                <input type="date" placeholder="Start Date" class="w-1/3 p-2 border rounded"/>
+                <input type="date" placeholder="End Date" class="w-1/3 p-2 border rounded"/>
+                <button class="remove-term px-2 bg-red-500 text-white rounded">❌</button>
+            `;
+            termsContainer.appendChild(termDiv);
+            termDiv.querySelector(".remove-term").addEventListener("click", () => termDiv.remove());
+        });
 
-    saveCalendarBtn?.addEventListener("click", async () => {
-        const academicYear = document.getElementById("academicYear").value.trim();
-        if (!academicYear) return showToast(translateText("enter_academic_year"), "error");
+        saveCalendarBtn?.addEventListener("click", async () => {
+            const academicYear = document.getElementById("academicYear").value.trim();
+            if (!academicYear) return showToast(translateText("enter_academic_year"), "error");
 
-        const terms = Array.from(termsContainer.children)
-            .map(div => {
-                const termName = div.querySelector("input[type=text]").value.trim();
-                const startDate = div.querySelectorAll("input[type=date]")[0].value;
-                const endDate = div.querySelectorAll("input[type=date]")[1].value;
-                return {
-                    termName,
-                    startDate,
-                    endDate
-                };
-            })
-            .filter(t => t.termName && t.startDate && t.endDate);
-
-        if (!terms.length) return showToast(translateText("add_at_least_one_term"), "error");
-
-        try {
-            const res = await fetchAPI("/teacher/calendar", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    academicYear,
-                    terms
+            const terms = Array.from(termsContainer.children)
+                .map(div => {
+                    const termName = div.querySelector("input[type=text]").value.trim();
+                    const startDate = div.querySelectorAll("input[type=date]")[0].value;
+                    const endDate = div.querySelectorAll("input[type=date]")[1].value;
+                    return {
+                        termName,
+                        startDate,
+                        endDate
+                    };
                 })
-            });
+                .filter(t => t.termName && t.startDate && t.endDate);
 
-            if (res && res.ok) {
-                showToast(translateText("calendar_saved"), "success");
-            } else {
-                showToast(translateText("failed_save_calendar"), "error");
+            if (!terms.length) return showToast(translateText("add_at_least_one_term"), "error");
+
+            try {
+                const res = await fetchAPI("/teacher/calendar", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        academicYear,
+                        terms
+                    })
+                });
+
+                if (res && res.ok) {
+                    showToast(translateText("calendar_saved"), "success");
+                } else {
+                    showToast(translateText("failed_save_calendar"), "error");
+                }
+            } catch (err) {
+                console.error("Calendar save error:", err);
+                showToast(translateText("network_error"), "error");
             }
-        } catch (err) {
-            console.error("Calendar save error:", err);
-            showToast(translateText("network_error"), "error");
-        }
-    });
-}
-
-    function wireMessageForm() { 
-    const formId = "message";
-    const studentSelect = document.getElementById(`${formId}-student-select`);
-    const gradeSelect = document.getElementById(`${formId}-grade-select`);
-    const messageText = document.getElementById("messageText");
-    const sendBtn = document.getElementById("sendMessageButton");
-    const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
-
-    if (!studentSelect || !gradeSelect || !messageText || !sendBtn || !recipientRadios.length) return;
-
-    function validateForm() {
-        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-        let isValid = false;
-        if (recipientType === "single" || recipientType === "multiple") {
-            isValid = studentSelect.value && messageText.value.trim();
-        } else if (recipientType === "otherGrade") {
-            isValid = gradeSelect.value && messageText.value.trim();
-        } else if (recipientType === "class") {
-            isValid = messageText.value.trim();
-        }
-        sendBtn.disabled = !isValid;
-    }
-
-    recipientRadios.forEach(radio => radio.addEventListener("change", validateForm));
-    studentSelect.addEventListener("change", validateForm);
-    gradeSelect.addEventListener("change", validateForm);
-    messageText.addEventListener("input", validateForm);
-
-    sendBtn.addEventListener("click", async () => {
-        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-        let assigned_to_users = [];
-        let assigned_to_grades = [];
-
-        if (recipientType === "single") {
-            assigned_to_users = [studentSelect.value];
-        } else if (recipientType === "multiple") {
-            assigned_to_users = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
-        } else if (recipientType === "class") {
-            assigned_to_users = studentsCache.filter(s => s.isMyClass).map(s => s._id);
-        } else if (recipientType === "otherGrade") {
-            assigned_to_grades = [gradeSelect.value];
-            assigned_to_users = studentsCache.filter(s => s.grade === gradeSelect.value).map(s => s._id);
-        }
-
-        if (!assigned_to_users.length && !assigned_to_grades.length) {
-            showToast(translateText('select_at_least_one'), "error");
-            return;
-        }
-
-        const message = messageText.value.trim();
-        if (!message) {
-            showToast(translateText('fill_message_fields'), "error");
-            return;
-        }
-
-        sendBtn.disabled = true;
-        sendBtn.textContent = translateText('sending');
-
-        try {
-            const res = await fetchAPI("/teacher/message", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    assigned_to_users,
-                    assigned_to_grades,
-                    message,
-                })
-            });
-
-            if (res && res.ok) {
-                showToast(translateText('message_sent'), "success");
-                messageText.value = "";
-                validateForm();
-            } else {
-                const data = await res.json();
-                showToast(data?.message || translateText('failed_send_message'), "error");
-            }
-        } catch (err) {
-            console.error("Send message error:", err);
-            showToast(translateText('network_error'), "error");
-        } finally {
-            sendBtn.disabled = false;
-            sendBtn.textContent = translateText('sendMessage');
-        }
-    });
-
-    updateFormUI(formId);
-}
-
-  function wireAssignmentForm() {
-    const formId = "assignment";
-    const studentSelect = document.getElementById(`${formId}-student-select`);
-    const gradeSelect = document.getElementById(`${formId}-grade-select`);
-    const programSelect = document.getElementById(`${formId}-program-select`);
-    const schoolSelect = document.getElementById(`${formId}-school-select`);
-    const titleInput = document.getElementById("assignmentTitle");
-    const dueDateInput = document.getElementById("assignmentDueDate");
-    const textArea = document.getElementById("assignmentText");
-    const fileInput = document.getElementById("assignmentFile");
-    const sendBtn = document.getElementById("sendAssignmentButton");
-    const wordCountText = document.getElementById("wordCountText");
-    const fileNameSpan = document.getElementById("fileName");
-    const clearFileBtn = document.getElementById("clearFileButton");
-    const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
-
-    if (!studentSelect || !gradeSelect || !titleInput || !dueDateInput || !textArea || !sendBtn) return;
-
-    function updateSendBtn() {
-        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-        let hasRecipient = false;
-        if (recipientType === "single" || recipientType === "multiple") {
-            hasRecipient = studentSelect.value;
-        } else if (recipientType === "otherGrade") {
-            hasRecipient = gradeSelect.value;
-        } else if (recipientType === "class") {
-            hasRecipient = true; // Always true for entire class
-        }
-        sendBtn.disabled = !(hasRecipient && titleInput.value.trim() && (textArea.value.trim() || fileInput.files.length));
-    }
-
-    function updateWordCount() {
-        const words = textArea.value.trim().split(/\s+/).filter(Boolean).length;
-        wordCountText.textContent = translateText("wordCount").replace("0", words);
-        updateSendBtn();
-    }
-
-    textArea.addEventListener("input", updateWordCount);
-    titleInput.addEventListener("input", updateSendBtn);
-    dueDateInput.addEventListener("input", updateSendBtn);
-    recipientRadios.forEach(radio => radio.addEventListener("change", updateSendBtn));
-    studentSelect.addEventListener("change", updateSendBtn);
-    gradeSelect.addEventListener("change", updateSendBtn);
-
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files.length) {
-            fileNameSpan.textContent = fileInput.files[0].name;
-            clearFileBtn.classList.remove("hidden");
-        } else {
-            fileNameSpan.textContent = translateText("noFileSelected");
-            clearFileBtn.classList.add("hidden");
-        }
-        updateSendBtn();
-    });
-
-    clearFileBtn.addEventListener("click", () => {
-        fileInput.value = "";
-        fileNameSpan.textContent = translateText("noFileSelected");
-        clearFileBtn.classList.add("hidden");
-        updateSendBtn();
-    });
-
-    sendBtn.addEventListener("click", async () => {
-        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-
-        // Initialize all backend arrays
-        let assigned_to_users = [];
-        let assigned_to_grades = [];
-        let assigned_to_programs = [];
-        let assigned_to_schools = [];
-        let assigned_to_other_grades = [];
-
-        // Map frontend selections to backend arrays
-        if (recipientType === "single") {
-            assigned_to_users = [studentSelect.value];
-        } else if (recipientType === "multiple") {
-            assigned_to_users = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
-        } else if (recipientType === "class") {
-            assigned_to_users = studentsCache.filter(s => s.isMyClass).map(s => s._id);
-        } else if (recipientType === "otherGrade") {
-            assigned_to_other_grades = [gradeSelect.value];
-            assigned_to_users = studentsCache.filter(s => s.grade === gradeSelect.value).map(s => s._id);
-        }
-
-        // Optional: populate program or school if dropdown exists
-        if (programSelect && programSelect.value) assigned_to_programs = [programSelect.value];
-        if (schoolSelect && schoolSelect.value) assigned_to_schools = [schoolSelect.value];
-
-        // Validation: must assign at least one target
-        if (
-            !assigned_to_users.length &&
-            !assigned_to_grades.length &&
-            !assigned_to_programs.length &&
-            !assigned_to_schools.length &&
-            !assigned_to_other_grades.length
-        ) {
-            showToast(translateText('select_at_least_one'), "error");
-            return;
-        }
-
-        const title = titleInput.value.trim();
-        const dueDate = dueDateInput.value;
-        const text = textArea.value.trim();
-        const file = fileInput.files[0];
-
-        if (!title || (!text && !file)) {
-            showToast(translateText("fill_title_and_content"), "error");
-            return;
-        }
-
-        sendBtn.disabled = true;
-        sendBtn.textContent = translateText("sending");
-
-        try {
-            const formData = new FormData();
-            if (assigned_to_users.length) formData.append("assigned_to_users", JSON.stringify(assigned_to_users));
-            if (assigned_to_grades.length) formData.append("assigned_to_grades", JSON.stringify(assigned_to_grades));
-            if (assigned_to_programs.length) formData.append("assigned_to_programs", JSON.stringify(assigned_to_programs));
-            if (assigned_to_schools.length) formData.append("assigned_to_schools", JSON.stringify(assigned_to_schools));
-            if (assigned_to_other_grades.length) formData.append("assigned_to_other_grades", JSON.stringify(assigned_to_other_grades));
-            formData.append("recipientType", recipientType);
-            formData.append("title", title);
-            formData.append("due_date", dueDate);
-            formData.append("description", text);
-            if (file) formData.append("file", file);
-
-            const res = await fetchAPI("/teacher/assignments", {
-                method: "POST",
-                body: formData
-            });
-
-            if (res && res.ok) {
-                showToast(translateText("assignment_sent"), "success");
-                titleInput.value = "";
-                dueDateInput.value = "";
-                textArea.value = "";
-                fileInput.value = "";
-                fileNameSpan.textContent = translateText("noFileSelected");
-                clearFileBtn.classList.add("hidden");
-                updateWordCount();
-                updateSendBtn();
-            } else {
-                const data = await res.json();
-                showToast(data?.message || translateText("failed_send_assignment"), "error");
-            }
-        } catch (err) {
-            console.error("Assignment send error:", err);
-            showToast(translateText("network_error"), "error");
-        } finally {
-            sendBtn.disabled = false;
-            sendBtn.textContent = translateText("sendAssignment");
-        }
-    });
-
-    updateFormUI(formId);
-    updateWordCount();
-}
-
-    function wireAddPointsForm() {
-    const formId = "points";
-    const studentSelect = document.getElementById(`${formId}-student-select`);
-    const gradeSelect = document.getElementById(`${formId}-grade-select`);
-    const pointsInput = document.getElementById("pointsInput");
-    const reasonInput = document.getElementById("reasonText");
-    const addBtn = document.getElementById("addPointsButton");
-    const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
-
-    if (!studentSelect || !gradeSelect || !pointsInput || !addBtn) return;
-
-    function validateForm() {
-        const points = parseInt(pointsInput.value, 10) || 0;
-        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-        let hasRecipient = false;
-
-        if (recipientType === "single" || recipientType === "multiple") {
-            hasRecipient = studentSelect.value;
-        } else if (recipientType === "otherGrade") {
-            hasRecipient = gradeSelect.value;
-        } else if (recipientType === "class") {
-            hasRecipient = true;
-        }
-
-        addBtn.disabled = !(hasRecipient && points > 0 && reasonInput.value.trim().length > 0);
-    }
-
-    recipientRadios.forEach(radio => radio.addEventListener("change", validateForm));
-    studentSelect.addEventListener("change", validateForm);
-    gradeSelect.addEventListener("change", validateForm);
-    pointsInput.addEventListener("input", validateForm);
-    reasonInput.addEventListener("input", validateForm);
-
-    addBtn.addEventListener("click", async () => {
-        const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-        const points = parseInt(pointsInput.value, 10);
-        const reason = reasonInput.value.trim();
-
-        if (isNaN(points) || points <= 0) {
-            showToast(translateText('points_must_be_positive'), "error");
-            return;
-        }
-        if (!reason) {
-            showToast(translateText('reason_required'), "error");
-            return;
-        }
-
-        let payload = { points, reason };
-
-        // Assign the correct field based on recipient type (matches backend schema)
-        if (recipientType === "single") {
-            payload.studentIds = [studentSelect.value];
-        } else if (recipientType === "multiple") {
-            payload.studentIds = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
-        } else if (recipientType === "class") {
-            payload.studentIds = studentsCache.filter(s => s.isMyClass).map(s => s._id);
-        } else if (recipientType === "otherGrade") {
-            payload.otherGrade = gradeSelect.value;
-        }
-
-        if (
-            (!payload.studentIds || payload.studentIds.length === 0) &&
-            !payload.otherGrade
-        ) {
-            showToast(translateText('select_at_least_one'), "error");
-            return;
-        }
-
-        addBtn.disabled = true;
-        addBtn.textContent = translateText('adding_points');
-
-        try {
-            const res = await fetchAPI("/rewards/teacher/add-points", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (res && res.ok) {
-                showToast(translateText('points_added'), "success");
-                pointsInput.value = "";
-                reasonInput.value = "";
-                validateForm();
-            } else {
-                const data = await res.json();
-                showToast(data?.message || translateText('failed_add_points'), "error");
-            }
-        } catch (err) {
-            console.error("Add points error:", err);
-            showToast(translateText('network_error'), "error");
-        } finally {
-            addBtn.disabled = false;
-            addBtn.textContent = translateText('addPointsButton');
-        }
-    });
-
-    updateFormUI(formId);
-}
-
-window.onload = async () => {
-    await checkAuth();
-    await loadTranslations(currentLang);
-    applyTranslations();
-    
-    await fetchTeacherProfile();
-    await fetchStudents();
-    fetchAssignedTasks();
-    fetchFeedback();
-    fetchOverdueTasks();
-    wireAssignmentForm();
-    wireAddPointsForm();
-    wireMessageForm();
-    wireCalendar();
-    wireProfilePhotoUpload();
-    hideLoadingOverlay();
-    document.getElementById("currentYear").textContent = new Date().getFullYear();
-
-    document.getElementById("logoutButton").addEventListener("click", async () => {
-        const res = await fetchAPI("/auth/logout", { method: "POST" });
-        if (res && res.ok) window.location.href = "/login.html";
-    });
-
-    const profileMenuButton = document.getElementById("profile-menu-button");
-    const profileDropdownMenu = document.getElementById("profile-dropdown-menu");
-    profileMenuButton.addEventListener("click", () => {
-        const isHidden = profileDropdownMenu.classList.contains("hidden");
-        if (isHidden) {
-            profileDropdownMenu.classList.remove("hidden");
-            setTimeout(() => profileDropdownMenu.classList.remove("scale-95", "opacity-0"), 10);
-        } else {
-            profileDropdownMenu.classList.add("scale-95", "opacity-0");
-            setTimeout(() => profileDropdownMenu.classList.add("hidden"), 300);
-        }
-    });
-
-    const langSelect = document.getElementById("language-select");
-    if (langSelect) {
-        langSelect.addEventListener("change", async (e) => {
-            currentLang = e.target.value;
-            await loadTranslations(currentLang);
-            applyTranslations();
-            renderStudents(studentsCache.filter(s => s.isMyClass));
-            populateSelects(studentsCache, studentsCache.filter(s => s.isMyClass), studentsCache.filter(s => !s.isMyClass));
-            fetchAssignedTasks();
-            fetchFeedback();
-            fetchOverdueTasks();
         });
     }
-};
-</script>
 
+    // NEW: Generic function to show/hide form fields based on recipient type
+    function updateFormUI(formId) {
+        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
+        const studentSelect = document.getElementById(`${formId}-student-select`);
+        const gradeSelect = document.getElementById(`${formId}-grade-select`);
+        const studentSelectGroup = studentSelect?.closest('div');
+        const gradeSelectGroup = gradeSelect?.closest('div');
+
+        recipientRadios.forEach(radio => {
+            radio.addEventListener("change", (e) => {
+                const recipientType = e.target.value;
+                if (studentSelectGroup) {
+                    studentSelectGroup.classList.toggle("hidden", recipientType === "class" || recipientType === "otherGrade");
+                    studentSelect.multiple = recipientType === "multiple";
+                }
+                if (gradeSelectGroup) {
+                    gradeSelectGroup.classList.toggle("hidden", recipientType !== "otherGrade");
+                }
+            });
+        });
+    }
+
+    function wireMessageForm() { 
+        const formId = "message";
+        const studentSelect = document.getElementById(`${formId}-student-select`);
+        const gradeSelect = document.getElementById(`${formId}-grade-select`);
+        const messageText = document.getElementById("messageText");
+        const sendBtn = document.getElementById("sendMessageButton");
+        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
+
+        if (!studentSelect || !gradeSelect || !messageText || !sendBtn || !recipientRadios.length) return;
+
+        function validateForm() {
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+            let isValid = false;
+            if (recipientType === "single" || recipientType === "multiple") {
+                isValid = studentSelect.value && messageText.value.trim();
+            } else if (recipientType === "otherGrade") {
+                isValid = gradeSelect.value && messageText.value.trim();
+            } else if (recipientType === "class") {
+                isValid = messageText.value.trim();
+            }
+            sendBtn.disabled = !isValid;
+        }
+
+        recipientRadios.forEach(radio => radio.addEventListener("change", validateForm));
+        studentSelect.addEventListener("change", validateForm);
+        gradeSelect.addEventListener("change", validateForm);
+        messageText.addEventListener("input", validateForm);
+
+        sendBtn.addEventListener("click", async () => {
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+            let assigned_to_users = [];
+            let assigned_to_grades = [];
+
+            if (recipientType === "single") {
+                assigned_to_users = [studentSelect.value];
+            } else if (recipientType === "multiple") {
+                assigned_to_users = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
+            } else if (recipientType === "class") {
+                assigned_to_users = studentsCache.filter(s => s.isMyClass).map(s => s._id);
+            } else if (recipientType === "otherGrade") {
+                assigned_to_grades = [gradeSelect.value];
+                assigned_to_users = studentsCache.filter(s => s.grade === gradeSelect.value).map(s => s._id);
+            }
+
+            if (!assigned_to_users.length && !assigned_to_grades.length) {
+                showToast(translateText('select_at_least_one'), "error");
+                return;
+            }
+
+            const message = messageText.value.trim();
+            if (!message) {
+                showToast(translateText('fill_message_fields'), "error");
+                return;
+            }
+
+            sendBtn.disabled = true;
+            sendBtn.textContent = translateText('sending');
+
+            try {
+                const res = await fetchAPI("/teacher/message", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        assigned_to_users,
+                        assigned_to_grades,
+                        message,
+                    })
+                });
+
+                if (res && res.ok) {
+                    showToast(translateText('message_sent'), "success");
+                    messageText.value = "";
+                    validateForm();
+                } else {
+                    const data = await res.json();
+                    showToast(data?.message || translateText('failed_send_message'), "error");
+                }
+            } catch (err) {
+                console.error("Send message error:", err);
+                showToast(translateText('network_error'), "error");
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = translateText('sendMessage');
+            }
+        });
+
+        updateFormUI(formId);
+    }
+
+    function wireAssignmentForm() {
+        const formId = "assignment";
+        const studentSelect = document.getElementById(`${formId}-student-select`);
+        const gradeSelect = document.getElementById(`${formId}-grade-select`);
+        const programSelect = document.getElementById(`${formId}-program-select`);
+        const schoolSelect = document.getElementById(`${formId}-school-select`);
+        const titleInput = document.getElementById("assignmentTitle");
+        const dueDateInput = document.getElementById("assignmentDueDate");
+        const textArea = document.getElementById("assignmentText");
+        const fileInput = document.getElementById("assignmentFile");
+        const sendBtn = document.getElementById("sendAssignmentButton");
+        const wordCountText = document.getElementById("wordCountText");
+        const fileNameSpan = document.getElementById("fileName");
+        const clearFileBtn = document.getElementById("clearFileButton");
+        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
+
+        if (!studentSelect || !gradeSelect || !titleInput || !dueDateInput || !textArea || !sendBtn) return;
+
+        function updateSendBtn() {
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+            let hasRecipient = false;
+            if (recipientType === "single" || recipientType === "multiple") {
+                hasRecipient = studentSelect.value;
+            } else if (recipientType === "otherGrade") {
+                hasRecipient = gradeSelect.value;
+            } else if (recipientType === "class") {
+                hasRecipient = true; // Always true for entire class
+            }
+            sendBtn.disabled = !(hasRecipient && titleInput.value.trim() && (textArea.value.trim() || fileInput.files.length));
+        }
+
+        function updateWordCount() {
+            const words = textArea.value.trim().split(/\s+/).filter(Boolean).length;
+            wordCountText.textContent = translateText("wordCount").replace("0", words);
+            updateSendBtn();
+        }
+
+        textArea.addEventListener("input", updateWordCount);
+        titleInput.addEventListener("input", updateSendBtn);
+        dueDateInput.addEventListener("input", updateSendBtn);
+        recipientRadios.forEach(radio => radio.addEventListener("change", updateSendBtn));
+        studentSelect.addEventListener("change", updateSendBtn);
+        gradeSelect.addEventListener("change", updateSendBtn);
+
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files.length) {
+                fileNameSpan.textContent = fileInput.files[0].name;
+                clearFileBtn.classList.remove("hidden");
+            } else {
+                fileNameSpan.textContent = translateText("noFileSelected");
+                clearFileBtn.classList.add("hidden");
+            }
+            updateSendBtn();
+        });
+
+        clearFileBtn.addEventListener("click", () => {
+            fileInput.value = "";
+            fileNameSpan.textContent = translateText("noFileSelected");
+            clearFileBtn.classList.add("hidden");
+            updateSendBtn();
+        });
+
+        sendBtn.addEventListener("click", async () => {
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+
+            // Initialize all backend arrays
+            let assigned_to_users = [];
+            let assigned_to_grades = [];
+            let assigned_to_programs = [];
+            let assigned_to_schools = [];
+            let assigned_to_other_grades = [];
+
+            // Map frontend selections to backend arrays
+            if (recipientType === "single") {
+                assigned_to_users = [studentSelect.value];
+            } else if (recipientType === "multiple") {
+                assigned_to_users = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
+            } else if (recipientType === "class") {
+                assigned_to_users = studentsCache.filter(s => s.isMyClass).map(s => s._id);
+            } else if (recipientType === "otherGrade") {
+                assigned_to_other_grades = [gradeSelect.value];
+                assigned_to_users = studentsCache.filter(s => s.grade === gradeSelect.value).map(s => s._id);
+            }
+
+            // Optional: populate program or school if dropdown exists
+            if (programSelect && programSelect.value) assigned_to_programs = [programSelect.value];
+            if (schoolSelect && schoolSelect.value) assigned_to_schools = [schoolSelect.value];
+
+            // Validation: must assign at least one target
+            if (
+                !assigned_to_users.length &&
+                !assigned_to_grades.length &&
+                !assigned_to_programs.length &&
+                !assigned_to_schools.length &&
+                !assigned_to_other_grades.length
+            ) {
+                showToast(translateText('select_at_least_one'), "error");
+                return;
+            }
+
+            const title = titleInput.value.trim();
+            const dueDate = dueDateInput.value;
+            const text = textArea.value.trim();
+            const file = fileInput.files[0];
+
+            if (!title || (!text && !file)) {
+                showToast(translateText("fill_title_and_content"), "error");
+                return;
+            }
+
+            sendBtn.disabled = true;
+            sendBtn.textContent = translateText("sending");
+
+            try {
+                const formData = new FormData();
+                if (assigned_to_users.length) formData.append("assigned_to_users", JSON.stringify(assigned_to_users));
+                if (assigned_to_grades.length) formData.append("assigned_to_grades", JSON.stringify(assigned_to_grades));
+                if (assigned_to_programs.length) formData.append("assigned_to_programs", JSON.stringify(assigned_to_programs));
+                if (assigned_to_schools.length) formData.append("assigned_to_schools", JSON.stringify(assigned_to_schools));
+                if (assigned_to_other_grades.length) formData.append("assigned_to_other_grades", JSON.stringify(assigned_to_other_grades));
+                formData.append("recipientType", recipientType);
+                formData.append("title", title);
+                formData.append("due_date", dueDate);
+                formData.append("description", text);
+                if (file) formData.append("file", file);
+
+                const res = await fetchAPI("/teacher/assignments", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (res && res.ok) {
+                    showToast(translateText("assignment_sent"), "success");
+                    titleInput.value = "";
+                    dueDateInput.value = "";
+                    textArea.value = "";
+                    fileInput.value = "";
+                    fileNameSpan.textContent = translateText("noFileSelected");
+                    clearFileBtn.classList.add("hidden");
+                    updateWordCount();
+                    updateSendBtn();
+                } else {
+                    const data = await res.json();
+                    showToast(data?.message || translateText("failed_send_assignment"), "error");
+                }
+            } catch (err) {
+                console.error("Assignment send error:", err);
+                showToast(translateText("network_error"), "error");
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = translateText("sendAssignment");
+            }
+        });
+
+        updateFormUI(formId);
+        updateWordCount();
+    }
+
+    function wireAddPointsForm() {
+        const formId = "points";
+        const studentSelect = document.getElementById(`${formId}-student-select`);
+        const gradeSelect = document.getElementById(`${formId}-grade-select`);
+        const pointsInput = document.getElementById("pointsInput");
+        const reasonInput = document.getElementById("reasonText");
+        const addBtn = document.getElementById("addPointsButton");
+        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
+
+        if (!studentSelect || !gradeSelect || !pointsInput || !addBtn) return;
+
+        function validateForm() {
+            const points = parseInt(pointsInput.value, 10) || 0;
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+            let hasRecipient = false;
+
+            if (recipientType === "single" || recipientType === "multiple") {
+                hasRecipient = studentSelect.value;
+            } else if (recipientType === "otherGrade") {
+                hasRecipient = gradeSelect.value;
+            } else if (recipientType === "class") {
+                hasRecipient = true;
+            }
+
+            addBtn.disabled = !(hasRecipient && points > 0 && reasonInput.value.trim().length > 0);
+        }
+
+        recipientRadios.forEach(radio => radio.addEventListener("change", validateForm));
+        studentSelect.addEventListener("change", validateForm);
+        gradeSelect.addEventListener("change", validateForm);
+        pointsInput.addEventListener("input", validateForm);
+        reasonInput.addEventListener("input", validateForm);
+
+        addBtn.addEventListener("click", async () => {
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+            const points = parseInt(pointsInput.value, 10);
+            const reason = reasonInput.value.trim();
+
+            if (isNaN(points) || points <= 0) {
+                showToast(translateText('points_must_be_positive'), "error");
+                return;
+            }
+            if (!reason) {
+                showToast(translateText('reason_required'), "error");
+                return;
+            }
+
+            let payload = { points, reason };
+
+            // Assign the correct field based on recipient type (matches backend schema)
+            if (recipientType === "single") {
+                payload.studentIds = [studentSelect.value];
+            } else if (recipientType === "multiple") {
+                payload.studentIds = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
+            } else if (recipientType === "class") {
+                payload.studentIds = studentsCache.filter(s => s.isMyClass).map(s => s._id);
+            } else if (recipientType === "otherGrade") {
+                payload.otherGrade = gradeSelect.value;
+            }
+
+            if (
+                (!payload.studentIds || payload.studentIds.length === 0) &&
+                !payload.otherGrade
+            ) {
+                showToast(translateText('select_at_least_one'), "error");
+                return;
+            }
+
+            addBtn.disabled = true;
+            addBtn.textContent = translateText('adding_points');
+
+            try {
+                const res = await fetchAPI("/rewards/teacher/add-points", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res && res.ok) {
+                    showToast(translateText('points_added'), "success");
+                    pointsInput.value = "";
+                    reasonInput.value = "";
+                    validateForm();
+                } else {
+                    const data = await res.json();
+                    showToast(data?.message || translateText('failed_add_points'), "error");
+                }
+            } catch (err) {
+                console.error("Add points error:", err);
+                showToast(translateText('network_error'), "error");
+            } finally {
+                addBtn.disabled = false;
+                addBtn.textContent = translateText('addPointsButton');
+            }
+        });
+
+        updateFormUI(formId);
+    }
+
+    window.onload = async () => {
+        await checkAuth();
+        await loadTranslations(currentLang);
+        applyTranslations();
+        
+        await fetchTeacherProfile();
+        await fetchStudents();
+        fetchAssignedTasks();
+        fetchFeedback();
+        fetchOverdueTasks();
+        wireAssignmentForm();
+        wireAddPointsForm();
+        wireMessageForm();
+        wireCalendar();
+        wireProfilePhotoUpload();
+        hideLoadingOverlay();
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+
+        document.getElementById("logoutButton").addEventListener("click", async () => {
+            const res = await fetchAPI("/auth/logout", { method: "POST" });
+            if (res && res.ok) window.location.href = "/login.html";
+        });
+
+        const profileMenuButton = document.getElementById("profile-menu-button");
+        const profileDropdownMenu = document.getElementById("profile-dropdown-menu");
+        profileMenuButton.addEventListener("click", () => {
+            const isHidden = profileDropdownMenu.classList.contains("hidden");
+            if (isHidden) {
+                profileDropdownMenu.classList.remove("hidden");
+                setTimeout(() => profileDropdownMenu.classList.remove("scale-95", "opacity-0"), 10);
+            } else {
+                profileDropdownMenu.classList.add("scale-95", "opacity-0");
+                setTimeout(() => profileDropdownMenu.classList.add("hidden"), 300);
+            }
+        });
+
+        const langSelect = document.getElementById("language-select");
+        if (langSelect) {
+            langSelect.addEventListener("change", async (e) => {
+                currentLang = e.target.value;
+                await loadTranslations(currentLang);
+                applyTranslations();
+                renderStudents(studentsCache.filter(s => s.isMyClass));
+                populateSelects(studentsCache, studentsCache.filter(s => s.isMyClass), studentsCache.filter(s => !s.isMyClass));
+                fetchAssignedTasks();
+                fetchFeedback();
+                fetchOverdueTasks();
+            });
+        }
+    };
+</script>
   </body>
 </html>
 
