@@ -13,6 +13,7 @@ const fetch = require("node-fetch");
 
 const eventBus = new EventEmitter();
 
+// ✅ Required env check
 const requiredEnvVars = [
   "PORT",
   "MONGODB_URI",
@@ -42,7 +43,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Allowed origins for CORS
+// 🌍 Allowed origins
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:4000",
@@ -51,12 +52,22 @@ const allowedOrigins = [
   "https://api.smartstudentact.com",
 ];
 
-// CORS setup
+// 🔍 Debug incoming origin
+app.use((req, res, next) => {
+  console.log("🌐 Incoming request origin:", req.headers.origin || "N/A");
+  next();
+});
+
+// ⚙️ CORS setup
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) {
+      return callback(null, true); // allow non-browser clients
+    }
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+    console.warn(`❌ CORS blocked request from: ${origin}`);
     return callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
@@ -72,7 +83,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// Handle preflight requests explicitly
+// ✅ Always handle preflight
 app.options("*", cors(corsOptions));
 
 try {
@@ -140,6 +151,7 @@ app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
+// 🛠 Global error handler
 app.use((err, req, res, next) => {
   if (NODE_ENV === "development") {
     console.error("❌ Global error handler caught:", err);
@@ -182,5 +194,6 @@ async function startApp() {
 }
 
 startApp();
+
 
 
