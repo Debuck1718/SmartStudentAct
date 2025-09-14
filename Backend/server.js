@@ -53,9 +53,13 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: true, 
+    origin: (origin, callback) => {
+      // allow requests with no origin (like curl or mobile apps)
+      if (!origin) return callback(null, true);
+      return callback(null, origin);
+    },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // allow all HTTP methods
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
       "Authorization",
