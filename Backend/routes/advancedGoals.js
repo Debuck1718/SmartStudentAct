@@ -32,23 +32,20 @@ function hasRole(allowedRoles = []) {
 }
 
 const studentGoalSchema = Joi.object({
-    description: Joi.string().required(),
-    target_date: Joi.date().iso().required(),
-    progress: Joi.number().min(0).max(100).required(),
-    type: Joi.string().valid('academic', 'personal', 'extracurricular').required(),
-    is_completed: Joi.boolean().default(false),
-    points: Joi.number().integer().min(0).default(0)
+  description: Joi.string().required(),
+  type: Joi.string().valid('academic', 'personal', 'health', 'other').required(),
+  progress: Joi.number().min(0).max(100).default(0),
+  target_date: Joi.date().iso().required()
 });
 
 const goalUpdateSchema = Joi.object({
-    description: Joi.string().optional(),
-    target_date: Joi.date().iso().optional(),
-    progress: Joi.number().min(0).max(100).optional(),
-    type: Joi.string().valid('academic', 'personal', 'extracurricular').optional(),
-    is_completed: Joi.boolean().optional(),
-    points: Joi.number().integer().min(0).optional()
+  description: Joi.string().optional(),
+  type: Joi.string().valid('academic', 'personal', 'health', 'other').optional(),
+  progress: Joi.number().min(0).max(100).optional(),
+  target_date: Joi.date().iso().optional()
 });
-// New Joi schema for the add-points route
+
+
 const addPointsSchema = Joi.object({
   points: Joi.number().integer().required(),
   reason: Joi.string().required(),
@@ -457,91 +454,95 @@ router.post('/milestone-completed', authenticateJWT, checkSubscription, async (r
 
 
 router.post('/goals', authenticateJWT, async (req, res) => {
-    const { error, value } = studentGoalSchema.validate(req.body);
-    if (error) return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
+  const { error, value } = studentGoalSchema.validate(req.body);
+  if (error) return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
 
-    try {
-        const userId = req.userId;
+  try {
+    const userId = req.userId;
 
-        let studentGoals = await StudentRewards.findOne({ studentId: userId });
-        if (!studentGoals) {
-            studentGoals = new StudentRewards({ studentId: userId, goals: [] });
-        }
-
-        studentGoals.goals.push(value);
-        await studentGoals.save();
-
-        eventBus.emit('goal_notification', {
-            userId,
-            message: `New goal created: ${value.description}`
-        });
-
-        res.status(201).json({ message: 'Goal added successfully!', goal: value });
-    } catch (err) {
-        logger.error('Error adding new goal:', err);
-        res.status(500).json({ message: 'Failed to add goal.' });
+    let studentGoals = await StudentRewards.findOne({ studentId: userId });
+    if (!studentGoals) {
+      studentGoals = new StudentRewards({ studentId: userId, goals: [] });
     }
+
+    studentGoals.goals.push(value);
+    const saved = await studentGoals.save();
+
+    eventBus.emit('goal_notification', {
+      userId,
+      message: `New goal created: ${value.description}`
+    });
+
+    res.status(201).json({ message: 'Goal added successfully!', goal: saved.goals[saved.goals.length - 1] });
+
+  } catch (err) {
+    logger.error('Error adding new goal:', err);
+    res.status(500).json({ message: 'Failed to add goal.', error: err.message });
+  }
 });
 
-// --- Get all goals ---
+// ---------------------- Get All Goals ----------------------
 router.get('/goals', authenticateJWT, async (req, res) => {
-    try {
-        const userId = req.userId;
-        const studentGoals = await StudentRewards.findOne({ studentId: userId });
+  try {
+    const userId = req.userId;
+    const studentGoals = await StudentRewards.findOne({ studentId: userId });
 
-        res.status(200).json({ goals: studentGoals ? studentGoals.goals : [] });
-    } catch (err) {
-        logger.error('Error fetching goals:', err);
-        res.status(500).json({ message: 'Failed to fetch goals.' });
-    }
+    res.status(200).json({ goals: studentGoals ? studentGoals.goals : [] });
+  } catch (err) {
+    logger.error('Error fetching goals:', err);
+    res.status(500).json({ message: 'Failed to fetch goals.', error: err.message });
+  }
 });
 
-// --- Update a goal ---
+// ---------------------- Update Goal ----------------------
 router.put('/goals/:goalId', authenticateJWT, async (req, res) => {
-    const { error, value } = goalUpdateSchema.validate(req.body);
-    if (error) return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
+  const { error, value } = goalUpdateSchema.validate(req.body);
+  if (error) return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
 
-    try {
-        const userId = req.userId;
-        const { goalId } = req.params;
+  try {
+    const userId = req.userId;
+    const { goalId } = req.params;
 
-        const studentGoals = await StudentRewards.findOne({ studentId: userId });
-        if (!studentGoals) return res.status(404).json({ message: 'Student goals not found.' });
+    const studentGoals = await StudentRewards.findOne({ studentId: userId });
+    if (!studentGoals) return res.status(404).json({ message: 'Student goals not found.' });
 
-        const goal = studentGoals.goals.id(goalId);
-        if (!goal) return res.status(404).json({ message: 'Goal not found.' });
+    const goal = studentGoals.goals.id(goalId);
+    if (!goal) return res.status(404).json({ message: 'Goal not found.' });
 
-        Object.assign(goal, value);
-        await studentGoals.save();
+    Object.assign(goal, value);
+    await studentGoals.save();
 
-        res.status(200).json({ message: 'Goal updated successfully!', goal });
-    } catch (err) {
-        logger.error('Error updating goal:', err);
-        res.status(500).json({ message: 'Failed to update goal.' });
-    }
+    res.status(200).json({ message: 'Goal updated successfully!', goal });
+
+  } catch (err) {
+    logger.error('Error updating goal:', err);
+    res.status(500).json({ message: 'Failed to update goal.', error: err.message });
+  }
 });
 
-// --- Delete a goal ---
+// ---------------------- Delete Goal ----------------------
 router.delete('/goals/:goalId', authenticateJWT, async (req, res) => {
-    try {
-        const userId = req.userId;
-        const { goalId } = req.params;
+  try {
+    const userId = req.userId;
+    const { goalId } = req.params;
 
-        const studentGoals = await StudentRewards.findOne({ studentId: userId });
-        if (!studentGoals) return res.status(404).json({ message: 'Student goals not found.' });
+    const studentGoals = await StudentRewards.findOne({ studentId: userId });
+    if (!studentGoals) return res.status(404).json({ message: 'Student goals not found.' });
 
-        const goalIndex = studentGoals.goals.findIndex(g => g._id.toString() === goalId);
-        if (goalIndex === -1) return res.status(404).json({ message: 'Goal not found.' });
+    const goalIndex = studentGoals.goals.findIndex(g => g._id.toString() === goalId);
+    if (goalIndex === -1) return res.status(404).json({ message: 'Goal not found.' });
 
-        studentGoals.goals.splice(goalIndex, 1);
-        await studentGoals.save();
+    studentGoals.goals.splice(goalIndex, 1);
+    await studentGoals.save();
 
-        eventBus.emit('goal_notification', { userId, message: 'Goal deleted.' });
-        res.status(200).json({ message: 'Goal deleted successfully.' });
-    } catch (err) {
-        logger.error('Error deleting goal:', err);
-        res.status(500).json({ message: 'Failed to delete goal.' });
-    }
+    eventBus.emit('goal_notification', { userId, message: 'Goal deleted.' });
+
+    res.status(200).json({ message: 'Goal deleted successfully.' });
+
+  } catch (err) {
+    logger.error('Error deleting goal:', err);
+    res.status(500).json({ message: 'Failed to delete goal.', error: err.message });
+  }
 });
 
 module.exports = router;

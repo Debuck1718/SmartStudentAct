@@ -1703,70 +1703,83 @@ protectedRouter.get(
 
 
 protectedRouter.post(
-  "/student/tasks",
+  '/student/tasks',
   authenticateJWT,
-  hasRole("student"),
+  hasRole('student'),
   async (req, res) => {
     try {
+      console.log('JWT userId:', req.userId); // Debug
+
       const { title, description, due_date } = req.body;
 
       if (!title || !due_date) {
-        return res.status(400).json({ message: "Title and due_date are required." });
+        return res.status(400).json({ message: 'Title and due_date are required.' });
       }
 
       const dueDate = new Date(due_date);
       if (isNaN(dueDate.getTime())) {
-        return res.status(400).json({ message: "Invalid due_date" });
+        return res.status(400).json({ message: 'Invalid due_date.' });
+      }
+
+      if (!req.userId) {
+        return res.status(401).json({ message: 'Unauthorized: user ID missing.' });
       }
 
       const newTask = new StudentTask({
         student_id: req.userId,
         title,
-        description: description || "",
+        description: description || '',
         due_date: dueDate,
       });
 
-      await newTask.save();
+      const savedTask = await newTask.save();
 
-      req.app.locals.eventBus.emit("task_created", {
-        taskId: newTask._id,
+      req.app.locals.eventBus.emit('task_created', {
+        taskId: savedTask._id,
         studentId: req.userId,
-        title: newTask.title,
+        title: savedTask.title,
       });
 
-      res.status(201).json({ message: "Task created successfully", task: newTask });
+      res.status(201).json({ message: 'Task created successfully', task: savedTask });
+
     } catch (error) {
-      logger.error("Error creating student task:", error);
-      res.status(500).json({ message: "Server error" });
+      logger.error('Error creating student task:', error);
+      res.status(500).json({ message: 'Server error', error: error.message });
     }
   }
 );
 
+// ---------------------- Get All Tasks ----------------------
 protectedRouter.get(
-  "/student/tasks",
+  '/student/tasks',
   authenticateJWT,
-  hasRole("student"),
+  hasRole('student'),
   async (req, res) => {
     try {
       const studentId = req.userId;
 
       if (!studentId) {
-        return res.status(400).json({ message: "Student ID missing from request." });
+        return res.status(400).json({ message: 'Student ID missing from request.' });
       }
 
-      const tasks = await StudentTask.find({ student_id: studentId }).lean().sort({ due_date: 1 });
+      const tasks = await StudentTask.find({ student_id: studentId })
+        .lean()
+        .sort({ due_date: 1 });
+
       res.status(200).json({ tasks });
+
     } catch (error) {
-      logger.error("Error fetching tasks:", error.message, error.stack);
-      res.status(500).json({ message: "Failed to fetch tasks.", error: error.message });
+      logger.error('Error fetching tasks:', error);
+      res.status(500).json({ message: 'Failed to fetch tasks.', error: error.message });
     }
   }
 );
 
+// ---------------------- Mark Task Complete ----------------------
 protectedRouter.patch(
-  "/student/tasks/:id/complete",
+  '/student/tasks/:id/complete',
   authenticateJWT,
-  hasRole("student"),
+  hasRole('student'),
   async (req, res) => {
     try {
       const task = await StudentTask.findOneAndUpdate(
@@ -1775,16 +1788,18 @@ protectedRouter.patch(
         { new: true }
       );
 
-      if (!task) return res.status(404).json({ message: "Task not found" });
+      if (!task) {
+        return res.status(404).json({ message: 'Task not found.' });
+      }
 
-      res.status(200).json({ message: "Task marked as completed", task });
+      res.status(200).json({ message: 'Task marked as completed', task });
+
     } catch (error) {
-      logger.error("Error marking task complete:", error);
-      res.status(500).json({ message: "Server error" });
+      logger.error('Error marking task complete:', error);
+      res.status(500).json({ message: 'Server error', error: error.message });
     }
   }
 );
-
 
 
 protectedRouter.post(
