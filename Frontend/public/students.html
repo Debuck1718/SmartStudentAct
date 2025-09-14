@@ -335,13 +335,31 @@
     }
 
     async function fetchWithAuth(endpoint, options = {}) {
-      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error((await res.json()).message || "Request failed");
-      return res.json();
+  const headers = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+
+  // Add cache-busting param
+  const url = `${API_BASE_URL}${endpoint}${
+    endpoint.includes("?") ? "&" : "?"
+  }_=${Date.now()}`;
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: "include", // 👈 important for HttpOnly cookie
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Unauthorized. Please log in again.");
     }
+    throw new Error(`HTTP error ${response.status}`);
+  }
+
+  return response.json();
+}
 
     async function checkAuthentication() {
       try {
@@ -412,62 +430,65 @@
     }
 
     async function fetchAssignments() {
-      try {
-        const [teacherAssignments, studentTasks] = await Promise.all([
-          fetchWithAuth("/student/assignments"),
-          fetchWithAuth("/student/tasks"),
-        ]);
+  try {
+    const [teacherAssignments, studentTasks] = await Promise.all([
+      fetchWithAuth("/student/assignments"),
+      fetchWithAuth("/student/tasks"),
+    ]);
 
-        let assignmentsHtml = "";
-        if (teacherAssignments.length > 0) {
-          assignmentsHtml += `<h3 class="font-bold text-lg mb-2 text-blue-600">Teacher-Assigned Assignments</h3>`;
-          assignmentsHtml += teacherAssignments.map((a) => {
-            const due = a.due_date ? new Date(a.due_date).toLocaleString() : "N/A";
-            return `
-              <li class="p-4 border-b rounded-lg shadow-sm mb-2 bg-gray-100 flex justify-between items-center">
-                <div>
-                  <h4 class="font-semibold">${a.title || "Untitled"}</h4>
-                  <p class="text-sm text-gray-600">${a.description || ""}</p>
-                  <span class="text-xs text-gray-500 block mt-1">Due: ${due}</span>
-                </div>
-                <button onclick="handleSubmission('${a._id}')" class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm hover:bg-blue-600 transition-colors duration-200">Submit</button>
-              </li>
-            `;
-          }).join("");
-        } else {
-          assignmentsHtml += `<p data-i18n="no_assignments" class="italic text-gray-500 text-center">No teacher-assigned assignments.</p>`;
-        }
+    let assignmentsHtml = "";
 
-        assignmentsHtml += `<hr class="my-4 border-gray-300">`;
-
-        if (studentTasks.length > 0) {
-          assignmentsHtml += `<h3 class="font-bold text-lg mb-2 text-purple-600">My Personal Tasks</h3>`;
-          assignmentsHtml += studentTasks.map((t) => {
-            const due = t.due_date ? new Date(t.due_date).toLocaleString() : "N/A";
-            const completedClass = t.is_completed ? "line-through text-gray-400" : "";
-            const completedText = t.is_completed ? "Completed" : "Mark as Done";
-            const buttonAction = t.is_completed ? "" : `onclick="markTaskComplete('${t._id}')"`;
-            const buttonClass = t.is_completed ? "bg-green-500 cursor-not-allowed" : "bg-purple-500 hover:bg-purple-600";
-            return `
-              <li class="p-4 border-b rounded-lg shadow-sm mb-2 bg-gray-100 flex justify-between items-center ${completedClass}">
-                <div>
-                  <h4 class="font-semibold">${t.title}</h4>
-                  <p class="text-sm text-gray-600">${t.description || ""}</p>
-                  <span class="text-xs text-gray-500 block mt-1">Due: ${due}</span>
-                </div>
-                <button ${buttonAction} class="${buttonClass} text-white px-3 py-1 rounded-full text-sm transition-colors duration-200">${completedText}</button>
-              </li>
-            `;
-          }).join("");
-        } else {
-          assignmentsHtml += `<p data-i18n="no_tasks" class="italic text-gray-500 text-center">No personal tasks added yet.</p>`;
-        }
-
-        DOM.assignmentsList.innerHTML = assignmentsHtml;
-      } catch (e) {
-        showToast(e.message, "error");
-      }
+    // --- Teacher Assignments ---
+    if (teacherAssignments.length > 0) {
+      assignmentsHtml += `<h3 class="font-bold text-lg mb-2 text-blue-600">Teacher-Assigned Assignments</h3>`;
+      assignmentsHtml += teacherAssignments.map((a) => {
+        const due = a.due_date ? new Date(a.due_date).toLocaleString() : "N/A";
+        return `
+          <li class="p-4 border-b rounded-lg shadow-sm mb-2 bg-gray-100 flex justify-between items-center">
+            <div>
+              <h4 class="font-semibold">${a.title || "Untitled"}</h4>
+              <p class="text-sm text-gray-600">${a.description || ""}</p>
+              <span class="text-xs text-gray-500 block mt-1">Due: ${due}</span>
+            </div>
+            <button onclick="handleSubmission('${a._id}')" class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm hover:bg-blue-600 transition-colors duration-200">Submit</button>
+          </li>
+        `;
+      }).join("");
+    } else {
+      assignmentsHtml += `<p data-i18n="no_assignments" class="italic text-gray-500 text-center">No teacher-assigned assignments.</p>`;
     }
+
+    assignmentsHtml += `<hr class="my-4 border-gray-300">`;
+
+    // --- Personal Tasks ---
+    if (studentTasks.length > 0) {
+      assignmentsHtml += `<h3 class="font-bold text-lg mb-2 text-purple-600">My Personal Tasks</h3>`;
+      assignmentsHtml += studentTasks.map((t) => {
+        const due = t.due_date ? new Date(t.due_date).toLocaleString() : "N/A";
+        const completedClass = t.is_completed ? "line-through text-gray-400" : "";
+        const completedText = t.is_completed ? "Completed" : "Mark as Done";
+        const buttonAction = t.is_completed ? "" : `onclick="markTaskComplete('${t._id}')"`; 
+        const buttonClass = t.is_completed ? "bg-green-500 cursor-not-allowed" : "bg-purple-500 hover:bg-purple-600";
+        return `
+          <li class="p-4 border-b rounded-lg shadow-sm mb-2 bg-gray-100 flex justify-between items-center ${completedClass}">
+            <div>
+              <h4 class="font-semibold">${t.title}</h4>
+              <p class="text-sm text-gray-600">${t.description || ""}</p>
+              <span class="text-xs text-gray-500 block mt-1">Due: ${due}</span>
+            </div>
+            <button ${buttonAction} class="${buttonClass} text-white px-3 py-1 rounded-full text-sm transition-colors duration-200">${completedText}</button>
+          </li>
+        `;
+      }).join("");
+    } else {
+      assignmentsHtml += `<p data-i18n="no_tasks" class="italic text-gray-500 text-center">No personal tasks added yet.</p>`;
+    }
+
+    DOM.assignmentsList.innerHTML = assignmentsHtml;
+  } catch (e) {
+    showToast(e.message, "error");
+  }
+}
 
     window.markTaskComplete = async (taskId) => {
       try {
@@ -475,7 +496,7 @@
           method: "PATCH"
         });
         showToast("Task marked as completed!", "success");
-        fetchAssignments(); // Refresh the list
+        fetchAssignments(); 
       } catch (e) {
         showToast(e.message, "error");
       }
