@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -35,7 +34,7 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
 const app = express();
-app.set("trust proxy", 1); 
+app.set("trust proxy", 1);
 
 app.use(morgan("dev"));
 app.use(helmet());
@@ -43,29 +42,38 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
+// Allowed origins for CORS
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:4000",
   "https://smartstudentact.com",
   "https://www.smartstudentact.com",
-  "https://api.smartstudentact.com", 
+  "https://api.smartstudentact.com",
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true, 
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Set-Cookie"],
-  })
-);
+// CORS setup
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+  ],
+  exposedHeaders: ["Set-Cookie"],
+};
 
+app.use(cors(corsOptions));
+// Handle preflight requests explicitly
+app.options("*", cors(corsOptions));
 
 try {
   cloudinary.config({
@@ -79,7 +87,6 @@ try {
   process.exit(1);
 }
 
-
 async function connectMongo() {
   try {
     console.log(`📡 Connecting to MongoDB...`);
@@ -90,7 +97,6 @@ async function connectMongo() {
     throw err;
   }
 }
-
 
 let agenda;
 async function startAgenda() {
@@ -111,7 +117,6 @@ async function startAgenda() {
   }
 }
 
-
 try {
   const publicRoutes = require("./routes/publicRoutes");
   app.use("/", publicRoutes(eventBus, agenda));
@@ -120,8 +125,7 @@ try {
   app.use("/api", webhookRoutes);
 
   const pushRoutes = require("./routes/pushRoutes");
-app.use("/api/push", pushRoutes);
-
+  app.use("/api/push", pushRoutes);
 
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", protectedRoutes);
@@ -136,7 +140,6 @@ app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-
 app.use((err, req, res, next) => {
   if (NODE_ENV === "development") {
     console.error("❌ Global error handler caught:", err);
@@ -150,7 +153,6 @@ app.use((err, req, res, next) => {
     details: NODE_ENV === "development" ? err.stack : undefined,
   });
 });
-
 
 const server = http.createServer(app);
 
@@ -180,4 +182,5 @@ async function startApp() {
 }
 
 startApp();
+
 
