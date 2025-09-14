@@ -6,7 +6,6 @@ const mailer = require("./email");
 
 const eventBus = new EventEmitter();
 
-
 const emailTemplates = {
   otp: 3,
   welcome: 2,
@@ -19,9 +18,8 @@ const emailTemplates = {
   goalBudgetUpdate: 10,
 };
 
-
 webpush.setVapidDetails(
-  "mailto:support@smartstudentact.com", 
+  "mailto:support@smartstudentact.com",
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );
@@ -44,10 +42,7 @@ async function sendSMS(phone, message) {
 async function sendPushToUser(pushSub, payload) {
   try {
     if (pushSub?.subscription) {
-      await webpush.sendNotification(
-        pushSub.subscription,
-        JSON.stringify(payload)
-      );
+      await webpush.sendNotification(pushSub.subscription, JSON.stringify(payload));
     }
   } catch (err) {
     logger.error(`Push notification failed: ${err.message}`);
@@ -56,7 +51,6 @@ async function sendPushToUser(pushSub, payload) {
 
 async function notifyUser(user, title, message, url, emailTemplateId, templateVariables = {}) {
   try {
-   
     if (user.PushSub) {
       await sendPushToUser(user.PushSub, { title, body: message, url });
     }
@@ -65,7 +59,6 @@ async function notifyUser(user, title, message, url, emailTemplateId, templateVa
       await sendSMS(user.phone, `${title}: ${message}`);
     }
 
-  
     if (user.email && emailTemplateId) {
       await mailer.sendTemplateEmail(user.email, emailTemplateId, templateVariables);
       logger.info(`[Brevo Email] Sent "${title}" to ${user.email}`);
@@ -75,26 +68,37 @@ async function notifyUser(user, title, message, url, emailTemplateId, templateVa
   }
 }
 
-
 function configureEventBus(agenda, mongoose) {
   const User = mongoose.models.User;
   const Assignment = mongoose.models.Assignment;
   const StudentTask = mongoose.models.StudentTask;
   const Quiz = mongoose.models.Quiz;
 
-  
+  async function fetchStudentsForAssignmentOrQuiz(item) {
+    const userIds = item.assigned_to_users || [];
+    const grades = item.assigned_to_grades || [];
+    const otherGrades = item.assigned_to_other_grades || [];
+    const schools = item.assigned_to_schools || [];
+
+    const students = await User.find({
+      role: "student",
+      $or: [
+        { _id: { $in: userIds } },
+        { grade: { $in: grades } },
+        { _id: { $in: otherGrades } },
+        { school: { $in: schools } },
+      ],
+    }).select("_id phone email firstname PushSub");
+
+    return students;
+  }
+
   eventBus.on("assignment_created", async ({ assignmentId, title }) => {
     try {
       const assignment = await Assignment.findById(assignmentId);
       if (!assignment) return;
 
-      const students = await User.find({
-        $or: [
-          { school: { $in: assignment.assigned_to_schools } },
-          { grade: { $in: assignment.assigned_to_grades } },
-          { email: { $in: assignment.assigned_to_users } },
-        ],
-      }).select("_id phone email firstname PushSub");
+      const students = await fetchStudentsForAssignmentOrQuiz(assignment);
 
       for (const student of students) {
         await notifyUser(
@@ -111,7 +115,6 @@ function configureEventBus(agenda, mongoose) {
         );
       }
 
-     
       const reminderHours = [6, 2];
       for (const hoursBefore of reminderHours) {
         const remindTime = new Date(assignment.due_date);
@@ -135,13 +138,7 @@ function configureEventBus(agenda, mongoose) {
       const assignment = await Assignment.findById(assignmentId);
       if (!assignment) return;
 
-      const students = await User.find({
-        $or: [
-          { school: { $in: assignment.assigned_to_schools } },
-          { grade: { $in: assignment.assigned_to_grades } },
-          { email: { $in: assignment.assigned_to_users } },
-        ],
-      }).select("_id phone email firstname PushSub");
+      const students = await fetchStudentsForAssignmentOrQuiz(assignment);
 
       for (const student of students) {
         await notifyUser(
@@ -163,7 +160,6 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
-  
   eventBus.on("task_created", async ({ taskId, studentId, title }) => {
     try {
       const task = await StudentTask.findById(taskId);
@@ -216,15 +212,12 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
-  
   eventBus.on("quiz_created", async ({ quizId, title }) => {
     try {
       const quiz = await Quiz.findById(quizId);
       if (!quiz) return;
 
-      const students = await User.find({
-        email: { $in: quiz.assigned_to_users },
-      }).select("_id phone email firstname PushSub");
+      const students = await fetchStudentsForAssignmentOrQuiz(quiz);
 
       for (const student of students) {
         await notifyUser(
@@ -241,11 +234,11 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
-  
   eventBus.on("feedback_given", async ({ assignmentId, studentId, feedback }) => {
     try {
       const assignment = await Assignment.findById(assignmentId);
       const student = await User.findById(studentId).select("_id phone email firstname PushSub");
+      if (!assignment || !student) return;
 
       await notifyUser(
         student,
@@ -264,11 +257,11 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
- 
   eventBus.on("assignment_graded", async ({ assignmentId, studentId, grade }) => {
     try {
       const assignment = await Assignment.findById(assignmentId);
       const student = await User.findById(studentId).select("_id phone email firstname PushSub");
+      if (!assignment || !student) return;
 
       await notifyUser(
         student,
@@ -287,10 +280,11 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
- 
   eventBus.on("reward_granted", async ({ userId, type }) => {
     try {
       const user = await User.findById(userId).select("_id phone email firstname PushSub");
+      if (!user) return;
+
       await notifyUser(
         user,
         "Reward Earned",
@@ -310,6 +304,8 @@ function configureEventBus(agenda, mongoose) {
   eventBus.on("goal_notification", async ({ userId, message }) => {
     try {
       const user = await User.findById(userId).select("_id phone email firstname PushSub");
+      if (!user) return;
+
       await notifyUser(
         user,
         "Goal Update",
@@ -326,6 +322,8 @@ function configureEventBus(agenda, mongoose) {
   eventBus.on("budget_notification", async ({ userId, message }) => {
     try {
       const user = await User.findById(userId).select("_id phone email firstname PushSub");
+      if (!user) return;
+
       await notifyUser(
         user,
         "Budget Update",
@@ -339,8 +337,9 @@ function configureEventBus(agenda, mongoose) {
     }
   });
 
+  eventBus.setMaxListeners(50);
   return { eventBus };
 }
 
-eventBus.setMaxListeners(50);
 module.exports = { configureEventBus, emailTemplates };
+

@@ -54,9 +54,37 @@ module.exports = (mongoConnectionString) => {
       }
     });
 
-    /**
-     * Task Reminder job
-     */
+    agenda.define("quiz_reminder", async (job) => {
+  const { quizId, hoursBefore } = job.attrs.data;
+  try {
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) return;
+
+    const students = await User.find({
+      $or: [
+        { school: { $in: quiz.assigned_to_schools } },
+        { grade: { $in: quiz.assigned_to_grades } },
+        { _id: { $in: quiz.assigned_to_users } },
+      ],
+    }).select("_id phone email firstname PushSub");
+
+    for (const student of students) {
+      await notifyUser(
+        student,
+        "Quiz Reminder",
+        `"${quiz.title}" is due in ${hoursBefore} hours.`,
+        "/student/quizzes",
+        emailTemplates.quizNotification,
+        { firstname: student.firstname, quizTitle: quiz.title, hoursBefore }
+      );
+    }
+  } catch (err) {
+    logger.error(`quiz_reminder job failed: ${err.message}`);
+  }
+});
+
+
+
     agenda.define("task_reminder", async (job) => {
       try {
         const { taskId, studentId, message } = job.attrs.data;

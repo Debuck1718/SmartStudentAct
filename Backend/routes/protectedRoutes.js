@@ -1225,13 +1225,12 @@ protectedRouter.post(
         assigned_to_programs = [],
         assigned_to_schools = [],
         assigned_to_other_grades = [],
-        recipientType, // new field from frontend: 'single', 'multiple', 'class', 'otherGrade'
-        grade,         // used if recipientType is 'otherGrade'
+        recipientType,
+        grade,
       } = req.body;
 
       // Map "entire class" to assigned_to_users automatically
       if (recipientType === "class") {
-        // Fetch students in the teacher's class
         const students = await User.find({ isMyClass: true, role: "student" });
         assigned_to_users = students.map(s => s._id.toString());
       } else if (recipientType === "otherGrade" && grade) {
@@ -1239,7 +1238,7 @@ protectedRouter.post(
         assigned_to_other_grades = students.map(s => s._id.toString());
       }
 
-      // Validation: must have at least one target
+      // Validation
       if (
         !assigned_to_users.length &&
         !assigned_to_grades.length &&
@@ -1267,6 +1266,26 @@ protectedRouter.post(
       });
 
       await newAssignment.save();
+
+      // Emit event for notifications
+      eventBus.emit("assignment_created", {
+        assignmentId: newAssignment._id,
+        title: newAssignment.title,
+      });
+
+      // Schedule reminders: 6 hours & 2 hours before due date
+      const reminderHours = [6, 2];
+      for (const hoursBefore of reminderHours) {
+        const remindTime = new Date(due_date);
+        remindTime.setHours(remindTime.getHours() - hoursBefore);
+        if (remindTime > new Date()) {
+          await agenda.schedule(remindTime, "assignment_reminder", {
+            assignmentId: newAssignment._id,
+            hoursBefore,
+          });
+        }
+      }
+
       res.status(201).json({
         message: "Assignment created successfully",
         assignment: newAssignment,
@@ -1277,6 +1296,7 @@ protectedRouter.post(
     }
   }
 );
+
 
 
 protectedRouter.get(
@@ -1360,20 +1380,19 @@ protectedRouter.post(
         due_date,
         timeLimitMinutes,
         questions,
-        assigned_to_users,
-        assigned_to_grades,
-        assigned_to_programs,
-        assigned_to_schools,
-        assigned_to_other_grades, // New field for other grades
+        assigned_to_users = [],
+        assigned_to_grades = [],
+        assigned_to_programs = [],
+        assigned_to_schools = [],
+        assigned_to_other_grades = [],
       } = req.body;
 
-      // New validation logic to handle different assignment targets
       if (
-        !assigned_to_users &&
-        !assigned_to_grades &&
-        !assigned_to_programs &&
-        !assigned_to_schools &&
-        !assigned_to_other_grades
+        !assigned_to_users.length &&
+        !assigned_to_grades.length &&
+        !assigned_to_programs.length &&
+        !assigned_to_schools.length &&
+        !assigned_to_other_grades.length
       ) {
         return res.status(400).json({
           message:
@@ -1388,23 +1407,42 @@ protectedRouter.post(
         due_date,
         timeLimitMinutes,
         questions,
-        assigned_to_users: assigned_to_users || [],
-        assigned_to_grades: assigned_to_grades || [],
-        assigned_to_programs: assigned_to_programs || [],
-        assigned_to_schools: assigned_to_schools || [],
-        assigned_to_other_grades: assigned_to_other_grades || [],
+        assigned_to_users,
+        assigned_to_grades,
+        assigned_to_programs,
+        assigned_to_schools,
+        assigned_to_other_grades,
       });
 
       await quiz.save();
-      res
-        .status(201)
-        .json({ message: "Quiz created successfully", quiz });
+
+      // Emit event for notifications
+      eventBus.emit("quiz_created", {
+        quizId: quiz._id,
+        title: quiz.title,
+      });
+
+      // Schedule reminders: 6 hours & 2 hours before due date
+      const reminderHours = [6, 2];
+      for (const hoursBefore of reminderHours) {
+        const remindTime = new Date(due_date);
+        remindTime.setHours(remindTime.getHours() - hoursBefore);
+        if (remindTime > new Date()) {
+          await agenda.schedule(remindTime, "quiz_reminder", {
+            quizId: quiz._id,
+            hoursBefore,
+          });
+        }
+      }
+
+      res.status(201).json({ message: "Quiz created successfully", quiz });
     } catch (error) {
       logger.error("Error creating quiz:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
+
 
 protectedRouter.get(
   "/teacher/overdue-tasks",
@@ -1485,35 +1523,40 @@ protectedRouter.post(
   authenticateJWT,
   hasRole(["teacher"]),
   async (req, res) => {
-    const { assigned_to_users, assigned_to_grades, message } = req.body;
+    const { assigned_to_users = [], assigned_to_grades = [], message } = req.body;
 
     try {
       let studentIds = [];
 
-      if (assigned_to_users && assigned_to_users.length > 0) {
-        // Validate users exist
+      // Validate individual students
+      if (assigned_to_users.length > 0) {
         const students = await User.find({
-          _id: { $in: assigned_to_users },
+          _id: { $in: assigned_to_users.map(id => id.toString()) },
           role: "student",
         });
-        if (!students.length) {
+        if (students.length === 0) {
           return res.status(404).json({ message: "No students found for the given IDs." });
         }
-        studentIds = students.map(s => s._id);
+        studentIds.push(...students.map(s => s._id.toString()));
       }
 
-      if (assigned_to_grades && assigned_to_grades.length > 0) {
+      // Validate students by grade
+      if (assigned_to_grades.length > 0) {
         const gradeStudents = await User.find({
           grade: { $in: assigned_to_grades },
           role: "student",
         });
-        studentIds.push(...gradeStudents.map(s => s._id));
+        studentIds.push(...gradeStudents.map(s => s._id.toString()));
       }
 
-      if (!studentIds.length) {
+      // Deduplicate IDs
+      studentIds = [...new Set(studentIds)];
+
+      if (studentIds.length === 0) {
         return res.status(400).json({ message: "No students selected." });
       }
 
+      // Emit messages
       studentIds.forEach(id => {
         eventBus.emit("teacher_message", {
           userId: id,
@@ -1522,10 +1565,10 @@ protectedRouter.post(
         });
       });
 
-      res.status(200).json({ message: "Message sent successfully!" });
+      res.status(200).json({ message: "Message sent successfully!", studentIds });
     } catch (error) {
       logger.error("Error sending message:", error);
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ message: "Server error", error: error.message });
     }
   }
 );
