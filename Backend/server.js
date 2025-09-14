@@ -31,7 +31,7 @@ requiredEnvVars.forEach((key) => {
 
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
-const isProd = NODE_ENV === "production";
+const isProd = process.NODE_ENV === "production";
 
 const app = express();
 app.set("trust proxy", 1);
