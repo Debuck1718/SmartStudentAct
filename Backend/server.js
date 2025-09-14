@@ -10,6 +10,7 @@ const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
 const http = require("http");
 const fetch = require("node-fetch");
+const path = require("path");
 
 const eventBus = new EventEmitter();
 
@@ -149,6 +150,15 @@ try {
 
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
+});
+
+// Serve the front-end static files
+app.use(express.static(path.join(__dirname, 'client', 'build')));
+
+// ⚠️ This is the critical fix. The catch-all route MUST be last.
+// It serves the main HTML file for any requests that didn't match an API route.
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client", "build", "index.html"));
 });
 
 // 🛠 Global error handler
