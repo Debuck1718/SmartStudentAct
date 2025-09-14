@@ -84,8 +84,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// ✅ This line was causing the error and is not needed.
-// app.options("*", cors(corsOptions));
 
 try {
   cloudinary.config({
@@ -113,6 +111,7 @@ async function connectMongo() {
 let agenda;
 async function startAgenda() {
   try {
+    console.log(`📅 Connecting to Agenda...`);
     agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
 
     agenda.define("test job", async () => {
@@ -122,7 +121,7 @@ async function startAgenda() {
     await agenda.start();
     await agenda.every("1 minute", "test job");
 
-    console.log("📅 Agenda job scheduler started!");
+    console.log("✅ Agenda job scheduler started!");
   } catch (err) {
     console.error("❌ Agenda startup error:", err);
     throw err;
@@ -177,6 +176,13 @@ app.use((err, req, res, next) => {
 });
 
 const server = http.createServer(app);
+
+// Global handler for uncaught promise rejections to prevent silent crashes
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Optional: Exit the process to prevent it from running in an unknown state
+  // process.exit(1);
+});
 
 async function startApp() {
   try {
