@@ -1734,11 +1734,14 @@ protectedRouter.post(
 
       const savedTask = await newTask.save();
 
-      req.app.locals.eventBus.emit('task_created', {
+      // --- CRITICAL CHANGE HERE ---
+      // Use the imported 'eventBus' variable directly.
+      eventBus.emit('task_created', {
         taskId: savedTask._id,
         studentId: req.userId,
         title: savedTask.title,
       });
+      // --- END OF CRITICAL CHANGE ---
 
       res.status(201).json({ message: 'Task created successfully', task: savedTask });
 
