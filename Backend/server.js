@@ -14,6 +14,7 @@ const path = require("path");
 
 const eventBus = new EventEmitter();
 
+// Ensure required env vars exist
 const requiredEnvVars = [
   "PORT",
   "MONGODB_URI",
@@ -29,8 +30,10 @@ requiredEnvVars.forEach((key) => {
   }
 });
 
+
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
+const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
 const app = express();
