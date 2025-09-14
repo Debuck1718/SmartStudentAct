@@ -80,7 +80,10 @@ const corsOptions = {
   ],
   exposedHeaders: ["Set-Cookie"],
 };
-app.use(cors(corsOptions)); // ✅ handles preflight too
+app.use(cors(corsOptions));
+
+// ✅ Always respond to preflight requests
+app.options("*", cors(corsOptions));
 
 // ✅ Cloudinary config
 try {
@@ -98,11 +101,14 @@ try {
 // 📡 MongoDB
 async function connectMongo() {
   try {
-    console.log(`📡 Connecting to MongoDB...`);
-    await mongoose.connect(MONGO_URI);
+    console.log("📡 Connecting to MongoDB...");
+    await mongoose.connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err);
+    console.error("❌ MongoDB connection error:", err.message);
     throw err;
   }
 }
@@ -111,7 +117,7 @@ async function connectMongo() {
 let agenda;
 async function startAgenda() {
   try {
-    console.log(`📅 Connecting to Agenda...`);
+    console.log("📅 Initializing Agenda...");
     agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
 
     agenda.define("test job", async () => {
@@ -123,7 +129,7 @@ async function startAgenda() {
 
     console.log("✅ Agenda job scheduler started!");
   } catch (err) {
-    console.error("❌ Agenda startup error:", err);
+    console.error("❌ Agenda startup error:", err.message);
     throw err;
   }
 }
@@ -152,19 +158,17 @@ app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-// Serve static front-end files (React/Vue/Angular builds)
+// Serve static front-end files
 app.use(express.static(path.join(__dirname, "client", "build")));
 
 // Catch-all for SPA front-end routing
-app.get("/*", (req, res) => {
+app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "build", "index.html"));
 });
 
 // 🛠 Global error handler
 app.use((err, req, res, next) => {
-  if (NODE_ENV === "development") {
-    console.error("❌ Global error handler caught:", err);
-  }
+  console.error("❌ Global error handler caught:", err);
   res.status(err.status || 500).json({
     error: err.message || "An unexpected server error occurred.",
     details: NODE_ENV === "development" ? err.stack : undefined,
@@ -181,11 +185,13 @@ process.on("unhandledRejection", (reason, promise) => {
 // 🚀 Start app
 async function startApp() {
   try {
+    console.log("🚀 Starting SmartStudentAct backend...");
+
     await connectMongo();
     await startAgenda();
 
     server.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
+      console.log(`✅ Server running on port ${PORT} [${NODE_ENV}]`);
 
       // Self-ping to keep Render dyno awake
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
@@ -200,12 +206,14 @@ async function startApp() {
       }
     });
   } catch (err) {
-    console.error("❌ Fatal startup error:", err);
-    process.exit(1);
+    console.error("❌ Fatal startup error:", err.message);
+    console.error(err.stack);
+    // ❌ Removed process.exit(1) → so Render shows the real error
   }
 }
 
 startApp();
+
 
 
 
