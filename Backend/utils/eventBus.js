@@ -1,17 +1,26 @@
-// eventBus.js
 const EventEmitter = require("events");
 const webpush = require("web-push");
 const smsApi = require("./sms");
 const logger = require("./logger");
 const mailer = require("./email");
 const mongoose = require("mongoose");
+const Agenda = require("agenda"); // ✅ import agenda
 
 const User = mongoose.models.User;
 const Assignment = mongoose.models.Assignment;
 const StudentTask = mongoose.models.StudentTask;
 const Quiz = mongoose.models.Quiz;
 
-const agenda = { schedule: () => {} };
+// ✅ Initialize Agenda with Mongo connection
+const agenda = new Agenda({
+  db: { address: process.env.MONGO_URI, collection: "jobs" },
+});
+
+// Start Agenda after Mongo connects
+agenda.on("ready", async () => {
+  logger.info("✅ Agenda connected, starting...");
+  await agenda.start();
+});
 
 // Shared event bus instance
 const eventBus = new EventEmitter();
@@ -299,9 +308,7 @@ eventBus.on("assignment_graded", async ({ assignmentId, studentId, grade }) => {
   }
 });
 
-/**
- * Rewards + Points granted
- */
+
 eventBus.on("reward_granted", async ({ userId, type, points, reason }) => {
   try {
     const user = await User.findById(userId).select("_id phone email firstname PushSub");
@@ -373,5 +380,5 @@ eventBus.on("budget_notification", async ({ userId, message }) => {
 
 eventBus.setMaxListeners(50);
 
-module.exports = { eventBus, emailTemplates };
+module.exports = { eventBus, emailTemplates, agenda };
 
