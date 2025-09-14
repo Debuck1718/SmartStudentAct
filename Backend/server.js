@@ -60,7 +60,9 @@ app.use(
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true, 
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization","Access-Control-Allow-Origin",
+      "Access-Control-Allow-Methods", "OPTIONS, POST, GET,PUT, PATCH"
+    ],
     exposedHeaders: ["Set-Cookie"],
   })
 );

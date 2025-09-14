@@ -1740,29 +1740,25 @@ protectedRouter.post(
 
 // ---------------------- Get All Tasks ----------------------
 protectedRouter.get(
-  '/student/tasks',
+  "/student/tasks",
   authenticateJWT,
-  hasRole('student'),
+  hasRole("student"),
   async (req, res) => {
     try {
-      const studentId = req.userId;
+      console.log("Fetching tasks for user:", req.userId);
 
-      if (!studentId) {
-        return res.status(400).json({ message: 'Student ID missing from request.' });
-      }
+      const tasks = await StudentTask.find({ student_id: req.userId }).sort({
+        due_date: 1,
+      });
 
-      const tasks = await StudentTask.find({ student_id: studentId })
-        .lean()
-        .sort({ due_date: 1 });
-
-      res.status(200).json({ tasks });
-
+      res.json({ tasks });
     } catch (error) {
-      logger.error('Error fetching tasks:', error);
-      res.status(500).json({ message: 'Failed to fetch tasks.', error: error.message });
+      logger.error("Error fetching student tasks:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
     }
   }
 );
+
 
 // ---------------------- Mark Task Complete ----------------------
 protectedRouter.patch(
