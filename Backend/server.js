@@ -38,6 +38,7 @@ const isProd = NODE_ENV === "production";
 const app = express();
 app.set("trust proxy", 1);
 
+// Middleware
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
@@ -62,12 +63,9 @@ app.use((req, res, next) => {
 // ⚙️ CORS setup
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin) {
-      return callback(null, true); // allow non-browser clients
-    }
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    if (!origin) return callback(null, true); // allow non-browser clients
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+
     console.warn(`❌ CORS blocked request from: ${origin}`);
     return callback(new Error("Not allowed by CORS"));
   },
@@ -82,9 +80,12 @@ const corsOptions = {
   ],
   exposedHeaders: ["Set-Cookie"],
 };
-
 app.use(cors(corsOptions));
 
+// ✅ Always respond to preflight requests
+app.options("*", cors(corsOptions));
+
+// ✅ Cloudinary config
 try {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -97,6 +98,7 @@ try {
   process.exit(1);
 }
 
+// 📡 MongoDB
 async function connectMongo() {
   try {
     console.log(`📡 Connecting to MongoDB...`);
@@ -108,6 +110,7 @@ async function connectMongo() {
   }
 }
 
+// 📅 Agenda jobs
 let agenda;
 async function startAgenda() {
   try {
@@ -128,6 +131,7 @@ async function startAgenda() {
   }
 }
 
+// Routes
 try {
   const publicRoutes = require("./routes/publicRoutes");
   app.use("/", publicRoutes(eventBus, agenda));
@@ -151,11 +155,10 @@ app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-// Serve the front-end static files
-app.use(express.static(path.join(__dirname, 'client', 'build')));
+// Serve static front-end files (React/Vue/Angular builds)
+app.use(express.static(path.join(__dirname, "client", "build")));
 
-// ⚠️ This is the critical fix. The catch-all route MUST be last.
-// It serves the main HTML file for any requests that didn't match an API route.
+// Catch-all for SPA front-end routing
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "build", "index.html"));
 });
@@ -165,25 +168,20 @@ app.use((err, req, res, next) => {
   if (NODE_ENV === "development") {
     console.error("❌ Global error handler caught:", err);
   }
-
-  const statusCode = err.status || 500;
-  const message = err.message || "An unexpected server error occurred.";
-
-  res.status(statusCode).json({
-    error: message,
+  res.status(err.status || 500).json({
+    error: err.message || "An unexpected server error occurred.",
     details: NODE_ENV === "development" ? err.stack : undefined,
   });
 });
 
 const server = http.createServer(app);
 
-// Global handler for uncaught promise rejections to prevent silent crashes
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  // Optional: Exit the process to prevent it from running in an unknown state
-  // process.exit(1);
+// Global handler for unhandled promise rejections
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
 });
 
+// 🚀 Start app
 async function startApp() {
   try {
     await connectMongo();
@@ -192,6 +190,7 @@ async function startApp() {
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
 
+      // Self-ping to keep Render dyno awake
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         setInterval(async () => {
           try {
@@ -210,6 +209,7 @@ async function startApp() {
 }
 
 startApp();
+
 
 
 
