@@ -1711,20 +1711,18 @@ protectedRouter.post(
       const { title, description, due_date } = req.body;
 
       if (!title || !due_date) {
-        return res
-          .status(400)
-          .json({ message: "Title and due_date are required." });
+        return res.status(400).json({ message: "Title and due_date are required." });
       }
 
       const dueDate = new Date(due_date);
-      if (isNaN(dueDate)) {
+      if (isNaN(dueDate.getTime())) {
         return res.status(400).json({ message: "Invalid due_date" });
       }
 
       const newTask = new StudentTask({
-        student_id: req.user.id,
+        student_id: req.userId,
         title,
-        description,
+        description: description || "",
         due_date: dueDate,
       });
 
@@ -1732,13 +1730,11 @@ protectedRouter.post(
 
       req.app.locals.eventBus.emit("task_created", {
         taskId: newTask._id,
-        studentId: req.user.id,
+        studentId: req.userId,
         title: newTask.title,
       });
 
-      res
-        .status(201)
-        .json({ message: "Task created successfully", task: newTask });
+      res.status(201).json({ message: "Task created successfully", task: newTask });
     } catch (error) {
       logger.error("Error creating student task:", error);
       res.status(500).json({ message: "Server error" });
@@ -1752,24 +1748,20 @@ protectedRouter.get(
   hasRole("student"),
   async (req, res) => {
     try {
-      const studentId = req.user.id || req.user._id; 
+      const studentId = req.userId;
 
       if (!studentId) {
         return res.status(400).json({ message: "Student ID missing from request." });
       }
 
-      const tasks = await StudentTask.find({ student_id: studentId }).lean();
-      return res.status(200).json(tasks);
+      const tasks = await StudentTask.find({ student_id: studentId }).lean().sort({ due_date: 1 });
+      res.status(200).json({ tasks });
     } catch (error) {
       logger.error("Error fetching tasks:", error.message, error.stack);
-      return res.status(500).json({
-        message: "Failed to fetch tasks.",
-        error: error.message, 
-      });
+      res.status(500).json({ message: "Failed to fetch tasks.", error: error.message });
     }
   }
 );
-
 
 protectedRouter.patch(
   "/student/tasks/:id/complete",
@@ -1778,7 +1770,7 @@ protectedRouter.patch(
   async (req, res) => {
     try {
       const task = await StudentTask.findOneAndUpdate(
-        { _id: req.params.id, student_id: req.user.id },
+        { _id: req.params.id, student_id: req.userId },
         { is_completed: true },
         { new: true }
       );
@@ -1792,6 +1784,7 @@ protectedRouter.patch(
     }
   }
 );
+
 
 
 protectedRouter.post(

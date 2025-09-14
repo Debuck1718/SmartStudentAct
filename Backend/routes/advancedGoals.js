@@ -48,7 +48,6 @@ const goalUpdateSchema = Joi.object({
     is_completed: Joi.boolean().optional(),
     points: Joi.number().integer().min(0).optional()
 });
-
 // New Joi schema for the add-points route
 const addPointsSchema = Joi.object({
   points: Joi.number().integer().required(),
@@ -459,140 +458,89 @@ router.post('/milestone-completed', authenticateJWT, checkSubscription, async (r
 
 router.post('/goals', authenticateJWT, async (req, res) => {
     const { error, value } = studentGoalSchema.validate(req.body);
-    if (error) {
-        return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
-    }
+    if (error) return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
 
     try {
-        const userId = req.user.id;
+        const userId = req.userId;
 
         let studentGoals = await StudentRewards.findOne({ studentId: userId });
         if (!studentGoals) {
-            studentGoals = new StudentRewards({ studentId: userId });
+            studentGoals = new StudentRewards({ studentId: userId, goals: [] });
         }
 
         studentGoals.goals.push(value);
         await studentGoals.save();
-        
+
         eventBus.emit('goal_notification', {
             userId,
             message: `New goal created: ${value.description}`
         });
 
         res.status(201).json({ message: 'Goal added successfully!', goal: value });
-
-    } catch (error) {
-        logger.error('Error adding new goal:', error);
+    } catch (err) {
+        logger.error('Error adding new goal:', err);
         res.status(500).json({ message: 'Failed to add goal.' });
     }
 });
 
+// --- Get all goals ---
 router.get('/goals', authenticateJWT, async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.userId;
         const studentGoals = await StudentRewards.findOne({ studentId: userId });
 
-        if (!studentGoals) {
-            return res.status(200).json({ goals: [] });
-        }
-
-        res.status(200).json({ goals: studentGoals.goals });
-
-    } catch (error) {
-        logger.error('Error fetching goals:', error);
+        res.status(200).json({ goals: studentGoals ? studentGoals.goals : [] });
+    } catch (err) {
+        logger.error('Error fetching goals:', err);
         res.status(500).json({ message: 'Failed to fetch goals.' });
     }
 });
 
+// --- Update a goal ---
 router.put('/goals/:goalId', authenticateJWT, async (req, res) => {
     const { error, value } = goalUpdateSchema.validate(req.body);
-    if (error) {
-        return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
-    }
+    if (error) return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
 
     try {
-        const userId = req.user.id;
+        const userId = req.userId;
         const { goalId } = req.params;
 
         const studentGoals = await StudentRewards.findOne({ studentId: userId });
-        if (!studentGoals) {
-            return res.status(404).json({ message: 'Student goals not found.' });
-        }
+        if (!studentGoals) return res.status(404).json({ message: 'Student goals not found.' });
 
         const goal = studentGoals.goals.id(goalId);
-        if (!goal) {
-            return res.status(404).json({ message: 'Goal not found.' });
-        }
+        if (!goal) return res.status(404).json({ message: 'Goal not found.' });
 
         Object.assign(goal, value);
-        
         await studentGoals.save();
 
         res.status(200).json({ message: 'Goal updated successfully!', goal });
-
-    } catch (error) {
-        logger.error('Error updating goal:', error);
+    } catch (err) {
+        logger.error('Error updating goal:', err);
         res.status(500).json({ message: 'Failed to update goal.' });
     }
 });
 
+// --- Delete a goal ---
 router.delete('/goals/:goalId', authenticateJWT, async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.userId;
         const { goalId } = req.params;
 
         const studentGoals = await StudentRewards.findOne({ studentId: userId });
-        if (!studentGoals) {
-            return res.status(404).json({ message: 'Student goals not found.' });
-        }
+        if (!studentGoals) return res.status(404).json({ message: 'Student goals not found.' });
 
         const goalIndex = studentGoals.goals.findIndex(g => g._id.toString() === goalId);
-        if (goalIndex === -1) {
-            return res.status(404).json({ message: 'Goal not found.' });
-        }
+        if (goalIndex === -1) return res.status(404).json({ message: 'Goal not found.' });
 
         studentGoals.goals.splice(goalIndex, 1);
         await studentGoals.save();
-        
-        eventBus.emit('goal_notification', {
-            userId,
-            message: `Goal deleted.`
-        });
 
+        eventBus.emit('goal_notification', { userId, message: 'Goal deleted.' });
         res.status(200).json({ message: 'Goal deleted successfully.' });
-
-    } catch (error) {
-        logger.error('Error deleting goal:', error);
+    } catch (err) {
+        logger.error('Error deleting goal:', err);
         res.status(500).json({ message: 'Failed to delete goal.' });
-    }
-});
-
-router.get('/:studentId', authenticateJWT, checkSubscription, async (req, res) => {
-    try {
-        const studentId = req.params.studentId;
-        const student = await StudentRewards.findOne({ studentId });
-        const user = await User.findById(req.user.userId);
-
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found.' });
-        }
-
-        const { badges, termSummary, termRewards, treatSuggestions, premiumRewards } = calculateAllRewards(student, user);
-        const weeklyMessage = `Keep pushing ${student.name}! You're closer to your next badge. 💪`;
-
-        res.status(200).json({
-            name: student.name,
-            weeklyMessage,
-            badges,
-            termSummary,
-            termRewards,
-            treatSuggestions,
-            premiumRewards
-        });
-
-    } catch (error) {
-        logger.error('Error fetching combined rewards:', error);
-        res.status(500).json({ message: 'Server error' });
     }
 });
 
