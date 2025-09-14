@@ -14,7 +14,7 @@ const path = require("path");
 
 const eventBus = new EventEmitter();
 
-// Ensure required env vars exist
+
 const requiredEnvVars = [
   "PORT",
   "MONGODB_URI",
@@ -53,7 +53,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "https://smartstudentact.com", 
+    origin: "https://www.smartstudentact.com", 
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
