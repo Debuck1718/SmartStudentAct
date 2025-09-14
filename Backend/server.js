@@ -80,10 +80,7 @@ const corsOptions = {
   ],
   exposedHeaders: ["Set-Cookie"],
 };
-app.use(cors(corsOptions));
-
-// ✅ Always respond to preflight requests
-app.options("*", cors(corsOptions));
+app.use(cors(corsOptions)); // ✅ handles preflight too
 
 // ✅ Cloudinary config
 try {
@@ -159,7 +156,7 @@ app.get("/", (req, res) => {
 app.use(express.static(path.join(__dirname, "client", "build")));
 
 // Catch-all for SPA front-end routing
-app.get("*", (req, res) => {
+app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "build", "index.html"));
 });
 
@@ -209,6 +206,7 @@ async function startApp() {
 }
 
 startApp();
+
 
 
 
