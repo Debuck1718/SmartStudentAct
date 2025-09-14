@@ -53,7 +53,7 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: "*", // allow all origins
+    origin: true, 
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // allow all HTTP methods
     allowedHeaders: [
