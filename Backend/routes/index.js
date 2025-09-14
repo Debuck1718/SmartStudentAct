@@ -2,7 +2,7 @@
 const publicRoutes = require("./publicRoutes");
 const protectedRoutes = require("./protectedRoutes");
 const webhookRoutes = require("./webhookRoutes");
-const pushRoutes = require("./pushRoutes"); // ✅ new
+const pushRoutes = require("./pushRoutes"); 
 
 module.exports = (app, eventBus, agenda) => {
   const publicApiRouter = publicRoutes(eventBus, agenda);

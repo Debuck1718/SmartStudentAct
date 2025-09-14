@@ -193,7 +193,6 @@ const teacherAssignmentSchema = Joi.object({
     .items(Joi.number().integer().min(1).max(12))
     .default([]),
 
-  // University levels (100, 200, 300, 400)
   assigned_to_levels: Joi.array()
     .items(Joi.number().valid(100, 200, 300, 400))
     .default([]),
@@ -1146,11 +1145,11 @@ protectedRouter.post(
 
       const school = teacher.school;
 
-      // Validate each term
+      
       const formattedTerms = terms.map((term, idx) => {
         const termName = term.termName?.trim() || term.name?.trim();
-        const startDate = term.startDate || term.date; // handle legacy "date"
-        const endDate = term.endDate || term.date;     // fallback to same date if endDate missing
+        const startDate = term.startDate || term.date; 
+        const endDate = term.endDate || term.date;     
         if (!termName || !startDate || !endDate) {
           throw new Error(`Term ${idx + 1} is missing required fields.`);
         }
@@ -1161,7 +1160,7 @@ protectedRouter.post(
         };
       });
 
-      // Check if a calendar already exists for this school & year
+  
       let schoolCalendar = await SchoolCalendar.findOne({ school: school._id, academicYear });
 
       if (schoolCalendar) {
@@ -1181,7 +1180,7 @@ protectedRouter.post(
         });
       }
 
-      // Create new calendar
+    
       schoolCalendar = new SchoolCalendar({
         teacher_id: teacherId,
         school: school._id,
@@ -1230,7 +1229,7 @@ protectedRouter.post(
         grade,
       } = req.body;
 
-      // Map "entire class" to assigned_to_users automatically
+      
       if (recipientType === "class") {
         const students = await User.find({ isMyClass: true, role: "student" });
         assigned_to_users = students.map((s) => new mongoose.Types.ObjectId(s._id));
@@ -1238,12 +1237,12 @@ protectedRouter.post(
         const students = await User.find({ grade, role: "student" });
         assigned_to_other_grades = students.map((s) => new mongoose.Types.ObjectId(s._id));
       } else {
-        // Convert any provided user/school IDs to ObjectIds
+        
         assigned_to_users = assigned_to_users.map((id) => new mongoose.Types.ObjectId(id));
         assigned_to_schools = assigned_to_schools.map((id) => new mongoose.Types.ObjectId(id));
       }
 
-      // Validation: must assign to at least one target
+      
       if (
         !assigned_to_users.length &&
         !assigned_to_grades.length &&
@@ -1257,7 +1256,7 @@ protectedRouter.post(
         });
       }
 
-      // Create assignment
+     
       const newAssignment = new Assignment({
         teacher_id: teacherId,
         title,

@@ -53,7 +53,7 @@ const addPointsSchema = Joi.object({
   grade: Joi.string().optional(),
   program: Joi.string().optional(),
   otherGrade: Joi.string().optional(),
-}).oxor('studentIds', 'grade', 'program', 'otherGrade'); // Ensures only one of these fields is present
+}).oxor('studentIds', 'grade', 'program', 'otherGrade'); 
 
 async function grantReward({ userIds, type, points, description, source = 'System', grantedBy = null }) {
     if (!userIds || userIds.length === 0) {
@@ -68,7 +68,7 @@ async function grantReward({ userIds, type, points, description, source = 'Syste
             return;
         }
 
-        // Loop through each user ID and grant the reward
+        
         for (const userId of userIds) {
             const updatedUser = await User.findByIdAndUpdate(
                 userId,
@@ -329,7 +329,6 @@ router.post(
     hasRole(["teacher", "admin"]),
     async (req, res) => {
         try {
-            // Validate with Joi schema
             const { error, value } = addPointsSchema.validate(req.body);
             if (error) {
                 return res.status(400).json({
@@ -342,19 +341,19 @@ router.post(
             let studentsToUpdate = [];
 
             if (studentIds) {
-                // Find students by an array of IDs
+                
                 const students = await User.find({ _id: { $in: studentIds } });
                 studentsToUpdate = students.map(s => s._id);
             } else if (grade) {
-                // Find students by an entire grade
+                
                 const students = await User.find({ grade: grade, role: "student" });
                 studentsToUpdate = students.map(s => s._id);
             } else if (program) {
-                // Find students by program
+               
                 const students = await User.find({ program: program, role: "student" });
                 studentsToUpdate = students.map(s => s._id);
             } else if (otherGrade) {
-                // Find students in another grade
+               
                 const students = await User.find({ grade: otherGrade, role: "student" });
                 studentsToUpdate = students.map(s => s._id);
             }
@@ -365,7 +364,7 @@ router.post(
 
             const sourceRole = req.user.role === "admin" ? "Admin" : "Teacher";
 
-            // Call the updated grantReward function
+            
             await grantReward({
                 userIds: studentsToUpdate,
                 type: 'teacher_grant',
@@ -494,7 +493,7 @@ router.get('/goals', authenticateJWT, async (req, res) => {
   }
 });
 
-// ---------------------- Update Goal ----------------------
+
 router.put('/goals/:goalId', authenticateJWT, async (req, res) => {
   const { error, value } = goalUpdateSchema.validate(req.body);
   if (error) return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });

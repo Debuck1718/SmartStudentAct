@@ -24,7 +24,7 @@ const {
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
 const IS_PROD = process.env.NODE_ENV === "production";
 const JWT_SECRET = process.env.JWT_SECRET;
-const PASSWORD_RESET_EXPIRY = 3600000; // 1h
+const PASSWORD_RESET_EXPIRY = 3600000; 
 
 if (!JWT_SECRET)
   throw new Error("JWT_SECRET is not defined in environment variables.");
@@ -55,7 +55,7 @@ module.exports = (eventBus) => {
     default: "/login.html",
   };
 
-  // ---------- SCHEMAS ----------
+  
   const signupOtpSchema = Joi.object({
     phone: Joi.string()
       .pattern(/^\+?[1-9]\d{1,14}$/)
@@ -247,7 +247,7 @@ module.exports = (eventBus) => {
             program: decoded.program || "",
           };
 
-          // Conditionally add fields based on occupation and education level
+
           if (newUserData.occupation === "teacher") {
             newUserData.teacherGrade = decoded.teacherGrade;
             newUserData.teacherSubject = decoded.teacherSubject;
@@ -256,7 +256,7 @@ module.exports = (eventBus) => {
             if (decoded.educationLevel === "university") {
               newUserData.university = decoded.university || "Unknown University";
               newUserData.uniLevel = decoded.uniLevel || "100";
-            } else { // Student is not university
+            } else { 
               newUserData.grade = Number(decoded.grade) || 1;
             }
           }

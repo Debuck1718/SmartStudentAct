@@ -8,7 +8,7 @@ const { authenticateJWT } = require('../middlewares/auth');
 const checkSubscription = require('../middlewares/checkSubscription');
 const BudgetEntry = require('../models/BudgetEntry');
 
-// ---------------------- Validation Schemas ----------------------
+
 const budgetEntrySchema = Joi.object({
   amount: Joi.number().positive().required(),
   category: Joi.string().required(),
@@ -29,9 +29,7 @@ const budgetEntryIdSchema = Joi.object({
   entryId: Joi.string().length(24).hex().required()
 });
 
-// ---------------------- Routes ----------------------
 
-// Create new budget entry
 router.post('/add-entry', authenticateJWT, checkSubscription, async (req, res) => {
   const { error, value } = budgetEntrySchema.validate(req.body);
   if (error) return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });
@@ -61,7 +59,7 @@ router.post('/add-entry', authenticateJWT, checkSubscription, async (req, res) =
   }
 });
 
-// Dashboard summary
+
 router.get('/dashboard', authenticateJWT, checkSubscription, async (req, res) => {
   try {
     const entries = await BudgetEntry.find({ userId: req.userId }).sort({ date: 1 });
@@ -94,7 +92,7 @@ router.get('/dashboard', authenticateJWT, checkSubscription, async (req, res) =>
   }
 });
 
-// Get all entries
+
 router.get('/entries', authenticateJWT, async (req, res) => {
   try {
     const entries = await BudgetEntry.find({ userId: req.userId }).sort({ date: -1 });
@@ -105,7 +103,7 @@ router.get('/entries', authenticateJWT, async (req, res) => {
   }
 });
 
-// Get single entry
+
 router.get('/entries/:entryId', authenticateJWT, async (req, res) => {
   const { error } = budgetEntryIdSchema.validate(req.params);
   if (error) return res.status(400).json({ status: 'Validation Error', message: error.details[0].message });

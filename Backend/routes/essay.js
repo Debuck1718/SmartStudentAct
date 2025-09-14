@@ -104,7 +104,7 @@ async function generateFeedbackWithRetry(payload, retries = 3) {
         logger.error("All Gemini API attempts failed. Final error:", err);
         throw err;
       }
-      // Implement exponential backoff
+      
       const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
       await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -132,7 +132,7 @@ function mergeFeedback(feedbackArray) {
   return merged;
 }
 
-// --- Route
+
 router.post("/check", authenticateJWT, checkSubscription, async (req, res) => {
   const { error, value } = essaySchema.validate(req.body);
   if (error) {
