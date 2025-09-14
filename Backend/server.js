@@ -84,8 +84,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// ✅ Always handle preflight
-app.options("*", cors(corsOptions));
+// ✅ This line was causing the error and is not needed.
+// app.options("*", cors(corsOptions));
 
 try {
   cloudinary.config({
