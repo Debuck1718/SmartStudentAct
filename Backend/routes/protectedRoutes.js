@@ -1700,12 +1700,11 @@ protectedRouter.get(
       });
       console.log("📝 Query conditions:", JSON.stringify(conditions, null, 2));
 
-     
       const assignments = await Assignment.find({ $or: conditions }).sort({ due_date: 1 });
-
       console.log("📦 Assignments found:", assignments.length);
 
-      res.status(200).json(assignments);
+      res.set("Cache-Control", "no-store"); // disable caching
+      res.status(200).json(assignments); // return array directly
     } catch (error) {
       logger.error("Error fetching student assignments:", error);
       res.status(500).json({ message: "Server error", error: error.message });
@@ -1776,15 +1775,14 @@ protectedRouter.get(
         due_date: 1,
       });
 
-      res.json({ tasks });
+      res.set("Cache-Control", "no-store"); // disable caching
+      res.json(tasks); // return array (not { tasks: [...] })
     } catch (error) {
       logger.error("Error fetching student tasks:", error);
       res.status(500).json({ message: "Server error", error: error.message });
     }
   }
 );
-
-
 // ---------------------- Mark Task Complete ----------------------
 protectedRouter.patch(
   '/student/tasks/:id/complete',
