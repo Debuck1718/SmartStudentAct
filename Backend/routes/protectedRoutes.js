@@ -1662,27 +1662,53 @@ protectedRouter.get(
       const student = await User.findById(req.user.id).populate("school");
       if (!student) return res.status(404).json({ message: "Student not found." });
 
+      // Normalize values
+      const studentIdObj = new mongoose.Types.ObjectId(student._id);
+      const studentIdStr = student._id.toString();
+      const studentEmail = student.email || null;
+      const studentGrade = student.grade || null;
+      const studentProgram = student.program || null;
+      const studentSchool = student.school?._id || null;
+
+      // Build query conditions
       const conditions = [
-        { assigned_to_users: { $in: [student._id.toString(), student.email] } },
-        { assigned_to_programs: { $in: [student.program] } },
-        { assigned_to_schools: { $in: [student.school?._id] } },
+        { assigned_to_users: { $in: [studentIdObj, studentIdStr, studentEmail] } },
       ];
 
-      if (student.educationLevel === "university") {
-        conditions.push({ assigned_to_levels: { $in: [student.uniLevel] } });
-      } else {
-        conditions.push({ assigned_to_grades: { $in: [student.grade] } });
+      if (studentProgram) {
+        conditions.push({ assigned_to_programs: { $in: [studentProgram] } });
       }
 
-      
-      conditions.push({ assigned_to_other_grades: { $in: [student.grade] } });
+      if (studentSchool) {
+        conditions.push({ assigned_to_schools: { $in: [studentSchool] } });
+      }
 
+      if (student.educationLevel === "university" && student.uniLevel) {
+        conditions.push({ assigned_to_levels: { $in: [student.uniLevel] } });
+      } else if (studentGrade) {
+        conditions.push({ assigned_to_grades: { $in: [studentGrade] } });
+        conditions.push({ assigned_to_other_grades: { $in: [studentGrade] } });
+      }
+
+      // Debug logs
+      console.log("🔎 Student info:", {
+        id: studentIdStr,
+        email: studentEmail,
+        grade: studentGrade,
+        program: studentProgram,
+        school: studentSchool,
+      });
+      console.log("📝 Query conditions:", JSON.stringify(conditions, null, 2));
+
+     
       const assignments = await Assignment.find({ $or: conditions }).sort({ due_date: 1 });
+
+      console.log("📦 Assignments found:", assignments.length);
 
       res.status(200).json(assignments);
     } catch (error) {
       logger.error("Error fetching student assignments:", error);
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ message: "Server error", error: error.message });
     }
   }
 );
@@ -1694,7 +1720,7 @@ protectedRouter.post(
   hasRole('student'),
   async (req, res) => {
     try {
-      console.log('JWT userId:', req.userId); // Debug
+      console.log('JWT userId:', req.userId); 
 
       const { title, description, due_date } = req.body;
 
@@ -1720,14 +1746,13 @@ protectedRouter.post(
 
       const savedTask = await newTask.save();
 
-      // --- CRITICAL CHANGE HERE ---
-      // Use the imported 'eventBus' variable directly.
+   
       eventBus.emit('task_created', {
         taskId: savedTask._id,
         studentId: req.userId,
         title: savedTask.title,
       });
-      // --- END OF CRITICAL CHANGE ---
+    
 
       res.status(201).json({ message: 'Task created successfully', task: savedTask });
 
@@ -1738,7 +1763,7 @@ protectedRouter.post(
   }
 );
 
-// ---------------------- Get All Tasks ----------------------
+
 protectedRouter.get(
   "/student/tasks",
   authenticateJWT,
