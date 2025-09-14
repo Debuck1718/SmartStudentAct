@@ -1208,35 +1208,71 @@ protectedRouter.post(
 );
 
 
-protectedRouter.get(
-  "/student/assignments",
+protectedRouter.post(
+  "/teacher/assignments",
   authenticateJWT,
-  hasRole("student"),
+  hasRole("teacher"),
+  localUpload.single("file"),
   async (req, res) => {
     try {
-      const student = await User.findById(req.user.id).populate("school");
-      if (!student) return res.status(404).json({ message: "Student not found." });
+      const teacherId = req.user.id;
+      let {
+        title,
+        description,
+        due_date,
+        assigned_to_users = [],
+        assigned_to_grades = [],
+        assigned_to_programs = [],
+        assigned_to_schools = [],
+        assigned_to_other_grades = [],
+        recipientType, // new field from frontend: 'single', 'multiple', 'class', 'otherGrade'
+        grade,         // used if recipientType is 'otherGrade'
+      } = req.body;
 
-      const conditions = [
-        { assigned_to_users: { $in: [student._id.toString(), student.email] } },
-        { assigned_to_programs: { $in: [student.program] } },
-        { assigned_to_schools: { $in: [student.school?._id] } },
-      ];
-
-      if (student.educationLevel === "university") {
-        conditions.push({ assigned_to_levels: { $in: [student.uniLevel] } });
-      } else {
-        conditions.push({ assigned_to_grades: { $in: [student.grade] } });
+      // Map "entire class" to assigned_to_users automatically
+      if (recipientType === "class") {
+        // Fetch students in the teacher's class
+        const students = await User.find({ isMyClass: true, role: "student" });
+        assigned_to_users = students.map(s => s._id.toString());
+      } else if (recipientType === "otherGrade" && grade) {
+        const students = await User.find({ grade, role: "student" });
+        assigned_to_other_grades = students.map(s => s._id.toString());
       }
 
-     
-      conditions.push({ assigned_to_other_grades: { $in: [student.grade] } });
+      // Validation: must have at least one target
+      if (
+        !assigned_to_users.length &&
+        !assigned_to_grades.length &&
+        !assigned_to_programs.length &&
+        !assigned_to_schools.length &&
+        !assigned_to_other_grades.length
+      ) {
+        return res.status(400).json({
+          message:
+            "Assignment must be assigned to at least one user, grade, program, or school.",
+        });
+      }
 
-      const assignments = await Assignment.find({ $or: conditions }).sort({ due_date: 1 });
+      const newAssignment = new Assignment({
+        teacher_id: teacherId,
+        title,
+        description,
+        file_path: req.file ? `/uploads/assignments/${req.file.filename}` : null,
+        due_date,
+        assigned_to_users,
+        assigned_to_grades,
+        assigned_to_programs,
+        assigned_to_schools,
+        assigned_to_other_grades,
+      });
 
-      res.status(200).json(assignments);
+      await newAssignment.save();
+      res.status(201).json({
+        message: "Assignment created successfully",
+        assignment: newAssignment,
+      });
     } catch (error) {
-      logger.error("Error fetching student assignments:", error);
+      logger.error("Error creating assignment:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
@@ -1595,21 +1631,22 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const student = await User.findById(req.user.id).populate("school");
-      if (!student) {
-        return res.status(404).json({ message: "Student not found." });
-      }
+      if (!student) return res.status(404).json({ message: "Student not found." });
 
       const conditions = [
-        { assigned_to_users: student.email },
-        { assigned_to_programs: student.program },
-        { assigned_to_schools: student.school },
+        { assigned_to_users: { $in: [student._id.toString(), student.email] } },
+        { assigned_to_programs: { $in: [student.program] } },
+        { assigned_to_schools: { $in: [student.school?._id] } },
       ];
 
       if (student.educationLevel === "university") {
-        conditions.push({ assigned_to_levels: student.uniLevel });
+        conditions.push({ assigned_to_levels: { $in: [student.uniLevel] } });
       } else {
-        conditions.push({ assigned_to_grades: student.grade });
+        conditions.push({ assigned_to_grades: { $in: [student.grade] } });
       }
+
+      
+      conditions.push({ assigned_to_other_grades: { $in: [student.grade] } });
 
       const assignments = await Assignment.find({ $or: conditions }).sort({ due_date: 1 });
 
