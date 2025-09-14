@@ -1232,13 +1232,13 @@ protectedRouter.post(
       // Map "entire class" to assigned_to_users automatically
       if (recipientType === "class") {
         const students = await User.find({ isMyClass: true, role: "student" });
-        assigned_to_users = students.map(s => s._id.toString());
+        assigned_to_users = students.map((s) => s._id.toString());
       } else if (recipientType === "otherGrade" && grade) {
         const students = await User.find({ grade, role: "student" });
-        assigned_to_other_grades = students.map(s => s._id.toString());
+        assigned_to_other_grades = students.map((s) => s._id.toString());
       }
 
-      // Validation
+      // Validation: must assign to at least one target
       if (
         !assigned_to_users.length &&
         !assigned_to_grades.length &&
@@ -1252,6 +1252,7 @@ protectedRouter.post(
         });
       }
 
+      // Create assignment
       const newAssignment = new Assignment({
         teacher_id: teacherId,
         title,
@@ -1267,24 +1268,11 @@ protectedRouter.post(
 
       await newAssignment.save();
 
-      // Emit event for notifications
+      // ✅ Emit event for notifications + reminders (handled in eventBus.js)
       eventBus.emit("assignment_created", {
         assignmentId: newAssignment._id,
         title: newAssignment.title,
       });
-
-      // Schedule reminders: 6 hours & 2 hours before due date
-      const reminderHours = [6, 2];
-      for (const hoursBefore of reminderHours) {
-        const remindTime = new Date(due_date);
-        remindTime.setHours(remindTime.getHours() - hoursBefore);
-        if (remindTime > new Date()) {
-          await agenda.schedule(remindTime, "assignment_reminder", {
-            assignmentId: newAssignment._id,
-            hoursBefore,
-          });
-        }
-      }
 
       res.status(201).json({
         message: "Assignment created successfully",
@@ -1296,8 +1284,6 @@ protectedRouter.post(
     }
   }
 );
-
-
 
 protectedRouter.get(
   "/teacher/assignments",
