@@ -10,11 +10,9 @@ const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
 const http = require("http");
 const fetch = require("node-fetch");
-const path = require("path");
 
 const eventBus = new EventEmitter();
 
-// ✅ Required env check
 const requiredEnvVars = [
   "PORT",
   "MONGODB_URI",
@@ -36,53 +34,38 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
 const app = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", 1); 
 
-// Middleware
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// 🌍 Allowed origins
+
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:4000",
   "https://smartstudentact.com",
   "https://www.smartstudentact.com",
-  "https://api.smartstudentact.com",
+  "https://api.smartstudentact.com", 
 ];
 
-// 🔍 Debug incoming origin
-app.use((req, res, next) => {
-  console.log("🌐 Incoming request origin:", req.headers.origin || "N/A");
-  next();
-});
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true, 
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Set-Cookie"],
+  })
+);
 
-// ⚙️ CORS setup
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // allow non-browser clients
-    if (allowedOrigins.includes(origin)) return callback(null, true);
 
-    console.warn(`❌ CORS blocked request from: ${origin}`);
-    return callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Accept",
-    "Origin",
-  ],
-  exposedHeaders: ["Set-Cookie"],
-};
-app.use(cors(corsOptions)); // ✅ handles all including OPTIONS
-
-// ✅ Cloudinary config
 try {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -95,26 +78,22 @@ try {
   process.exit(1);
 }
 
-// 📡 MongoDB
+
 async function connectMongo() {
   try {
-    console.log("📡 Connecting to MongoDB...");
-    await mongoose.connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    console.log(`📡 Connecting to MongoDB...`);
+    await mongoose.connect(MONGO_URI);
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err.message);
+    console.error("❌ MongoDB connection error:", err);
     throw err;
   }
 }
 
-// 📅 Agenda jobs
+
 let agenda;
 async function startAgenda() {
   try {
-    console.log("📅 Initializing Agenda...");
     agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
 
     agenda.define("test job", async () => {
@@ -124,14 +103,14 @@ async function startAgenda() {
     await agenda.start();
     await agenda.every("1 minute", "test job");
 
-    console.log("✅ Agenda job scheduler started!");
+    console.log("📅 Agenda job scheduler started!");
   } catch (err) {
-    console.error("❌ Agenda startup error:", err.message);
+    console.error("❌ Agenda startup error:", err);
     throw err;
   }
 }
 
-// Routes
+
 try {
   const publicRoutes = require("./routes/publicRoutes");
   app.use("/", publicRoutes(eventBus, agenda));
@@ -140,7 +119,8 @@ try {
   app.use("/api", webhookRoutes);
 
   const pushRoutes = require("./routes/pushRoutes");
-  app.use("/api/push", pushRoutes);
+app.use("/api/push", pushRoutes);
+
 
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", protectedRoutes);
@@ -155,42 +135,32 @@ app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-// Serve static front-end files
-app.use(express.static(path.join(__dirname, "client", "build")));
 
-// Catch-all for SPA front-end routing
-app.get("/*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client", "build", "index.html"));
-});
-
-// 🛠 Global error handler
 app.use((err, req, res, next) => {
-  console.error("❌ Global error handler caught:", err);
-  res.status(err.status || 500).json({
-    error: err.message || "An unexpected server error occurred.",
+  if (NODE_ENV === "development") {
+    console.error("❌ Global error handler caught:", err);
+  }
+
+  const statusCode = err.status || 500;
+  const message = err.message || "An unexpected server error occurred.";
+
+  res.status(statusCode).json({
+    error: message,
     details: NODE_ENV === "development" ? err.stack : undefined,
   });
 });
 
+
 const server = http.createServer(app);
 
-// Global handler for unhandled promise rejections
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
-});
-
-// 🚀 Start app
 async function startApp() {
   try {
-    console.log("🚀 Starting SmartStudentAct backend...");
-
     await connectMongo();
     await startAgenda();
 
     server.listen(PORT, () => {
-      console.log(`✅ Server running on port ${PORT} [${NODE_ENV}]`);
+      console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
 
-      // Self-ping to keep Render dyno awake
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         setInterval(async () => {
           try {
@@ -203,18 +173,10 @@ async function startApp() {
       }
     });
   } catch (err) {
-    console.error("❌ Fatal startup error:", err.message);
-    console.error(err.stack);
-    // ❌ Removed process.exit(1) → so Render shows the real error
+    console.error("❌ Fatal startup error:", err);
+    process.exit(1);
   }
 }
 
 startApp();
-
-
-
-
-
-
-
 
