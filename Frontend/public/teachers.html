@@ -132,72 +132,80 @@
         </section>
         ---
         <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
-            ✏️ Create and Send Assignment
-          </h2>
-
-          <div class="mb-4">
-            <label class="block text-gray-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
-            <div class="flex flex-col sm:flex-row gap-2">
-              <label class="inline-flex items-center">
-                <input type="radio" name="assignmentRecipient" value="single" class="form-radio text-blue-600" checked />
-                <span class="ml-2 text-gray-700" data-i18n="singleStudent">Single Student</span>
-              </label>
-              <label class="inline-flex items-center">
-                <input type="radio" name="assignmentRecipient" value="multiple" class="form-radio text-blue-600" />
-                <span class="ml-2 text-gray-700" data-i18n="multipleStudents">Multiple Students</span>
-              </label>
-              <label class="inline-flex items-center">
-                <input type="radio" name="assignmentRecipient" value="class" class="form-radio text-blue-600" />
-                <span class="ml-2 text-gray-700" data-i18n="entireClass">Entire Class</span>
-              </label>
-              <label class="inline-flex items-center">
-                <input type="radio" name="assignmentRecipient" value="otherGrade" class="form-radio text-blue-600" />
-                <span class="ml-2 text-gray-700" data-i18n="otherGrade">Another Grade</span>
-              </label>
-            </div>
-          </div>
-
-          <div id="assignment-select-group">
-            <label for="assignment-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student(s):</label>
-            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-              <select id="assignment-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
-            </div>
-          </div>
-
-          <div id="assignment-grade-select-group" class="hidden">
-            <label for="assignment-grade-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectGrade">Select Grade:</label>
-            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-              <select id="assignment-grade-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
-            </div>
-          </div>
-
-          <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle">Assignment Title:</label>
-          <input type="text" id="assignmentTitle" maxlength="100" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., History Essay on World War II" />
-
-          <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2" data-i18n="dueDate">Due Date:</label>
-          <input type="datetime-local" id="assignmentDueDate" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-
-          <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails">
-            Assignment Details (max 1000 words or attach file):
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
+      ✏️ Create and Send Assignment
+    </h2>
+    <form id="assignmentForm">
+      <div class="mb-4">
+        <label class="block text-gray-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <label class="inline-flex items-center">
+            <input type="checkbox" name="assignmentRecipient" value="student" class="form-checkbox text-blue-600" />
+            <span class="ml-2 text-gray-700" data-i18n="selectStudents">Specific Students</span>
           </label>
-          <textarea id="assignmentText" maxlength="5000" class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" placeholder="Type your assignment here..."></textarea>
-          <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
+          <label class="inline-flex items-center">
+            <input type="checkbox" name="assignmentRecipient" value="myClass" class="form-checkbox text-blue-600" />
+            <span class="ml-2 text-gray-700" data-i18n="entireClass">Entire Class</span>
+          </label>
+          <label class="inline-flex items-center">
+            <input type="checkbox" name="assignmentRecipient" value="otherGrade" class="form-checkbox text-blue-600" />
+            <span class="ml-2 text-gray-700" data-i18n="otherGrade">Another Grade</span>
+          </label>
+          <label class="inline-flex items-center">
+            <input type="checkbox" name="assignmentRecipient" value="program" class="form-checkbox text-blue-600" />
+            <span class="ml-2 text-gray-700" data-i18n="program">Program</span>
+          </label>
+        </div>
+      </div>
 
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-            <label class="custom-file-input cursor-pointer text-base">
-              <input type="file" id="assignmentFile" class="custom-file-input" />
-            </label>
-            <div id="fileStatus" class="flex items-center gap-2">
-              <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
-              <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">Clear</button>
-            </div>
+      <div id="assignment-student-select-group" class="hidden">
+        <label for="assignment-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudentsLabel">Select Student(s):</label>
+        <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+          <select id="assignment-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none" multiple></select>
+        </div>
+      </div>
+
+      <div id="assignment-grade-select-group" class="hidden">
+        <label for="assignment-grade-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectGrade">Select Grade:</label>
+        <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+          <select id="assignment-grade-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+        </div>
+      </div>
+      
+      <div id="assignment-program-select-group" class="hidden">
+          <label for="assignment-program-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectProgram">Select Program:</label>
+          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+              <select id="assignment-program-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
           </div>
+      </div>
 
-          <button id="sendAssignmentButton" class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled data-i18n="sendAssignment">
-            Send Assignment
-          </button>
-        </section>
+      <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle">Assignment Title:</label>
+      <input type="text" id="assignmentTitle" maxlength="100" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., History Essay on World War II" />
+
+      <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2" data-i18n="dueDate">Due Date:</label>
+      <input type="datetime-local" id="assignmentDueDate" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+      <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails">
+        Assignment Details (max 1000 words or attach file):
+      </label>
+      <textarea id="assignmentText" maxlength="5000" class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" placeholder="Type your assignment here..."></textarea>
+      <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <label class="custom-file-input cursor-pointer text-base">
+          <input type="file" id="assignmentFile" class="custom-file-input" />
+        </label>
+        <div id="fileStatus" class="flex items-center gap-2">
+          <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
+          <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">Clear</button>
+        </div>
+      </div>
+
+      <button id="sendAssignmentButton" class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled data-i18n="sendAssignment">
+        Send Assignment
+      </button>
+    </form>
+  </section>
         ---
         <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
           <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="addPointsTitle">
@@ -348,8 +356,9 @@
     let translations = {};
     let currentLang = "en";
     let studentsCache = [];
+    let currentUser = {}; 
 
-    // Load translations from teachers.json
+  
     async function loadTranslations(lang = "en") {
         try {
             const res = await fetch(`/locales/teachers.json`);
@@ -358,16 +367,15 @@
             translations = allTranslations[lang] || {};
         } catch (err) {
             console.error("Translation load error:", err);
-            translations = {}; // fallback to empty
+            translations = {}; 
         }
     }
 
-    // Get translation string by key
+
     function translateText(key) {
         return translations[key] || key;
     }
 
-    // Apply translations to DOM elements
     function applyTranslations() {
         document.querySelectorAll("[data-i18n]").forEach(el => {
             const key = el.getAttribute("data-i18n");
@@ -438,6 +446,7 @@
         const res = await fetchAPI("/teacher/profile");
         if (res && res.ok) {
             const data = await res.json();
+            currentUser = data; 
             document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
             document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
         }
@@ -667,29 +676,35 @@
         });
     }
 
-    // NEW: Generic function to show/hide form fields based on recipient type
-    function updateFormUI(formId) {
-        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
-        const studentSelect = document.getElementById(`${formId}-student-select`);
-        const gradeSelect = document.getElementById(`${formId}-grade-select`);
-        const studentSelectGroup = studentSelect?.closest('div');
-        const gradeSelectGroup = gradeSelect?.closest('div');
+    function updateFormUI() {
+        const studentCheck = document.querySelector('input[name="assignmentRecipient"][value="student"]');
+        const myClassCheck = document.querySelector('input[name="assignmentRecipient"][value="myClass"]');
+        const otherGradeCheck = document.querySelector('input[name="assignmentRecipient"][value="otherGrade"]');
+        const programCheck = document.querySelector('input[name="assignmentRecipient"][value="program"]');
 
-        recipientRadios.forEach(radio => {
-            radio.addEventListener("change", (e) => {
-                const recipientType = e.target.value;
-                if (studentSelectGroup) {
-                    studentSelectGroup.classList.toggle("hidden", recipientType === "class" || recipientType === "otherGrade");
-                    studentSelect.multiple = recipientType === "multiple";
-                }
-                if (gradeSelectGroup) {
-                    gradeSelectGroup.classList.toggle("hidden", recipientType !== "otherGrade");
-                }
-            });
-        });
+        const studentSelectGroup = document.getElementById("assignment-student-select-group");
+        const gradeSelectGroup = document.getElementById("assignment-grade-select-group");
+        const programSelectGroup = document.getElementById("assignment-program-select-group");
+
+        
+        [studentSelectGroup, gradeSelectGroup, programSelectGroup].forEach(el => el.classList.add("hidden"));
+
+        if (studentCheck?.checked) {
+            studentSelectGroup.classList.remove("hidden");
+            document.getElementById("assignment-student-select").multiple = true;
+        }
+        if (myClassCheck?.checked) {
+
+        }
+        if (otherGradeCheck?.checked) {
+            gradeSelectGroup.classList.remove("hidden");
+        }
+        if (programCheck?.checked) {
+            programSelectGroup.classList.remove("hidden");
+        }
     }
 
-    function wireMessageForm() { 
+    function wireMessageForm() {
         const formId = "message";
         const studentSelect = document.getElementById(`${formId}-student-select`);
         const gradeSelect = document.getElementById(`${formId}-grade-select`);
@@ -700,7 +715,7 @@
         if (!studentSelect || !gradeSelect || !messageText || !sendBtn || !recipientRadios.length) return;
 
         function validateForm() {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`)?.value;
             let isValid = false;
             if (recipientType === "single" || recipientType === "multiple") {
                 isValid = studentSelect.value && messageText.value.trim();
@@ -718,7 +733,7 @@
         messageText.addEventListener("input", validateForm);
 
         sendBtn.addEventListener("click", async () => {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`)?.value;
             let assigned_to_users = [];
             let assigned_to_grades = [];
 
@@ -777,7 +792,7 @@
             }
         });
 
-        updateFormUI(formId);
+        validateForm();
     }
 
     function wireAssignmentForm() {
@@ -785,7 +800,6 @@
         const studentSelect = document.getElementById(`${formId}-student-select`);
         const gradeSelect = document.getElementById(`${formId}-grade-select`);
         const programSelect = document.getElementById(`${formId}-program-select`);
-        const schoolSelect = document.getElementById(`${formId}-school-select`);
         const titleInput = document.getElementById("assignmentTitle");
         const dueDateInput = document.getElementById("assignmentDueDate");
         const textArea = document.getElementById("assignmentText");
@@ -794,21 +808,14 @@
         const wordCountText = document.getElementById("wordCountText");
         const fileNameSpan = document.getElementById("fileName");
         const clearFileBtn = document.getElementById("clearFileButton");
-        const recipientRadios = document.querySelectorAll(`input[name="${formId}Recipient"]`);
+        const recipientCheckboxes = document.querySelectorAll(`input[name="${formId}Recipient"]`);
 
         if (!studentSelect || !gradeSelect || !titleInput || !dueDateInput || !textArea || !sendBtn) return;
 
         function updateSendBtn() {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
-            let hasRecipient = false;
-            if (recipientType === "single" || recipientType === "multiple") {
-                hasRecipient = studentSelect.value;
-            } else if (recipientType === "otherGrade") {
-                hasRecipient = gradeSelect.value;
-            } else if (recipientType === "class") {
-                hasRecipient = true; // Always true for entire class
-            }
-            sendBtn.disabled = !(hasRecipient && titleInput.value.trim() && (textArea.value.trim() || fileInput.files.length));
+            const hasRecipient = Array.from(recipientCheckboxes).some(checkbox => checkbox.checked);
+            const hasContent = titleInput.value.trim() && (textArea.value.trim() || fileInput.files.length > 0);
+            sendBtn.disabled = !(hasRecipient && hasContent);
         }
 
         function updateWordCount() {
@@ -817,13 +824,10 @@
             updateSendBtn();
         }
 
+        // Attach event listeners to all relevant fields
         textArea.addEventListener("input", updateWordCount);
         titleInput.addEventListener("input", updateSendBtn);
         dueDateInput.addEventListener("input", updateSendBtn);
-        recipientRadios.forEach(radio => radio.addEventListener("change", updateSendBtn));
-        studentSelect.addEventListener("change", updateSendBtn);
-        gradeSelect.addEventListener("change", updateSendBtn);
-
         fileInput.addEventListener("change", () => {
             if (fileInput.files.length) {
                 fileNameSpan.textContent = fileInput.files[0].name;
@@ -834,7 +838,6 @@
             }
             updateSendBtn();
         });
-
         clearFileBtn.addEventListener("click", () => {
             fileInput.value = "";
             fileNameSpan.textContent = translateText("noFileSelected");
@@ -842,38 +845,46 @@
             updateSendBtn();
         });
 
-        sendBtn.addEventListener("click", async () => {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+        // Event listener for all recipient checkboxes
+        recipientCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener("change", () => {
+                updateFormUI(); // Update UI based on selection
+                updateSendBtn();
+            });
+        });
 
-            // Initialize all backend arrays
+        studentSelect.addEventListener("change", updateSendBtn);
+        gradeSelect.addEventListener("change", updateSendBtn);
+        programSelect.addEventListener("change", updateSendBtn);
+
+        sendBtn.addEventListener("click", async () => {
+            const checkedRecipients = Array.from(recipientCheckboxes)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
+
             let assigned_to_users = [];
             let assigned_to_grades = [];
             let assigned_to_programs = [];
-            let assigned_to_schools = [];
             let assigned_to_other_grades = [];
 
-            // Map frontend selections to backend arrays
-            if (recipientType === "single") {
-                assigned_to_users = [studentSelect.value];
-            } else if (recipientType === "multiple") {
-                assigned_to_users = Array.from(studentSelect.selectedOptions).map(opt => opt.value);
-            } else if (recipientType === "class") {
-                assigned_to_users = studentsCache.filter(s => s.isMyClass).map(s => s._id);
-            } else if (recipientType === "otherGrade") {
-                assigned_to_other_grades = [gradeSelect.value];
-                assigned_to_users = studentsCache.filter(s => s.grade === gradeSelect.value).map(s => s._id);
+ 
+            if (checkedRecipients.includes('student')) {
+                assigned_to_users.push(...Array.from(studentSelect.selectedOptions).map(opt => opt.value));
+            }
+            if (checkedRecipients.includes('myClass')) {
+                assigned_to_users.push(...studentsCache.filter(s => s.isMyClass).map(s => s._id));
+            }
+            if (checkedRecipients.includes('otherGrade')) {
+                assigned_to_other_grades.push(gradeSelect.value);
+            }
+            if (checkedRecipients.includes('program')) {
+                assigned_to_programs.push(programSelect.value);
             }
 
-            // Optional: populate program or school if dropdown exists
-            if (programSelect && programSelect.value) assigned_to_programs = [programSelect.value];
-            if (schoolSelect && schoolSelect.value) assigned_to_schools = [schoolSelect.value];
-
-            // Validation: must assign at least one target
             if (
                 !assigned_to_users.length &&
                 !assigned_to_grades.length &&
                 !assigned_to_programs.length &&
-                !assigned_to_schools.length &&
                 !assigned_to_other_grades.length
             ) {
                 showToast(translateText('select_at_least_one'), "error");
@@ -898,9 +909,12 @@
                 if (assigned_to_users.length) formData.append("assigned_to_users", JSON.stringify(assigned_to_users));
                 if (assigned_to_grades.length) formData.append("assigned_to_grades", JSON.stringify(assigned_to_grades));
                 if (assigned_to_programs.length) formData.append("assigned_to_programs", JSON.stringify(assigned_to_programs));
-                if (assigned_to_schools.length) formData.append("assigned_to_schools", JSON.stringify(assigned_to_schools));
                 if (assigned_to_other_grades.length) formData.append("assigned_to_other_grades", JSON.stringify(assigned_to_other_grades));
-                formData.append("recipientType", recipientType);
+                
+                if (currentUser && currentUser.school) {
+                    formData.append("assigned_to_schools", JSON.stringify([currentUser.school]));
+                }
+                
                 formData.append("title", title);
                 formData.append("due_date", dueDate);
                 formData.append("description", text);
@@ -913,14 +927,10 @@
 
                 if (res && res.ok) {
                     showToast(translateText("assignment_sent"), "success");
-                    titleInput.value = "";
-                    dueDateInput.value = "";
-                    textArea.value = "";
-                    fileInput.value = "";
-                    fileNameSpan.textContent = translateText("noFileSelected");
-                    clearFileBtn.classList.add("hidden");
+                    document.getElementById("assignmentForm").reset();
                     updateWordCount();
                     updateSendBtn();
+                    updateFormUI();
                 } else {
                     const data = await res.json();
                     showToast(data?.message || translateText("failed_send_assignment"), "error");
@@ -933,9 +943,10 @@
                 sendBtn.textContent = translateText("sendAssignment");
             }
         });
-
-        updateFormUI(formId);
+        
+        updateFormUI();
         updateWordCount();
+        updateSendBtn();
     }
 
     function wireAddPointsForm() {
@@ -951,7 +962,7 @@
 
         function validateForm() {
             const points = parseInt(pointsInput.value, 10) || 0;
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`)?.value;
             let hasRecipient = false;
 
             if (recipientType === "single" || recipientType === "multiple") {
@@ -972,7 +983,7 @@
         reasonInput.addEventListener("input", validateForm);
 
         addBtn.addEventListener("click", async () => {
-            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`).value;
+            const recipientType = document.querySelector(`input[name="${formId}Recipient"]:checked`)?.value;
             const points = parseInt(pointsInput.value, 10);
             const reason = reasonInput.value.trim();
 
@@ -987,7 +998,6 @@
 
             let payload = { points, reason };
 
-            // Assign the correct field based on recipient type (matches backend schema)
             if (recipientType === "single") {
                 payload.studentIds = [studentSelect.value];
             } else if (recipientType === "multiple") {
@@ -1036,7 +1046,7 @@
             }
         });
 
-        updateFormUI(formId);
+        validateForm();
     }
 
     window.onload = async () => {
@@ -1083,12 +1093,9 @@
                 applyTranslations();
                 renderStudents(studentsCache.filter(s => s.isMyClass));
                 populateSelects(studentsCache, studentsCache.filter(s => s.isMyClass), studentsCache.filter(s => !s.isMyClass));
-                fetchAssignedTasks();
-                fetchFeedback();
-                fetchOverdueTasks();
             });
         }
-    };
+    }
 </script>
   </body>
 </html>
