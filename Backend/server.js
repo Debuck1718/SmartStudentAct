@@ -10,6 +10,7 @@ const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
 const http = require("http");
 const fetch = require("node-fetch");
+const path = require("path");
 
 const eventBus = new EventEmitter();
 
@@ -34,22 +35,19 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
 const app = express();
-app.set("trust proxy", 1); 
+app.set("trust proxy", 1);
+
 
 app.use(morgan("dev"));
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false, 
+  })
+);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:4000",
-  "https://smartstudentact.com",
-  "https://www.smartstudentact.com",
-  "https://api.smartstudentact.com", 
-];
 
 app.use(
   cors({
@@ -64,7 +62,7 @@ app.use(
       "Origin",
     ],
     exposedHeaders: ["Set-Cookie"],
-    optionsSuccessStatus: 200, 
+    optionsSuccessStatus: 200,
   })
 );
 
@@ -80,6 +78,28 @@ try {
   console.error("❌ Cloudinary config error", error);
   process.exit(1);
 }
+
+
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    maxAge: "30d",
+    immutable: true,
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
+    },
+  })
+);
+
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    maxAge: "7d",
+    immutable: false,
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "public, max-age=604800");
+    },
+  })
+);
 
 
 async function connectMongo() {
@@ -122,8 +142,7 @@ try {
   app.use("/api", webhookRoutes);
 
   const pushRoutes = require("./routes/pushRoutes");
-app.use("/api/push", pushRoutes);
-
+  app.use("/api/push", pushRoutes);
 
   const protectedRoutes = require("./routes/protectedRoutes");
   app.use("/api", protectedRoutes);
@@ -133,6 +152,7 @@ app.use("/api/push", pushRoutes);
   console.error("❌ Routes loading error:", err);
   process.exit(1);
 }
+
 
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
@@ -182,4 +202,6 @@ async function startApp() {
 }
 
 startApp();
+
+
 
