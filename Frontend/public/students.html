@@ -356,48 +356,48 @@
 
 
     async function handleSaveAssignment() {
-  const title = document.getElementById("assignment-name").value.trim();
-  const description = document.getElementById("assignment-desc").value.trim();
-  const dueDate = document.getElementById("assignment-due-date").value;
-  const dueTime = document.getElementById("assignment-due-time").value;
+      const title = document.getElementById("assignment-name").value.trim();
+      const description = document.getElementById("assignment-desc").value.trim();
+      const dueDate = document.getElementById("assignment-due-date").value;
+      const dueTime = document.getElementById("assignment-due-time").value;
 
-  if (!title || !dueDate || !dueTime) {
-    return showToast("Enter all task fields", "warning");
-  }
+      if (!title || !dueDate || !dueTime) {
+        return showToast("Enter all task fields", "warning");
+      }
 
-  try {
-    const due_date = new Date(`${dueDate}T${dueTime}`).toISOString();
+      try {
+        const due_date = new Date(`${dueDate}T${dueTime}`).toISOString();
 
-    // Include userId if needed
-    await fetchWithAuth("/student/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        description,
-        due_date,
-        userId: req.userId || undefined // optional, backend already reads JWT
-      }),
-    });
+        await fetchWithAuth("/student/tasks", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            title,
+            description,
+            due_date
+          }),
+        });
 
-    showToast("Task added!", "success");
-    closeModal("add-assignment-modal");
-    fetchAssignments();
-    scheduleReminders(title, due_date);
-  } catch (e) {
-    showToast(e.message, "error");
-  }
-}
+        showToast("Task added!", "success");
+        closeModal("add-assignment-modal");
+        fetchAssignments();
+        scheduleReminders(title, due_date);
+      } catch (e) {
+        showToast(e.message, "error");
+      }
+    }
 
     async function handleSubmission(assignmentId) {
 
       const submissionText = prompt("Enter your submission text:");
-      if (submissionText === null) return; 
+      if (submissionText === null) return;
 
       const formData = new FormData();
       formData.append("assignmentId", assignmentId);
       formData.append("submissionText", submissionText);
- 
+
 
       try {
         await fetchWithAuth("/student/submissions", {
@@ -405,7 +405,7 @@
           body: formData,
         });
         showToast("Assignment submitted successfully!", "success");
-        fetchAssignments(); 
+        fetchAssignments();
       } catch (e) {
         showToast(e.message, "error");
       }
@@ -475,7 +475,7 @@
           method: "PATCH"
         });
         showToast("Task marked as completed!", "success");
-        fetchAssignments(); 
+        fetchAssignments(); // Refresh the list
       } catch (e) {
         showToast(e.message, "error");
       }
@@ -510,67 +510,97 @@
 
 
     async function handleSaveBudget() {
-  const description = document.getElementById("expense-name").value.trim();
-  const amount = parseFloat(document.getElementById("expense-amount").value.trim());
-  const date = document.getElementById("expense-date").value;
-  const category = document.getElementById("expense-category").value;
+      const description = document.getElementById("expense-name").value.trim();
+      const amount = parseFloat(document.getElementById("expense-amount").value.trim());
+      const date = document.getElementById("expense-date").value;
+      const category = document.getElementById("expense-category").value;
 
-  if (!description || isNaN(amount) || !date) {
-    return showToast("Enter all budget fields", "warning");
-  }
+      if (!description || isNaN(amount) || !date) {
+        return showToast("Enter all budget fields", "warning");
+      }
 
-  try {
-    await fetchWithAuth("/budget/add-entry", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        description,
-        amount,
-        date,
-        category,
-        type: "expense",
-        userId: req.userId || undefined // optional
-      }),
-    });
-    showToast("Budget entry saved!", "success");
-    closeModal("budget-modal");
-    fetchBudget();
-  } catch (e) {
-    showToast(e.message, "error");
-  }
-}
+      try {
+        await fetchWithAuth("/budget/add-entry", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            description,
+            amount,
+            date,
+            category,
+            type: "expense",
+          }),
+        });
+        showToast("Budget entry saved!", "success");
+        closeModal("budget-modal");
+        fetchBudget();
+      } catch (e) {
+        showToast(e.message, "error");
+      }
+    }
+
+    async function fetchBudget() {
+      try {
+        const entries = await fetchWithAuth("/budget/entries");
+        DOM.budgetList.innerHTML = entries.length ?
+          entries.map(
+            (e) =>
+            `<li class="p-2 border-b">${e.description}: $${e.amount} (${e.category || "N/A"}, ${new Date(e.date).toLocaleDateString()})</li>`
+          ).join("") :
+          "<li>No budget entries</li>";
+      } catch (e) {
+        showToast(e.message, "error");
+      }
+    }
 
 
     async function handleSaveGoal() {
-  const description = DOM.goalInput.value.trim();
-  const target_date = document.getElementById("goal-target-date").value;
-  const type = document.getElementById("goal-type").value;
+      const description = DOM.goalInput.value.trim();
+      const target_date = document.getElementById("goal-target-date").value;
+      const type = document.getElementById("goal-type").value;
 
-  if (!description || !target_date) {
-    return showToast("Enter all goal fields", "warning");
-  }
+      if (!description || !target_date) {
+        return showToast("Enter all goal fields", "warning");
+      }
 
-  try {
-    await fetchWithAuth("/rewards/goals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        description,
-        target_date,
-        type,
-        progress: 0,
-        userId: req.userId || undefined // optional
-      }),
-    });
+      try {
+        await fetchWithAuth("/rewards/goals", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            description,
+            target_date,
+            type,
+            progress: 0
+          }),
+        });
+        showToast("Goal saved 🎯", "success");
+        DOM.goalInput.value = "";
+        document.getElementById("goal-target-date").value = "";
+        fetchGoal();
+      } catch (e) {
+        showToast(e.message, "error");
+      }
+    }
 
-    showToast("Goal saved 🎯", "success");
-    DOM.goalInput.value = "";
-    document.getElementById("goal-target-date").value = "";
-    fetchGoal();
-  } catch (e) {
-    showToast(e.message, "error");
-  }
-}
+    async function fetchGoal() {
+      try {
+        const goals = await fetchWithAuth("/rewards/goals");
+        DOM.savedGoalsList.innerHTML = goals.length ?
+          goals.map(
+            (g) =>
+            `<li>${g.description} (${g.type}) - ${g.progress}% complete, due ${new Date(g.target_date).toLocaleDateString()}</li>`
+          ).join("") :
+          "<li>No goals yet.</li>";
+      } catch (e) {
+        showToast(e.message, "error");
+      }
+    }
+
 
     async function fetchQuizzes() {
       try {
@@ -589,38 +619,27 @@
 
 
     async function handleProfileUpload(e) {
-  e.preventDefault();
+      e.preventDefault();
+      const formData = new FormData(DOM.profileForm);
 
-  const formData = new FormData();
-  const file = DOM.profileForm.querySelector('input[type="file"]').files[0];
-  if (!file) {
-    showToast("No file selected.", "error");
-    return;
-  }
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Upload failed");
 
-  formData.append("profilePhoto", file); 
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Upload failed");
-
-    DOM.profilePreview.src = data.photoUrl || "./images/default-avatar.png";
-    showToast("Profile updated!", "success");
-  } catch (err) {
-    console.error(err);
-    DOM.profilePreview.src = "./images/default-avatar.png";
-    showToast(err.message, "error");
-  }
-}
+        DOM.profilePreview.src = data.imageUrl || "./images/default-avatar.png";
+        showToast("Profile updated!", "success");
+      } catch (e) {
+        DOM.profilePreview.src = "./images/default-avatar.png";
+        showToast(e.message, "error");
+      }
+    }
 
 
-    
     function renderChart() {
       if (!DOM.chartCanvas) return;
       const ctx = DOM.chartCanvas.getContext("2d");
@@ -630,7 +649,7 @@
           labels: ["Assignments", "Quizzes", "Budget"],
           datasets: [{
             label: "Activity",
-            data: [12, 19, 3], // Placeholder
+            data: [12, 19, 3], 
             backgroundColor: ["#3b82f6", "#8b5cf6", "#ef4444"],
             borderRadius: 10,
           }, ],
