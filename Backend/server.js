@@ -37,21 +37,43 @@ const isProd = NODE_ENV === "production";
 const app = express();
 app.set("trust proxy", 1);
 
-
+// -------------------- MIDDLEWARE --------------------
 app.use(morgan("dev"));
+
+// Helmet security headers
 app.use(
   helmet({
-    contentSecurityPolicy: false, 
+    contentSecurityPolicy: false, // disable if using inline scripts/styles
   })
 );
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  next();
+});
+
+// Remove x-powered-by
+app.disable("x-powered-by");
+
+// Body parsers
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// -------------------- CORS --------------------
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:4000",
+  "https://smartstudentact.com",
+  "https://www.smartstudentact.com",
+];
 
 app.use(
   cors({
-    origin: true, 
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) callback(null, origin);
+      else callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
@@ -66,7 +88,7 @@ app.use(
   })
 );
 
-
+// -------------------- CLOUDINARY --------------------
 try {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -79,7 +101,7 @@ try {
   process.exit(1);
 }
 
-
+// -------------------- STATIC FILES --------------------
 app.use(
   express.static(path.join(__dirname, "public"), {
     maxAge: "30d",
@@ -101,7 +123,7 @@ app.use(
   })
 );
 
-
+// -------------------- MONGO --------------------
 async function connectMongo() {
   try {
     console.log(`📡 Connecting to MongoDB...`);
@@ -113,7 +135,7 @@ async function connectMongo() {
   }
 }
 
-
+// -------------------- AGENDA --------------------
 let agenda;
 async function startAgenda() {
   try {
@@ -133,7 +155,7 @@ async function startAgenda() {
   }
 }
 
-
+// -------------------- ROUTES --------------------
 try {
   const publicRoutes = require("./routes/publicRoutes");
   app.use("/", publicRoutes(eventBus, agenda));
@@ -153,12 +175,13 @@ try {
   process.exit(1);
 }
 
-
+// -------------------- HEALTH CHECK --------------------
 app.get("/", (req, res) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-
+// -------------------- GLOBAL ERROR HANDLER --------------------
 app.use((err, req, res, next) => {
   if (NODE_ENV === "development") {
     console.error("❌ Global error handler caught:", err);
@@ -173,7 +196,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-
+// -------------------- SERVER --------------------
 const server = http.createServer(app);
 
 async function startApp() {
@@ -202,6 +225,7 @@ async function startApp() {
 }
 
 startApp();
+
 
 
 
