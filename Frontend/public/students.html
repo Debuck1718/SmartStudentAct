@@ -356,39 +356,38 @@
 
 
     async function handleSaveAssignment() {
-      const title = document.getElementById("assignment-name").value.trim();
-      const description = document.getElementById("assignment-desc").value.trim();
-      const dueDate = document.getElementById("assignment-due-date").value;
-      const dueTime = document.getElementById("assignment-due-time").value;
+  const title = document.getElementById("assignment-name").value.trim();
+  const description = document.getElementById("assignment-desc").value.trim();
+  const dueDate = document.getElementById("assignment-due-date").value;
+  const dueTime = document.getElementById("assignment-due-time").value;
 
-      if (!title || !dueDate || !dueTime) {
-        return showToast("Enter all task fields", "warning");
-      }
+  if (!title || !dueDate || !dueTime) {
+    return showToast("Enter all task fields", "warning");
+  }
 
-      try {
-        const due_date = new Date(`${dueDate}T${dueTime}`).toISOString();
+  try {
+    const due_date = new Date(`${dueDate}T${dueTime}`).toISOString();
 
- 
-        await fetchWithAuth("/student/tasks", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            title,
-            description,
-            due_date
-          }),
-        });
+    // Include userId if needed
+    await fetchWithAuth("/student/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        description,
+        due_date,
+        userId: req.userId || undefined // optional, backend already reads JWT
+      }),
+    });
 
-        showToast("Task added!", "success");
-        closeModal("add-assignment-modal");
-        fetchAssignments();
-        scheduleReminders(title, due_date);
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
+    showToast("Task added!", "success");
+    closeModal("add-assignment-modal");
+    fetchAssignments();
+    scheduleReminders(title, due_date);
+  } catch (e) {
+    showToast(e.message, "error");
+  }
+}
 
     async function handleSubmission(assignmentId) {
 
@@ -523,15 +522,14 @@
   try {
     await fetchWithAuth("/budget/add-entry", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         description,
         amount,
         date,
         category,
-        type: "expense", 
+        type: "expense",
+        userId: req.userId || undefined // optional
       }),
     });
     showToast("Budget entry saved!", "success");
@@ -542,66 +540,37 @@
   }
 }
 
-    async function fetchBudget() {
-      try {
-        const entries = await fetchWithAuth("/budget/entries");
-        DOM.budgetList.innerHTML = entries.length ?
-          entries.map(
-            (e) =>
-            `<li class="p-2 border-b">${e.description}: $${e.amount} (${e.category || "N/A"}, ${new Date(e.date).toLocaleDateString()})</li>`
-          ).join("") :
-          "<li>No budget entries</li>";
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-
 
     async function handleSaveGoal() {
-      const description = DOM.goalInput.value.trim();
-      const target_date = document.getElementById("goal-target-date").value;
-      const type = document.getElementById("goal-type").value;
+  const description = DOM.goalInput.value.trim();
+  const target_date = document.getElementById("goal-target-date").value;
+  const type = document.getElementById("goal-type").value;
 
-      if (!description || !target_date) {
-        return showToast("Enter all goal fields", "warning");
-      }
+  if (!description || !target_date) {
+    return showToast("Enter all goal fields", "warning");
+  }
 
-      try {
-        await fetchWithAuth("/rewards/goals", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            description,
-            target_date,
-            type,
-            progress: 0
-          }),
-        });
-        showToast("Goal saved 🎯", "success");
-        DOM.goalInput.value = "";
-        document.getElementById("goal-target-date").value = "";
-        fetchGoal();
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
+  try {
+    await fetchWithAuth("/rewards/goals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        description,
+        target_date,
+        type,
+        progress: 0,
+        userId: req.userId || undefined // optional
+      }),
+    });
 
-    async function fetchGoal() {
-      try {
-        const goals = await fetchWithAuth("/rewards/goals");
-        DOM.savedGoalsList.innerHTML = goals.length ?
-          goals.map(
-            (g) =>
-            `<li>${g.description} (${g.type}) - ${g.progress}% complete, due ${new Date(g.target_date).toLocaleDateString()}</li>`
-          ).join("") :
-          "<li>No goals yet.</li>";
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-
+    showToast("Goal saved 🎯", "success");
+    DOM.goalInput.value = "";
+    document.getElementById("goal-target-date").value = "";
+    fetchGoal();
+  } catch (e) {
+    showToast(e.message, "error");
+  }
+}
 
     async function fetchQuizzes() {
       try {
