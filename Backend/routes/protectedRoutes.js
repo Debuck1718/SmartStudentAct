@@ -22,6 +22,7 @@ const School = require("../models/School");
 const Quiz = require("../models/Quiz");
 const StudentTask = require("../models/StudentTask"); 
 const SchoolCalendar = require("../models/SchoolCalendar");
+const Message = require("../models/Message");
 
 const advancedGoalsRouter = require("./advancedGoals");
 const essayRouter = require("./essay");
@@ -1215,7 +1216,7 @@ protectedRouter.post(
   localUpload.single("file"),
   async (req, res) => {
     try {
-      const teacherId = req.user.id;
+      const teacherId = new mongoose.Types.ObjectId(req.user.id);
       let {
         title,
         description,
@@ -1232,10 +1233,14 @@ protectedRouter.post(
       // Map "entire class" to assigned_to_users automatically
       if (recipientType === "class") {
         const students = await User.find({ isMyClass: true, role: "student" });
-        assigned_to_users = students.map((s) => s._id.toString());
+        assigned_to_users = students.map((s) => new mongoose.Types.ObjectId(s._id));
       } else if (recipientType === "otherGrade" && grade) {
         const students = await User.find({ grade, role: "student" });
-        assigned_to_other_grades = students.map((s) => s._id.toString());
+        assigned_to_other_grades = students.map((s) => new mongoose.Types.ObjectId(s._id));
+      } else {
+        // Convert any provided user/school IDs to ObjectIds
+        assigned_to_users = assigned_to_users.map((id) => new mongoose.Types.ObjectId(id));
+        assigned_to_schools = assigned_to_schools.map((id) => new mongoose.Types.ObjectId(id));
       }
 
       // Validation: must assign to at least one target
@@ -1402,13 +1407,13 @@ protectedRouter.post(
 
       await quiz.save();
 
-      // Emit event for notifications
+     
       eventBus.emit("quiz_created", {
         quizId: quiz._id,
         title: quiz.title,
       });
 
-      // Schedule reminders: 6 hours & 2 hours before due date
+      
       const reminderHours = [6, 2];
       for (const hoursBefore of reminderHours) {
         const remindTime = new Date(due_date);
@@ -1514,44 +1519,48 @@ protectedRouter.post(
     try {
       let studentIds = [];
 
-      // Validate individual students
       if (assigned_to_users.length > 0) {
         const students = await User.find({
           _id: { $in: assigned_to_users.map(id => id.toString()) },
           role: "student",
         });
-        if (students.length === 0) {
-          return res.status(404).json({ message: "No students found for the given IDs." });
-        }
-        studentIds.push(...students.map(s => s._id.toString()));
+        studentIds.push(...students.map(s => s._id));
       }
 
-      // Validate students by grade
       if (assigned_to_grades.length > 0) {
         const gradeStudents = await User.find({
           grade: { $in: assigned_to_grades },
           role: "student",
         });
-        studentIds.push(...gradeStudents.map(s => s._id.toString()));
+        studentIds.push(...gradeStudents.map(s => s._id));
       }
 
-      // Deduplicate IDs
-      studentIds = [...new Set(studentIds)];
+      studentIds = [...new Set(studentIds.map(id => id.toString()))]; // unique
 
       if (studentIds.length === 0) {
         return res.status(400).json({ message: "No students selected." });
       }
 
-      // Emit messages
-      studentIds.forEach(id => {
+      
+      const savedMessages = [];
+      for (const id of studentIds) {
+        const msg = new Message({
+          teacherName: req.user.firstname,
+          studentId: id,
+          text: message,
+        });
+        await msg.save();
+        savedMessages.push(msg);
+
+        
         eventBus.emit("teacher_message", {
           userId: id,
           message,
           teacherName: req.user.firstname,
         });
-      });
+      }
 
-      res.status(200).json({ message: "Message sent successfully!", studentIds });
+      res.status(200).json({ message: "Message sent successfully!", studentIds, savedMessages });
     } catch (error) {
       logger.error("Error sending message:", error);
       res.status(500).json({ message: "Server error", error: error.message });
@@ -1662,17 +1671,18 @@ protectedRouter.get(
       const student = await User.findById(req.user.id).populate("school");
       if (!student) return res.status(404).json({ message: "Student not found." });
 
-      // Normalize values
+     
       const studentIdObj = new mongoose.Types.ObjectId(student._id);
-      const studentIdStr = student._id.toString();
       const studentEmail = student.email || null;
       const studentGrade = student.grade || null;
       const studentProgram = student.program || null;
-      const studentSchool = student.school?._id || null;
+      const studentSchool = student.school?._id
+        ? new mongoose.Types.ObjectId(student.school._id)
+        : null;
 
-      // Build query conditions
+     
       const conditions = [
-        { assigned_to_users: { $in: [studentIdObj, studentIdStr, studentEmail] } },
+        { assigned_to_users: { $in: [studentIdObj, studentEmail] } }, // support both ObjectId + email
       ];
 
       if (studentProgram) {
@@ -1690,9 +1700,8 @@ protectedRouter.get(
         conditions.push({ assigned_to_other_grades: { $in: [studentGrade] } });
       }
 
-      // Debug logs
       console.log("🔎 Student info:", {
-        id: studentIdStr,
+        id: studentIdObj,
         email: studentEmail,
         grade: studentGrade,
         program: studentProgram,
@@ -1701,16 +1710,17 @@ protectedRouter.get(
       console.log("📝 Query conditions:", JSON.stringify(conditions, null, 2));
 
       const assignments = await Assignment.find({ $or: conditions }).sort({ due_date: 1 });
+
       console.log("📦 Assignments found:", assignments.length);
 
-      res.set("Cache-Control", "no-store"); // disable caching
-      res.status(200).json(assignments); // return array directly
+      res.status(200).json(assignments);
     } catch (error) {
       logger.error("Error fetching student assignments:", error);
       res.status(500).json({ message: "Server error", error: error.message });
     }
   }
 );
+
 
 
 protectedRouter.post(
@@ -1775,15 +1785,15 @@ protectedRouter.get(
         due_date: 1,
       });
 
-      res.set("Cache-Control", "no-store"); // disable caching
-      res.json(tasks); // return array (not { tasks: [...] })
+      res.set("Cache-Control", "no-store"); 
+      res.json(tasks); 
     } catch (error) {
       logger.error("Error fetching student tasks:", error);
       res.status(500).json({ message: "Server error", error: error.message });
     }
   }
 );
-// ---------------------- Mark Task Complete ----------------------
+
 protectedRouter.patch(
   '/student/tasks/:id/complete',
   authenticateJWT,
@@ -2067,6 +2077,20 @@ protectedRouter.get(
   }
 );
 
+protectedRouter.get(
+  "/student/messages",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
+    try {
+      const messages = await Message.find({ studentId: req.userId }).sort({ createdAt: -1 });
+      res.status(200).json(messages);
+    } catch (err) {
+      logger.error("Error fetching student messages:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
 
 protectedRouter.post(
   "/upload/local",

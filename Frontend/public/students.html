@@ -135,6 +135,13 @@
         </div>
       </section>
 
+       <section id="student-messages" class="mb-6">
+  <h3 class="font-bold text-lg mb-2 text-green-600">Teacher Messages</h3>
+  <ul id="messages-list" class="space-y-2">
+    
+  </ul>
+</section>
+
       <section id="rewards" class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300">
         <h2 data-i18n="rewards_title" class="text-2xl font-semibold mb-4 text-gray-800 flex items-center">🏆 Rewards</h2>
         <div id="rewards-list" class="space-y-4"><p data-i18n="no_rewards" class="italic text-gray-500 text-center">No rewards yet. Keep up the great work!</p></div>
@@ -175,7 +182,7 @@
     </div>
   </nav>
 
-  <!-- Add Task Modal -->
+  
 <div id="add-assignment-modal" class="modal-overlay">
   <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 modal-content relative">
     <button class="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl"
@@ -231,7 +238,6 @@
     </div>
   </div>
 
-  
   <div id="toast-container"></div>
   
   <script src="translate.js"></script>
@@ -406,6 +412,32 @@
         showToast(e.message, "error");
       }
     }
+    async function fetchStudentMessages() {
+  try {
+    const messages = await fetchWithAuth("/student/messages");
+    const list = document.getElementById("messages-list");
+
+    if (!messages || messages.length === 0) {
+      list.innerHTML = `<p class="italic text-gray-500 text-center">No messages yet.</p>`;
+      return;
+    }
+
+    list.innerHTML = messages.map(m => {
+      const date = new Date(m.createdAt).toLocaleString();
+      return `
+        <li class="p-3 border rounded-lg bg-green-50 shadow-sm">
+          <p class="font-semibold">${m.teacherName}</p>
+          <p class="text-gray-700">${m.text}</p>
+          <span class="text-xs text-gray-500">${date}</span>
+        </li>
+      `;
+    }).join("");
+  } catch (err) {
+    console.error("Error fetching messages:", err);
+  }
+}
+fetchStudentMessages();
+
 
     async function handleSubmission(assignmentId) {
 
@@ -438,7 +470,7 @@
 
     let assignmentsHtml = "";
 
-    // --- Teacher Assignments ---
+  
     if (teacherAssignments.length > 0) {
       assignmentsHtml += `<h3 class="font-bold text-lg mb-2 text-blue-600">Teacher-Assigned Assignments</h3>`;
       assignmentsHtml += teacherAssignments.map((a) => {
@@ -460,7 +492,7 @@
 
     assignmentsHtml += `<hr class="my-4 border-gray-300">`;
 
-    // --- Personal Tasks ---
+  
     if (studentTasks.length > 0) {
       assignmentsHtml += `<h3 class="font-bold text-lg mb-2 text-purple-600">My Personal Tasks</h3>`;
       assignmentsHtml += studentTasks.map((t) => {
