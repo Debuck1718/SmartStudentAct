@@ -4,12 +4,12 @@ const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
-const PORT = process.env.PORT || 4000; // ✅ FIXED for Render
+const PORT = process.env.PORT || 4000; 
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
-// ✅ MongoDB Connection
+
 const connectMongo = async () => {
   try {
     console.log("📡 Connecting to MongoDB...");
@@ -21,7 +21,7 @@ const connectMongo = async () => {
   }
 };
 
-// ✅ Agenda Job Scheduler
+
 let agenda;
 const startAgenda = async () => {
   try {
@@ -41,7 +41,7 @@ const startAgenda = async () => {
   }
 };
 
-// ✅ Create HTTP Server
+
 const server = http.createServer(app);
 let isShuttingDown = false;
 
@@ -53,7 +53,7 @@ const startApp = async () => {
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
 
-      // 🔄 Render Self-Ping (keep dyno awake)
+     
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         setInterval(async () => {
           try {
@@ -71,8 +71,8 @@ const startApp = async () => {
   }
 };
 
-// ✅ Health Check (for Render)
-app.get("/health", (req, res) => {
+
+app.get("/healthz", (req, res) => {
   res.status(200).json({
     status: "ok",
     uptime: process.uptime(),
@@ -80,7 +80,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-// ✅ Graceful Shutdown
+
 const shutdown = async (signal) => {
   if (isShuttingDown) return;
   isShuttingDown = true;

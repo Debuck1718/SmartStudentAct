@@ -45,7 +45,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ CORS setup (using middleware, more reliable)
+
 const corsOptions = {
   origin: "https://www.smartstudentact.com",
   credentials: true,
@@ -54,7 +54,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// ✅ Disable caching for sensitive routes
+
 app.use((req, res, next) => {
   if (!req.path.startsWith("/public") && !req.path.startsWith("/uploads")) {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -64,7 +64,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Cloudinary config
+
 try {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -77,7 +77,7 @@ try {
   process.exit(1);
 }
 
-// ✅ Static assets
+
 app.use(
   express.static(path.join(__dirname, "public"), {
     maxAge: "30d",
@@ -99,7 +99,7 @@ app.use(
   })
 );
 
-// ✅ Routes
+
 try {
   const publicRoutes = require("./routes/publicRoutes");
   const webhookRoutes = require("./routes/webhookRoutes");
@@ -117,17 +117,17 @@ try {
   process.exit(1);
 }
 
-// ✅ Health check endpoint (for Render)
-app.get("/health", (req, res) => {
+
+app.get("/healthz", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-// ✅ Root endpoint
+
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-// ✅ Global error handler
+
 app.use((err, req, res, next) => {
   console.error("❌ Global error handler caught:", err);
   const statusCode = err.status || 500;
