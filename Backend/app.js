@@ -10,7 +10,7 @@ const path = require("path");
 const cors = require("cors");
 const { authenticateJWT } = require("./middlewares/auth");
 
-// ✅ Validate required env vars
+
 const requiredEnvVars = [
   "PORT",
   "MONGODB_URI",
@@ -31,7 +31,7 @@ validateEnvVars();
 const eventBus = new EventEmitter();
 const app = express();
 
-// ✅ Security, logging & parsing
+
 app.set("trust proxy", 1);
 app.use(morgan("dev"));
 app.use(
@@ -45,16 +45,32 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ CORS setup (using middleware, more reliable)
+// ✅ CORS setup (strict, no wildcards)
+const allowedOrigins = [
+  "https://www.smartstudentact.com",
+  "https://smartstudentact.com",
+  "http://localhost:3000", 
+];
+
 const corsOptions = {
-  origin: "https://www.smartstudentact.com",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+
 app.use(cors(corsOptions));
 
-// ✅ Disable caching for sensitive routes
+app.options("/users/login", cors(corsOptions));
+app.options("/api/*", cors(corsOptions));
+
+
 app.use((req, res, next) => {
   if (!req.path.startsWith("/public") && !req.path.startsWith("/uploads")) {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -64,7 +80,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Cloudinary config
+
 try {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -77,7 +93,7 @@ try {
   process.exit(1);
 }
 
-// ✅ Static assets
+
 app.use(
   express.static(path.join(__dirname, "public"), {
     maxAge: "30d",
@@ -99,7 +115,7 @@ app.use(
   })
 );
 
-// ✅ Routes
+
 try {
   const publicRoutes = require("./routes/publicRoutes");
   const webhookRoutes = require("./routes/webhookRoutes");
@@ -117,17 +133,17 @@ try {
   process.exit(1);
 }
 
-// ✅ Health check endpoint (for Render)
+
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-// ✅ Root endpoint
+
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-// ✅ Global error handler
+
 app.use((err, req, res, next) => {
   console.error("❌ Global error handler caught:", err);
   const statusCode = err.status || 500;
