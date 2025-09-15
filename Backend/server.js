@@ -5,7 +5,7 @@ const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
 // Hardcode the port number
-const PORT = 4000;
+const PORT = process.env.PORT|| 4000;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
