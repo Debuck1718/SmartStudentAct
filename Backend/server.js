@@ -2,7 +2,7 @@ const http = require("http");
 const mongoose = require("mongoose");
 const Agenda = require("agenda");
 const fetch = require("node-fetch");
-const { app, eventBus } = require("./app");
+const { app } = require("./app");
 
 const PORT = process.env.PORT;
 if (!PORT) {
