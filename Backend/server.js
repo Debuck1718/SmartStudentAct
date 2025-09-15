@@ -13,11 +13,7 @@ const isProd = NODE_ENV === "production";
 const connectMongo = async () => {
   try {
     console.log("📡 Connecting to MongoDB...");
-    await mongoose.connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      autoIndex: true,
-    });
+    await mongoose.connect(MONGO_URI);
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
@@ -116,6 +112,7 @@ process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
 startApp();
+
 
 
 
