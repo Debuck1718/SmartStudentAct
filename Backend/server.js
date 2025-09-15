@@ -4,17 +4,20 @@ const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
-
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
-
+// ✅ MongoDB Connection
 const connectMongo = async () => {
   try {
-    console.log(`📡 Connecting to MongoDB...`);
-    await mongoose.connect(MONGO_URI);
+    console.log("📡 Connecting to MongoDB...");
+    await mongoose.connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      autoIndex: true,
+    });
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
@@ -22,17 +25,19 @@ const connectMongo = async () => {
   }
 };
 
-
-
+// ✅ Agenda Job Scheduler
 let agenda;
 const startAgenda = async () => {
   try {
     agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
+
     agenda.define("test job", async () => {
       console.log(`⏳ Running test job at ${new Date().toISOString()}`);
     });
+
     await agenda.start();
     await agenda.every("1 minute", "test job");
+
     console.log("📅 Agenda job scheduler started!");
   } catch (err) {
     console.error("❌ Agenda startup error:", err);
@@ -40,8 +45,7 @@ const startAgenda = async () => {
   }
 };
 
-
-
+// ✅ Create HTTP Server
 const server = http.createServer(app);
 let isShuttingDown = false;
 
@@ -50,10 +54,10 @@ const startApp = async () => {
     await connectMongo();
     await startAgenda();
 
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
 
-     
+      // 🔄 Render Self-Ping (keep dyno awake)
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         setInterval(async () => {
           try {
@@ -71,20 +75,22 @@ const startApp = async () => {
   }
 };
 
-
+// ✅ Health Check (for Render)
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", uptime: process.uptime() });
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
 });
 
-
-
+// ✅ Graceful Shutdown
 const shutdown = async (signal) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
   console.log(`\n🚦 Received ${signal}, starting graceful shutdown...`);
 
   try {
-
     await new Promise((resolve) => server.close(resolve));
     console.log("✅ Server closed. No new connections accepted.");
 
@@ -93,7 +99,6 @@ const shutdown = async (signal) => {
       console.log("✅ Agenda job scheduler stopped.");
     }
 
-    
     if (mongoose.connection.readyState === 1) {
       await mongoose.disconnect();
       console.log("✅ MongoDB disconnected.");
@@ -107,14 +112,11 @@ const shutdown = async (signal) => {
   }
 };
 
-
-
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-
-
 startApp();
+
 
 
 
