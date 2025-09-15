@@ -4,7 +4,6 @@
   "description": "SmartStudent Backend API - handles student tasks, assignments, budgeting, feedback, reminders, rewards, and admin management",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'No build step needed for Railway deployment'",
     "omit-dev": "npm install --omit=dev"
