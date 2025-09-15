@@ -72,6 +72,12 @@ const startApp = async () => {
 };
 
 
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
+
+
+
 const shutdown = async (signal) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
