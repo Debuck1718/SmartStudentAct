@@ -34,7 +34,6 @@ const connectMongo = async () => {
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
-    throw err; // critical, stop startup
   }
 };
 
@@ -54,7 +53,6 @@ const startAgenda = async () => {
     console.log("📅 Agenda job scheduler started!");
   } catch (err) {
     console.error("❌ Agenda startup error:", err);
-    throw err; // critical, stop startup
   }
 };
 
@@ -62,31 +60,28 @@ const startAgenda = async () => {
 const server = http.createServer(app);
 let isShuttingDown = false;
 
-const startApp = async () => {
-  try {
+// Start HTTP server immediately so health checks pass
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
+
+  // Start MongoDB and Agenda asynchronously
+  (async () => {
     await connectMongo();
     await startAgenda();
+  })();
 
-    server.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
-
-      // Optional: self-ping to prevent idling in prod
-      if (isProd && process.env.RENDER_EXTERNAL_URL) {
-        setInterval(async () => {
-          try {
-            await fetch(process.env.RENDER_EXTERNAL_URL);
-            console.log("🔄 Self-ping successful:", new Date().toISOString());
-          } catch (err) {
-            console.error("⚠️ Self-ping failed:", err.message);
-          }
-        }, 5 * 60 * 1000);
+  // Optional: self-ping to prevent idling in prod
+  if (isProd && process.env.RENDER_EXTERNAL_URL) {
+    setInterval(async () => {
+      try {
+        await fetch(process.env.RENDER_EXTERNAL_URL);
+        console.log("🔄 Self-ping successful:", new Date().toISOString());
+      } catch (err) {
+        console.error("⚠️ Self-ping failed:", err.message);
       }
-    });
-  } catch (err) {
-    console.error("❌ Fatal startup error:", err);
-    process.exit(1);
+    }, 5 * 60 * 1000);
   }
-};
+});
 
 // ---------- Root Route ----------
 app.get("/", (req, res) => {
@@ -124,8 +119,6 @@ const shutdown = async (signal) => {
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-
-startApp();
 
 
 

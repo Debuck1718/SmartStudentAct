@@ -12,7 +12,7 @@
   "deploy": {
     "runtime": "V2",
     "numReplicas": 1,
-    "healthcheckPath": "./health",
+    "healthcheckPath": "/health",
     "sleepApplication": false,
     "useLegacyStacker": false,
     "multiRegionConfig": {
