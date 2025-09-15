@@ -2,19 +2,13 @@ const http = require("http");
 const mongoose = require("mongoose");
 const Agenda = require("agenda");
 const fetch = require("node-fetch");
-const { app } = require("./app");
+const { app, eventBus } = require("./app");
 
-const PORT = process.env.PORT;
-if (!PORT) {
-  console.error("❌ PORT not defined. Exiting...");
-  process.exit(1);
-}
-
+const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
-// Connect to MongoDB
 const connectMongo = async () => {
   try {
     console.log("📡 Connecting to MongoDB...");
@@ -22,10 +16,10 @@ const connectMongo = async () => {
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
+    throw err;
   }
 };
 
-// Agenda Job Scheduler
 let agenda;
 const startAgenda = async () => {
   try {
@@ -41,39 +35,44 @@ const startAgenda = async () => {
     console.log("📅 Agenda job scheduler started!");
   } catch (err) {
     console.error("❌ Agenda startup error:", err);
+    throw err;
   }
 };
 
-// Create HTTP server
 const server = http.createServer(app);
 let isShuttingDown = false;
 
-// Start App
 const startApp = async () => {
-  await connectMongo();
-  await startAgenda();
+  try {
+    await connectMongo();
+    await startAgenda();
 
-  server.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
+    server.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server running on http://0.0.0.0:${PORT} [${NODE_ENV}]`);
 
-    // Self-ping to keep awake in production
-    if (isProd && process.env.RENDER_EXTERNAL_URL) {
-      setInterval(async () => {
-        try {
-          await fetch(process.env.RENDER_EXTERNAL_URL);
-          console.log("🔄 Self-ping successful:", new Date().toISOString());
-        } catch (err) {
-          console.error("⚠️ Self-ping failed:", err.message);
-        }
-      }, 5 * 60 * 1000);
-    }
-  });
+      
+      if (isProd && process.env.RENDER_EXTERNAL_URL) {
+        setInterval(async () => {
+          try {
+            await fetch(process.env.RENDER_EXTERNAL_URL);
+            console.log("🔄 Self-ping successful:", new Date().toISOString());
+          } catch (err) {
+            console.error("⚠️ Self-ping failed:", err.message);
+          }
+        }, 5 * 60 * 1000);
+      }
+    });
+  } catch (err) {
+    console.error("❌ Fatal startup error:", err);
+    process.exit(1);
+  }
 };
 
-// Routes
+
 app.get("/", (req, res) => {
   res.status(200).send("SmartStudentAct API is running 🚀");
 });
+
 
 app.get(["/health", "/healthz"], (req, res) => {
   res.status(200).json({
@@ -83,7 +82,6 @@ app.get(["/health", "/healthz"], (req, res) => {
   });
 });
 
-// Graceful shutdown
 const shutdown = async (signal) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
@@ -104,17 +102,16 @@ const shutdown = async (signal) => {
     }
 
     console.log("✅ Graceful shutdown complete. Exiting.");
+    process.exit(0);
   } catch (err) {
     console.error("❌ Error during shutdown:", err);
-  } finally {
-    process.exit(0);
+    process.exit(1);
   }
 };
 
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-// Start the app
 startApp();
 
 
