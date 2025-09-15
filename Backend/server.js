@@ -4,6 +4,7 @@ const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
+const PORT = process.env.PORT || 4000; // ✅ FIXED for Render
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
@@ -111,6 +112,7 @@ process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
 startApp();
+
 
 
 
