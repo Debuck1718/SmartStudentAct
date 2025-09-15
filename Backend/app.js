@@ -7,7 +7,7 @@ const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
 const EventEmitter = require("events");
 const path = require("path");
-const { authenticateDashboard } = require("./middlewares/auth");
+const { authenticateJWT } = require("./middlewares/auth");
 
 
 const requiredEnvVars = [
@@ -102,7 +102,7 @@ try {
   app.use("/api", webhookRoutes);
   app.use("/api/push", pushRoutes);
 
-  app.use("/api", authenticateDashboard, protectedRoutes);
+  app.use("/api", authenticateJWT, protectedRoutes);
 
   console.log("✅ Routes loaded successfully!");
 } catch (err) {

@@ -106,7 +106,7 @@ const authenticateJWT = (req, res, next) => {
             });
           }
 
-          // Fetch the user from the database to ensure a valid objectId
+         
           const user = await User.findById(refreshDecoded.id);
           
           if (!user || user.refreshToken !== refreshToken) {
@@ -117,7 +117,7 @@ const authenticateJWT = (req, res, next) => {
             });
           }
 
-          // Generate a new access token using the valid user document
+          
           const newAccessToken = generateAccessToken(user);
 
           res.cookie("access_token", newAccessToken, {
@@ -129,7 +129,7 @@ const authenticateJWT = (req, res, next) => {
             maxAge: 15 * 60 * 1000,
           });
 
-          req.userId = user._id; // Set req.userId to the valid Mongoose _id
+          req.userId = user._id; 
           req.userRole = user.role;
           req.email = user.email;
           req.user = user;
