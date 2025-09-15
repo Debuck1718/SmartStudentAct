@@ -1,87 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title data-i18n="loginTitle">SmartStudentAct Login</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="loginTitle">SmartStudentAct Login</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/icon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-EWMR745QHX');
-  </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-EWMR745QHX');
+    </script>
 
-  <style>
-    body { font-family: "Inter", sans-serif; background-color: #f5f5f5; }
-    .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
-  </style>
+    <style>
+        body { font-family: "Inter", sans-serif; background-color: #f5f5f5; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+        .input-group:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+    </style>
 </head>
 <body class="flex items-center justify-center min-h-screen px-4">
+<main class="w-full max-w-md bg-white shadow-md rounded-2xl p-8">
 
-  <div class="w-full max-w-md bg-white shadow-md rounded-2xl p-8">
-
-    <!-- Language selector with label for accessibility -->
     <div class="mb-4 text-right">
-      <label for="language-select" class="sr-only">Choose Language</label>
-      <select id="language-select" class="border border-gray-300 rounded-md p-2 text-sm">
-        <option value="en">English</option>
-        <option value="fr">Français</option>
-        <option value="es">Español</option>
-        <option value="tr">Türkçe</option>
-        <option value="ar">العربية</option>
-        <option value="ru">Русский</option>
-        <option value="pt">Português</option>
-      </select>
+        <label for="language-select" class="sr-only">Choose Language</label>
+        <select id="language-select" class="border border-gray-300 rounded-md p-2 text-sm">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="tr">Türkçe</option>
+            <option value="ar">العربية</option>
+            <option value="ru">Русский</option>
+            <option value="pt">Português</option>
+        </select>
     </div>
 
     <h1 id="loginTitle" class="text-2xl font-bold text-center text-gray-800 mb-6" data-i18n="loginTitle">
-      SmartStudentAct Login
+        SmartStudentAct Login
     </h1>
 
-    <!-- Banner with aria-live for screen readers -->
     <div id="banner" class="hidden text-center mb-4 p-3 rounded-lg text-sm transition-all duration-300" role="alert" aria-live="polite"></div>
 
-    <!-- Email -->
-    <div class="mb-4">
-      <input id="emailInput" type="email" 
-             class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-             placeholder="" data-i18n-placeholder="email" autocomplete="email" aria-label="Email" />
-      <p id="emailError" class="text-red-500 text-sm mt-1"></p>
-    </div>
+    <form id="loginForm">
+        <div class="mb-4">
+            <label for="emailInput" class="sr-only" data-i18n="emailLabel"></label>
+            <input id="emailInput" type="email"
+                   class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                   placeholder="" data-i18n-placeholder="email" autocomplete="email" required />
+            <p id="emailError" class="text-red-500 text-sm mt-1"></p>
+        </div>
 
-    <!-- Password -->
-    <div class="mb-4">
-      <div class="flex items-center border border-gray-300 rounded-lg bg-white">
-        <input id="passwordInput" type="password" 
-               class="w-full h-12 px-4 rounded-l-lg focus:outline-none"
-               placeholder="" data-i18n-placeholder="password" autocomplete="current-password" aria-label="Password" />
-        <button id="passwordToggle" type="button" class="px-4 text-blue-600 font-bold" data-i18n="show">Show</button>
-      </div>
-      <p id="passwordError" class="text-red-500 text-sm mt-1"></p>
-    </div>
+        <div class="mb-4">
+            <label for="passwordInput" class="sr-only" data-i18n="passwordLabel"></label>
+            <div class="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden input-group">
+                <input id="passwordInput" type="password"
+                       class="flex-1 h-12 px-4 rounded-l-lg focus:outline-none"
+                       placeholder="" data-i18n-placeholder="password" autocomplete="current-password" required />
+                <button id="passwordToggle" type="button" class="px-4 text-blue-600 font-bold hover:text-blue-700 transition" aria-label="Show password">
+                    <span data-i18n="show">Show</span>
+                </button>
+            </div>
+            <p id="passwordError" class="text-red-500 text-sm mt-1"></p>
+        </div>
 
-    <button id="loginButton" class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition" data-i18n="login">
-      Login
-    </button>
+        <button id="loginButton" type="submit" class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition" data-i18n="login">
+            Login
+        </button>
+    </form>
 
     <div class="mt-6 text-center space-y-2">
-      <a href="/signup.html" class="text-blue-600 hover:underline" data-i18n="signupLink">Don’t have an account? Sign up</a><br />
-      <a href="/forgot-password.html" class="text-blue-600 hover:underline" data-i18n="forgotPasswordLink">Forgot Password?</a>
+        <a href="/signup.html" class="text-blue-600 hover:underline" data-i18n="signupLink"></a><br />
+        <a href="/forgot-password.html" class="text-blue-600 hover:underline" data-i18n="forgotPasswordLink"></a>
     </div>
-  </div>
-
+</main>
 <script>
 const API_BASE_URL = "https://api.smartstudentact.com";
 
@@ -91,194 +91,228 @@ const loginButton = document.getElementById("loginButton");
 const passwordToggle = document.getElementById("passwordToggle");
 const bannerEl = document.getElementById("banner");
 const langSelect = document.getElementById("language-select");
-
-let showPassword = false;
-let currentLang = "en";
-
+const loginForm = document.getElementById("loginForm");
 
 const translations = {
-  en: {
-    loginTitle: "SmartStudentAct Login",
-    email: "Email",
-    password: "Password",
-    show: "Show",
-    login: "Login",
-    signupLink: "Don’t have an account? Sign up",
-    forgotPasswordLink: "Forgot Password?",
-    requiredFields: "Email and password are required.",
-    loginSuccess: "Login successful! Redirecting...",
-    loginFail: "Login failed. Please check your credentials.",
-    unexpectedError: "Unexpected error occurred.",
-    unexpectedResponse: "Unexpected login response. Please try again."
-  },
-  fr: {
-    loginTitle: "Connexion SmartStudentAct",
-    email: "Email",
-    password: "Mot de passe",
-    show: "Afficher",
-    login: "Connexion",
-    signupLink: "Vous n'avez pas de compte ? Inscrivez-vous",
-    forgotPasswordLink: "Mot de passe oublié ?",
-    requiredFields: "Email et mot de passe requis.",
-    loginSuccess: "Connexion réussie ! Redirection...",
-    loginFail: "Échec de la connexion. Vérifiez vos identifiants.",
-    unexpectedError: "Une erreur inattendue s'est produite.",
-    unexpectedResponse: "Réponse inattendue. Veuillez réessayer."
-  },
-  es: {
-    loginTitle: "Inicio de sesión SmartStudentAct",
-    email: "Correo electrónico",
-    password: "Contraseña",
-    show: "Mostrar",
-    login: "Iniciar sesión",
-    signupLink: "¿No tienes una cuenta? Regístrate",
-    forgotPasswordLink: "¿Olvidaste tu contraseña?",
-    requiredFields: "Correo y contraseña requeridos.",
-    loginSuccess: "¡Inicio de sesión exitoso! Redirigiendo...",
-    loginFail: "Error de inicio de sesión. Verifica tus credenciales.",
-    unexpectedError: "Ocurrió un error inesperado.",
-    unexpectedResponse: "Respuesta inesperada. Inténtalo de nuevo."
-  },
-  tr: {
-    loginTitle: "SmartStudentAct Giriş",
-    email: "E-posta",
-    password: "Şifre",
-    show: "Göster",
-    login: "Giriş",
-    signupLink: "Hesabınız yok mu? Kayıt ol",
-    forgotPasswordLink: "Şifrenizi mi unuttunuz?",
-    requiredFields: "E-posta ve şifre gerekli.",
-    loginSuccess: "Giriş başarılı! Yönlendiriliyor...",
-    loginFail: "Giriş başarısız. Bilgilerinizi kontrol edin.",
-    unexpectedError: "Beklenmeyen bir hata oluştu.",
-    unexpectedResponse: "Beklenmeyen yanıt. Lütfen tekrar deneyin."
-  },
-  ar: {
-    loginTitle: "تسجيل الدخول SmartStudentAct",
-    email: "البريد الإلكتروني",
-    password: "كلمة المرور",
-    show: "عرض",
-    login: "تسجيل الدخول",
-    signupLink: "ليس لديك حساب؟ سجل الآن",
-    forgotPasswordLink: "نسيت كلمة المرور؟",
-    requiredFields: "البريد الإلكتروني وكلمة المرور مطلوبان.",
-    loginSuccess: "تم تسجيل الدخول بنجاح! جاري التحويل...",
-    loginFail: "فشل تسجيل الدخول. تحقق من بياناتك.",
-    unexpectedError: "حدث خطأ غير متوقع.",
-    unexpectedResponse: "استجابة تسجيل دخول غير متوقعة. حاول مرة أخرى."
-  },
-  ru: {
-    loginTitle: "Вход в SmartStudentAct",
-    email: "Электронная почта",
-    password: "Пароль",
-    show: "Показать",
-    login: "Войти",
-    signupLink: "Нет аккаунта? Зарегистрируйтесь",
-    forgotPasswordLink: "Забыли пароль?",
-    requiredFields: "Требуются электронная почта и пароль.",
-    loginSuccess: "Вход выполнен! Перенаправление...",
-    loginFail: "Ошибка входа. Проверьте данные.",
-    unexpectedError: "Произошла непредвиденная ошибка.",
-    unexpectedResponse: "Неожиданный ответ. Попробуйте снова."
-  },
-  pt: {
-    loginTitle: "Login SmartStudentAct",
-    email: "Email",
-    password: "Senha",
-    show: "Mostrar",
-    login: "Login",
-    signupLink: "Não tem uma conta? Cadastre-se",
-    forgotPasswordLink: "Esqueceu a senha?",
-    requiredFields: "Email e senha são obrigatórios.",
-    loginSuccess: "Login bem-sucedido! Redirecionando...",
-    loginFail: "Falha no login. Verifique suas credenciais.",
-    unexpectedError: "Ocorreu um erro inesperado.",
-    unexpectedResponse: "Resposta inesperada. Tente novamente."
-  }
+    en: {
+        loginTitle: "SmartStudentAct Login",
+        emailLabel: "Email address",
+        email: "Email",
+        passwordLabel: "Password",
+        password: "Password",
+        show: "Show",
+        hide: "Hide",
+        login: "Login",
+        signupLink: "Don’t have an account? Sign up",
+        forgotPasswordLink: "Forgot Password?",
+        requiredFields: "Email and password are required.",
+        loginSuccess: "Login successful! Redirecting...",
+        loginFail: "Login failed. Please check your credentials.",
+        unexpectedError: "An unexpected error occurred. Please try again later.",
+        unexpectedResponse: "An unexpected login response was received. Please try again.",
+        trialActive: "Your trial is active and ends on",
+    },
+    fr: {
+        loginTitle: "Connexion SmartStudentAct",
+        emailLabel: "Adresse e-mail",
+        email: "Email",
+        passwordLabel: "Mot de passe",
+        password: "Mot de passe",
+        show: "Afficher",
+        hide: "Masquer",
+        login: "Connexion",
+        signupLink: "Vous n'avez pas de compte ? Inscrivez-vous",
+        forgotPasswordLink: "Mot de passe oublié ?",
+        requiredFields: "Email et mot de passe requis.",
+        loginSuccess: "Connexion réussie ! Redirection...",
+        loginFail: "Échec de la connexion. Vérifiez vos identifiants.",
+        unexpectedError: "Une erreur inattendue s'est produite. Veuillez réessayer plus tard.",
+        unexpectedResponse: "Réponse inattendue. Veuillez réessayer.",
+        trialActive: "Votre essai est actif et se termine le",
+    },
+    es: {
+        loginTitle: "Inicio de sesión SmartStudentAct",
+        emailLabel: "Dirección de correo electrónico",
+        email: "Correo electrónico",
+        passwordLabel: "Contraseña",
+        password: "Contraseña",
+        show: "Mostrar",
+        hide: "Ocultar",
+        login: "Iniciar sesión",
+        signupLink: "¿No tienes una cuenta? Regístrate",
+        forgotPasswordLink: "¿Olvidaste tu contraseña?",
+        requiredFields: "Correo y contraseña requeridos.",
+        loginSuccess: "¡Inicio de sesión exitoso! Redirigiendo...",
+        loginFail: "Error de inicio de sesión. Verifica tus credenciales.",
+        unexpectedError: "Ocurrió un error inesperado. Inténtalo de nuevo más tarde.",
+        unexpectedResponse: "Respuesta inesperada. Inténtalo de nuevo.",
+        trialActive: "Tu prueba está activa y finaliza el",
+    },
+    tr: {
+        loginTitle: "SmartStudentAct Giriş",
+        emailLabel: "E-posta adresi",
+        email: "E-posta",
+        passwordLabel: "Şifre",
+        password: "Şifre",
+        show: "Göster",
+        hide: "Gizle",
+        login: "Giriş",
+        signupLink: "Hesabınız yok mu? Kayıt ol",
+        forgotPasswordLink: "Şifrenizi mi unuttunuz?",
+        requiredFields: "E-posta ve şifre gerekli.",
+        loginSuccess: "Giriş başarılı! Yönlendiriliyor...",
+        loginFail: "Giriş başarısız. Bilgilerinizi kontrol edin.",
+        unexpectedError: "Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+        unexpectedResponse: "Beklenmeyen bir yanıt alındı. Lütfen tekrar deneyin.",
+        trialActive: "Deneme sürümünüz aktif ve şu tarihte sona eriyor:",
+    },
+    ar: {
+        loginTitle: "تسجيل الدخول SmartStudentAct",
+        emailLabel: "البريد الإلكتروني",
+        email: "البريد الإلكتروني",
+        passwordLabel: "كلمة المرور",
+        password: "كلمة المرور",
+        show: "عرض",
+        hide: "إخفاء",
+        login: "تسجيل الدخول",
+        signupLink: "ليس لديك حساب؟ سجل الآن",
+        forgotPasswordLink: "نسيت كلمة المرور؟",
+        requiredFields: "البريد الإلكتروني وكلمة المرور مطلوبان.",
+        loginSuccess: "تم تسجيل الدخول بنجاح! جاري التحويل...",
+        loginFail: "فشل تسجيل الدخول. تحقق من بياناتك.",
+        unexpectedError: "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقاً.",
+        unexpectedResponse: "تم استلام استجابة تسجيل دخول غير متوقعة. يرجى المحاولة مرة أخرى.",
+        trialActive: "فترة تجربتك نشطة وتنتهي في",
+    },
+    ru: {
+        loginTitle: "Вход в SmartStudentAct",
+        emailLabel: "Адрес электронной почты",
+        email: "Электронная почта",
+        passwordLabel: "Пароль",
+        password: "Пароль",
+        show: "Показать",
+        hide: "Скрыть",
+        login: "Войти",
+        signupLink: "Нет аккаунта? Зарегистрируйтесь",
+        forgotPasswordLink: "Забыли пароль?",
+        requiredFields: "Требуются электронная почта и пароль.",
+        loginSuccess: "Вход выполнен! Перенаправление...",
+        loginFail: "Ошибка входа. Проверьте данные.",
+        unexpectedError: "Произошла непредвиденная ошибка. Пожалуйста, попробуйте снова позже.",
+        unexpectedResponse: "Получен неожиданный ответ. Попробуйте снова.",
+        trialActive: "Ваш пробный период активен и истекает",
+    },
+    pt: {
+        loginTitle: "Login SmartStudentAct",
+        emailLabel: "Endereço de e-mail",
+        email: "Email",
+        passwordLabel: "Senha",
+        password: "Senha",
+        show: "Mostrar",
+        hide: "Ocultar",
+        login: "Login",
+        signupLink: "Não tem uma conta? Cadastre-se",
+        forgotPasswordLink: "Esqueceu a senha?",
+        requiredFields: "Email e senha são obrigatórios.",
+        loginSuccess: "Login bem-sucedido! Redirecionando...",
+        loginFail: "Falha no login. Verifique suas credenciais.",
+        unexpectedError: "Ocorreu um erro inesperado. Tente novamente mais tarde.",
+        unexpectedResponse: "Resposta de login inesperada. Tente novamente.",
+        trialActive: "Sua avaliação está ativa e termina em",
+    }
 };
 
+let currentLang = "en";
+
 function applyTranslations(lang) {
-  currentLang = lang;
-  document.querySelectorAll("[data-i18n]").forEach(el => {
-    const key = el.getAttribute("data-i18n");
-    if(translations[lang][key]) el.textContent = translations[lang][key];
-  });
-  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-    const key = el.getAttribute("data-i18n-placeholder");
-    if(translations[lang][key]) el.placeholder = translations[lang][key];
-  });
+    currentLang = lang;
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (translations[lang][key]) el.textContent = translations[lang][key];
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        const key = el.getAttribute("data-i18n-placeholder");
+        if (translations[lang][key]) el.placeholder = translations[lang][key];
+    });
 }
 
-applyTranslations(currentLang);
+function showBanner(message, type = 'error') {
+    bannerEl.textContent = message;
+    bannerEl.className = `text-center mb-4 p-3 rounded-lg text-sm transition-all duration-300`;
+    if (type === 'error') {
+        bannerEl.classList.add("bg-red-100", "text-red-700");
+    } else if (type === 'success') {
+        bannerEl.classList.add("bg-green-100", "text-green-700");
+    } else {
+        bannerEl.classList.add("bg-gray-100", "text-gray-700");
+    }
+}
+
+async function handleLogin(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const email = emailInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+        showBanner(translations[currentLang].requiredFields, "error");
+        return;
+    }
+
+    loginButton.disabled = true;
+    loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/users/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            showBanner(data.message || translations[currentLang].loginFail, "error");
+            return;
+        }
+
+        if (data.user && data.user.trialActive && !data.user.subscriptionActive && data.user.trial_end_at) {
+            const trialEnd = new Date(data.user.trial_end_at).toLocaleDateString(currentLang);
+            showBanner(`${translations[currentLang].trialActive} ${trialEnd}`, "success");
+        } else {
+            showBanner(translations[currentLang].loginSuccess, "success");
+        }
+
+        if (data.redirectUrl) {
+            setTimeout(() => window.location.href = data.redirectUrl, 1200);
+        } else {
+            showBanner(translations[currentLang].unexpectedResponse, "error");
+        }
+
+    } catch(err) {
+        console.error("Login error:", err);
+        showBanner(translations[currentLang].unexpectedError, "error");
+    } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = translations[currentLang].login;
+    }
+}
+
+// Event Listeners
+document.addEventListener("DOMContentLoaded", () => {
+    applyTranslations(langSelect.value); // Apply initial translation based on select value
+});
+
 langSelect.addEventListener("change", e => applyTranslations(e.target.value));
 
 passwordToggle.addEventListener("click", () => {
-  showPassword = !showPassword;
-  passwordInput.type = showPassword ? "text" : "password";
-  passwordToggle.textContent = translations[currentLang].show;
+    const isPassword = passwordInput.type === "password";
+    passwordInput.type = isPassword ? "text" : "password";
+    passwordToggle.textContent = isPassword ? translations[currentLang].hide : translations[currentLang].show;
 });
 
-function showBanner(message, type='error') {
-  bannerEl.textContent = message;
-  bannerEl.classList.remove("hidden","bg-red-100","text-red-700","bg-green-100","text-green-700","bg-gray-100","text-gray-700");
-  if(type === 'error') bannerEl.classList.add("bg-red-100","text-red-700");
-  else if(type === 'success') bannerEl.classList.add("bg-green-100","text-green-700");
-  else bannerEl.classList.add("bg-gray-100","text-gray-700");
-  bannerEl.classList.remove("hidden");
-}
-
-async function handleLogin() {
-  const email = emailInput.value.trim().toLowerCase();
-  const password = passwordInput.value;
-
-  if(!email || !password) {
-    showBanner(translations[currentLang].requiredFields, "error");
-    return;
-  }
-
-  loginButton.disabled = true;
-  loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/users/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await res.json();
-
-    if(!res.ok) {
-      showBanner(data.message || translations[currentLang].loginFail, "error");
-      return;
-    }
-
-    
-    if (data.user.trialActive && !data.user.subscriptionActive && data.user.trial_end_at) {
-      const trialEnd = new Date(data.user.trial_end_at).toLocaleDateString();
-      showBanner(`${translations[currentLang].trialActive} ${trialEnd}`, "success");
-    } else if (data.user.subscriptionActive) {
-      showBanner(translations[currentLang].loginSuccess, "success");
-    }
-
-   
-    if(data.redirectUrl) {
-      setTimeout(() => window.location.href = data.redirectUrl, 1200);
-    } else {
-      showBanner(translations[currentLang].unexpectedResponse, "error");
-    }
-
-  } catch(err) {
-    console.error("Login error:", err);
-    showBanner(translations[currentLang].unexpectedError, "error");
-  } finally {
-    loginButton.disabled = false;
-    loginButton.textContent = translations[currentLang].login;
-  }
-}
-
-loginButton.addEventListener("click", handleLogin);
+loginForm.addEventListener("submit", handleLogin);
 </script>
 </body>
 </html>

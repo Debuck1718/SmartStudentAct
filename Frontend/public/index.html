@@ -1,331 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SmartStudentAct – AI Essay Checker, Student Finance & Goal Tracker</title>
-  <meta name="description" content="SmartStudentAct helps students track assignments, manage goals, budget wisely, and use an AI-powered essay checker. Stay organized, improve your writing, and achieve success." />
-  <meta name="keywords" content="AI essay checker, student management app, school finance tracker, assignment planner, SmartStudentAct, study tools, academic success app, homework tracker" />
-  <meta name="author" content="SmartStudentAct Team" />
-  <link rel="canonical" href="https://smartstudentact.com" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartStudentAct – AI Essay Checker, Student Finance & Goal Tracker</title>
+    <meta name="description" content="SmartStudentAct helps students track assignments, manage goals, budget wisely, and use an AI-powered essay checker. Stay organized, improve your writing, and achieve success." />
+    <meta name="keywords" content="AI essay checker, student management app, school finance tracker, assignment planner, SmartStudentAct, study tools, academic success app, homework tracker" />
+    <meta name="author" content="SmartStudentAct Team" />
+    <link rel="canonical" href="https://smartstudentact.com" />
 
- 
-  <meta property="og:title" content="SmartStudentAct – AI Essay Checker & Student Tools" />
-  <meta property="og:description" content="Track assignments, manage your budget, and get instant AI-powered essay feedback with SmartStudentAct." />
-  <meta property="og:image" content="https://smartstudentact.com/images/icon.png" />
-  <meta property="og:url" content="https://smartstudentact.com" />
-  <meta property="og:type" content="website" />
+    <meta property="og:title" content="SmartStudentAct – AI Essay Checker & Student Tools" />
+    <meta property="og:description" content="Track assignments, manage your budget, and get instant AI-powered essay feedback with SmartStudentAct." />
+    <meta property="og:image" content="https://smartstudentact.com/images/icon.png" />
+    <meta property="og:url" content="https://smartstudentact.com" />
+    <meta property="og:type" content="website" />
 
-  
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="SmartStudentAct – AI Essay Checker & Student Tools" />
-  <meta name="twitter:description" content="SmartStudentAct helps you study smarter: essay checker, budget tracker, and student success tools." />
-  <meta name="twitter:image" content="https://smartstudentact.com/images/icon.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SmartStudentAct – AI Essay Checker & Student Tools" />
+    <meta name="twitter:description" content="SmartStudentAct helps you study smarter: essay checker, budget tracker, and student success tools." />
+    <meta name="twitter:image" content="https://smartstudentact.com/images/icon.png" />
 
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/icon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "SmartStudentAct",
-    "url": "https://smartstudentact.com",
-    "description": "SmartStudentAct is a student-focused app that helps with assignment tracking, goal management, budgeting, and AI-powered essay checking.",
-    "applicationCategory": "EducationApplication",
-    "operatingSystem": "All",
-    "author": { "@type": "Organization", "name": "SmartStudentAct" },
-    "publisher": { "@type": "Organization", "name": "SmartStudentAct" }
-  }
-  </script>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "SmartStudentAct",
+            "url": "https://smartstudentact.com",
+            "description": "SmartStudentAct is a student-focused app that helps with assignment tracking, goal management, budgeting, and AI-powered essay checking.",
+            "applicationCategory": "EducationApplication",
+            "operatingSystem": "All",
+            "author": { "@type": "Organization", "name": "SmartStudentAct" },
+            "publisher": { "@type": "Organization", "name": "SmartStudentAct" }
+        }
+    </script>
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag("js", new Date());
-    gtag("config", "G-EWMR745QHX");
-  </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        gtag("js", new Date());
+        gtag("config", "G-EWMR745QHX");
+    </script>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
-    body { font-family: "Inter", sans-serif; background-color: #f0f4f8; }
-    .background-image-container {
-      background-image: url("./images/bg.png");
-      background-size: cover;
-      background-position: center;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-    }
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal-content {
-      background-color: white;
-      padding: 2rem;
-      border-radius: 1rem;
-      max-width: 80%;
-      text-align: center;
-    }
-    select.language-dropdown {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background-color: #3b82f6;
-      color: white;
-      font-weight: 600;
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: transform 0.2s ease, background-color 0.2s ease;
-    }
-    select.language-dropdown:hover {
-      background-color: #2563eb;
-      transform: scale(1.05);
-    }
-  </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* Prevents text size adjustment on mobile browsers for consistency */
+        body { 
+            text-size-adjust: 100%;
+            -webkit-text-size-adjust: 100%; 
+        }
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+        body { 
+            font-family: "Inter", sans-serif; 
+            background-color: #f0f4f8; 
+        }
+        .background-image-container {
+            background-image: url("./images/bg.png");
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 80%;
+            text-align: center;
+        }
+        select.language-dropdown {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: #3b82f6;
+            color: white;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        select.language-dropdown:hover {
+            background-color: #2563eb;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans">
-
 <div id="alert-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-message">
-  <div class="modal-content shadow-lg">
-    <h3 id="modal-title" data-i18n="modal_title" class="text-xl font-bold mb-4"></h3>
-    <p id="modal-message" data-i18n="modal_message" class="mb-6"></p>
-    <button onclick="closeModal()" data-i18n="modal_ok_btn" class="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">OK</button>
-  </div>
+    <div class="modal-content shadow-lg">
+        <h3 id="modal-title" data-i18n="modal_title" class="text-xl font-bold mb-4"></h3>
+        <p id="modal-message" data-i18n="modal_message" class="mb-6"></p>
+        <button onclick="closeModal()" data-i18n="modal_ok_btn" class="bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors">OK</button>
+    </div>
 </div>
-
 <div class="background-image-container flex-col p-4 md:p-8">
-  <div class="w-full max-w-2xl mx-auto space-y-6">
-
-    <div class="flex justify-center mb-6">
-      <label for="languageSelector" class="sr-only">Choose Language</label>
-      <select id="languageSelector" class="language-dropdown">
-        <option value="en">English</option>
-        <option value="fr">Français</option>
-        <option value="es">Español</option>
-        <option value="tr">Türkçe</option>
-        <option value="ar">العربية</option>
-        <option value="ru">Русский</option>
-      </select>
+    <div class="w-full max-w-2xl mx-auto space-y-6">
+        <div class="flex justify-center mb-6">
+            <label for="languageSelector" class="sr-only">Choose Language</label>
+            <select id="languageSelector" class="language-dropdown">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="tr">Türkçe</option>
+                <option value="ar">العربية</option>
+                <option value="ru">Русский</option>
+            </select>
+        </div>
+        <div class="bg-blue-500 bg-opacity-80 p-8 rounded-xl shadow-lg text-center">
+            <h1 data-i18n="site_title" class="text-4xl md:text-5xl font-extrabold text-white mb-2" style="text-shadow:1px 1px 2px rgba(0,0,0,0.5)"></h1>
+            <p data-i18n="site_subtitle" class="text-lg md:text-xl text-white opacity-90" style="text-shadow:1px 1px 2px rgba(0,0,0,0.5)"></p>
+        </div>
+        <div class="bg-white bg-opacity-90 p-6 rounded-xl shadow-lg">
+            <h2 data-i18n="welcome_heading" class="text-2xl font-bold mb-3 text-gray-800"></h2>
+            <p data-i18n="welcome_paragraph_1" class="text-gray-700 mb-4 leading-relaxed"></p>
+            <p data-i18n="welcome_paragraph_2" class="text-gray-700 leading-relaxed"></p>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mt-6 justify-center">
+                <button id="signInBtn" data-i18n="sign_in_btn" class="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 transition-colors flex-1"></button>
+                <button id="signUpBtn" data-i18n="sign_up_btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-600 transition-colors flex-1"></button>
+            </div>
+        </div>
+        <div class="bg-gray-100 bg-opacity-90 p-6 rounded-xl shadow-inner">
+            <h2 data-i18n="about_heading" class="text-2xl font-bold mb-3 text-gray-800"></h2>
+            <p data-i18n="about_paragraph" class="text-gray-700 leading-relaxed"></p>
+        </div>
+        <footer class="text-center text-gray-600 space-y-2 mt-8">
+            <p class="text-sm">© <span id="current-year"></span> SmartStudentAct | <span data-i18n="footer_text"></span></p>
+            <div class="flex justify-center space-x-6">
+                <a href="aboutus.html" data-i18n="footer_about_link" class="text-blue-500 font-semibold hover:underline"></a>
+            </div>
+        </footer>
     </div>
-
-    <div class="bg-blue-500 bg-opacity-80 p-8 rounded-xl shadow-lg text-center">
-      <h1 data-i18n="site_title" class="text-4xl md:text-5xl font-extrabold text-white mb-2" style="text-shadow:1px 1px 2px rgba(0,0,0,0.5)"></h1>
-      <p data-i18n="site_subtitle" class="text-lg md:text-xl text-white opacity-90" style="text-shadow:1px 1px 2px rgba(0,0,0,0.5)"></p>
-    </div>
-
-    <div class="bg-white bg-opacity-90 p-6 rounded-xl shadow-lg">
-      <h2 data-i18n="welcome_heading" class="text-2xl font-bold mb-3 text-gray-800"></h2>
-      <p data-i18n="welcome_paragraph_1" class="text-gray-700 mb-4 leading-relaxed"></p>
-      <p data-i18n="welcome_paragraph_2" class="text-gray-700 leading-relaxed"></p>
-      <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mt-6 justify-center">
-        <button id="signInBtn" data-i18n="sign_in_btn" class="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 transition-colors flex-1"></button>
-        <button id="signUpBtn" data-i18n="sign_up_btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-600 transition-colors flex-1"></button>
-      </div>
-    </div>
-
-    <div class="bg-gray-100 bg-opacity-90 p-6 rounded-xl shadow-inner">
-      <h2 data-i18n="about_heading" class="text-2xl font-bold mb-3 text-gray-800"></h2>
-      <p data-i18n="about_paragraph" class="text-gray-700 leading-relaxed"></p>
-    </div>
-
-    <footer class="text-center text-gray-600 space-y-2 mt-8">
-      <p class="text-sm">© <span id="current-year"></span> SmartStudentAct | <span data-i18n="footer_text"></span></p>
-      <div class="flex justify-center space-x-6">
-        <a href="aboutus.html" data-i18n="footer_about_link" class="text-blue-500 font-semibold hover:underline"></a>
-      </div>
-    </footer>
-  </div>
 </div>
-
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function() {
+        var translations = {
+            en: {
+                site_title: "SmartStudentAct",
+                site_subtitle: "Track your goals. Budget smart.",
+                welcome_heading: "Welcome to SmartStudentAct 📚",
+                welcome_paragraph_1: "SmartStudentAct is designed to help you manage your assignments, track your goals, control your budget, and earn exciting rewards based on your academic and financial achievements.",
+                welcome_paragraph_2: "Whether you're a student looking to stay organized or a teacher supporting your class, SmartStudentAct connects you with the right tools for smart success.",
+                sign_in_btn: "🔐 Sign In",
+                sign_up_btn: "📝 Sign Up",
+                about_heading: "About SmartStudentAct",
+                about_paragraph: "SmartStudentAct is a student-focused app designed to help you stay on top of your assignments, budget wisely, and track personal goals. Whether you're tracking due dates or saving up for your next big project, we’ve got your back.",
+                footer_text: "Built with 💙 for learners",
+                footer_about_link: "About",
+                modal_title: "Coming Soon",
+                modal_message: "The functionality is not yet implemented.",
+                modal_ok_btn: "OK",
+            },
+            fr: {
+                site_title: "SmartStudentAct",
+                site_subtitle: "Suivez vos objectifs. Gérez votre budget.",
+                welcome_heading: "Bienvenue sur SmartStudentAct 📚",
+                welcome_paragraph_1: "SmartStudentAct est conçu pour vous aider à gérer vos devoirs, à suivre vos objectifs, à contrôler votre budget et à gagner des récompenses passionnantes basées sur vos réussites académiques et financières.",
+                welcome_paragraph_2: "Que vous soyez un étudiant cherchant à rester organisé ou un enseignant soutenant sa classe, SmartStudentAct vous connecte aux bons outils pour un succès intelligent.",
+                sign_in_btn: "🔐 Se connecter",
+                sign_up_btn: "📝 S'inscrire",
+                about_heading: "À propos de SmartStudentAct",
+                about_paragraph: "SmartStudentAct est une application axée sur les étudiants conçue pour vous aider à rester au top de vos devoirs, à gérer judicieusement votre budget et à suivre vos objectifs personnels. Que vous suiviez des échéances ou que vous économisiez pour votre prochain grand projet, nous sommes là pour vous.",
+                footer_text: "Créé avec 💙 pour les apprenants",
+                footer_about_link: "À propos",
+                modal_title: "Bientôt disponible",
+                modal_message: "La fonctionnalité n'est pas encore implémentée.",
+                modal_ok_btn: "OK",
+            },
+            es: {
+                site_title: "SmartStudentAct",
+                site_subtitle: "Sigue tus metas. Administra tu presupuesto.",
+                welcome_heading: "Bienvenido a SmartStudentAct 📚",
+                welcome_paragraph_1: "SmartStudentAct está diseñado para ayudarte a gestionar tus tareas, seguir tus metas, controlar tu presupuesto y ganar recompensas emocionantes basadas en tus logros académicos y financieros.",
+                welcome_paragraph_2: "Ya seas un estudiante buscando organizarse o un profesor apoyando a su clase, SmartStudentAct te conecta con las herramientas adecuadas para el éxito inteligente.",
+                sign_in_btn: "🔐 Iniciar sesión",
+                sign_up_btn: "📝 Registrarse",
+                about_heading: "Acerca de SmartStudentAct",
+                about_paragraph: "SmartStudentAct es una aplicación centrada en el estudiante diseñada para ayudarte a mantenerte al día con tus tareas, administrar sabiamente tu presupuesto y seguir objetivos personales. Ya sea que sigas fechas de entrega o ahorres para tu próximo gran proyecto, te respaldamos.",
+                footer_text: "Creado con 💙 para los aprendices",
+                footer_about_link: "Acerca de",
+                modal_title: "Próximamente",
+                modal_message: "La funcionalidad aún no está implementada.",
+                modal_ok_btn: "OK",
+            },
+            tr: {
+                site_title: "SmartStudentAct",
+                site_subtitle: "Hedeflerinizi takip edin. Bütçenizi akıllıca yönetin.",
+                welcome_heading: "SmartStudentAct'e Hoşgeldiniz 📚",
+                welcome_paragraph_1: "SmartStudentAct, ödevlerinizi yönetmenize, hedeflerinizi takip etmenize, bütçenizi kontrol etmenize ve akademik ve finansal başarılarınıza dayalı heyecan verici ödüller kazanmanıza yardımcı olmak için tasarlanmıştır.",
+                welcome_paragraph_2: "İster düzenli kalmak isteyen bir öğrenci olun, ister sınıfını destekleyen bir öğretmen olun, SmartStudentAct sizi akıllı başarı için doğru araçlarla buluşturur.",
+                sign_in_btn: "🔐 Giriş Yap",
+                sign_up_btn: "📝 Kayıt Ol",
+                about_heading: "SmartStudentAct Hakkında",
+                about_paragraph: "SmartStudentAct, öğrencilerin ödevlerini takip etmelerine, bütçelerini akıllıca yönetmelerine ve kişisel hedeflerini izlemelerine yardımcı olmak için tasarlanmış bir öğrenci odaklı uygulamadır.",
+                footer_text: "Öğrenciler için 💙 ile yapıldı",
+                footer_about_link: "Hakkında",
+                modal_title: "Yakında",
+                modal_message: "Bu işlev henüz uygulanmadı.",
+                modal_ok_btn: "Tamam",
+            },
+            ar: {
+                site_title: "SmartStudentAct",
+                site_subtitle: "تتبع أهدافك. إدارة ميزانيتك بذكاء.",
+                welcome_heading: "مرحبًا بك في SmartStudentAct 📚",
+                welcome_paragraph_1: "تم تصميم SmartStudentAct لمساعدتك في إدارة واجباتك، تتبع أهدافك، التحكم في ميزانيتك، وكسب مكافآت ممتعة بناءً على إنجازاتك الأكاديمية والمالية.",
+                welcome_paragraph_2: "سواء كنت طالبًا يسعى للبقاء منظمًا أو معلمًا يدعم صفه، فإن SmartStudentAct يربطك بالأدوات المناسبة للنجاح الذكي.",
+                sign_in_btn: "🔐 تسجيل الدخول",
+                sign_up_btn: "📝 التسجيل",
+                about_heading: "عن SmartStudentAct",
+                about_paragraph: "SmartStudentAct هو تطبيق يركز على الطلاب لمساعدتك على البقاء على اطلاع على واجباتك، إدارة ميزانيتك بحكمة، وتتبع الأهداف الشخصية.",
+                footer_text: "تم بناؤه 💙 للمتعلمين",
+                footer_about_link: "عن التطبيق",
+                modal_title: "قريبًا",
+                modal_message: "الميزة لم تُنفذ بعد.",
+                modal_ok_btn: "حسناً",
+            },
+            ru: {
+                site_title: "SmartStudentAct",
+                site_subtitle: "Следите за своими целями. Умно управляйте бюджетом.",
+                welcome_heading: "Добро пожаловать в SmartStudentAct 📚",
+                welcome_paragraph_1: "SmartStudentAct создан, чтобы помочь вам управлять заданиями, отслеживать цели, контролировать бюджет и получать интересные награды на основе ваших академических и финансовых достижений.",
+                welcome_paragraph_2: "Будь вы студент, стремящийся к организации, или преподаватель, поддерживающий свой класс, SmartStudentAct соединяет вас с правильными инструментами для умного успеха.",
+                sign_in_btn: "🔐 Войти",
+                sign_up_btn: "📝 Регистрация",
+                about_heading: "О SmartStudentAct",
+                about_paragraph: "SmartStudentAct — это приложение, ориентированное на студентов, которое помогает оставаться в курсе заданий, разумно управлять бюджетом и отслеживать личные цели.",
+                footer_text: "Создано с 💙 для учащихся",
+                footer_about_link: "О нас",
+                modal_title: "Скоро",
+                modal_message: "Функционал еще не реализован.",
+                modal_ok_btn: "OK",
+            },
+        };
 
-  var translations = {
-        en: {
-          site_title: "SmartStudentAct",
-          site_subtitle: "Track your goals. Budget smart.",
-          welcome_heading: "Welcome to SmartStudentAct 📚",
-          welcome_paragraph_1:
-            "SmartStudentAct is designed to help you manage your assignments, track your goals, control your budget, and earn exciting rewards based on your academic and financial achievements.",
-          welcome_paragraph_2:
-            "Whether you're a student looking to stay organized or a teacher supporting your class, SmartStudentAct connects you with the right tools for smart success.",
-          sign_in_btn: "🔐 Sign In",
-          sign_up_btn: "📝 Sign Up",
-          about_heading: "About SmartStudentAct",
-          about_paragraph:
-            "SmartStudentAct is a student-focused app designed to help you stay on top of your assignments, budget wisely, and track personal goals. Whether you're tracking due dates or saving up for your next big project, we’ve got your back.",
-          footer_text: "Built with 💙 for learners",
-          footer_about_link: "About",
-          footer_contact_link: "Contact",
-          modal_title: "Coming Soon",
-          modal_message: "The functionality is not yet implemented.",
-          modal_ok_btn: "OK",
-        },
-        fr: {
-          site_title: "SmartStudentAct",
-          site_subtitle: "Suivez vos objectifs. Gérez votre budget.",
-          welcome_heading: "Bienvenue sur SmartStudentAct 📚",
-          welcome_paragraph_1:
-            "SmartStudentAct est conçu pour vous aider à gérer vos devoirs, à suivre vos objectifs, à contrôler votre budget et à gagner des récompenses passionnantes basées sur vos réussites académiques et financières.",
-          welcome_paragraph_2:
-            "Que vous soyez un étudiant cherchant à rester organisé ou un enseignant soutenant sa classe, SmartStudentAct vous connecte aux bons outils pour un succès intelligent.",
-          sign_in_btn: "🔐 Se connecter",
-          sign_up_btn: "📝 S'inscrire",
-          about_heading: "À propos de SmartStudentAct",
-          about_paragraph:
-            "SmartStudentAct est une application axée sur les étudiants conçue pour vous aider à rester au top de vos devoirs, à gérer judicieusement votre budget et à suivre vos objectifs personnels. Que vous suiviez des échéances ou que vous économisiez pour votre prochain grand projet, nous sommes là pour vous.",
-          footer_text: "Créé avec 💙 pour les apprenants",
-          footer_about_link: "À propos",
-          footer_contact_link: "Contact",
-          modal_title: "Bientôt disponible",
-          modal_message: "La fonctionnalité n'est pas encore implémentée.",
-          modal_ok_btn: "OK",
-        },
-        es: {
-          site_title: "SmartStudentAct",
-          site_subtitle: "Sigue tus metas. Administra tu presupuesto.",
-          welcome_heading: "Bienvenido a SmartStudentAct 📚",
-          welcome_paragraph_1:
-            "SmartStudentAct está diseñado para ayudarte a gestionar tus tareas, seguir tus metas, controlar tu presupuesto y ganar recompensas emocionantes basadas en tus logros académicos y financieros.",
-          welcome_paragraph_2:
-            "Ya seas un estudiante buscando organizarse o un profesor apoyando a su clase, SmartStudentAct te conecta con las herramientas adecuadas para el éxito inteligente.",
-          sign_in_btn: "🔐 Iniciar sesión",
-          sign_up_btn: "📝 Registrarse",
-          about_heading: "Acerca de SmartStudentAct",
-          about_paragraph:
-            "SmartStudentAct es una aplicación centrada en el estudiante diseñada para ayudarte a mantenerte al día con tus tareas, administrar sabiamente tu presupuesto y seguir objetivos personales. Ya sea que sigas fechas de entrega o ahorres para tu próximo gran proyecto, te respaldamos.",
-          footer_text: "Creado con 💙 para los aprendices",
-          footer_about_link: "Acerca de",
-          footer_contact_link: "Contacto",
-          modal_title: "Próximamente",
-          modal_message: "La funcionalidad aún no está implementada.",
-          modal_ok_btn: "OK",
-        },
-        tr: {
-          site_title: "SmartStudentAct",
-          site_subtitle:
-            "Hedeflerinizi takip edin. Bütçenizi akıllıca yönetin.",
-          welcome_heading: "SmartStudentAct'e Hoşgeldiniz 📚",
-          welcome_paragraph_1:
-            "SmartStudentAct, ödevlerinizi yönetmenize, hedeflerinizi takip etmenize, bütçenizi kontrol etmenize ve akademik ve finansal başarılarınıza dayalı heyecan verici ödüller kazanmanıza yardımcı olmak için tasarlanmıştır.",
-          welcome_paragraph_2:
-            "İster düzenli kalmak isteyen bir öğrenci olun, ister sınıfını destekleyen bir öğretmen olun, SmartStudentAct sizi akıllı başarı için doğru araçlarla buluşturur.",
-          sign_in_btn: "🔐 Giriş Yap",
-          sign_up_btn: "📝 Kayıt Ol",
-          about_heading: "SmartStudentAct Hakkında",
-          about_paragraph:
-            "SmartStudentAct, öğrencilerin ödevlerini takip etmelerine, bütçelerini akıllıca yönetmelerine ve kişisel hedeflerini izlemelerine yardımcı olmak için tasarlanmış bir öğrenci odaklı uygulamadır.",
-          footer_text: "Öğrenciler için 💙 ile yapıldı",
-          footer_about_link: "Hakkında",
-          footer_contact_link: "İletişim",
-          modal_title: "Yakında",
-          modal_message: "Bu işlev henüz uygulanmadı.",
-          modal_ok_btn: "Tamam",
-        },
-        ar: {
-          site_title: "SmartStudentAct",
-          site_subtitle: "تتبع أهدافك. إدارة ميزانيتك بذكاء.",
-          welcome_heading: "مرحبًا بك في SmartStudentAct 📚",
-          welcome_paragraph_1:
-            "تم تصميم SmartStudentAct لمساعدتك في إدارة واجباتك، تتبع أهدافك، التحكم في ميزانيتك، وكسب مكافآت ممتعة بناءً على إنجازاتك الأكاديمية والمالية.",
-          welcome_paragraph_2:
-            "سواء كنت طالبًا يسعى للبقاء منظمًا أو معلمًا يدعم صفه، فإن SmartStudentAct يربطك بالأدوات المناسبة للنجاح الذكي.",
-          sign_in_btn: "🔐 تسجيل الدخول",
-          sign_up_btn: "📝 التسجيل",
-          about_heading: "عن SmartStudentAct",
-          about_paragraph:
-            "SmartStudentAct هو تطبيق يركز على الطلاب لمساعدتك على البقاء على اطلاع على واجباتك، إدارة ميزانيتك بحكمة، وتتبع الأهداف الشخصية.",
-          footer_text: "تم بناؤه 💙 للمتعلمين",
-          footer_about_link: "عن التطبيق",
-          footer_contact_link: "اتصل بنا",
-          modal_title: "قريبًا",
-          modal_message: "الميزة لم تُنفذ بعد.",
-          modal_ok_btn: "حسناً",
-        },
-        ru: {
-          site_title: "SmartStudentAct",
-          site_subtitle: "Следите за своими целями. Умно управляйте бюджетом.",
-          welcome_heading: "Добро пожаловать в SmartStudentAct 📚",
-          welcome_paragraph_1:
-            "SmartStudentAct создан, чтобы помочь вам управлять заданиями, отслеживать цели, контролировать бюджет и получать интересные награды на основе ваших академических и финансовых достижений.",
-          welcome_paragraph_2:
-            "Будь вы студент, стремящийся к организации, или преподаватель, поддерживающий свой класс, SmartStudentAct соединяет вас с правильными инструментами для умного успеха.",
-          sign_in_btn: "🔐 Войти",
-          sign_up_btn: "📝 Регистрация",
-          about_heading: "О SmartStudentAct",
-          about_paragraph:
-            "SmartStudentAct — это приложение, ориентированное на студентов, которое помогает оставаться в курсе заданий, разумно управлять бюджетом и отслеживать личные цели.",
-          footer_text: "Создано с 💙 для учащихся",
-          footer_about_link: "О нас",
-          footer_contact_link: "Контакты",
-          modal_title: "Скоро",
-          modal_message: "Функционал еще не реализован.",
-          modal_ok_btn: "OK",
-        },
-      };
+        function translatePage(lang) {
+            const elements = document.querySelectorAll("[data-i18n]");
+            for (let i = 0; i < elements.length; i++) {
+                const el = elements[i];
+                const key = el.getAttribute("data-i18n");
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            }
+            document.documentElement.lang = lang;
+        }
 
-  function translatePage(lang) {
-    var elements = document.querySelectorAll("[data-i18n]");
-    for (var i = 0; i < elements.length; i++) {
-      var el = elements[i];
-      var key = el.getAttribute("data-i18n");
-      if (translations[lang] && translations[lang][key]) {
-        el.textContent = translations[lang][key];
-      }
-    }
-    document.documentElement.lang = lang;
-  }
+        const languageSelector = document.getElementById("languageSelector");
+        if (languageSelector) {
+            languageSelector.addEventListener("change", (e) => {
+                translatePage(e.target.value);
+            });
+        }
 
-  var languageSelector = document.getElementById("languageSelector");
-  if (languageSelector) {
-    languageSelector.addEventListener("change", function(e) {
-      translatePage(e.target.value);
+        const yearEl = document.getElementById("current-year");
+        if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+        const alertModal = document.getElementById("alert-modal");
+        window.showAlert = (title, message) => {
+            const titleEl = document.getElementById("modal-title");
+            const messageEl = document.getElementById("modal-message");
+            if(titleEl) titleEl.textContent = title;
+            if(messageEl) messageEl.textContent = message;
+            if(alertModal) alertModal.style.display = "flex";
+        };
+
+        window.closeModal = () => {
+            if(alertModal) alertModal.style.display = "none";
+        };
+
+        const signInBtn = document.getElementById("signInBtn");
+        const signUpBtn = document.getElementById("signUpBtn");
+
+        if (signInBtn) {
+            signInBtn.addEventListener("click", () => { 
+                window.location.href="/login.html"; 
+            });
+        }
+        
+        if (signUpBtn) {
+            signUpBtn.addEventListener("click", () => { 
+                window.location.href="/signup.html"; 
+            });
+        }
+
+        translatePage(languageSelector ? languageSelector.value : "en");
     });
-  }
-
-  var yearEl = document.getElementById("current-year");
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-  var alertModal = document.getElementById("alert-modal");
-  window.showAlert = function(title, message) {
-    var titleEl = document.getElementById("modal-title");
-    var messageEl = document.getElementById("modal-message");
-    if(titleEl) titleEl.textContent = title;
-    if(messageEl) messageEl.textContent = message;
-    if(alertModal) alertModal.style.display = "flex";
-  };
-
-  window.closeModal = function() {
-    if(alertModal) alertModal.style.display = "none";
-  };
-
-  var signInBtn = document.getElementById("signInBtn");
-  var signUpBtn = document.getElementById("signUpBtn");
-  if(signInBtn) signInBtn.addEventListener("click", function() { window.location.href="/login.html"; });
-  if(signUpBtn) signUpBtn.addEventListener("click", function() { window.location.href="/signup.html"; });
-
-  translatePage(languageSelector ? languageSelector.value : "en");
-
-});
 </script>
-
 </body>
 </html>
 
