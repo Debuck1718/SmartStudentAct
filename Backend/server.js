@@ -4,7 +4,8 @@ const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
-const PORT = process.env.PORT || 4000;
+// Hardcode the port number
+const PORT = 4000;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
@@ -47,10 +48,10 @@ const startApp = async () => {
     await connectMongo();
     await startAgenda();
 
+    // Use the hardcoded PORT variable
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on http://0.0.0.0:${PORT} [${NODE_ENV}]`);
 
-      
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         setInterval(async () => {
           try {
@@ -68,11 +69,9 @@ const startApp = async () => {
   }
 };
 
-
 app.get("/", (req, res) => {
   res.status(200).send("SmartStudentAct API is running 🚀");
 });
-
 
 app.get(["/health", "/healthz"], (req, res) => {
   res.status(200).json({
@@ -113,7 +112,6 @@ process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
 startApp();
-
 
 
 
