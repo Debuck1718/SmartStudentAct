@@ -98,7 +98,7 @@ try {
   const pushRoutes = require("./routes/pushRoutes");
   const protectedRoutes = require("./routes/protectedRoutes");
 
-  app.use("/", publicRoutes(eventBus));
+  app.use("/", publicRoutes);
   app.use("/api", webhookRoutes);
   app.use("/api/push", pushRoutes);
 
