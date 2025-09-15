@@ -4,8 +4,7 @@ const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
-const PORT = process.env.PORT || 4000
-
+const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
@@ -49,9 +48,9 @@ const startApp = async () => {
     await startAgenda();
 
     server.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
+      console.log(`🚀 Server running on http://0.0.0.0:${PORT} [${NODE_ENV}]`);
 
-      // ✅ Self-ping to prevent Render idle timeout
+      
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         setInterval(async () => {
           try {
@@ -69,12 +68,12 @@ const startApp = async () => {
   }
 };
 
-// ✅ Root route (for Render probes + manual test)
+
 app.get("/", (req, res) => {
   res.status(200).send("SmartStudentAct API is running 🚀");
 });
 
-// ✅ Health checks (supports both /health and /healthz)
+
 app.get(["/health", "/healthz"], (req, res) => {
   res.status(200).json({
     status: "ok",

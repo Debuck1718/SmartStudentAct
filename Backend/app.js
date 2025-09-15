@@ -10,7 +10,7 @@ const path = require("path");
 const cors = require("cors");
 const { authenticateJWT } = require("./middlewares/auth");
 
-// ✅ Validate required env vars
+
 const requiredEnvVars = [
   "PORT",
   "MONGODB_URI",
@@ -31,7 +31,7 @@ validateEnvVars();
 const eventBus = new EventEmitter();
 const app = express();
 
-// ✅ Security, logging & parsing
+
 app.set("trust proxy", 1);
 app.use(morgan("dev"));
 app.use(
