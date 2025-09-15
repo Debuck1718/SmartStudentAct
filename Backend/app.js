@@ -118,11 +118,6 @@ try {
 }
 
 
-app.get("/healthz", (req, res) => {
-  res.status(200).json({ status: "ok" });
-});
-
-
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });

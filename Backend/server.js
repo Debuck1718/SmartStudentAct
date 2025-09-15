@@ -4,11 +4,10 @@ const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
-const PORT = process.env.PORT || 4000; 
+const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
-
 
 const connectMongo = async () => {
   try {
@@ -20,7 +19,6 @@ const connectMongo = async () => {
     throw err;
   }
 };
-
 
 let agenda;
 const startAgenda = async () => {
@@ -41,7 +39,6 @@ const startAgenda = async () => {
   }
 };
 
-
 const server = http.createServer(app);
 let isShuttingDown = false;
 
@@ -53,7 +50,7 @@ const startApp = async () => {
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
 
-     
+      // ✅ Self-ping to prevent Render idle timeout
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         setInterval(async () => {
           try {
@@ -71,15 +68,19 @@ const startApp = async () => {
   }
 };
 
+// ✅ Root route (for Render probes + manual test)
+app.get("/", (req, res) => {
+  res.status(200).send("SmartStudentAct API is running 🚀");
+});
 
-app.get("/healthz", (req, res) => {
+// ✅ Health checks (supports both /health and /healthz)
+app.get(["/health", "/healthz"], (req, res) => {
   res.status(200).json({
     status: "ok",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
 });
-
 
 const shutdown = async (signal) => {
   if (isShuttingDown) return;
@@ -112,6 +113,7 @@ process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
 startApp();
+
 
 
 
