@@ -63,7 +63,7 @@ const startApp = async () => {
     await connectMongo();
     await startAgenda();
 
-    server.listen({ host: "::", port }, () => {
+    server.listen({ host: "0.0.0.0", port }, () => {
       console.log(`🚀 SmartStudentAct API listening on ${port}`);
     });
 
