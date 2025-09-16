@@ -44,15 +44,14 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Define CORS options
 const corsOptions = {
-  origin: "https://www.smartstudentact.com",
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  origin: "https://www.smartstudentact.com",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // This line should be before any routes
 
 // Cache-control middleware
 app.use((req, res, next) => {
@@ -99,24 +98,25 @@ app.use(
   })
 );
 
-// Routes
 try {
-  const publicRoutes = require("./routes/publicRoutes");
-  const webhookRoutes = require("./routes/webhookRoutes");
-  const pushRoutes = require("./routes/pushRoutes");
-  const protectedRoutes = require("./routes/protectedRoutes");
+  const publicRoutes = require("./routes/publicRoutes");
+  const webhookRoutes = require("./routes/webhookRoutes");
+  const pushRoutes = require("./routes/pushRoutes");
+  const protectedRoutes = require("./routes/protectedRoutes");
 
-  app.use("/", publicRoutes);
-  app.use("/api", webhookRoutes);
-  app.use("/api/push", pushRoutes);
-  app.use("/api", authenticateJWT, protectedRoutes);
+  // Public routes (no authentication)
+  app.use("/", publicRoutes);
+  app.use("/api", webhookRoutes);
+  app.use("/api/push", pushRoutes);
 
-  console.log("✅ Routes loaded successfully!");
+  // Authenticated routes
+  app.use("/api", authenticateJWT, protectedRoutes);
+
+  console.log("✅ Routes loaded successfully!");
 } catch (err) {
-  console.error("❌ Routes loading error:", err);
-  process.exit(1);
+  console.error("❌ Routes loading error:", err);
+  process.exit(1);
 }
-
 // ---------- Root Route ----------
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
