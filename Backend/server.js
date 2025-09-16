@@ -1,122 +1,157 @@
-const http = require("http");
+require("dotenv").config();
+const express = require("express");
 const mongoose = require("mongoose");
-const Agenda = require("agenda");
-const fetch = require("node-fetch");
-const { app, eventBus } = require("./app");
+const helmet = require("helmet");
+const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
+const cloudinary = require("cloudinary").v2;
+const EventEmitter = require("events");
+const path = require("path");
+const cors = require("cors");
+const { authenticateJWT } = require("./middlewares/auth");
 
-// PORT and environment
-const PORT = process.env.PORT || 4000;
-const MONGO_URI = process.env.MONGODB_URI;
-const NODE_ENV = process.env.NODE_ENV || "development";
-const isProd = NODE_ENV === "production";
+const requiredEnvVars = [
+  "PORT",
+  "MONGODB_URI",
+  "JWT_SECRET",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
+  "CLOUDINARY_API_SECRET",
+];
 
-let agenda;
-global.agendaStarted = false; // flag for healthcheck
-let isShuttingDown = false;
-
-// ---------- MongoDB Connection ----------
-const connectMongo = async () => {
-  try {
-    console.log("📡 Connecting to MongoDB...");
-    await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected successfully!");
-  } catch (err) {
-    console.error("❌ MongoDB connection error:", err);
-  }
-};
-
-// ---------- Agenda Job Scheduler ----------
-const startAgenda = async () => {
-  try {
-    agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
-
-    agenda.define("test job", async () => {
-      console.log(`⏳ Running test job at ${new Date().toISOString()}`);
-    });
-
-    await agenda.start();
-    global.agendaStarted = true; // flag for healthcheck
-    await agenda.every("1 minute", "test job");
-
-    console.log("📅 Agenda job scheduler started!");
-  } catch (err) {
-    console.error("❌ Agenda startup error:", err);
-  }
-};
-
-// ---------- Root & Health Routes ----------
-app.get("/", (req, res) => {
-  res.status(200).send("SmartStudentAct API is running 🚀");
-});
-
-app.get(["/health", "/healthz"], (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    mongoConnected: mongoose.connection.readyState === 1,
-    agendaStarted: global.agendaStarted,
-  });
-});
-
-// ---------- HTTP Server ----------
-const server = http.createServer(app);
-
-const startApp = async () => {
-  // Start server immediately to allow healthchecks
-  server.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Server running on http://0.0.0.0:${PORT} [${NODE_ENV}]`);
-
-    // Optional: self-ping to prevent idling in prod
-    if (isProd && process.env.RENDER_EXTERNAL_URL) {
-      setInterval(async () => {
-        try {
-          await fetch(process.env.RENDER_EXTERNAL_URL);
-          console.log("🔄 Self-ping successful:", new Date().toISOString());
-        } catch (err) {
-          console.error("⚠️ Self-ping failed:", err.message);
-        }
-      }, 5 * 60 * 1000);
-    }
-  });
-
-  // Connect to MongoDB and start Agenda in background
-  connectMongo();
-  startAgenda();
-};
-
-// ---------- Graceful Shutdown ----------
-const shutdown = async (signal) => {
-  if (isShuttingDown) return;
-  isShuttingDown = true;
-  console.log(`\n🚦 Received ${signal}, starting graceful shutdown...`);
-
-  try {
-    await new Promise((resolve) => server.close(resolve));
-    console.log("✅ Server closed. No new connections accepted.");
-
-    if (agenda) {
-      await agenda.stop();
-      console.log("✅ Agenda job scheduler stopped.");
-    }
-
-    if (mongoose.connection.readyState === 1) {
-      await mongoose.disconnect();
-      console.log("✅ MongoDB disconnected.");
-    }
-
-    console.log("✅ Graceful shutdown complete. Exiting.");
-    process.exit(0);
-  } catch (err) {
-    console.error("❌ Error during shutdown:", err);
+const validateEnvVars = () => {
+  const missingVars = requiredEnvVars.filter((key) => !process.env[key]);
+  if (missingVars.length > 0) {
+    console.error(`❌ Missing required environment variables: ${missingVars.join(", ")}`);
     process.exit(1);
   }
 };
+validateEnvVars();
 
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);
+const eventBus = new EventEmitter();
+const app = express();
 
-startApp();
+app.set("trust proxy", 1);
+app.use(morgan("dev"));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    xssFilter: false,
+  })
+);
+app.disable("x-powered-by");
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// CORS configuration
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      "https://www.smartstudentact.com",
+      "http://localhost:3000",
+      "https://healthcheck.railway.app",
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+
+// Cache-control middleware
+app.use((req, res, next) => {
+  if (!req.path.startsWith("/public") && !req.path.startsWith("/uploads")) {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+  }
+  next();
+});
+
+// Cloudinary config
+try {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  console.log("✅ Cloudinary configured successfully!");
+} catch (error) {
+  console.error("❌ Cloudinary config error", error);
+  process.exit(1);
+}
+
+// Static folders
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    maxAge: "30d",
+    immutable: true,
+  })
+);
+
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    maxAge: "7d",
+  })
+);
+
+// Routes
+try {
+  const publicRoutes = require("./routes/publicRoutes");
+  const webhookRoutes = require("./routes/webhookRoutes");
+  const pushRoutes = require("./routes/pushRoutes");
+  const protectedRoutes = require("./routes/protectedRoutes");
+
+  app.use("/", publicRoutes);
+  app.use("/api", webhookRoutes);
+  app.use("/api/push", pushRoutes);
+  app.use("/api", authenticateJWT, protectedRoutes);
+
+  console.log("✅ Routes loaded successfully!");
+} catch (err) {
+  console.error("❌ Routes loading error:", err);
+  process.exit(1);
+}
+
+// Root route
+app.get("/", (req, res) => {
+  res.json({ message: "SmartStudentAct Backend Running 🚀" });
+});
+
+// Healthcheck (immediate)
+app.get(["/health", "/healthz"], (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*"); // allow all origins for healthcheck
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    mongoConnected: mongoose.connection.readyState === 1,
+    agendaStarted: global.agendaStarted || false,
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("❌ Global error handler caught:", err);
+  const statusCode = err.status || 500;
+  const message = err.message || "An unexpected server error occurred.";
+
+  res.status(statusCode).json({
+    error: message,
+    details: process.env.NODE_ENV === "development" ? err.stack : undefined,
+  });
+});
+
+module.exports = { app, eventBus };
+
 
 
 
