@@ -4,13 +4,19 @@ const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app } = require("./app");
 
-// ---------- Environment ----------
-const PORT = process.env.PORT || 4000;
+// ---------- PORT ----------
+const PORT = process.env.PORT;
+if (!PORT) {
+  console.error("❌ PORT not defined. Exiting...");
+  process.exit(1);
+}
+
+// ---------- ENV ----------
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
-// ---------- Health Route (always ready) ----------
+// ---------- Health Route (lightweight, always responds) ----------
 app.get("/health", (_req, res) => {
   res.status(200).json({
     status: "ok",
@@ -19,34 +25,47 @@ app.get("/health", (_req, res) => {
   });
 });
 
-// ---------- Root Route ----------
-app.get("/", (_req, res) => {
-  res.status(200).send("SmartStudentAct API is running 🚀");
-});
-
-// ---------- HTTP Server ----------
-const server = http.createServer(app);
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on http://0.0.0.0:${PORT} [${NODE_ENV}]`);
-});
-
-// ---------- Asynchronous Startup (MongoDB + Agenda) ----------
-let agenda;
-(async () => {
+// ---------- MongoDB Connection ----------
+const connectMongo = async () => {
   try {
     console.log("📡 Connecting to MongoDB...");
     await mongoose.connect(MONGO_URI);
     console.log("✅ MongoDB connected successfully!");
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err);
+    // Don't crash; health still works
+  }
+};
 
+// ---------- Agenda Job Scheduler ----------
+let agenda;
+const startAgenda = async () => {
+  try {
     agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
+
     agenda.define("test job", async () => {
       console.log(`⏳ Running test job at ${new Date().toISOString()}`);
     });
+
     await agenda.start();
     await agenda.every("1 minute", "test job");
-    console.log("📅 Agenda job scheduler started!");
 
-    // Optional: self-ping to prevent idling in production
+    console.log("📅 Agenda job scheduler started!");
+  } catch (err) {
+    console.error("❌ Agenda startup error:", err);
+  }
+};
+
+// ---------- HTTP Server ----------
+const server = http.createServer(app);
+let isShuttingDown = false;
+
+const startApp = async () => {
+  // Start server immediately
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running on http://0.0.0.0:${PORT} [${NODE_ENV}]`);
+
+    // Optional: self-ping to prevent idling in prod
     if (isProd && process.env.RENDER_EXTERNAL_URL) {
       setInterval(async () => {
         try {
@@ -57,13 +76,19 @@ let agenda;
         }
       }, 5 * 60 * 1000);
     }
-  } catch (err) {
-    console.error("❌ Startup error:", err);
-  }
-})();
+  });
+
+  // Connect to MongoDB and start Agenda asynchronously
+  connectMongo();
+  startAgenda();
+};
+
+// ---------- Root Route ----------
+app.get("/", (req, res) => {
+  res.status(200).send("SmartStudentAct API is running 🚀");
+});
 
 // ---------- Graceful Shutdown ----------
-let isShuttingDown = false;
 const shutdown = async (signal) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
@@ -94,6 +119,8 @@ const shutdown = async (signal) => {
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
+// ---------- Start App ----------
+startApp();
 
 
 
