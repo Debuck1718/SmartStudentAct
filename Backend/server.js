@@ -64,7 +64,7 @@ const startApp = async () => {
     await startAgenda();
 
     server.listen({ host: "0.0.0.0", port }, () => {
-      console.log(`🚀 SmartStudentAct API listening on http://0.0.0.0:${port}`);
+      console.log(`🚀 SmartStudentAct API listening on ${port}`);
     });
 
     // Render self-ping to prevent idling
