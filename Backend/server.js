@@ -5,12 +5,17 @@ const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
+// =======================
+// Environment Variables
+// =======================
 const port = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
-// MongoDB connection
+// =======================
+// MongoDB Connection
+// =======================
 const connectMongo = async () => {
   try {
     console.log("📡 Connecting to MongoDB...");
@@ -22,7 +27,9 @@ const connectMongo = async () => {
   }
 };
 
-// Agenda setup
+// =======================
+// Agenda Job Scheduler
+// =======================
 let agenda;
 const startAgenda = async () => {
   try {
@@ -42,18 +49,22 @@ const startAgenda = async () => {
   }
 };
 
-// Create HTTP server
+// =======================
+// HTTP Server
+// =======================
 const server = http.createServer(app);
 let isShuttingDown = false;
 
-// Startup sequence
+// =======================
+// Startup Sequence
+// =======================
 const startApp = async () => {
   try {
     await connectMongo();
     await startAgenda();
 
-    server.listen(port, "0.0.0.0", () => {
-      console.log(`🚀 SmartStudentAct API listening on port ${port}`);
+    server.listen({ host: "0.0.0.0", port }, () => {
+      console.log(`🚀 SmartStudentAct API listening on http://0.0.0.0:${port}`);
     });
 
     // Render self-ping to prevent idling
@@ -73,7 +84,9 @@ const startApp = async () => {
   }
 };
 
-// Root + health routes
+// =======================
+// Root + Health Endpoints
+// =======================
 app.get("/", (req, res) => {
   res.status(200).send("SmartStudentAct API is running 🚀");
 });
@@ -86,7 +99,9 @@ app.get(["/health", "/healthz"], (req, res) => {
   });
 });
 
-// Graceful shutdown
+// =======================
+// Graceful Shutdown
+// =======================
 const shutdown = async (signal) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
@@ -117,8 +132,9 @@ const shutdown = async (signal) => {
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-// Boot the app
+
 startApp();
+
 
 
 
