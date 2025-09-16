@@ -1,14 +1,16 @@
+// server.js
 const http = require("http");
 const mongoose = require("mongoose");
 const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
-const PORT = process.env.PORT || 3000; // Railway provides PORT automatically
+const port = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
+// MongoDB connection
 const connectMongo = async () => {
   try {
     console.log("📡 Connecting to MongoDB...");
@@ -20,6 +22,7 @@ const connectMongo = async () => {
   }
 };
 
+// Agenda setup
 let agenda;
 const startAgenda = async () => {
   try {
@@ -39,36 +42,38 @@ const startAgenda = async () => {
   }
 };
 
+// Create HTTP server
 const server = http.createServer(app);
 let isShuttingDown = false;
 
+// Startup sequence
 const startApp = async () => {
   try {
     await connectMongo();
     await startAgenda();
 
-    // ✅ Fix: bind to "::" instead of "0.0.0.0"
-    server.listen(PORT, "::", () => {
-      console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
-
-      if (isProd && process.env.RENDER_EXTERNAL_URL) {
-        setInterval(async () => {
-          try {
-            await fetch(process.env.RENDER_EXTERNAL_URL);
-            console.log("🔄 Self-ping successful:", new Date().toISOString());
-          } catch (err) {
-            console.error("⚠️ Self-ping failed:", err.message);
-          }
-        }, 5 * 60 * 1000);
-      }
+    server.listen(port, "0.0.0.0", () => {
+      console.log(`🚀 SmartStudentAct API listening on port ${port}`);
     });
+
+    // Render self-ping to prevent idling
+    if (isProd && process.env.RENDER_EXTERNAL_URL) {
+      setInterval(async () => {
+        try {
+          await fetch(process.env.RENDER_EXTERNAL_URL);
+          console.log("🔄 Self-ping successful:", new Date().toISOString());
+        } catch (err) {
+          console.error("⚠️ Self-ping failed:", err.message);
+        }
+      }, 5 * 60 * 1000);
+    }
   } catch (err) {
     console.error("❌ Fatal startup error:", err);
     process.exit(1);
   }
 };
 
-// Root + health
+// Root + health routes
 app.get("/", (req, res) => {
   res.status(200).send("SmartStudentAct API is running 🚀");
 });
@@ -112,7 +117,9 @@ const shutdown = async (signal) => {
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
+// Boot the app
 startApp();
+
 
 
 
