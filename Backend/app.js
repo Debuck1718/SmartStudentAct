@@ -44,18 +44,14 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS options with Railway healthcheck support
+// Define CORS options
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow server-to-server requests
-    if (origin === "https://www.smartstudentact.com") return callback(null, true);
-    if (origin.includes("healthcheck.railway.app")) return callback(null, true);
-    return callback(new Error("Not allowed by CORS"));
-  },
+  origin: "https://www.smartstudentact.com",
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+
 app.use(cors(corsOptions));
 
 // Cache-control middleware
@@ -121,12 +117,12 @@ try {
   process.exit(1);
 }
 
-// Root route
+// ---------- Root Route ----------
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-// Healthcheck route (immediately available, no auth)
+// ---------- Healthcheck Route (available immediately) ----------
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok",
@@ -136,7 +132,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Global error handler
+// ---------- Global Error Handler ----------
 app.use((err, req, res, next) => {
   console.error("❌ Global error handler caught:", err);
   const statusCode = err.status || 500;
@@ -149,6 +145,5 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = { app, eventBus };
-
 
 
