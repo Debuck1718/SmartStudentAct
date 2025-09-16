@@ -26,7 +26,6 @@ const connectMongo = async () => {
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
-    throw err; // critical, stop startup
   }
 };
 
@@ -46,7 +45,6 @@ const startAgenda = async () => {
     console.log("📅 Agenda job scheduler started!");
   } catch (err) {
     console.error("❌ Agenda startup error:", err);
-    throw err; // critical, stop startup
   }
 };
 
@@ -73,13 +71,8 @@ const startApp = async () => {
   });
 
   // Connect to MongoDB and start Agenda in the background
-  try {
-    await connectMongo();
-    await startAgenda();
-  } catch (err) {
-    console.error("❌ Fatal startup error:", err);
-    process.exit(1);
-  }
+  connectMongo();
+  startAgenda();
 };
 
 // ---------- Graceful Shutdown ----------
@@ -114,6 +107,7 @@ process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
 startApp();
+
 
 
 
