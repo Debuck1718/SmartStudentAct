@@ -44,19 +44,17 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ---------- CORS Setup ----------
+// Define CORS options
 const corsOptions = {
-  origin: [
-    "https://www.smartstudentact.com",       // your frontend
-    "https://healthcheck.railway.app",       // Railway healthcheck
-  ],
+  origin: "https://www.smartstudentact.com",
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+
 app.use(cors(corsOptions));
 
-// ---------- Cache-Control Middleware ----------
+// Cache-control middleware
 app.use((req, res, next) => {
   if (!req.path.startsWith("/public") && !req.path.startsWith("/uploads")) {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -66,7 +64,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ---------- Cloudinary ----------
+// Cloudinary config
 try {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -79,7 +77,7 @@ try {
   process.exit(1);
 }
 
-// ---------- Static Assets ----------
+// Static folders
 app.use(
   express.static(path.join(__dirname, "public"), {
     maxAge: "30d",
@@ -101,7 +99,7 @@ app.use(
   })
 );
 
-// ---------- Routes ----------
+// Routes
 try {
   const publicRoutes = require("./routes/publicRoutes");
   const webhookRoutes = require("./routes/webhookRoutes");
@@ -119,18 +117,19 @@ try {
   process.exit(1);
 }
 
-// ---------- Healthcheck Route ----------
+// ---------- Root Route ----------
+app.get("/", (req, res) => {
+  res.json({ message: "SmartStudentAct Backend Running 🚀" });
+});
+
+// ---------- Healthcheck Route (available immediately) ----------
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok",
-    uptime: process.uptime(),
     timestamp: new Date().toISOString(),
+    mongoConnected: mongoose.connection.readyState === 1,
+    agendaStarted: global.agendaStarted || false,
   });
-});
-
-// ---------- Root ----------
-app.get("/", (req, res) => {
-  res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
 // ---------- Global Error Handler ----------
@@ -146,4 +145,5 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = { app, eventBus };
+
 
