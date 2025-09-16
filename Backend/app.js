@@ -122,15 +122,6 @@ app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });
 
-// ---------- Healthcheck Route (available immediately) ----------
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    mongoConnected: mongoose.connection.readyState === 1,
-    agendaStarted: global.agendaStarted || false,
-  });
-});
 
 // ---------- Global Error Handler ----------
 app.use((err, req, res, next) => {
