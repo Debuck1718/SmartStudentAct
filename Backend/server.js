@@ -4,7 +4,7 @@ const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
-const PORT = process.env.PORT || 3000; // Railway provides PORT automatically
+const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
@@ -47,7 +47,6 @@ const startApp = async () => {
     await connectMongo();
     await startAgenda();
 
-    // ✅ Fix: bind to "::" instead of "0.0.0.0"
     server.listen(PORT, "::", () => {
       console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
 
@@ -68,7 +67,6 @@ const startApp = async () => {
   }
 };
 
-// Root + health
 app.get("/", (req, res) => {
   res.status(200).send("SmartStudentAct API is running 🚀");
 });
@@ -81,7 +79,6 @@ app.get(["/health", "/healthz"], (req, res) => {
   });
 });
 
-// Graceful shutdown
 const shutdown = async (signal) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
