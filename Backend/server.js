@@ -1,21 +1,19 @@
-// server.js
 const http = require("http");
 const mongoose = require("mongoose");
 const Agenda = require("agenda");
 const fetch = require("node-fetch");
 const { app, eventBus } = require("./app");
 
-// =======================
-// Environment Variables
-// =======================
-const port = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8080;
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
 
-// =======================
-// MongoDB Connection
-// =======================
+let agenda;
+let isShuttingDown = false;
+global.agendaStarted = false;
+
+// ---------- MongoDB Connection ----------
 const connectMongo = async () => {
   try {
     console.log("📡 Connecting to MongoDB...");
@@ -27,10 +25,7 @@ const connectMongo = async () => {
   }
 };
 
-// =======================
-// Agenda Job Scheduler
-// =======================
-let agenda;
+// ---------- Agenda Scheduler ----------
 const startAgenda = async () => {
   try {
     agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
@@ -41,6 +36,7 @@ const startAgenda = async () => {
 
     await agenda.start();
     await agenda.every("1 minute", "test job");
+    global.agendaStarted = true;
 
     console.log("📅 Agenda job scheduler started!");
   } catch (err) {
@@ -49,59 +45,53 @@ const startAgenda = async () => {
   }
 };
 
-// =======================
-// HTTP Server
-// =======================
+// ---------- HTTP Server ----------
 const server = http.createServer(app);
-let isShuttingDown = false;
 
-// =======================
-// Startup Sequence
-// =======================
 const startApp = async () => {
   try {
     await connectMongo();
     await startAgenda();
 
-    server.listen({ host: "0.0.0.0", port }, () => {
-      console.log(`🚀 SmartStudentAct API listening on ${port}`);
-    });
+    // ✅ Dual-stack binding (IPv4 + IPv6)
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
 
-    // Render self-ping to prevent idling
-    if (isProd && process.env.RENDER_EXTERNAL_URL) {
-      setInterval(async () => {
-        try {
-          await fetch(process.env.RENDER_EXTERNAL_URL);
-          console.log("🔄 Self-ping successful:", new Date().toISOString());
-        } catch (err) {
-          console.error("⚠️ Self-ping failed:", err.message);
-        }
-      }, 5 * 60 * 1000);
-    }
+      if (isProd && process.env.RENDER_EXTERNAL_URL) {
+        setInterval(async () => {
+          try {
+            await fetch(process.env.RENDER_EXTERNAL_URL);
+            console.log("🔄 Self-ping successful:", new Date().toISOString());
+          } catch (err) {
+            console.error("⚠️ Self-ping failed:", err.message);
+          }
+        }, 5 * 60 * 1000);
+      }
+    });
   } catch (err) {
     console.error("❌ Fatal startup error:", err);
     process.exit(1);
   }
 };
 
-// =======================
-// Root + Health Endpoints
-// =======================
+// ---------- Root + Healthcheck ----------
 app.get("/", (req, res) => {
   res.status(200).send("SmartStudentAct API is running 🚀");
 });
 
 app.get(["/health", "/healthz"], (req, res) => {
+  const mongoStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
   res.status(200).json({
     status: "ok",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
+    environment: NODE_ENV,
+    mongo: mongoStatus,
+    agenda: global.agendaStarted ? "running" : "stopped",
   });
 });
 
-// =======================
-// Graceful Shutdown
-// =======================
+// ---------- Graceful Shutdown ----------
 const shutdown = async (signal) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
@@ -132,8 +122,8 @@ const shutdown = async (signal) => {
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
-
 startApp();
+
 
 
 
