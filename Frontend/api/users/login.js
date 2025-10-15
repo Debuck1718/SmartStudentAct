@@ -1,4 +1,4 @@
-// /api/public/login.js
+// /api/users/login.js
 import bcrypt from "bcryptjs";
 import { connectDb } from "@/utils/connectDb";
 import {
@@ -10,42 +10,35 @@ import { getRedirectUrl } from "@/utils/helpers";
 import User from "@/models/User";
 import logger from "@/utils/logger";
 
-// ✅ CORS handler
-function runCors(req, res) {
-  return new Promise((resolve) => {
-    const allowedOrigins = [
-      "https://www.smartstudentact.com",
-      "https://smart-student-57b2svy6h-debucks-projects.vercel.app",
-      "http://localhost:3000",
-    ];
+// ✅ Reusable CORS setup
+const allowedOrigins = [
+  "https://www.smartstudentact.com",
+  "https://smart-student-57b2svy6h-debucks-projects.vercel.app",
+  "http://localhost:3000",
+];
 
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
-      res.setHeader("Access-Control-Allow-Origin", origin);
-    }
-
-    res.setHeader(
-      "Access-Control-Allow-Methods",
-      "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-    );
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
-    );
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-
-    // ✅ Handle preflight
-    if (req.method === "OPTIONS") {
-      res.status(200).end();
-      return resolve();
-    }
-
-    resolve();
-  });
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+  res.setHeader("Access-Control-Allow-Credentials", "true");
 }
 
 export default async function handler(req, res) {
-  await runCors(req, res); // ✅ Apply CORS early
+  // ✅ Handle CORS preflight early
+  setCorsHeaders(req, res);
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
@@ -53,27 +46,28 @@ export default async function handler(req, res) {
 
   try {
     await connectDb();
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    if (!email || !password)
+    if (!email || !password) {
       return res
         .status(400)
         .json({ message: "Email and password are required" });
+    }
 
     const user = await User.findOne({ email }).select("+password +refreshToken");
-    if (!user)
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-    if (!user.password)
+    if (!user.password) {
       return res
         .status(400)
         .json({ message: "User must set a password first" });
+    }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword)
       return res.status(401).json({ message: "Invalid credentials" });
 
-    // ✅ Check trial or suspension
+    // ✅ Check trial expiry
     const now = new Date();
     if (
       user.trial_end_at &&
@@ -94,6 +88,7 @@ export default async function handler(req, res) {
 
     setAuthCookies(res, accessToken, refreshToken);
 
+    // ✅ Success
     return res.status(200).json({
       status: "success",
       message: "Login successful",
@@ -108,6 +103,9 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     logger.error("❌ Login error:", err);
-    res.status(500).json({ message: "Login failed. Please try again later." });
+    return res
+      .status(500)
+      .json({ message: "Login failed. Please try again later." });
   }
 }
+
