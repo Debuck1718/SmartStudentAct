@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartStudentAct | Global Leaderboard</title>
+   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #f8fafc;
+      color: #1e293b;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .leaderboard-container {
+      width: 100%;
+      max-width: 800px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+    .leaderboard-header {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      text-align: center;
+      padding: 24px 16px;
+    }
+    .leaderboard-header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .leaderboard-table th, .leaderboard-table td {
+      padding: 14px 10px;
+      text-align: left;
+    }
+    .leaderboard-table th {
+      background-color: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+    .leaderboard-table tr {
+      border-bottom: 1px solid #e2e8f0;
+      transition: background 0.2s ease-in-out;
+    }
+    .leaderboard-table tr:hover {
+      background: #f9fafb;
+    }
+    .rank {
+      font-weight: 600;
+      color: #2563eb;
+    }
+    .user-row.highlight {
+      background: #dbeafe;
+      font-weight: 600;
+    }
+    .category-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .category-student {
+      background: #22c55e;
+    }
+    .category-worker {
+      background: #f59e0b;
+    }
+    .your-rank {
+      background: #1e40af;
+      color: white;
+      text-align: center;
+      padding: 16px;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .loading {
+      text-align: center;
+      padding: 50px;
+      color: #64748b;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="leaderboard-container">
+    <div class="leaderboard-header">
+      <h1>🌍 Global Leaderboard</h1>
+      <p>Top Students & Workers</p>
+    </div>
+
+    <div id="your-rank" class="your-rank">Loading your rank...</div>
+
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Level</th>
+          <th>Points</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body">
+        <tr><td colspan="5" class="loading">Loading leaderboard...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    async function loadLeaderboard() {
+      try {
+        const res = await fetch("/api/leaderboard", {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
+          }
+        });
+        const data = await res.json();
+
+        const tbody = document.getElementById("leaderboard-body");
+        const yourRank = document.getElementById("your-rank");
+        tbody.innerHTML = "";
+
+        if (!data.leaderboard || data.leaderboard.length === 0) {
+          tbody.innerHTML = "<tr><td colspan='5' class='loading'>No data available.</td></tr>";
+          yourRank.textContent = "Unranked";
+          return;
+        }
+
+        data.leaderboard.forEach((user) => {
+          const tr = document.createElement("tr");
+          tr.classList.add("user-row");
+          if (user.rank === data.yourRank) tr.classList.add("highlight");
+
+          const badgeClass = user.category === "Student" ? "category-student" : "category-worker";
+
+          tr.innerHTML = `
+            <td class="rank">#${user.rank}</td>
+            <td>${user.name || "Unknown"}</td>
+            <td><span class="category-badge ${badgeClass}">${user.category}</span></td>
+            <td>${user.level || "-"}</td>
+            <td>${user.totalPoints ?? 0}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        yourRank.textContent = `🏅 Your Rank: ${data.yourRank}`;
+      } catch (err) {
+        console.error("Leaderboard error:", err);
+        document.getElementById("leaderboard-body").innerHTML =
+          "<tr><td colspan='5' class='loading'>Failed to load leaderboard.</td></tr>";
+        document.getElementById("your-rank").textContent = "Error loading rank.";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadLeaderboard);
+  </script>
+</body>
+</html>

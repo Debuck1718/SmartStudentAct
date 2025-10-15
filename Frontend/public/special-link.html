@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Special Links</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .spinner {
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #3498db;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    @keyframes spin { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-4">
+
+  <div class="w-full max-w-2xl bg-white shadow-md rounded-lg p-6 mt-6">
+    <div class="flex justify-between items-center mb-4">
+      <h1 id="title" class="text-2xl font-bold text-center">Special Links</h1>
+      <select id="langSelect" class="border p-2 rounded-md text-sm">
+        <option value="en">EN</option>
+        <option value="fr">FR</option>
+        <option value="es">ES</option>
+        <option value="tr">TR</option>
+        <option value="ar">AR</option>
+        <option value="ru">RU</option>
+        <option value="pt">PT</option>
+      </select>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex justify-center gap-3 mb-6">
+      <button id="tabRequests" class="px-4 py-2 bg-blue-600 text-white rounded-md">Requests</button>
+      <button id="tabConnections" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md">Connections</button>
+    </div>
+
+    <!-- Section: Send Request -->
+    <div id="requestsSection">
+      <h2 id="sendTitle" class="text-lg font-semibold mb-3">Send a Special Link Request</h2>
+
+      <div class="space-y-3 mb-4">
+        <input id="emailInput" type="email" placeholder="Enter user email..." class="border w-full p-2 rounded-md" />
+        <select id="typeSelect" class="border w-full p-2 rounded-md">
+          <option value="">Select Type</option>
+          <option value="special_teacher">Teacher to Student</option>
+          <option value="special_student">Student to Teacher</option>
+        </select>
+        <textarea id="messageInput" placeholder="Optional message..." class="border w-full p-2 rounded-md"></textarea>
+        <button id="sendRequestBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md w-full">Send Request</button>
+      </div>
+
+      <div class="flex justify-around mt-6">
+        <button id="viewSentBtn" class="text-blue-600 underline">View Sent</button>
+        <button id="viewReceivedBtn" class="text-blue-600 underline">View Received</button>
+      </div>
+
+      <div id="requestList" class="mt-4"></div>
+    </div>
+
+    <!-- Section: Connections -->
+    <div id="connectionsSection" class="hidden">
+      <h2 id="connectionsTitle" class="text-lg font-semibold mb-3">Active Connections</h2>
+      <div id="connectionsList"></div>
+    </div>
+
+    <div id="alertBox" class="hidden mt-4 p-3 rounded-md text-white text-center"></div>
+  </div>
+
+  <script>
+    const langData = {
+      en: {
+        title: "Special Links",
+        requests: "Requests",
+        connections: "Connections",
+        sendTitle: "Send a Special Link Request",
+        emailPlaceholder: "Enter user email...",
+        selectType: "Select Type",
+        t2s: "Teacher to Student",
+        s2t: "Student to Teacher",
+        messagePlaceholder: "Optional message...",
+        sendBtn: "Send Request",
+        viewSent: "View Sent",
+        viewReceived: "View Received",
+        activeConnections: "Active Connections",
+        loading: "Loading...",
+        noRequests: "No requests found.",
+        noConnections: "No connections found.",
+        error: "Error",
+      },
+      fr: {
+        title: "Liens Spéciaux",
+        requests: "Demandes",
+        connections: "Connexions",
+        sendTitle: "Envoyer une demande spéciale",
+        emailPlaceholder: "Entrez l'email de l'utilisateur...",
+        selectType: "Sélectionner le type",
+        t2s: "Enseignant vers Étudiant",
+        s2t: "Étudiant vers Enseignant",
+        messagePlaceholder: "Message facultatif...",
+        sendBtn: "Envoyer la demande",
+        viewSent: "Voir envoyées",
+        viewReceived: "Voir reçues",
+        activeConnections: "Connexions actives",
+        loading: "Chargement...",
+        noRequests: "Aucune demande trouvée.",
+        noConnections: "Aucune connexion trouvée.",
+        error: "Erreur",
+      },
+      es: {
+        title: "Enlaces Especiales",
+        requests: "Solicitudes",
+        connections: "Conexiones",
+        sendTitle: "Enviar solicitud especial",
+        emailPlaceholder: "Introduce el correo del usuario...",
+        selectType: "Seleccionar tipo",
+        t2s: "Profesor a Estudiante",
+        s2t: "Estudiante a Profesor",
+        messagePlaceholder: "Mensaje opcional...",
+        sendBtn: "Enviar solicitud",
+        viewSent: "Ver enviadas",
+        viewReceived: "Ver recibidas",
+        activeConnections: "Conexiones activas",
+        loading: "Cargando...",
+        noRequests: "No se encontraron solicitudes.",
+        noConnections: "No se encontraron conexiones.",
+        error: "Error",
+      },
+      tr: {
+        title: "Özel Bağlantılar",
+        requests: "İstekler",
+        connections: "Bağlantılar",
+        sendTitle: "Özel Bağlantı İsteği Gönder",
+        emailPlaceholder: "Kullanıcı e-postasını girin...",
+        selectType: "Tür Seçin",
+        t2s: "Öğretmenden Öğrenciye",
+        s2t: "Öğrenciden Öğretmene",
+        messagePlaceholder: "İsteğe bağlı mesaj...",
+        sendBtn: "İstek Gönder",
+        viewSent: "Gönderilenleri Görüntüle",
+        viewReceived: "Alınanları Görüntüle",
+        activeConnections: "Aktif Bağlantılar",
+        loading: "Yükleniyor...",
+        noRequests: "İstek bulunamadı.",
+        noConnections: "Bağlantı bulunamadı.",
+        error: "Hata",
+      },
+      ar: {
+        title: "الروابط الخاصة",
+        requests: "الطلبات",
+        connections: "الاتصالات",
+        sendTitle: "إرسال طلب ارتباط خاص",
+        emailPlaceholder: "أدخل بريد المستخدم...",
+        selectType: "اختر النوع",
+        t2s: "من المعلم إلى الطالب",
+        s2t: "من الطالب إلى المعلم",
+        messagePlaceholder: "رسالة اختيارية...",
+        sendBtn: "إرسال الطلب",
+        viewSent: "عرض المرسلة",
+        viewReceived: "عرض المستلمة",
+        activeConnections: "الاتصالات النشطة",
+        loading: "جار التحميل...",
+        noRequests: "لا توجد طلبات.",
+        noConnections: "لا توجد اتصالات.",
+        error: "خطأ",
+      },
+      ru: {
+        title: "Специальные ссылки",
+        requests: "Запросы",
+        connections: "Связи",
+        sendTitle: "Отправить специальный запрос",
+        emailPlaceholder: "Введите email пользователя...",
+        selectType: "Выбрать тип",
+        t2s: "Учитель → Студент",
+        s2t: "Студент → Учитель",
+        messagePlaceholder: "Необязательное сообщение...",
+        sendBtn: "Отправить запрос",
+        viewSent: "Отправленные",
+        viewReceived: "Полученные",
+        activeConnections: "Активные связи",
+        loading: "Загрузка...",
+        noRequests: "Запросы не найдены.",
+        noConnections: "Связи не найдены.",
+        error: "Ошибка",
+      },
+      pt: {
+        title: "Links Especiais",
+        requests: "Pedidos",
+        connections: "Conexões",
+        sendTitle: "Enviar Pedido Especial",
+        emailPlaceholder: "Digite o e-mail do usuário...",
+        selectType: "Selecionar Tipo",
+        t2s: "Professor para Aluno",
+        s2t: "Aluno para Professor",
+        messagePlaceholder: "Mensagem opcional...",
+        sendBtn: "Enviar Pedido",
+        viewSent: "Ver Enviados",
+        viewReceived: "Ver Recebidos",
+        activeConnections: "Conexões Ativas",
+        loading: "Carregando...",
+        noRequests: "Nenhum pedido encontrado.",
+        noConnections: "Nenhuma conexão encontrada.",
+        error: "Erro",
+      }
+    };
+
+    const langSelect = document.getElementById("langSelect");
+    function updateLang(lang) {
+      const t = langData[lang];
+      document.getElementById("title").textContent = t.title;
+      document.getElementById("tabRequests").textContent = t.requests;
+      document.getElementById("tabConnections").textContent = t.connections;
+      document.getElementById("sendTitle").textContent = t.sendTitle;
+      document.getElementById("emailInput").placeholder = t.emailPlaceholder;
+      document.getElementById("typeSelect").options[0].text = t.selectType;
+      document.getElementById("typeSelect").options[1].text = t.t2s;
+      document.getElementById("typeSelect").options[2].text = t.s2t;
+      document.getElementById("messageInput").placeholder = t.messagePlaceholder;
+      document.getElementById("sendRequestBtn").textContent = t.sendBtn;
+      document.getElementById("viewSentBtn").textContent = t.viewSent;
+      document.getElementById("viewReceivedBtn").textContent = t.viewReceived;
+      document.getElementById("connectionsTitle").textContent = t.activeConnections;
+    }
+    langSelect.addEventListener("change", (e) => updateLang(e.target.value));
+
+
+    updateLang("en");
+
+     const emailInput = document.getElementById("emailInput");
+    const typeSelect = document.getElementById("typeSelect");
+    const messageInput = document.getElementById("messageInput");
+    const sendRequestBtn = document.getElementById("sendRequestBtn");
+    const viewSentBtn = document.getElementById("viewSentBtn");
+    const viewReceivedBtn = document.getElementById("viewReceivedBtn");
+    const requestList = document.getElementById("requestList");
+    const connectionsList = document.getElementById("connectionsList");
+    const alertBox = document.getElementById("alertBox");
+
+    const requestsSection = document.getElementById("requestsSection");
+    const connectionsSection = document.getElementById("connectionsSection");
+    const tabRequests = document.getElementById("tabRequests");
+    const tabConnections = document.getElementById("tabConnections");
+
+    const API_REQUEST = "/api/special-links/request";
+    const API_RESPOND = "/api/special-links/respond";
+    const API_LIST = "/api/special-links/list";
+
+    const headers = { "Content-Type": "application/json" };
+
+    function showAlert(msg, type="success") {
+      alertBox.textContent = msg;
+      alertBox.classList.remove("hidden", "bg-red-500", "bg-green-500");
+      alertBox.classList.add(type === "error" ? "bg-red-500" : "bg-green-500");
+      setTimeout(() => alertBox.classList.add("hidden"), 3000);
+    }
+
+    // Switch tabs
+    tabRequests.addEventListener("click", () => {
+      requestsSection.classList.remove("hidden");
+      connectionsSection.classList.add("hidden");
+      tabRequests.classList.add("bg-blue-600", "text-white");
+      tabConnections.classList.remove("bg-blue-600", "text-white");
+      tabConnections.classList.add("bg-gray-200", "text-gray-700");
+    });
+
+    tabConnections.addEventListener("click", () => {
+      requestsSection.classList.add("hidden");
+      connectionsSection.classList.remove("hidden");
+      tabConnections.classList.add("bg-blue-600", "text-white");
+      tabRequests.classList.remove("bg-blue-600", "text-white");
+      tabRequests.classList.add("bg-gray-200", "text-gray-700");
+      loadConnections();
+    });
+
+    // Send request
+    sendRequestBtn.addEventListener("click", async () => {
+      const email = emailInput.value.trim();
+      const type = typeSelect.value;
+      const message = messageInput.value.trim();
+
+      if (!email || !type) {
+        return showAlert("Email and type are required.", "error");
+      }
+
+      sendRequestBtn.innerHTML = '<span class="spinner"></span> Sending...';
+      sendRequestBtn.disabled = true;
+
+      try {
+        // find user by email
+        const findRes = await fetch(`/api/users/find?email=${encodeURIComponent(email)}`);
+        const findData = await findRes.json();
+
+        if (!findRes.ok || !findData.userId) {
+          throw new Error(findData.message || "User not found.");
+        }
+
+        const res = await fetch(API_REQUEST, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            receiverId: findData.userId,
+            requestType: type,
+            message
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showAlert("Request sent successfully!");
+        } else {
+          showAlert(data.message || "Failed to send request.", "error");
+        }
+      } catch (err) {
+        showAlert(err.message, "error");
+      } finally {
+        sendRequestBtn.innerHTML = "Send Request";
+        sendRequestBtn.disabled = false;
+      }
+    });
+
+    // Load sent or received
+    async function loadRequests(kind) {
+      requestList.innerHTML = '<div class="text-center text-gray-500 py-3">Loading...</div>';
+      try {
+        const res = await fetch(`${API_REQUEST}?type=${kind}`);
+        const data = await res.json();
+        if (res.ok && data.requests.length > 0) {
+          requestList.innerHTML = data.requests
+            .map(req => `
+              <div class="border rounded-md p-3 mb-3">
+                <p><strong>${req.requester_id.firstname} ${req.requester_id.lastname}</strong> → ${req.receiver_id.firstname} ${req.receiver_id.lastname}</p>
+                <p class="text-sm text-gray-600">Status: ${req.status}</p>
+                ${kind === "received" && req.status === "pending"
+                  ? `<div class="mt-2 flex gap-2">
+                      <button class="bg-green-600 text-white px-3 py-1 rounded" onclick="respond('${req._id}','approve')">Approve</button>
+                      <button class="bg-red-600 text-white px-3 py-1 rounded" onclick="respond('${req._id}','reject')">Reject</button>
+                    </div>` : ""}
+              </div>
+            `)
+            .join("");
+        } else {
+          requestList.innerHTML = `<p class="text-center text-gray-500">No ${kind} requests found.</p>`;
+        }
+      } catch {
+        requestList.innerHTML = `<p class="text-center text-red-500">Failed to load requests.</p>`;
+      }
+    }
+
+    // Respond approve/reject
+    window.respond = async (id, action) => {
+      try {
+        const res = await fetch(API_RESPOND, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ requestId: id, action }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAlert(`Request ${action}ed successfully.`);
+          loadRequests("received");
+        } else {
+          showAlert(data.message || "Error responding.", "error");
+        }
+      } catch {
+        showAlert("Network error.", "error");
+      }
+    };
+
+    // Load connections
+    async function loadConnections() {
+      connectionsList.innerHTML = '<div class="text-center text-gray-500 py-3">Loading...</div>';
+      try {
+        const res = await fetch(API_LIST);
+        const data = await res.json();
+        if (res.ok && data.links.length > 0) {
+          connectionsList.innerHTML = data.links.map(l => `
+            <div class="border rounded-md p-3 mb-3">
+              <p><strong>${l.partnerName}</strong> (${l.partnerRole})</p>
+              <p class="text-sm text-gray-600">${l.partnerEmail}</p>
+              <p class="text-sm text-gray-500">School: ${l.partnerSchool || "N/A"}</p>
+            </div>
+          `).join("");
+        } else {
+          connectionsList.innerHTML = `<p class="text-center text-gray-500">${data.message || "No connections found."}</p>`;
+        }
+      } catch {
+        connectionsList.innerHTML = `<p class="text-center text-red-500">Error loading connections.</p>`;
+      }
+    }
+
+    viewSentBtn.addEventListener("click", () => loadRequests("sent"));
+    viewReceivedBtn.addEventListener("click", () => loadRequests("received"));
+  </script>
+</body>
+</html>

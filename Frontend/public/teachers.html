@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title data-i18n="dashboardTitle">Teacher Dashboard</title>
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"
+    ></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
@@ -21,7 +24,10 @@
     <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
 
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
@@ -71,7 +77,10 @@
   </head>
 
   <body class="bg-gray-100 min-h-screen antialiased">
-    <div id="loadingOverlay" class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]">
+    <div
+      id="loadingOverlay"
+      class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]"
+    >
       <div class="text-center p-6 bg-white rounded-xl shadow-lg">
         <div class="spinner mx-auto mb-4"></div>
         <p class="text-lg text-gray-700 font-medium" data-i18n="loadingMessage">
@@ -81,13 +90,21 @@
     </div>
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      <header class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200">
-        <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0" data-i18n="dashboardTitle">
+      <header
+        class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200"
+      >
+        <h1
+          class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0"
+          data-i18n="dashboardTitle"
+        >
           📚 Teacher Dashboard
         </h1>
 
         <div class="flex items-center space-x-6">
-          <select id="language-select" class="rounded-full px-4 py-2 bg-white text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select
+            id="language-select"
+            class="rounded-full px-4 py-2 bg-white text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
             <option value="en">EN</option>
             <option value="fr">FR</option>
             <option value="es">ES</option>
@@ -97,253 +114,641 @@
           </select>
 
           <div class="relative inline-block text-left">
-            <button id="profile-menu-button" type="button" class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition-all duration-300 focus:outline-none">
-              <img id="profileAvatar" src="./images/default-avatar.png" alt="Profile Avatar" class="h-10 w-10 rounded-full object-cover border border-gray-300" />
-              <span id="profilePreviewName" class="hidden sm:inline font-medium text-gray-700">Teacher</span>
+            <button
+              id="profile-menu-button"
+              type="button"
+              class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition-all duration-300 focus:outline-none"
+            >
+              <img
+                id="profileAvatar"
+                src="./images/default-avatar.png"
+                alt="Profile Avatar"
+                class="h-10 w-10 rounded-full object-cover border border-gray-300"
+              />
+              <span
+                id="profilePreviewName"
+                class="hidden sm:inline font-medium text-gray-700"
+                >Teacher</span
+              >
               <i class="fas fa-chevron-down text-gray-400"></i>
             </button>
-            <input type="file" id="profilePhotoInput" accept="image/*" class="hidden" />
+            <input
+              type="file"
+              id="profilePhotoInput"
+              accept="image/*"
+              class="hidden"
+            />
 
-            <div id="profile-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden transition-all duration-300 origin-top-right transform scale-95 opacity-0">
-              <a href="./AI Essay Checker.html" class="block px-4 py-2 text-sm hover:bg-gray-100 transition" data-i18n="aiChecker">🤖 AI Essay Checker</a>
-              <a href="./quiz_dashboard.html" class="block px-4 py-2 text-sm hover:bg-gray-100 transition" data-i18n="quizDashboard">📝 Quiz Dashboard</a>
-              <a href="./profile.html" class="block px-4 py-2 text-sm hover:bg-gray-100 transition" data-i18n="yourProfile">👤 Your Profile</a>
-              <a href="./settings.html" class="block px-4 py-2 text-sm hover:bg-gray-100 transition" data-i18n="settings">⚙️ Settings</a>
-              <a href="./contact.html" class="block px-4 py-2 text-sm hover:bg-gray-100 transition" data-i18n="contact">📩 Contact</a>
-              <button id="logoutButton" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition" data-i18n="signOut">🚪 Sign out</button>
+            <div
+              id="profile-dropdown-menu"
+              class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden transition-all duration-300 origin-top-right transform scale-95 opacity-0"
+            >
+              <a
+                href="./special-link.html"
+                class="text-blue-600 font-semibold hover:underline"
+                >Special Links</a
+              >
+              <a
+                href="./quiz_dashboard.html"
+                class="block px-4 py-2 text-sm hover:bg-gray-100 transition"
+                data-i18n="quizDashboard"
+                >📝 Quiz Dashboard</a
+              >
+              <a
+                href="./profile.html"
+                class="block px-4 py-2 text-sm hover:bg-gray-100 transition"
+                data-i18n="yourProfile"
+                >👤 Your Profile</a
+              >
+              <a
+                href="./settings.html"
+                class="block px-4 py-2 text-sm hover:bg-gray-100 transition"
+                data-i18n="settings"
+                >⚙️ Settings</a
+              >
+              <a
+                href="./contact.html"
+                class="block px-4 py-2 text-sm hover:bg-gray-100 transition"
+                data-i18n="contact"
+                >📩 Contact</a
+              >
+              <button
+                id="logoutButton"
+                class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition"
+                data-i18n="signOut"
+              >
+                🚪 Sign out
+              </button>
             </div>
           </div>
         </div>
       </header>
       ---
-      <nav class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md">
-        <a href="./my-students.html" class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300" data-i18n="myClass">👨‍🎓 My Class</a>
-        <a href="./completed-assignment.html" class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300" data-i18n="completedTasks">✅ Completed Tasks</a>
-        <a href="./quiz_dashboard.html" class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition duration-300" data-i18n="quizDashboard">📝 Quiz Dashboard</a>
-        <a href="./AI Essay Checker.html" class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300" data-i18n="aiChecker">🤖 AI Checker</a>
+      <nav
+        class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md"
+      >
+        <a
+          href="./my-students.html"
+          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300"
+          data-i18n="myClass"
+          >👨‍🎓 My Class</a
+        >
+        <a
+          href="./completed-assignment.html"
+          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300"
+          data-i18n="completedTasks"
+          >✅ Completed Tasks</a
+        >
+        <a
+          href="./quiz_dashboard.html"
+          class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition duration-300"
+          data-i18n="quizDashboard"
+          >📝 Quiz Dashboard</a
+        >
+        <a
+          href="./AI Checker.html"
+          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300"
+          data-i18n="aiChecker"
+          >🤖 AI Checker</a
+        >
       </nav>
       ---
       <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <section id="studentsSection" class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentsInClass">
+        <section
+          id="studentsSection"
+          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+        >
+          <h2
+            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            data-i18n="studentsInClass"
+          >
             🎓 Students in Your Class
           </h2>
-          <div id="studentsList" class="divide-y divide-gray-200 text-gray-700"></div>
+          <div
+            id="studentsList"
+            class="divide-y divide-gray-200 text-gray-700"
+          ></div>
         </section>
         ---
-        <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-      <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="createAssignment">
-        ✏️ Create and Send Assignment
-      </h2>
-      <form id="assignmentForm">
-        <div class="mb-4">
-          <label class="block text-gray-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
-          <div class="flex flex-col sm:flex-row gap-2">
-            <label class="inline-flex items-center">
-              <input type="checkbox" name="assignmentRecipient" value="student" class="form-checkbox text-blue-600" />
-              <span class="ml-2 text-gray-700" data-i18n="selectStudents">Specific Students</span>
+        <section
+          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+        >
+          <h2
+            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            data-i18n="createAssignment"
+          >
+            ✏️ Create and Send Assignment
+          </h2>
+          <form id="assignmentForm">
+            <div class="mb-4">
+              <label
+                class="block text-gray-700 font-bold mb-2"
+                data-i18n="selectRecipient"
+                >Select Recipient:</label
+              >
+              <div class="flex flex-col sm:flex-row gap-2">
+                <label class="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    name="assignmentRecipient"
+                    value="student"
+                    class="form-checkbox text-blue-600"
+                  />
+                  <span class="ml-2 text-gray-700" data-i18n="selectStudents"
+                    >Specific Students</span
+                  >
+                </label>
+                <label class="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    name="assignmentRecipient"
+                    value="myClass"
+                    class="form-checkbox text-blue-600"
+                  />
+                  <span class="ml-2 text-gray-700" data-i18n="entireClass"
+                    >Entire Class</span
+                  >
+                </label>
+                <label class="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    name="assignmentRecipient"
+                    value="otherGrade"
+                    class="form-checkbox text-blue-600"
+                  />
+                  <span class="ml-2 text-gray-700" data-i18n="otherGrade"
+                    >Another Grade</span
+                  >
+                </label>
+                <label class="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    name="assignmentRecipient"
+                    value="special_student"
+                    class="form-checkbox text-blue-600"
+                  />
+                  <span class="ml-2 text-gray-700" data-i18n="otherGrade"
+                    >special_student</span
+                  >
+                </label>
+                <label class="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    name="assignmentRecipient"
+                    value="program"
+                    class="form-checkbox text-blue-600"
+                  />
+                  <span class="ml-2 text-gray-700" data-i18n="program"
+                    >Program</span
+                  >
+                </label>
+              </div>
+            </div>
+
+            <div id="assignment-student-select-group" class="hidden">
+              <label
+                for="assignment-student-select"
+                class="block text-gray-700 font-bold mb-2"
+                data-i18n="selectStudentsLabel"
+                >Select Student(s):</label
+              >
+              <div
+                class="border border-gray-300 rounded-lg overflow-hidden mb-4"
+              >
+                <select
+                  id="assignment-student-select"
+                  class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+                  multiple
+                ></select>
+              </div>
+            </div>
+
+            <div id="assignment-grade-select-group" class="hidden">
+              <label
+                for="assignment-grade-select"
+                class="block text-gray-700 font-bold mb-2"
+                data-i18n="selectGrade"
+                >Select Grade:</label
+              >
+              <div
+                class="border border-gray-300 rounded-lg overflow-hidden mb-4"
+              >
+                <select
+                  id="assignment-grade-select"
+                  class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+                ></select>
+              </div>
+            </div>
+
+            <div id="assignment-program-select-group" class="hidden">
+              <label
+                for="assignment-program-select"
+                class="block text-gray-700 font-bold mb-2"
+                data-i18n="selectProgram"
+                >Select Program:</label
+              >
+              <div
+                class="border border-gray-300 rounded-lg overflow-hidden mb-4"
+              >
+                <select
+                  id="assignment-program-select"
+                  class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+                ></select>
+              </div>
+            </div>
+
+            <label
+              for="assignmentTitle"
+              class="block text-gray-700 font-bold mb-2"
+              data-i18n="assignmentTitle"
+              >Assignment Title:</label
+            >
+            <input
+              type="text"
+              id="assignmentTitle"
+              maxlength="100"
+              class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g., History Essay on World War II"
+            />
+
+            <label
+              for="assignmentDueDate"
+              class="block text-gray-700 font-bold mb-2"
+              data-i18n="dueDate"
+              >Due Date:</label
+            >
+            <input
+              type="datetime-local"
+              id="assignmentDueDate"
+              class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <label
+              for="assignmentText"
+              class="block text-gray-700 font-bold mb-2"
+              data-i18n="assignmentDetails"
+            >
+              Assignment Details (max 1000 words or attach file):
             </label>
-            <label class="inline-flex items-center">
-              <input type="checkbox" name="assignmentRecipient" value="myClass" class="form-checkbox text-blue-600" />
-              <span class="ml-2 text-gray-700" data-i18n="entireClass">Entire Class</span>
-            </label>
-            <label class="inline-flex items-center">
-              <input type="checkbox" name="assignmentRecipient" value="otherGrade" class="form-checkbox text-blue-600" />
-              <span class="ml-2 text-gray-700" data-i18n="otherGrade">Another Grade</span>
-            </label>
-            <label class="inline-flex items-center">
-              <input type="checkbox" name="assignmentRecipient" value="program" class="form-checkbox text-blue-600" />
-              <span class="ml-2 text-gray-700" data-i18n="program">Program</span>
-            </label>
-          </div>
-        </div>
+            <textarea
+              id="assignmentText"
+              maxlength="5000"
+              class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              placeholder="Type your assignment here..."
+            ></textarea>
+            <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">
+              Word count: 0
+            </p>
 
-        <div id="assignment-student-select-group" class="hidden">
-          <label for="assignment-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudentsLabel">Select Student(s):</label>
-          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-            <select id="assignment-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none" multiple></select>
-          </div>
-        </div>
+            <div
+              class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4"
+            >
+              <label class="custom-file-input cursor-pointer text-base">
+                <input
+                  type="file"
+                  id="assignmentFile"
+                  class="custom-file-input"
+                />
+              </label>
+              <div id="fileStatus" class="flex items-center gap-2">
+                <span id="fileName" class="text-gray-700 text-sm italic"
+                  >No file selected.</span
+                >
+                <button
+                  id="clearFileButton"
+                  class="text-red-500 hover:text-red-700 hidden text-sm font-semibold"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
 
-        <div id="assignment-grade-select-group" class="hidden">
-          <label for="assignment-grade-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectGrade">Select Grade:</label>
-          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-            <select id="assignment-grade-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
-          </div>
-        </div>
-        
-        <div id="assignment-program-select-group" class="hidden">
-          <label for="assignment-program-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectProgram">Select Program:</label>
-          <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-            <select id="assignment-program-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
-          </div>
-        </div>
-
-        <label for="assignmentTitle" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentTitle">Assignment Title:</label>
-        <input type="text" id="assignmentTitle" maxlength="100" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., History Essay on World War II" />
-
-        <label for="assignmentDueDate" class="block text-gray-700 font-bold mb-2" data-i18n="dueDate">Due Date:</label>
-        <input type="datetime-local" id="assignmentDueDate" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-
-        <label for="assignmentText" class="block text-gray-700 font-bold mb-2" data-i18n="assignmentDetails">
-          Assignment Details (max 1000 words or attach file):
-        </label>
-        <textarea id="assignmentText" maxlength="5000" class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" placeholder="Type your assignment here..."></textarea>
-        <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">Word count: 0</p>
-
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-          <label class="custom-file-input cursor-pointer text-base">
-            <input type="file" id="assignmentFile" class="custom-file-input" />
-          </label>
-          <div id="fileStatus" class="flex items-center gap-2">
-            <span id="fileName" class="text-gray-700 text-sm italic">No file selected.</span>
-            <button id="clearFileButton" class="text-red-500 hover:text-red-700 hidden text-sm font-semibold">Clear</button>
-          </div>
-        </div>
-
-        <button id="sendAssignmentButton" class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled data-i18n="sendAssignment">
-          Send Assignment
-        </button>
-      </form>
-    </section>
+            <button
+              id="sendAssignmentButton"
+              class="w-full py-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled
+              data-i18n="sendAssignment"
+            >
+              Send Assignment
+            </button>
+          </form>
+        </section>
         ---
-        <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="addPointsTitle">
+        <section
+          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+        >
+          <h2
+            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            data-i18n="addPointsTitle"
+          >
             ➕ Add Student Points
           </h2>
           <div class="mb-4">
-            <label class="block text-gray-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
+            <label
+              class="block text-gray-700 font-bold mb-2"
+              data-i18n="selectRecipient"
+              >Select Recipient:</label
+            >
             <div class="flex flex-col sm:flex-row gap-2">
               <label class="inline-flex items-center">
-                <input type="radio" name="pointsRecipient" value="single" class="form-radio text-green-600" checked />
-                <span class="ml-2 text-gray-700" data-i18n="singleStudent">Single Student</span>
+                <input
+                  type="radio"
+                  name="pointsRecipient"
+                  value="single"
+                  class="form-radio text-green-600"
+                  checked
+                />
+                <span class="ml-2 text-gray-700" data-i18n="singleStudent"
+                  >Single Student</span
+                >
               </label>
               <label class="inline-flex items-center">
-                <input type="radio" name="pointsRecipient" value="multiple" class="form-radio text-green-600" />
-                <span class="ml-2 text-gray-700" data-i18n="multipleStudents">Multiple Students</span>
+                <input
+                  type="radio"
+                  name="pointsRecipient"
+                  value="multiple"
+                  class="form-radio text-green-600"
+                />
+                <span class="ml-2 text-gray-700" data-i18n="multipleStudents"
+                  >Multiple Students</span
+                >
               </label>
               <label class="inline-flex items-center">
-                <input type="radio" name="pointsRecipient" value="class" class="form-radio text-green-600" />
-                <span class="ml-2 text-gray-700" data-i18n="entireClass">Entire Class</span>
+                <input
+                  type="radio"
+                  name="pointsRecipient"
+                  value="class"
+                  class="form-radio text-green-600"
+                />
+                <span class="ml-2 text-gray-700" data-i18n="entireClass"
+                  >Entire Class</span
+                >
               </label>
               <label class="inline-flex items-center">
-                <input type="radio" name="pointsRecipient" value="otherGrade" class="form-radio text-green-600" />
-                <span class="ml-2 text-gray-700" data-i18n="otherGrade">Another Grade</span>
+                <input
+                  type="radio"
+                  name="pointsRecipient"
+                  value="otherGrade"
+                  class="form-radio text-green-600"
+                />
+                <span class="ml-2 text-gray-700" data-i18n="otherGrade"
+                  >Another Grade</span
+                >
               </label>
             </div>
           </div>
 
           <div id="points-select-group">
-            <label for="points-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student(s):</label>
+            <label
+              for="points-student-select"
+              class="block text-gray-700 font-bold mb-2"
+              data-i18n="selectStudent"
+              >Select Student(s):</label
+            >
             <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-              <select id="points-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+              <select
+                id="points-student-select"
+                class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+              ></select>
             </div>
           </div>
 
           <div id="points-grade-select-group" class="hidden">
-            <label for="points-grade-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectGrade">Select Grade:</label>
+            <label
+              for="points-grade-select"
+              class="block text-gray-700 font-bold mb-2"
+              data-i18n="selectGrade"
+              >Select Grade:</label
+            >
             <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-              <select id="points-grade-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+              <select
+                id="points-grade-select"
+                class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+              ></select>
             </div>
           </div>
 
-          <label for="pointsInput" class="block text-gray-700 font-bold mb-2" data-i18n="pointsToAdd">Points to Add:</label>
-          <input type="number" id="pointsInput" min="1" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="e.g., 10" />
+          <label
+            for="pointsInput"
+            class="block text-gray-700 font-bold mb-2"
+            data-i18n="pointsToAdd"
+            >Points to Add:</label
+          >
+          <input
+            type="number"
+            id="pointsInput"
+            min="1"
+            class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="e.g., 10"
+          />
 
-          <label for="reasonText" class="block text-gray-700 font-bold mb-2" data-i18n="reasonOptional">Reason (Optional):</label>
-          <textarea id="reasonText" class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y" placeholder="e.g., Great participation in class discussion."></textarea>
+          <label
+            for="reasonText"
+            class="block text-gray-700 font-bold mb-2"
+            data-i18n="reasonOptional"
+            >Reason (Optional):</label
+          >
+          <textarea
+            id="reasonText"
+            class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y"
+            placeholder="e.g., Great participation in class discussion."
+          ></textarea>
 
-          <button id="addPointsButton" class="w-full py-4 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="addPointsButton" disabled>
+          <button
+            id="addPointsButton"
+            class="w-full py-4 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            data-i18n="addPointsButton"
+            disabled
+          >
             Add Points
           </button>
         </section>
         ---
-        <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="sendMessageTitle">
+        <section
+          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+        >
+          <h2
+            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            data-i18n="sendMessageTitle"
+          >
             💌 Send Message to Student
           </h2>
           <div class="mb-4">
-            <label class="block text-gray-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
+            <label
+              class="block text-gray-700 font-bold mb-2"
+              data-i18n="selectRecipient"
+              >Select Recipient:</label
+            >
             <div class="flex flex-col sm:flex-row gap-2">
               <label class="inline-flex items-center">
-                <input type="radio" name="messageRecipient" value="single" class="form-radio text-purple-600" checked />
-                <span class="ml-2 text-gray-700" data-i18n="singleStudent">Single Student</span>
+                <input
+                  type="radio"
+                  name="messageRecipient"
+                  value="single"
+                  class="form-radio text-purple-600"
+                  checked
+                />
+                <span class="ml-2 text-gray-700" data-i18n="singleStudent"
+                  >Single Student</span
+                >
               </label>
               <label class="inline-flex items-center">
-                <input type="radio" name="messageRecipient" value="multiple" class="form-radio text-purple-600" />
-                <span class="ml-2 text-gray-700" data-i18n="multipleStudents">Multiple Students</span>
+                <input
+                  type="radio"
+                  name="messageRecipient"
+                  value="multiple"
+                  class="form-radio text-purple-600"
+                />
+                <span class="ml-2 text-gray-700" data-i18n="multipleStudents"
+                  >Multiple Students</span
+                >
               </label>
               <label class="inline-flex items-center">
-                <input type="radio" name="messageRecipient" value="class" class="form-radio text-purple-600" />
-                <span class="ml-2 text-gray-700" data-i18n="entireClass">Entire Class</span>
+                <input
+                  type="radio"
+                  name="messageRecipient"
+                  value="class"
+                  class="form-radio text-purple-600"
+                />
+                <span class="ml-2 text-gray-700" data-i18n="entireClass"
+                  >Entire Class</span
+                >
               </label>
               <label class="inline-flex items-center">
-                <input type="radio" name="messageRecipient" value="otherGrade" class="form-radio text-purple-600" />
-                <span class="ml-2 text-gray-700" data-i18n="otherGrade">Another Grade</span>
+                <input
+                  type="radio"
+                  name="messageRecipient"
+                  value="otherGrade"
+                  class="form-radio text-purple-600"
+                />
+                <span class="ml-2 text-gray-700" data-i18n="otherGrade"
+                  >Another Grade</span
+                >
               </label>
             </div>
           </div>
           <div id="message-select-group">
-            <label for="message-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student(s):</label>
+            <label
+              for="message-student-select"
+              class="block text-gray-700 font-bold mb-2"
+              data-i18n="selectStudent"
+              >Select Student(s):</label
+            >
             <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-              <select id="message-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+              <select
+                id="message-student-select"
+                class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+              ></select>
             </div>
           </div>
           <div id="message-grade-select-group" class="hidden">
-            <label for="message-grade-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectGrade">Select Grade:</label>
+            <label
+              for="message-grade-select"
+              class="block text-gray-700 font-bold mb-2"
+              data-i18n="selectGrade"
+              >Select Grade:</label
+            >
             <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-              <select id="message-grade-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+              <select
+                id="message-grade-select"
+                class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+              ></select>
             </div>
           </div>
-          <label for="messageText" class="block text-gray-700 font-bold mb-2" data-i18n="messageText">
+          <label
+            for="messageText"
+            class="block text-gray-700 font-bold mb-2"
+            data-i18n="messageText"
+          >
             Message:
           </label>
-          <textarea id="messageText" rows="4" class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y" placeholder="Type your message here..."></textarea>
+          <textarea
+            id="messageText"
+            rows="4"
+            class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+            placeholder="Type your message here..."
+          ></textarea>
 
-          <button id="sendMessageButton" class="w-full py-4 bg-purple-600 text-white font-bold rounded-lg shadow-md hover:bg-purple-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled data-i18n="sendMessage">
+          <button
+            id="sendMessageButton"
+            class="w-full py-4 bg-purple-600 text-white font-bold rounded-lg shadow-md hover:bg-purple-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+            data-i18n="sendMessage"
+          >
             Send Message
           </button>
         </section>
         ---
-        <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="overdueTasks">
+        <section
+          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+        >
+          <h2
+            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            data-i18n="overdueTasks"
+          >
             📌 Overdue Tasks
           </h2>
           <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
         </section>
         ---
-        <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="assignedTasks">
+        <section
+          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+        >
+          <h2
+            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            data-i18n="assignedTasks"
+          >
             📝 Assigned Tasks & Feedback
           </h2>
           <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
         </section>
         ---
-        <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="studentFeedback">
+        <section
+          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+        >
+          <h2
+            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            data-i18n="studentFeedback"
+          >
             💬 Student Feedback Overview
           </h2>
           <div id="feedbackList" class="divide-y divide-gray-200"></div>
         </section>
         ---
-        <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">📅 Academic Calendar</h2>
-          <input type="text" id="academicYear" class="w-full p-3 mb-4 border border-gray-300 rounded-lg" placeholder="Academic Year (e.g. 2025/2026)" />
+        <section
+          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+        >
+          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
+            📅 Academic Calendar
+          </h2>
+          <input
+            type="text"
+            id="academicYear"
+            class="w-full p-3 mb-4 border border-gray-300 rounded-lg"
+            placeholder="Academic Year (e.g. 2025/2026)"
+          />
 
           <div id="termsContainer" class="space-y-4"></div>
 
-          <button id="addTermButton" class="w-full py-2 mb-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
+          <button
+            id="addTermButton"
+            class="w-full py-2 mb-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300"
+          >
             ➕ Add Term
           </button>
 
-          <button id="saveCalendarButton" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-300">
+          <button
+            id="saveCalendarButton"
+            class="w-full py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-300"
+          >
             Save Calendar
           </button>
 
-          <p id="calendarMsg" class="text-center font-semibold mt-4 text-gray-700"></p>
+          <p
+            id="calendarMsg"
+            class="text-center font-semibold mt-4 text-gray-700"
+          ></p>
         </section>
-
       </main>
 
       <footer class="text-center text-sm text-gray-500 py-6 mt-4">
@@ -353,462 +758,712 @@
 
     <script src="translate.js"></script>
     <script>
-      const API_BASE_URL = "https://api.smartstudentact.com/api";
+      const API_BASE_URL =
+        "https://smart-student-57b2svy6h-debucks-projects.vercel.app/api";
       let translations = {};
       let currentLang = "en";
       let studentsCache = [];
-      let currentUser = {}; 
+      let currentUser = {};
 
       async function loadTranslations(lang = "en") {
-          try {
-              const res = await fetch(`/locales/teachers.json`);
-              if (!res.ok) throw new Error("Failed to load translations");
-              const allTranslations = await res.json();
-              translations = allTranslations[lang] || {};
-          } catch (err) {
-              console.error("Translation load error:", err);
-              translations = {}; 
-          }
+        try {
+          const res = await fetch(`/locales/teachers.json`);
+          if (!res.ok) throw new Error("Failed to load translations");
+          const allTranslations = await res.json();
+          translations = allTranslations[lang] || {};
+        } catch (err) {
+          console.error("Translation load error:", err);
+          translations = {};
+        }
       }
 
       function translateText(key) {
-          return translations[key] || key;
+        return translations[key] || key;
       }
 
       function applyTranslations() {
-          document.querySelectorAll("[data-i18n]").forEach(el => {
-              const key = el.getAttribute("data-i18n");
-              if (translations[key]) {
-                  const translatedText = translations[key][currentLang];
-                  if (translatedText) {
-                      if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
-                          el.placeholder = translatedText;
-                      } else {
-                          el.innerHTML = translatedText;
-                      }
-                  }
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.getAttribute("data-i18n");
+          if (translations[key]) {
+            const translatedText = translations[key][currentLang];
+            if (translatedText) {
+              if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+                el.placeholder = translatedText;
+              } else {
+                el.innerHTML = translatedText;
               }
-          });
+            }
+          }
+        });
       }
 
       function showToast(message, type = "info") {
-          const container = document.getElementById("toast-container") || (() => {
-              const el = document.createElement("div");
-              el.id = "toast-container";
-              el.className = "fixed top-4 right-4 z-[1000] space-y-2";
-              document.body.appendChild(el);
-              return el;
+        const container =
+          document.getElementById("toast-container") ||
+          (() => {
+            const el = document.createElement("div");
+            el.id = "toast-container";
+            el.className = "fixed top-4 right-4 z-[1000] space-y-2";
+            document.body.appendChild(el);
+            return el;
           })();
-          const colors = {
-              success: "bg-green-600",
-              error: "bg-red-600",
-              info: "bg-blue-600",
-              warning: "bg-yellow-500 text-gray-900"
-          };
-          const toast = document.createElement("div");
-          toast.className = `px-4 py-2 rounded text-white shadow ${colors[type] || colors.info}`;
-          toast.textContent = message;
-          container.appendChild(toast);
-          setTimeout(() => toast.remove(), 4000);
+        const colors = {
+          success: "bg-green-600",
+          error: "bg-red-600",
+          info: "bg-blue-600",
+          warning: "bg-yellow-500 text-gray-900",
+        };
+        const toast = document.createElement("div");
+        toast.className = `px-4 py-2 rounded text-white shadow ${
+          colors[type] || colors.info
+        }`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
       }
 
       function hideLoadingOverlay() {
-          const el = document.getElementById("loadingOverlay");
-          if (el) el.style.display = "none";
+        const el = document.getElementById("loadingOverlay");
+        if (el) el.style.display = "none";
       }
 
       async function fetchAPI(endpoint, options = {}) {
-          try {
-              const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-                  ...options,
-                  credentials: "include",
-                  headers: { ...(options.headers || {}) }
-              });
-              if (res.status === 401) {
-                  window.location.href = "/login.html";
-                  return null;
-              }
-              return res;
-          } catch (err) {
-              console.error("Fetch error:", err);
-              showToast("Network error, please try again.", "error");
-              return null;
+        try {
+          const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            credentials: "include",
+            headers: { ...(options.headers || {}) },
+          });
+          if (res.status === 401) {
+            window.location.href = "/login.html";
+            return null;
           }
+          return res;
+        } catch (err) {
+          console.error("Fetch error:", err);
+          showToast("Network error, please try again.", "error");
+          return null;
+        }
       }
 
       async function checkAuth() {
-          const res = await fetchAPI("/auth/check");
-          if (!res || !res.ok) window.location.href = "/login.html";
+        const res = await fetchAPI("/auth/check");
+        if (!res || !res.ok) window.location.href = "/login.html";
       }
 
       async function fetchTeacherProfile() {
-          const res = await fetchAPI("/teacher/profile");
-          if (res && res.ok) {
-              const data = await res.json();
-              currentUser = data; 
-              document.getElementById("profilePreviewName").innerText = data.name || "Teacher";
-              document.getElementById("profileAvatar").src = data.profile_picture_url || "./images/default-avatar.png";
-          }
+        const res = await fetchAPI("/teacher/profile");
+        if (res && res.ok) {
+          const data = await res.json();
+          currentUser = data;
+          document.getElementById("profilePreviewName").innerText =
+            data.name || "Teacher";
+          document.getElementById("profileAvatar").src =
+            data.profile_picture_url || "./images/default-avatar.png";
+        }
       }
 
       function wireProfilePhotoUpload() {
-          const avatarImg = document.getElementById("profileAvatar");
-          const uploadInput = document.getElementById("profilePhotoInput");
-          if (!avatarImg || !uploadInput) return;
+        const avatarImg = document.getElementById("profileAvatar");
+        const uploadInput = document.getElementById("profilePhotoInput");
+        if (!avatarImg || !uploadInput) return;
 
-          avatarImg.addEventListener("click", () => uploadInput.click());
+        avatarImg.addEventListener("click", () => uploadInput.click());
 
-          uploadInput.addEventListener("change", async () => {
-              const file = uploadInput.files[0];
-              if (!file) return;
+        uploadInput.addEventListener("change", async () => {
+          const file = uploadInput.files[0];
+          if (!file) return;
 
-              const formData = new FormData();
-              formData.append("profilePhoto", file);
+          const formData = new FormData();
+          formData.append("profilePhoto", file);
 
-              try {
-                  const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-                      method: "POST",
-                      credentials: "include",
-                      body: formData,
-                  });
-                  if (!res.ok) throw new Error("Upload failed");
-                  const data = await res.json();
-                  avatarImg.src = data.photoUrl;
-                  showToast("Profile photo updated!", "success");
-              } catch (err) {
-                  console.error("Photo upload error:", err);
-                  showToast("Error uploading picture", "error");
-              }
-          });
+          try {
+            const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+              method: "POST",
+              credentials: "include",
+              body: formData,
+            });
+            if (!res.ok) throw new Error("Upload failed");
+            const data = await res.json();
+            avatarImg.src = data.photoUrl;
+            showToast("Profile photo updated!", "success");
+          } catch (err) {
+            console.error("Photo upload error:", err);
+            showToast("Error uploading picture", "error");
+          }
+        });
       }
 
       function renderStudents(students = []) {
-          const container = document.getElementById("studentsList");
-          if (!container) return;
-          if (!students.length) {
-              container.innerHTML = `<div class="p-4 text-center text-gray-500">${translateText('no_students')}</div>`;
-              return;
-          }
-          container.innerHTML = students.map(s => `
+        const container = document.getElementById("studentsList");
+        if (!container) return;
+        if (!students.length) {
+          container.innerHTML = `<div class="p-4 text-center text-gray-500">${translateText(
+            "no_students"
+          )}</div>`;
+          return;
+        }
+        container.innerHTML = students
+          .map(
+            (s) => `
               <div class="p-4 flex items-center justify-between border-b last:border-b-0 hover:bg-gray-50">
                   <div class="flex items-center gap-3">
-                      <img src="${s.imageUrl || './images/default-avatar.png'}" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
+                      <img src="${
+                        s.imageUrl || "./images/default-avatar.png"
+                      }" alt="student avatar" class="h-10 w-10 rounded-full border object-cover"/>
                       <div>
-                          <p class="font-medium text-gray-800">${s.firstname} ${s.lastname}</p>
-                          <p class="text-sm text-gray-500">${translateText('grade')} ${s.grade || "-"}</p>
+                          <p class="font-medium text-gray-800">${s.firstname} ${
+              s.lastname
+            }</p>
+                          <p class="text-sm text-gray-500">${translateText(
+                            "grade"
+                          )} ${s.grade || "-"}</p>
                       </div>
                   </div>
                   <span class="text-xs text-gray-400">${s.email}</span>
               </div>
-          `).join("");
+          `
+          )
+          .join("");
       }
 
       async function fetchStudents() {
-          let myGrade = [], otherGrade = [];
-          const res = await fetchAPI("/teacher/students");
-          if (res && res.ok) myGrade = (await res.json()) || [];
-          const resOther = await fetchAPI("/teacher/students/other");
-          if (resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
-          studentsCache = [...myGrade, ...otherGrade];
-          renderStudents(myGrade);
-          populateSelects(studentsCache, myGrade, otherGrade);
+        let myGrade = [],
+          otherGrade = [];
+        const res = await fetchAPI("/teacher/students");
+        if (res && res.ok) myGrade = (await res.json()) || [];
+        const resOther = await fetchAPI("/teacher/students/other");
+        if (resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
+        studentsCache = [...myGrade, ...otherGrade];
+        renderStudents(myGrade);
+        populateSelects(studentsCache, myGrade, otherGrade);
       }
 
       function populateSelects(allStudents, myGrade = [], otherGrade = []) {
-          const studentSelects = [
-              document.getElementById("assignment-student-select"),
-              document.getElementById("points-student-select"),
-              document.getElementById("message-student-select"),
-          ];
+        const studentSelects = [
+          document.getElementById("assignment-student-select"),
+          document.getElementById("points-student-select"),
+          document.getElementById("message-student-select"),
+        ];
 
-          const toOptions = (list) => list.map(s => `<option value="${s._id || s.id}">${s.firstname} ${s.lastname} (${translateText('grade')} ${s.grade || '-'})</option>`).join("");
-          const toGradeOptions = () => [...new Set(allStudents.map(s => s.grade))].filter(Boolean).map(grade => `<option value="${grade}">${translateText('grade')} ${grade}</option>`).join("");
+        const toOptions = (list) =>
+          list
+            .map(
+              (s) =>
+                `<option value="${s._id || s.id}">${s.firstname} ${
+                  s.lastname
+                } (${translateText("grade")} ${s.grade || "-"})</option>`
+            )
+            .join("");
+        const toGradeOptions = () =>
+          [...new Set(allStudents.map((s) => s.grade))]
+            .filter(Boolean)
+            .map(
+              (grade) =>
+                `<option value="${grade}">${translateText(
+                  "grade"
+                )} ${grade}</option>`
+            )
+            .join("");
 
-          studentSelects.forEach(select => {
-              if (!select) return;
-              select.innerHTML = `
-                  <optgroup label="${translateText('myClass')}">${toOptions(myGrade)}</optgroup>
-                  <optgroup label="${translateText('other_students')}">${toOptions(otherGrade)}</optgroup>
+        studentSelects.forEach((select) => {
+          if (!select) return;
+          select.innerHTML = `
+                  <optgroup label="${translateText("myClass")}">${toOptions(
+            myGrade
+          )}</optgroup>
+                  <optgroup label="${translateText(
+                    "other_students"
+                  )}">${toOptions(otherGrade)}</optgroup>
               `;
-          });
+        });
 
-          const gradeSelects = [
-              document.getElementById("assignment-grade-select"),
-              document.getElementById("points-grade-select"),
-              document.getElementById("message-grade-select"),
-          ];
-          gradeSelects.forEach(select => {
-              if (!select) return;
-              select.innerHTML = `<option value="">${translateText('select_grade')}</option>` + toGradeOptions();
-          });
+        const gradeSelects = [
+          document.getElementById("assignment-grade-select"),
+          document.getElementById("points-grade-select"),
+          document.getElementById("message-grade-select"),
+        ];
+        gradeSelects.forEach((select) => {
+          if (!select) return;
+          select.innerHTML =
+            `<option value="">${translateText("select_grade")}</option>` +
+            toGradeOptions();
+        });
       }
 
       async function fetchAssignedTasks() {
-          const container = document.getElementById("assignedTasksList");
-          if (!container) return;
-          container.innerHTML = `<div class="p-4 text-gray-500">${translateText('loading')}...</div>`;
+        const container = document.getElementById("assignedTasksList");
+        if (!container) return;
+        container.innerHTML = `<div class="p-4 text-gray-500">${translateText(
+          "loading"
+        )}...</div>`;
 
-          const res = await fetchAPI("/teacher/assigned-tasks");
-          if (res && res.ok) {
-              const tasks = await res.json();
-              if (!tasks.length) {
-                  container.innerHTML = `<div class="p-4 text-gray-500">${translateText('no_assigned_tasks')}</div>`;
-                  return;
-              }
-              container.innerHTML = tasks.map(a => `
+        const res = await fetchAPI("/teacher/assigned-tasks");
+        if (res && res.ok) {
+          const tasks = await res.json();
+          if (!tasks.length) {
+            container.innerHTML = `<div class="p-4 text-gray-500">${translateText(
+              "no_assigned_tasks"
+            )}</div>`;
+            return;
+          }
+          container.innerHTML = tasks
+            .map(
+              (a) => `
                   <div class="p-4 border-b last:border-b-0">
                       <p class="font-semibold">${a.title}</p>
-                      <p class="text-gray-600 text-sm">${a.description || ''}</p>
-                      <p class="text-gray-500 text-xs">${translateText('due')}: ${a.due_date ? new Date(a.due_date).toLocaleString() : 'N/A'}</p>
+                      <p class="text-gray-600 text-sm">${
+                        a.description || ""
+                      }</p>
+                      <p class="text-gray-500 text-xs">${translateText(
+                        "due"
+                      )}: ${
+                a.due_date ? new Date(a.due_date).toLocaleString() : "N/A"
+              }</p>
                   </div>
-              `).join("");
-          } else {
-              container.innerHTML = `<div class="p-4 text-red-600">${translateText('failed_load_tasks')}</div>`;
-          }
+              `
+            )
+            .join("");
+        } else {
+          container.innerHTML = `<div class="p-4 text-red-600">${translateText(
+            "failed_load_tasks"
+          )}</div>`;
+        }
       }
 
       async function fetchFeedback() {
-          const container = document.getElementById("feedbackList");
-          if (!container) return;
-          container.innerHTML = `<div class="p-4 text-gray-500">${translateText('loading')}...</div>`;
+        const container = document.getElementById("feedbackList");
+        if (!container) return;
+        container.innerHTML = `<div class="p-4 text-gray-500">${translateText(
+          "loading"
+        )}...</div>`;
 
-          const res = await fetchAPI("/teacher/feedback");
-          if (res && res.ok) {
-              const feedbacks = await res.json();
-              if (!feedbacks.length) {
-                  container.innerHTML = `<div class="p-4 text-gray-500">${translateText('no_feedback')}</div>`;
-                  return;
-              }
-              container.innerHTML = feedbacks.map(f => `
+        const res = await fetchAPI("/teacher/feedback");
+        if (res && res.ok) {
+          const feedbacks = await res.json();
+          if (!feedbacks.length) {
+            container.innerHTML = `<div class="p-4 text-gray-500">${translateText(
+              "no_feedback"
+            )}</div>`;
+            return;
+          }
+          container.innerHTML = feedbacks
+            .map(
+              (f) => `
                   <div class="p-4 border-b last:border-b-0">
                       <p class="font-medium">${f.student_email}</p>
                       <p class="text-gray-600 text-sm">${f.message}</p>
-                      ${f.file_name ? `<p class="text-gray-500 text-xs">File: ${f.file_name}</p>` : ""}
+                      ${
+                        f.file_name
+                          ? `<p class="text-gray-500 text-xs">File: ${f.file_name}</p>`
+                          : ""
+                      }
                   </div>
-              `).join("");
-          } else {
-              container.innerHTML = `<div class="p-4 text-red-600">${translateText('failed_load_feedback')}</div>`;
-          }
+              `
+            )
+            .join("");
+        } else {
+          container.innerHTML = `<div class="p-4 text-red-600">${translateText(
+            "failed_load_feedback"
+          )}</div>`;
+        }
       }
 
       async function fetchOverdueTasks() {
-          const container = document.getElementById("overdueTasksList");
-          if (!container) return;
-          container.innerHTML = `<div class="p-4 text-gray-500">${translateText('loading')}...</div>`;
+        const container = document.getElementById("overdueTasksList");
+        if (!container) return;
+        container.innerHTML = `<div class="p-4 text-gray-500">${translateText(
+          "loading"
+        )}...</div>`;
 
-          const res = await fetchAPI("/teacher/overdue-tasks");
-          if (res && res.ok) {
-              const tasks = await res.json();
-              if (!tasks.length) {
-                  container.innerHTML = `<div class="p-4 text-gray-500">${translateText('no_overdue_tasks')}</div>`;
-                  return;
-              }
-              container.innerHTML = tasks.map(t => `
+        const res = await fetchAPI("/teacher/overdue-tasks");
+        if (res && res.ok) {
+          const tasks = await res.json();
+          if (!tasks.length) {
+            container.innerHTML = `<div class="p-4 text-gray-500">${translateText(
+              "no_overdue_tasks"
+            )}</div>`;
+            return;
+          }
+          container.innerHTML = tasks
+            .map(
+              (t) => `
                   <div class="p-4 border-b last:border-b-0">
                       <p class="font-semibold">${t.title}</p>
-                      <p class="text-gray-500 text-xs">${new Date(t.due_date).toLocaleString()}</p>
+                      <p class="text-gray-500 text-xs">${new Date(
+                        t.due_date
+                      ).toLocaleString()}</p>
                   </div>
-              `).join("");
-          } else {
-              container.innerHTML = `<div class="p-4 text-red-600">${translateText('failed_load_overdue')}</div>`;
-          }
+              `
+            )
+            .join("");
+        } else {
+          container.innerHTML = `<div class="p-4 text-red-600">${translateText(
+            "failed_load_overdue"
+          )}</div>`;
+        }
       }
 
       function wireCalendar() {
-          const addTermBtn = document.getElementById("addTermButton");
-          const saveCalendarBtn = document.getElementById("saveCalendarButton");
-          const termsContainer = document.getElementById("termsContainer");
-          const academicYearInput = document.getElementById("academicYear");
-          const calendarMsg = document.getElementById("calendarMsg");
+        const addTermBtn = document.getElementById("addTermButton");
+        const saveCalendarBtn = document.getElementById("saveCalendarButton");
+        const termsContainer = document.getElementById("termsContainer");
+        const academicYearInput = document.getElementById("academicYear");
+        const calendarMsg = document.getElementById("calendarMsg");
 
-          const renderTerms = (terms) => {
-              termsContainer.innerHTML = '';
-              terms.forEach((term, index) => {
-                  const termDiv = document.createElement("div");
-                  termDiv.className = "p-4 border border-gray-300 rounded-lg shadow-sm";
-                  termDiv.innerHTML = `
-                      <h3 class="font-semibold text-gray-700 mb-2">Term ${index + 1}</h3>
-                      <input type="text" class="w-full p-2 mb-2 border border-gray-300 rounded-md term-name" placeholder="Term Name (e.g. Fall Term)" value="${term.name || ''}" />
+        const renderTerms = (terms) => {
+          termsContainer.innerHTML = "";
+          terms.forEach((term, index) => {
+            const termDiv = document.createElement("div");
+            termDiv.className =
+              "p-4 border border-gray-300 rounded-lg shadow-sm";
+            termDiv.innerHTML = `
+                      <h3 class="font-semibold text-gray-700 mb-2">Term ${
+                        index + 1
+                      }</h3>
+                      <input type="text" class="w-full p-2 mb-2 border border-gray-300 rounded-md term-name" placeholder="Term Name (e.g. Fall Term)" value="${
+                        term.name || ""
+                      }" />
                       <label class="block text-gray-600 text-sm mb-1">Start Date:</label>
-                      <input type="date" class="w-full p-2 mb-2 border border-gray-300 rounded-md term-start-date" value="${term.startDate || ''}" />
+                      <input type="date" class="w-full p-2 mb-2 border border-gray-300 rounded-md term-start-date" value="${
+                        term.startDate || ""
+                      }" />
                       <label class="block text-gray-600 text-sm mb-1">End Date:</label>
-                      <input type="date" class="w-full p-2 mb-2 border border-gray-300 rounded-md term-end-date" value="${term.endDate || ''}" />
+                      <input type="date" class="w-full p-2 mb-2 border border-gray-300 rounded-md term-end-date" value="${
+                        term.endDate || ""
+                      }" />
                       <button class="remove-term-button text-red-500 hover:text-red-700 text-sm mt-2">Remove</button>
                   `;
-                  termsContainer.appendChild(termDiv);
-              });
-          };
+            termsContainer.appendChild(termDiv);
+          });
+        };
 
-          const saveCalendar = async () => {
-              const academicYear = academicYearInput.value;
-              const terms = [];
-              document.querySelectorAll("#termsContainer > div").forEach(termDiv => {
-                  const name = termDiv.querySelector(".term-name").value;
-                  const startDate = termDiv.querySelector(".term-start-date").value;
-                  const endDate = termDiv.querySelector(".term-end-date").value;
-                  if (name && startDate && endDate) {
-                      terms.push({ name, startDate, endDate });
-                  }
-              });
-
-              if (!academicYear || terms.length === 0) {
-                  calendarMsg.textContent = "Please fill in all fields.";
-                  calendarMsg.className = "text-center font-semibold mt-4 text-red-600";
-                  return;
+        const saveCalendar = async () => {
+          const academicYear = academicYearInput.value;
+          const terms = [];
+          document
+            .querySelectorAll("#termsContainer > div")
+            .forEach((termDiv) => {
+              const name = termDiv.querySelector(".term-name").value;
+              const startDate = termDiv.querySelector(".term-start-date").value;
+              const endDate = termDiv.querySelector(".term-end-date").value;
+              if (name && startDate && endDate) {
+                terms.push({ name, startDate, endDate });
               }
+            });
 
-              const res = await fetchAPI("/teacher/calendar", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ academicYear, terms }),
-              });
+          if (!academicYear || terms.length === 0) {
+            calendarMsg.textContent = "Please fill in all fields.";
+            calendarMsg.className =
+              "text-center font-semibold mt-4 text-red-600";
+            return;
+          }
 
-              if (res && res.ok) {
-                  calendarMsg.textContent = "Calendar saved successfully!";
-                  calendarMsg.className = "text-center font-semibold mt-4 text-green-600";
-              } else {
-                  calendarMsg.textContent = "Failed to save calendar.";
-                  calendarMsg.className = "text-center font-semibold mt-4 text-red-600";
-              }
-          };
-
-          const fetchCalendar = async () => {
-              const res = await fetchAPI("/teacher/calendar");
-              if (res && res.ok) {
-                  const { academicYear, terms } = await res.json();
-                  academicYearInput.value = academicYear || '';
-                  renderTerms(terms || []);
-              }
-          };
-
-          addTermBtn?.addEventListener("click", () => {
-              renderTerms([...Array.from(termsContainer.children).map(termDiv => ({
-                  name: termDiv.querySelector(".term-name").value,
-                  startDate: termDiv.querySelector(".term-start-date").value,
-                  endDate: termDiv.querySelector(".term-end-date").value,
-              })), {}]);
+          const res = await fetchAPI("/teacher/calendar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ academicYear, terms }),
           });
 
-          saveCalendarBtn?.addEventListener("click", saveCalendar);
+          if (res && res.ok) {
+            calendarMsg.textContent = "Calendar saved successfully!";
+            calendarMsg.className =
+              "text-center font-semibold mt-4 text-green-600";
+          } else {
+            calendarMsg.textContent = "Failed to save calendar.";
+            calendarMsg.className =
+              "text-center font-semibold mt-4 text-red-600";
+          }
+        };
 
-          termsContainer?.addEventListener("click", (e) => {
-              if (e.target.classList.contains("remove-term-button")) {
-                  e.target.closest("div").remove();
-              }
+        const fetchCalendar = async () => {
+          const res = await fetchAPI("/teacher/calendar");
+          if (res && res.ok) {
+            const { academicYear, terms } = await res.json();
+            academicYearInput.value = academicYear || "";
+            renderTerms(terms || []);
+          }
+        };
+
+        addTermBtn?.addEventListener("click", () => {
+          renderTerms([
+            ...Array.from(termsContainer.children).map((termDiv) => ({
+              name: termDiv.querySelector(".term-name").value,
+              startDate: termDiv.querySelector(".term-start-date").value,
+              endDate: termDiv.querySelector(".term-end-date").value,
+            })),
+            {},
+          ]);
+        });
+
+        saveCalendarBtn?.addEventListener("click", saveCalendar);
+
+        termsContainer?.addEventListener("click", (e) => {
+          if (e.target.classList.contains("remove-term-button")) {
+            e.target.closest("div").remove();
+          }
+        });
+
+        fetchCalendar();
+      }
+
+      const specialStudentSelectGroup = document.createElement("div");
+      specialStudentSelectGroup.id = "assignment-special-student-select-group";
+      specialStudentSelectGroup.className = "hidden";
+      specialStudentSelectGroup.innerHTML = `
+  <label for="assignment-special-student-select" class="block text-gray-700 font-bold mb-2">
+    Select Special Student(s):
+  </label>
+  <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+    <select id="assignment-special-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none" multiple></select>
+  </div>
+`;
+      document
+        .getElementById("assignmentForm")
+        .insertBefore(
+          specialStudentSelectGroup,
+          document.getElementById("assignmentTitle").parentElement
+        );
+
+      async function loadSpecialStudents() {
+        try {
+          const res = await fetch("/api/special-links/list", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            },
           });
+          const data = await res.json();
+          const select = document.getElementById(
+            "assignment-special-student-select"
+          );
+          select.innerHTML = "";
 
-          fetchCalendar();
+          if (!data.links || data.links.length === 0) {
+            select.innerHTML = `<option disabled>No special students available</option>`;
+            return;
+          }
+
+          data.links
+            .filter((l) => l.partnerRole === "student")
+            .forEach((student) => {
+              const opt = document.createElement("option");
+              opt.value = student.partnerId;
+              opt.textContent = `${student.partnerName} (${student.partnerEmail})`;
+              select.appendChild(opt);
+            });
+        } catch (err) {
+          console.error("Failed to load special students:", err);
+        }
       }
 
       function wireDashboardForms() {
-        const sendAssignmentButton = document.getElementById("sendAssignmentButton");
+        const sendAssignmentButton = document.getElementById(
+          "sendAssignmentButton"
+        );
         const addPointsButton = document.getElementById("addPointsButton");
         const sendMessageButton = document.getElementById("sendMessageButton");
         const assignmentForm = document.getElementById("assignmentForm");
         const pointsForm = document.getElementById("pointsForm");
         const messageForm = document.getElementById("messageForm");
-        const assignmentRecipients = document.querySelectorAll('input[name="assignmentRecipient"]');
-        const pointsRecipients = document.querySelectorAll('input[name="pointsRecipient"]');
-        const messageRecipients = document.querySelectorAll('input[name="messageRecipient"]');
-        const assignmentStudentSelectGroup = document.getElementById("assignment-student-select-group");
-        const assignmentGradeSelectGroup = document.getElementById("assignment-grade-select-group");
-        const assignmentProgramSelectGroup = document.getElementById("assignment-program-select-group");
-        const pointsStudentSelectGroup = document.getElementById("points-select-group");
-        const pointsGradeSelectGroup = document.getElementById("points-grade-select-group");
-        const messageStudentSelectGroup = document.getElementById("message-select-group");
-        const messageGradeSelectGroup = document.getElementById("message-grade-select-group");
+        const assignmentRecipients = document.querySelectorAll(
+          'input[name="assignmentRecipient"]'
+        );
+        const pointsRecipients = document.querySelectorAll(
+          'input[name="pointsRecipient"]'
+        );
+        const messageRecipients = document.querySelectorAll(
+          'input[name="messageRecipient"]'
+        );
+        const assignmentStudentSelectGroup = document.getElementById(
+          "assignment-student-select-group"
+        );
+        const assignmentGradeSelectGroup = document.getElementById(
+          "assignment-grade-select-group"
+        );
+        const assignmentProgramSelectGroup = document.getElementById(
+          "assignment-program-select-group"
+        );
+        const pointsStudentSelectGroup = document.getElementById(
+          "points-select-group"
+        );
+        const pointsGradeSelectGroup = document.getElementById(
+          "points-grade-select-group"
+        );
+        const messageStudentSelectGroup = document.getElementById(
+          "message-select-group"
+        );
+        const messageGradeSelectGroup = document.getElementById(
+          "message-grade-select-group"
+        );
 
-        const updateFormVisibility = (recipientType, studentGroup, gradeGroup, programGroup) => {
+        const updateFormVisibility = (
+          recipientType,
+          studentGroup,
+          gradeGroup,
+          programGroup,
+          specialGroup
+        ) => {
           if (recipientType === "student") {
             studentGroup.classList.remove("hidden");
             gradeGroup.classList.add("hidden");
-            if (programGroup) programGroup.classList.add("hidden");
-          } else if (recipientType === "otherGrade") {
-            studentGroup.classList.add("hidden");
-            gradeGroup.classList.remove("hidden");
-            if (programGroup) programGroup.classList.add("hidden");
-          } else if (recipientType === "program") {
+            programGroup.classList.add("hidden");
+            specialGroup.classList.add("hidden");
+          } else if (recipientType === "special_student") {
+            specialGroup.classList.remove("hidden");
             studentGroup.classList.add("hidden");
             gradeGroup.classList.add("hidden");
-            if (programGroup) programGroup.classList.remove("hidden");
+            programGroup.classList.add("hidden");
+            loadSpecialStudents(); // load on demand
+          } else if (recipientType === "otherGrade") {
+            gradeGroup.classList.remove("hidden");
+            studentGroup.classList.add("hidden");
+            programGroup.classList.add("hidden");
+            specialGroup.classList.add("hidden");
+          } else if (recipientType === "program") {
+            programGroup.classList.remove("hidden");
+            studentGroup.classList.add("hidden");
+            gradeGroup.classList.add("hidden");
+            specialGroup.classList.add("hidden");
           } else {
             studentGroup.classList.add("hidden");
             gradeGroup.classList.add("hidden");
-            if (programGroup) programGroup.classList.add("hidden");
+            programGroup.classList.add("hidden");
+            specialGroup.classList.add("hidden");
           }
         };
 
-        assignmentRecipients.forEach(input => {
+        assignmentRecipients.forEach((input) => {
           input.addEventListener("change", (e) => {
-            updateFormVisibility(e.target.value, assignmentStudentSelectGroup, assignmentGradeSelectGroup, assignmentProgramSelectGroup);
-            sendAssignmentButton.disabled = !Array.from(assignmentRecipients).some(r => r.checked);
+            updateFormVisibility(
+              e.target.value,
+              assignmentStudentSelectGroup,
+              assignmentGradeSelectGroup,
+              assignmentProgramSelectGroup,
+              specialStudentSelectGroup
+            );
+            sendAssignmentButton.disabled = !Array.from(
+              assignmentRecipients
+            ).some((r) => r.checked);
           });
         });
 
-        pointsRecipients.forEach(input => {
+        pointsRecipients.forEach((input) => {
           input.addEventListener("change", (e) => {
-            updateFormVisibility(e.target.value, pointsStudentSelectGroup, pointsGradeSelectGroup);
+            updateFormVisibility(
+              e.target.value,
+              pointsStudentSelectGroup,
+              pointsGradeSelectGroup
+            );
           });
         });
 
-        messageRecipients.forEach(input => {
+        messageRecipients.forEach((input) => {
           input.addEventListener("change", (e) => {
-            updateFormVisibility(e.target.value, messageStudentSelectGroup, messageGradeSelectGroup);
+            updateFormVisibility(
+              e.target.value,
+              messageStudentSelectGroup,
+              messageGradeSelectGroup
+            );
           });
         });
 
         const validateAssignmentForm = () => {
-          const hasRecipient = Array.from(assignmentRecipients).some(r => r.checked);
-          const hasTitle = document.getElementById("assignmentTitle").value.trim() !== "";
-          const hasContent = document.getElementById("assignmentText").value.trim() !== "" || document.getElementById("assignmentFile").files.length > 0;
-          sendAssignmentButton.disabled = !(hasRecipient && hasTitle && hasContent);
+          const hasRecipient = Array.from(assignmentRecipients).some(
+            (r) => r.checked
+          );
+          const hasTitle =
+            document.getElementById("assignmentTitle").value.trim() !== "";
+          const hasContent =
+            document.getElementById("assignmentText").value.trim() !== "" ||
+            document.getElementById("assignmentFile").files.length > 0;
+          sendAssignmentButton.disabled = !(
+            hasRecipient &&
+            hasTitle &&
+            hasContent
+          );
         };
 
-        document.getElementById("assignmentTitle")?.addEventListener("input", validateAssignmentForm);
-        document.getElementById("assignmentText")?.addEventListener("input", validateAssignmentForm);
-        document.getElementById("assignmentFile")?.addEventListener("change", validateAssignmentForm);
+        document
+          .getElementById("assignmentTitle")
+          ?.addEventListener("input", validateAssignmentForm);
+        document
+          .getElementById("assignmentText")
+          ?.addEventListener("input", validateAssignmentForm);
+        document
+          .getElementById("assignmentFile")
+          ?.addEventListener("change", validateAssignmentForm);
 
-        assignmentRecipients.forEach(input => input.addEventListener("change", validateAssignmentForm));
+        assignmentRecipients.forEach((input) =>
+          input.addEventListener("change", validateAssignmentForm)
+        );
 
         const validatePointsForm = () => {
-          const selectedStudent = document.getElementById("points-student-select").value !== "";
-          const pointsInput = document.getElementById("pointsInput").value.trim() !== "";
+          const selectedStudent =
+            document.getElementById("points-student-select").value !== "";
+          const pointsInput =
+            document.getElementById("pointsInput").value.trim() !== "";
           addPointsButton.disabled = !(selectedStudent && pointsInput);
         };
-        document.getElementById("points-student-select")?.addEventListener("change", validatePointsForm);
-        document.getElementById("pointsInput")?.addEventListener("input", validatePointsForm);
+        document
+          .getElementById("points-student-select")
+          ?.addEventListener("change", validatePointsForm);
+        document
+          .getElementById("pointsInput")
+          ?.addEventListener("input", validatePointsForm);
 
         const validateMessageForm = () => {
-          const selectedStudent = document.getElementById("message-student-select").value !== "";
-          const messageText = document.getElementById("messageText").value.trim() !== "";
+          const selectedStudent =
+            document.getElementById("message-student-select").value !== "";
+          const messageText =
+            document.getElementById("messageText").value.trim() !== "";
           sendMessageButton.disabled = !(selectedStudent && messageText);
         };
-        document.getElementById("message-student-select")?.addEventListener("change", validateMessageForm);
-        document.getElementById("messageText")?.addEventListener("input", validateMessageForm);
-        
-        document.getElementById("assignmentFile")?.addEventListener("change", (e) => {
-          const fileName = e.target.files[0]?.name || "No file selected.";
-          document.getElementById("fileName").textContent = fileName;
-          document.getElementById("clearFileButton").classList.toggle("hidden", e.target.files.length === 0);
-        });
+        document
+          .getElementById("message-student-select")
+          ?.addEventListener("change", validateMessageForm);
+        document
+          .getElementById("messageText")
+          ?.addEventListener("input", validateMessageForm);
 
-        document.getElementById("clearFileButton")?.addEventListener("click", () => {
-          const fileInput = document.getElementById("assignmentFile");
-          fileInput.value = "";
-          document.getElementById("fileName").textContent = "No file selected.";
-          document.getElementById("clearFileButton").classList.add("hidden");
-          validateAssignmentForm();
-        });
+        document
+          .getElementById("assignmentFile")
+          ?.addEventListener("change", (e) => {
+            const fileName = e.target.files[0]?.name || "No file selected.";
+            document.getElementById("fileName").textContent = fileName;
+            document
+              .getElementById("clearFileButton")
+              .classList.toggle("hidden", e.target.files.length === 0);
+          });
 
-        document.getElementById("assignmentText")?.addEventListener("input", (e) => {
-          const wordCount = e.target.value.split(/\s+/).filter(Boolean).length;
-          document.getElementById("wordCountText").textContent = `Word count: ${wordCount}`;
-        });
+        document
+          .getElementById("clearFileButton")
+          ?.addEventListener("click", () => {
+            const fileInput = document.getElementById("assignmentFile");
+            fileInput.value = "";
+            document.getElementById("fileName").textContent =
+              "No file selected.";
+            document.getElementById("clearFileButton").classList.add("hidden");
+            validateAssignmentForm();
+          });
+
+        document
+          .getElementById("assignmentText")
+          ?.addEventListener("input", (e) => {
+            const wordCount = e.target.value
+              .split(/\s+/)
+              .filter(Boolean).length;
+            document.getElementById(
+              "wordCountText"
+            ).textContent = `Word count: ${wordCount}`;
+          });
 
         assignmentForm?.addEventListener("submit", async (e) => {
           e.preventDefault();
-          const recipients = Array.from(assignmentRecipients).filter(r => r.checked).map(r => r.value);
-          if (recipients.length === 0) return showToast("Please select a recipient.", "warning");
+          const recipients = Array.from(assignmentRecipients)
+            .filter((r) => r.checked)
+            .map((r) => r.value);
+          if (recipients.length === 0)
+            return showToast("Please select a recipient.", "warning");
 
           const formData = new FormData(assignmentForm);
           const fileInput = document.getElementById("assignmentFile");
@@ -817,76 +1472,125 @@
           const assignmentData = {
             title: formData.get("assignmentTitle"),
             description: formData.get("assignmentText"),
-            dueDate: formData.get("assignmentDueDate"),
-            recipients: recipients,
-            studentIds: recipients.includes("student") ? Array.from(document.getElementById("assignment-student-select").selectedOptions).map(opt => opt.value) : [],
-            grade: recipients.includes("otherGrade") ? document.getElementById("assignment-grade-select").value : null,
-            program: recipients.includes("program") ? document.getElementById("assignment-program-select").value : null,
+            due_date: formData.get("assignmentDueDate"),
+            assigned_to_users: recipients.includes("student")
+              ? Array.from(
+                  document.getElementById("assignment-student-select")
+                    .selectedOptions
+                ).map((opt) => opt.value)
+              : [],
+            assigned_to_grades: recipients.includes("otherGrade")
+              ? [document.getElementById("assignment-grade-select").value]
+              : [],
+            assigned_to_programs: recipients.includes("program")
+              ? [document.getElementById("assignment-program-select").value]
+              : [],
+            specialStudentIds: recipients.includes("special_student")
+              ? Array.from(
+                  document.getElementById("assignment-special-student-select")
+                    .selectedOptions
+                ).map((opt) => opt.value)
+              : [],
           };
-          
-          if (file) {
-            formData.append("file", file);
-          } else {
-            formData.append("assignmentData", JSON.stringify(assignmentData));
-          }
 
-          if (!assignmentData.title) return showToast("Assignment title is required.", "warning");
-          if (!assignmentData.description && !file) return showToast("Please provide assignment details or attach a file.", "warning");
-          
+          Object.entries(assignmentData).forEach(([key, val]) => {
+            if (Array.isArray(val)) {
+              val.forEach((v) => formData.append(key, v));
+            } else if (val) {
+              formData.append(key, val);
+            }
+          });
+
+          if (file) formData.append("file", file);
+
           try {
-            const res = await fetchAPI("/teacher/assignments", {
+            const res = await fetch("/api/teacher/assignments", {
               method: "POST",
-              body: file ? formData : JSON.stringify(assignmentData),
-              headers: file ? {} : { "Content-Type": "application/json" },
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+              },
+              body: formData,
             });
-            if (res && res.ok) {
+
+            const result = await res.json();
+            if (res.ok) {
               showToast("Assignment sent successfully!", "success");
               assignmentForm.reset();
-              document.getElementById("wordCountText").textContent = "Word count: 0";
-              document.getElementById("fileName").textContent = "No file selected.";
-              document.getElementById("clearFileButton").classList.add("hidden");
               sendAssignmentButton.disabled = true;
-              fetchAssignedTasks();
+              document.getElementById("fileName").textContent =
+                "No file selected.";
+              document
+                .getElementById("clearFileButton")
+                .classList.add("hidden");
             } else {
-              const error = await res.json();
-              showToast(error.message || "Failed to send assignment.", "error");
+              showToast(
+                result.message || "Failed to send assignment.",
+                "error"
+              );
             }
           } catch (error) {
-            showToast("An unexpected error occurred.", "error");
             console.error(error);
+            showToast("Unexpected error occurred.", "error");
           }
         });
 
         addPointsButton?.addEventListener("click", async () => {
           const points = document.getElementById("pointsInput").value;
           const reason = document.getElementById("reasonText").value;
-          const recipientType = document.querySelector('input[name="pointsRecipient"]:checked').value;
-          
+          const recipientType = document.querySelector(
+            'input[name="pointsRecipient"]:checked'
+          ).value;
+
           let studentIds = [];
           let grade = null;
           let message = null;
 
           if (recipientType === "single") {
-            studentIds.push(document.getElementById("points-student-select").value);
+            studentIds.push(
+              document.getElementById("points-student-select").value
+            );
           } else if (recipientType === "multiple") {
-            studentIds = Array.from(document.getElementById("points-student-select").selectedOptions).map(opt => opt.value);
+            studentIds = Array.from(
+              document.getElementById("points-student-select").selectedOptions
+            ).map((opt) => opt.value);
           } else if (recipientType === "class") {
-            studentIds = studentsCache.filter(s => s.grade === currentUser.grade).map(s => s._id);
-            message = `You've been awarded ${points} points for ${reason || 'general good performance'}.`;
+            studentIds = studentsCache
+              .filter((s) => s.grade === currentUser.grade)
+              .map((s) => s._id);
+            message = `You've been awarded ${points} points for ${
+              reason || "general good performance"
+            }.`;
           } else if (recipientType === "otherGrade") {
             grade = document.getElementById("points-grade-select").value;
-            message = `You've been awarded ${points} points for ${reason || 'general good performance'}.`;
+            message = `You've been awarded ${points} points for ${
+              reason || "general good performance"
+            }.`;
           }
 
-          if (!points || (recipientType !== "class" && recipientType !== "otherGrade" && studentIds.length === 0)) {
-            return showToast("Please select a student and enter points.", "warning");
+          if (
+            !points ||
+            (recipientType !== "class" &&
+              recipientType !== "otherGrade" &&
+              studentIds.length === 0)
+          ) {
+            return showToast(
+              "Please select a student and enter points.",
+              "warning"
+            );
           }
 
           try {
             const res = await fetchAPI("/teacher/points/add", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ studentIds, grade, points, reason, message, recipientType }),
+              body: JSON.stringify({
+                studentIds,
+                grade,
+                points,
+                reason,
+                message,
+                recipientType,
+              }),
             });
             if (res && res.ok) {
               showToast("Points added successfully!", "success");
@@ -905,30 +1609,51 @@
 
         sendMessageButton?.addEventListener("click", async () => {
           const message = document.getElementById("messageText").value;
-          const recipientType = document.querySelector('input[name="messageRecipient"]:checked').value;
-          
+          const recipientType = document.querySelector(
+            'input[name="messageRecipient"]:checked'
+          ).value;
+
           let studentIds = [];
           let grade = null;
 
           if (recipientType === "single") {
-            studentIds.push(document.getElementById("message-student-select").value);
+            studentIds.push(
+              document.getElementById("message-student-select").value
+            );
           } else if (recipientType === "multiple") {
-            studentIds = Array.from(document.getElementById("message-student-select").selectedOptions).map(opt => opt.value);
+            studentIds = Array.from(
+              document.getElementById("message-student-select").selectedOptions
+            ).map((opt) => opt.value);
           } else if (recipientType === "class") {
-            studentIds = studentsCache.filter(s => s.grade === currentUser.grade).map(s => s._id);
+            studentIds = studentsCache
+              .filter((s) => s.grade === currentUser.grade)
+              .map((s) => s._id);
           } else if (recipientType === "otherGrade") {
             grade = document.getElementById("message-grade-select").value;
           }
 
-          if (!message || (recipientType !== "class" && recipientType !== "otherGrade" && studentIds.length === 0)) {
-            return showToast("Please select a recipient and enter a message.", "warning");
+          if (
+            !message ||
+            (recipientType !== "class" &&
+              recipientType !== "otherGrade" &&
+              studentIds.length === 0)
+          ) {
+            return showToast(
+              "Please select a recipient and enter a message.",
+              "warning"
+            );
           }
 
           try {
             const res = await fetchAPI("/teacher/messages", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ studentIds, grade, message, recipientType }),
+              body: JSON.stringify({
+                studentIds,
+                grade,
+                message,
+                recipientType,
+              }),
             });
             if (res && res.ok) {
               showToast("Message sent successfully!", "success");
@@ -943,48 +1668,58 @@
             console.error(error);
           }
         });
-
       }
-      
-      document.getElementById("logoutButton")?.addEventListener("click", async () => {
+
+      document
+        .getElementById("logoutButton")
+        ?.addEventListener("click", async () => {
           const res = await fetchAPI("/auth/logout", { method: "POST" });
           if (res && res.ok) {
-              window.location.href = "/login.html";
+            window.location.href = "/login.html";
           } else {
-              showToast("Logout failed. Please try again.", "error");
+            showToast("Logout failed. Please try again.", "error");
           }
-      });
+        });
 
-      document.getElementById("profile-menu-button")?.addEventListener("click", () => {
+      document
+        .getElementById("profile-menu-button")
+        ?.addEventListener("click", () => {
           const menu = document.getElementById("profile-dropdown-menu");
           const isExpanded = menu.classList.contains("scale-100");
           if (isExpanded) {
-              menu.classList.remove("scale-100", "opacity-100");
-              menu.classList.add("scale-95", "opacity-0");
-              setTimeout(() => menu.classList.add("hidden"), 300);
+            menu.classList.remove("scale-100", "opacity-100");
+            menu.classList.add("scale-95", "opacity-0");
+            setTimeout(() => menu.classList.add("hidden"), 300);
           } else {
-              menu.classList.remove("hidden");
-              setTimeout(() => {
-                  menu.classList.remove("scale-95", "opacity-0");
-                  menu.classList.add("scale-100", "opacity-100");
-              }, 10);
+            menu.classList.remove("hidden");
+            setTimeout(() => {
+              menu.classList.remove("scale-95", "opacity-0");
+              menu.classList.add("scale-100", "opacity-100");
+            }, 10);
           }
-      });
-      
+        });
+
       document.addEventListener("click", (e) => {
-          const menu = document.getElementById("profile-dropdown-menu");
-          const button = document.getElementById("profile-menu-button");
-          if (menu && button && !menu.contains(e.target) && !button.contains(e.target)) {
-              menu.classList.remove("scale-100", "opacity-100");
-              menu.classList.add("scale-95", "opacity-0");
-              setTimeout(() => menu.classList.add("hidden"), 300);
-          }
+        const menu = document.getElementById("profile-dropdown-menu");
+        const button = document.getElementById("profile-menu-button");
+        if (
+          menu &&
+          button &&
+          !menu.contains(e.target) &&
+          !button.contains(e.target)
+        ) {
+          menu.classList.remove("scale-100", "opacity-100");
+          menu.classList.add("scale-95", "opacity-0");
+          setTimeout(() => menu.classList.add("hidden"), 300);
+        }
       });
 
+      document.getElementById("currentYear").textContent =
+        new Date().getFullYear();
 
-      document.getElementById("currentYear").textContent = new Date().getFullYear();
-      
-      document.getElementById("language-select").addEventListener("change", async (e) => {
+      document
+        .getElementById("language-select")
+        .addEventListener("change", async (e) => {
           currentLang = e.target.value;
           await loadTranslations(currentLang);
           applyTranslations();
@@ -992,23 +1727,21 @@
           fetchAssignedTasks();
           fetchFeedback();
           fetchOverdueTasks();
-      });
+        });
 
       window.addEventListener("load", async () => {
-          await checkAuth();
-          await fetchTeacherProfile();
-          await fetchStudents();
-          await fetchAssignedTasks();
-          await fetchFeedback();
-          await fetchOverdueTasks();
-          wireDashboardForms();
-          wireCalendar();
-          hideLoadingOverlay();
-          wireProfilePhotoUpload();
-          applyTranslations();
+        await checkAuth();
+        await fetchTeacherProfile();
+        await fetchStudents();
+        await fetchAssignedTasks();
+        await fetchFeedback();
+        await fetchOverdueTasks();
+        wireDashboardForms();
+        wireCalendar();
+        hideLoadingOverlay();
+        wireProfilePhotoUpload();
+        applyTranslations();
       });
     </script>
   </body>
 </html>
-
-

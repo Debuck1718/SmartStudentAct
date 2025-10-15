@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartStudentAct - Worker Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet">
+   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white py-4 shadow">
+  <div class="max-w-6xl mx-auto flex justify-between items-center px-4">
+    <div class="flex items-center gap-3">
+      <img
+        id="profilePhoto"
+        src="./images/default-avatar.png"
+        alt="Profile"
+        class="w-10 h-10 rounded-full border-2 border-white object-cover cursor-pointer"
+        title="Click to update photo"
+      />
+      <h1 id="title" class="text-xl font-semibold">👷 Worker Dashboard</h1>
+    </div>
+
+    <div class="flex gap-2 items-center">
+      <select id="langSelect" class="text-black rounded p-1">
+        <option value="en">EN</option>
+        <option value="fr">FR</option>
+        <option value="es">ES</option>
+        <option value="tr">TR</option>
+        <option value="ar">AR</option>
+        <option value="ru">RU</option>
+        <option value="pt">PT</option>
+      </select>
+      <button id="logoutBtn" class="bg-red-500 px-4 py-2 rounded hover:bg-red-600">Logout</button>
+    </div>
+  </div>
+</header>
+
+<!-- Hidden file input for photo upload -->
+<input type="file" id="photoInput" accept="image/*" style="display: none" />
+
+  <main class="max-w-6xl mx-auto py-8 px-4 space-y-8">
+    <!-- Navigation Links -->
+    <nav class="bg-white rounded-lg shadow p-4 flex justify-around">
+      <a href="worker.html" class="text-blue-600 font-semibold hover:underline" id="nav_dashboard">Dashboard</a>
+      <a href="global-leaderboard.html" class="text-blue-600 font-semibold hover:underline" id="nav_dashboard">Global leaderboard</a>
+      <a href="contact.html" class="text-gray-700 hover:underline" id="nav_contact">Contact</a>
+      <a href="settings.html" class="text-gray-700 hover:underline" id="nav_settings">Settings</a>
+    </nav>
+
+    <!-- Overview -->
+    <section id="overview" class="bg-white rounded-lg shadow p-6">
+      <h2 id="overview_title" class="text-xl font-semibold mb-4">Overview</h2>
+      <div id="overviewData" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+        <div><h3 id="overview_motivation" class="font-semibold">Motivation</h3><p id="motivationLevel">--%</p></div>
+        <div><h3 id="overview_goals" class="font-semibold">Goals Completed</h3><p id="goalProgress">--%</p></div>
+        <div><h3 id="overview_streak" class="font-semibold">Active Streak</h3><p id="streakStatus">-- days</p></div>
+      </div>
+    </section>
+
+    <!-- Add Reminder -->
+    <section id="addReminder" class="bg-white rounded-lg shadow p-6">
+      <h2 id="reminder_title" class="text-xl font-semibold mb-4">Add Reminder</h2>
+      <form id="reminderForm" class="grid md:grid-cols-2 gap-4">
+        <input type="text" id="reminderTitle" placeholder="Title" class="border p-2 rounded" required />
+        <input type="date" id="reminderDate" class="border p-2 rounded" required />
+        <input type="time" id="reminderTime" class="border p-2 rounded" required />
+        <input type="text" id="reminderCategory" placeholder="Category" class="border p-2 rounded" />
+        <label class="md:col-span-2 flex items-center gap-2">
+          <input type="checkbox" id="reminderRecurring" /> <span>Recurring Reminder</span>
+        </label>
+        <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 md:col-span-2">
+          Add Reminder
+        </button>
+      </form>
+    </section>
+
+    <!-- Add Goal -->
+    <section id="addGoal" class="bg-white rounded-lg shadow p-6">
+      <h2 id="goal_title" class="text-xl font-semibold mb-4">Add New Goal</h2>
+      <form id="goalForm" class="grid md:grid-cols-2 gap-4">
+        <input type="text" id="goalTitle" placeholder="Title" class="border p-2 rounded" required />
+        <input type="date" id="goalDate" class="border p-2 rounded" required />
+        <input type="text" id="goalCategory" placeholder="Category" class="border p-2 rounded" />
+        <textarea id="goalDesc" placeholder="Description" class="border p-2 rounded md:col-span-2"></textarea>
+        <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 md:col-span-2">
+          Add Goal
+        </button>
+      </form>
+    </section>
+
+    <!-- Insights -->
+    <section id="insights" class="bg-white rounded-lg shadow p-6">
+      <h2 id="insight_title" class="text-xl font-semibold mb-4">AI Insights</h2>
+      <div id="insightBox" class="space-y-2 text-gray-700">
+        <p><strong>Goal Insight:</strong> <span id="goalInsight">Loading...</span></p>
+        <p><strong>Finance Insight:</strong> <span id="financeInsight">Loading...</span></p>
+        <p><strong>Motivation Insight:</strong> <span id="motivationInsight">Loading...</span></p>
+        <p><strong>Advice Summary:</strong> <span id="adviceSummary">Loading...</span></p>
+      </div>
+    </section>
+
+    <!-- Financial Summary -->
+    <section id="finance" class="bg-white rounded-lg shadow p-6">
+      <h2 id="finance_title" class="text-xl font-semibold mb-4">Finance Summary</h2>
+      <canvas id="financeChart" height="150"></canvas>
+    </section>
+
+    <!-- Rewards -->
+    <section id="rewards" class="bg-white rounded-lg shadow p-6">
+      <h2 id="reward_title" class="text-xl font-semibold mb-4">Rewards & Achievements</h2>
+      <div id="rewardData" class="grid md:grid-cols-2 gap-4"></div>
+    </section>
+  </main>
+
+  <footer class="bg-gray-100 text-center text-gray-500 py-4">
+    <p>© 2025 SmartStudentAct. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const userId = localStorage.getItem("user_id");
+    let translations = {};
+
+    async function loadTranslations(lang) {
+      const res = await fetch(`/locales/worker.json`);
+      const data = await res.json();
+      translations = data[lang] || data["en"];
+      document.querySelectorAll("[id]").forEach(el => {
+        if (translations[el.id]) el.textContent = translations[el.id];
+      });
+    }
+
+    document.getElementById("langSelect").addEventListener("change", e => {
+      loadTranslations(e.target.value);
+    });
+
+    async function loadOverview() {
+      try {
+        const res = await axios.get(`/api/worker/overview?user_id=${userId}`);
+        const data = res.data.data;
+        document.getElementById("motivationLevel").innerText = data.motivation_level + "%";
+        document.getElementById("goalProgress").innerText = data.goal_progress_percent + "%";
+        document.getElementById("streakStatus").innerText = data.active_streak_days + " days";
+        renderFinanceChart(data.financial_summary);
+      } catch (err) {
+        console.error("Overview load error:", err);
+      }
+    }
+
+    async function loadInsights() {
+      try {
+        const res = await axios.get(`/api/worker/insight`);
+        const data = res.data.insights;
+        document.getElementById("goalInsight").innerText = data.goalInsight || "—";
+        document.getElementById("financeInsight").innerText = data.financeInsight || "—";
+        document.getElementById("motivationInsight").innerText = data.motivationInsight || "—";
+        document.getElementById("adviceSummary").innerText = data.adviceSummary || "—";
+      } catch (err) {
+        console.error("Insight error:", err);
+      }
+    }
+
+    async function loadRewards() {
+      try {
+        const res = await axios.get(`/api/worker/rewards/dashboard`);
+        const r = res.data;
+        document.getElementById("rewardData").innerHTML = `
+          <div class="p-4 border rounded">
+            <p><strong>Total Points:</strong> ${r.totalPoints}</p>
+            <p><strong>Productivity:</strong> ${r.productivityScore}</p>
+            <p><strong>Consistency Weeks:</strong> ${r.consistencyWeeks}</p>
+          </div>
+          <div class="p-4 border rounded">
+            <p><strong>Last Updated:</strong> ${new Date(r.lastUpdated).toLocaleDateString()}</p>
+            <p><strong>Recent Activities:</strong></p>
+            <ul class="text-sm list-disc ml-6">
+              ${r.pointsLog.map(p => `<li>${p.source} +${p.points}pts - ${p.description}</li>`).join('')}
+            </ul>
+          </div>`;
+      } catch (err) {
+        console.error("Rewards load error:", err);
+      }
+    }
+
+    function renderFinanceChart(financials) {
+      const ctx = document.getElementById("financeChart").getContext("2d");
+      new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Income", "Expenses", "Savings"],
+          datasets: [{
+            data: [financials.total_income, financials.total_expenses, financials.total_savings],
+            backgroundColor: ["#22c55e", "#ef4444", "#3b82f6"]
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+      });
+    }
+
+    document.getElementById("goalForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        user_id: userId,
+        title: document.getElementById("goalTitle").value,
+        description: document.getElementById("goalDesc").value,
+        target_completion_date: document.getElementById("goalDate").value,
+        category: document.getElementById("goalCategory").value
+      };
+      try {
+        await axios.post("/api/worker/add-goal", payload);
+        alert("Goal added successfully!");
+        loadOverview();
+      } catch (err) {
+        alert("Error adding goal: " + err.response?.data?.message);
+      }
+    });
+
+    document.getElementById("reminderForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const dueDateTime = new Date(
+        document.getElementById("reminderDate").value + "T" +
+        document.getElementById("reminderTime").value
+      ).toISOString();
+      const payload = {
+        user_id: userId,
+        title: document.getElementById("reminderTitle").value,
+        due_date: dueDateTime,
+        category: document.getElementById("reminderCategory").value,
+        is_recurring: document.getElementById("reminderRecurring").checked
+      };
+      try {
+        await axios.post("/api/worker/add-reminder", payload);
+        alert("Reminder added successfully!");
+      } catch (err) {
+        alert("Error adding reminder: " + err.response?.data?.message);
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("user_id");
+      window.location.href = "/login.html";
+    });
+
+    // Profile photo upload logic
+const photoInput = document.getElementById("photoInput");
+const profilePhoto = document.getElementById("profilePhoto");
+
+async function loadProfilePhoto() {
+  try {
+    const res = await axios.get(`/api/profile/get-photo?user_id=${userId}`);
+    const url = res.data.photoUrl || "/images/default-avatar.png";
+    profilePhoto.src = url;
+  } catch (err) {
+    console.warn("Could not load profile photo:", err);
+    profilePhoto.src = "/images/default-avatar.png";
+  }
+}
+
+profilePhoto.addEventListener("click", () => {
+  photoInput.click();
+});
+
+photoInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("profilePhoto", file);
+
+  try {
+    const res = await axios.post("/api/profile/upload-photo", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    alert("Profile photo updated successfully!");
+    profilePhoto.src = res.data.photoUrl;
+  } catch (err) {
+    console.error("Photo upload failed:", err);
+    alert("Error uploading photo. Please try again.");
+  }
+});
+
+
+    loadTranslations("en");
+    loadOverview();
+    loadInsights();
+    loadRewards();
+    loadProfilePhoto();
+  </script>
+</body>
+</html>

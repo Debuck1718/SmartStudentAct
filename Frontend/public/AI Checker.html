@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Checker | SmartStudentAct</title>
+   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="icon" href="/favicon.ico" />
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --background-color: #f8fafc;
+      --text-color: #1e293b;
+      --card-bg: #fff;
+      --border-color: #e2e8f0;
+    }
+    body {
+      font-family: "Inter", sans-serif;
+      background: var(--background-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: var(--primary-color);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 0.75rem;
+      cursor: pointer;
+      font-weight: 500;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      border-bottom: 3px solid var(--primary-color);
+      color: var(--primary-color);
+    }
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      resize: vertical;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    textarea:focus {
+      border-color: var(--primary-color);
+    }
+    button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      width: 100%;
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #1e40af;
+    }
+    .result {
+      margin-top: 1.5rem;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 1rem;
+      white-space: pre-wrap;
+    }
+    .language-selector {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 0.5rem;
+    }
+    select {
+      padding: 0.4rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+    /* Styles for Citation Form */
+    .citation-form {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      display: none; /* Hidden by default */
+    }
+    .citation-form.active {
+      display: block;
+    }
+    .citation-form label {
+      display: block;
+      margin-top: 0.75rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+    .citation-form input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin-top: 0.25rem;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <header id="headerTitle">AI Checker</header>
+
+  <div class="container">
+    <div class="language-selector">
+      <select id="language">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="tr">Türkçe</option>
+        <option value="ar">العربية</option>
+        <option value="ru">Русский</option>
+      </select>
+    </div>
+
+    <div class="tabs">
+      <div id="tab-check" class="tab active" data-tab="check">AI Essay Checker</div>
+      <div id="tab-detect" class="tab" data-tab="detect">AI Detector</div>
+    </div>
+
+    <textarea id="textInput" placeholder="Enter your essay or text here..."></textarea>
+    
+    <div id="citationForm" class="citation-form active">
+        <p style="font-size: 0.95rem; color: var(--primary-color); margin-top: 0;">
+            Optional: Add citation data to help the tutor analyze source integration.
+        </p>
+        <label for="citationTitle">Source Title:</label>
+        <input type="text" id="citationTitle" placeholder="e.g., The Future of AI in Education" />
+
+        <label for="citationSource">Source Name:</label>
+        <input type="text" id="citationSource" placeholder="e.g., IEEE Journal or Smith & Co." />
+
+        <label for="citationURL">Source URL (must be valid):</label>
+        <input type="url" id="citationURL" placeholder="https://example.com/source" />
+        
+        <label for="citationAccessDate">Access Date (YYYY-MM-DD):</label>
+        <input type="date" id="citationAccessDate" />
+    </div>
+
+    <button id="analyzeButton">Analyze</button>
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    const translations = {
+      en: {
+        headerTitle: "AI Checker",
+        check: "AI Essay Checker",
+        detect: "AI Detector",
+        analyze: "Analyze",
+        placeholder: "Enter your essay or text here...",
+        success: "Analysis Complete!",
+      },
+      // ... (Rest of translations remain the same)
+      fr: {
+        headerTitle: "Vérificateur d'IA",
+        check: "Correcteur d'essai IA",
+        detect: "Détecteur d'IA",
+        analyze: "Analyser",
+        placeholder: "Entrez votre texte ici...",
+        success: "Analyse terminée !",
+      },
+      es: {
+        headerTitle: "Comprobador de IA",
+        check: "Verificador de Ensayos IA",
+        detect: "Detector de IA",
+        analyze: "Analizar",
+        placeholder: "Ingrese su texto aquí...",
+        success: "¡Análisis completo!",
+      },
+      tr: {
+        headerTitle: "Yapay Zeka Kontrolü",
+        check: "Yapay Zeka Deneme Denetleyicisi",
+        detect: "Yapay Zeka Dedektörü",
+        analyze: "Analiz Et",
+        placeholder: "Metninizi buraya girin...",
+        success: "Analiz tamamlandı!",
+      },
+      ar: {
+        headerTitle: "مدقق الذكاء الاصطناعي",
+        check: "مدقق المقالات بالذكاء الاصطناعي",
+        detect: "كاشف الذكاء الاصطناعي",
+        analyze: "تحليل",
+        placeholder: "أدخل النص هنا...",
+        success: "اكتمل التحليل!",
+      },
+      ru: {
+        headerTitle: "Проверка ИИ",
+        check: "Проверка эссе ИИ",
+        detect: "Детектор ИИ",
+        analyze: "Анализировать",
+        placeholder: "Введите ваш текст здесь...",
+        success: "Анализ завершен!",
+      },
+    };
+
+    let activeTab = "check";
+    const apiRoutes = {
+      check: "/api/teacher/check",
+      detect: "/api/teacher/detect",
+    };
+
+    const textInput = document.getElementById("textInput");
+    const resultDiv = document.getElementById("result");
+    const analyzeButton = document.getElementById("analyzeButton");
+    const citationForm = document.getElementById("citationForm");
+
+    // --- Tab and UI Handling ---
+
+    const updateUI = (tabName) => {
+        const t = translations[document.getElementById("language").value];
+        textInput.placeholder = t.placeholder;
+        analyzeButton.innerText = t.analyze;
+        
+        // Show/Hide Citation Form
+        if (tabName === "check") {
+            citationForm.classList.add("active");
+            textInput.placeholder = "Enter your essay text (min 50 chars) for feedback...";
+        } else {
+            citationForm.classList.remove("active");
+            textInput.placeholder = "Enter text (min 20 chars) for AI detection...";
+        }
+        resultDiv.innerHTML = "";
+    };
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        activeTab = tab.dataset.tab;
+        updateUI(activeTab);
+      });
+    });
+
+    const languageSelect = document.getElementById("language");
+    languageSelect.addEventListener("change", () => {
+      const lang = languageSelect.value;
+      const t = translations[lang];
+      document.getElementById("headerTitle").innerText = t.headerTitle;
+      document.getElementById("tab-check").innerText = t.check;
+      document.getElementById("tab-detect").innerText = t.detect;
+      updateUI(activeTab); // Update placeholder/button text after language change
+    });
+    
+    // Initial UI load
+    updateUI(activeTab);
+
+    // --- Submission Logic ---
+    analyzeButton.addEventListener("click", async () => {
+      const text = textInput.value.trim();
+      if (!text) return alert("Please enter some text.");
+
+      resultDiv.innerHTML = "⏳ Processing...";
+      analyzeButton.disabled = true;
+
+      try {
+        let payload = {};
+        let url = apiRoutes[activeTab];
+
+        if (activeTab === "check") {
+          // CHECKER PAYLOAD: essayText and optional citationData
+          const citationData = {
+              title: document.getElementById('citationTitle').value.trim(),
+              source: document.getElementById('citationSource').value.trim(),
+              url: document.getElementById('citationURL').value.trim(),
+              accessDate: document.getElementById('citationAccessDate').value.trim()
+          };
+
+          payload.essayText = text;
+          
+          // Only include citationData if all fields are filled
+          if (citationData.title && citationData.source && citationData.url && citationData.accessDate) {
+              payload.citationData = citationData;
+          }
+
+          // Validation based on API schema (min 50 chars)
+          if (payload.essayText.length < 50) {
+              resultDiv.innerHTML = "❌ Error: Essay text must be at least 50 characters long for analysis.";
+              return;
+          }
+          
+        } else {
+          // DETECTOR PAYLOAD: text
+          payload.text = text;
+          
+          // Validation based on API schema (min 20 chars)
+          if (payload.text.length < 20) {
+              resultDiv.innerHTML = "❌ Error: Text must be at least 20 characters long for AI detection.";
+              return;
+          }
+        }
+        
+        // --- API Call ---
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload), // Send the correct payload structure
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          if (activeTab === "check") {
+             // Beautify the feedback object
+             const formattedFeedback = Object.entries(data.feedback)
+                 .map(([key, value]) => {
+                     if (key === 'citation' && value) {
+                         return `<strong>Citation Used:</strong> ${value}`;
+                     }
+                     if (Array.isArray(value) && value.length > 0) {
+                         return `<strong>${key.charAt(0).toUpperCase() + key.slice(1)}:</strong>\n* ${value.join('\n* ')}`;
+                     }
+                     return ''; // Ignore empty arrays
+                 })
+                 .filter(item => item !== '')
+                 .join('\n\n');
+                 
+             resultDiv.innerHTML = `<strong>✅ Essay Feedback:</strong>\n\n${formattedFeedback}`;
+
+          } else {
+             // Display detection result neatly
+             resultDiv.innerHTML = `
+                <strong>🧠 AI Detection Result:</strong>
+                <p><strong>Verdict:</strong> ${data.result.verdict}</p>
+                <p><strong>Confidence:</strong> ${data.result.confidence}</p>
+                <p><strong>Analysis:</strong> ${data.result.analysis}</p>
+             `;
+          }
+        } else {
+          resultDiv.innerHTML = `❌ Error: ${data.message || "Failed to process."}`;
+        }
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = "❌ An error occurred during analysis. Check console for details.";
+      } finally {
+          analyzeButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

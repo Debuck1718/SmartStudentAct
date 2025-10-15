@@ -421,22 +421,18 @@
         };
       }
 
-      const API_BASE_URL = "https://api.smartstudentact.com/api";
-  const apiUrl = `${API_BASE_URL}/essay/check`;
+     // const API_BASE_URL = "https://api.smartstudentact.com/api";
+  const apiUrl = "/api/student/check";
 
-  async function getEssayFeedback(essayText, citationData) {
-  const payload = {
-    essayText,
-    citationData,
-  };
+async function getEssayFeedback(essayText, citationData) {
+  const payload = { essayText, citationData };
 
-  let response;
   try {
-    response = await fetch(apiUrl, {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      credentials: "include",  
+      credentials: "include",
     });
 
     if (!response.ok) {

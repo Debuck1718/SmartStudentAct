@@ -9,7 +9,10 @@
     <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-EWMR745QHX"
+    ></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
@@ -20,9 +23,9 @@
       gtag("config", "G-EWMR745QHX");
     </script>
     <style>
-       body { 
-            text-size-adjust: 100%;
-        }
+      body {
+        text-size-adjust: 100%;
+      }
       body {
         font-family: "Inter", sans-serif;
         background-color: #f4f4f4;
@@ -184,32 +187,75 @@
     </div>
 
     <div class="container">
-      <h1 class="text-center text-2xl font-bold mb-6 text-gray-800" data-i18n="pageTitle">
+      <h1
+        class="text-center text-2xl font-bold mb-6 text-gray-800"
+        data-i18n="pageTitle"
+      >
         Create Your Account
       </h1>
 
       <div id="signupFormSection" class="form-section">
         <div class="flex flex-col md:flex-row gap-2 mb-2">
-          <input id="firstnameInput" type="text" placeholder="" class="input flex-1" data-i18n-placeholder="firstName" />
-          <input id="lastnameInput" type="text" placeholder="" class="input flex-1" data-i18n-placeholder="lastName" />
+          <input
+            id="firstnameInput"
+            type="text"
+            placeholder=""
+            class="input flex-1"
+            data-i18n-placeholder="firstName"
+          />
+          <input
+            id="lastnameInput"
+            type="text"
+            placeholder=""
+            class="input flex-1"
+            data-i18n-placeholder="lastName"
+          />
         </div>
         <p id="firstnameError" class="error-text hidden"></p>
         <p id="lastnameError" class="error-text hidden"></p>
 
-        <input id="emailInput" type="email" placeholder="" class="input mb-2" data-i18n-placeholder="email" />
+        <input
+          id="emailInput"
+          type="email"
+          placeholder=""
+          class="input mb-2"
+          data-i18n-placeholder="email"
+        />
         <p id="emailError" class="error-text hidden"></p>
 
-        <input id="phoneInput" type="tel" placeholder="" class="input mb-2" data-i18n-placeholder="phone" />
+        <input
+          id="phoneInput"
+          type="tel"
+          placeholder=""
+          class="input mb-2"
+          data-i18n-placeholder="phone"
+        />
         <p id="phoneError" class="error-text hidden"></p>
 
-        <input id="passwordInput" type="password" placeholder="" class="input mb-2" data-i18n-placeholder="password" />
+        <input
+          id="passwordInput"
+          type="password"
+          placeholder=""
+          class="input mb-2"
+          data-i18n-placeholder="password"
+        />
         <p id="passwordError" class="error-text hidden"></p>
 
-        <input id="confirmPasswordInput" type="password" placeholder="" class="input mb-2" data-i18n-placeholder="confirmPassword" />
+        <input
+          id="confirmPasswordInput"
+          type="password"
+          placeholder=""
+          class="input mb-2"
+          data-i18n-placeholder="confirmPassword"
+        />
         <p id="confirmPasswordError" class="error-text hidden"></p>
 
         <div class="picker-container">
-          <select id="occupationSelect" class="picker" data-i18n-placeholder="occupation">
+          <select
+            id="occupationSelect"
+            class="picker"
+            data-i18n-placeholder="occupation"
+          >
             <option value="">Select Occupation</option>
             <option value="student" data-i18n="student">Student</option>
             <option value="teacher" data-i18n="teacher">Teacher</option>
@@ -218,12 +264,274 @@
         <p id="occupationError" class="error-text hidden"></p>
 
         <div id="schoolNameField" class="input-container hidden">
-          <input id="schoolNameInput" type="text" placeholder="" class="input" data-i18n-placeholder="schoolName" />
+          <input
+            id="schoolNameInput"
+            type="text"
+            placeholder=""
+            class="input"
+            data-i18n-placeholder="schoolName"
+          />
         </div>
         <p id="schoolNameError" class="error-text hidden"></p>
 
+        <div id="countryField" class="hidden">
+          <label for="countrySelect">Country</label>
+          <select id="countrySelect" required>
+            <option value="AF">Afghanistan</option>
+            <option value="AX">Aland Islands</option>
+            <option value="AL">Albania</option>
+            <option value="DZ">Algeria</option>
+            <option value="AS">American Samoa</option>
+            <option value="AD">Andorra</option>
+            <option value="AO">Angola</option>
+            <option value="AI">Anguilla</option>
+            <option value="AQ">Antarctica</option>
+            <option value="AG">Antigua and Barbuda</option>
+            <option value="AR">Argentina</option>
+            <option value="AM">Armenia</option>
+            <option value="AW">Aruba</option>
+            <option value="AU">Australia</option>
+            <option value="AT">Austria</option>
+            <option value="AZ">Azerbaijan</option>
+            <option value="BS">Bahamas</option>
+            <option value="BH">Bahrain</option>
+            <option value="BD">Bangladesh</option>
+            <option value="BB">Barbados</option>
+            <option value="BY">Belarus</option>
+            <option value="BE">Belgium</option>
+            <option value="BZ">Belize</option>
+            <option value="BJ">Benin</option>
+            <option value="BM">Bermuda</option>
+            <option value="BT">Bhutan</option>
+            <option value="BO">Bolivia</option>
+            <option value="BA">Bosnia and Herzegovina</option>
+            <option value="BW">Botswana</option>
+            <option value="BR">Brazil</option>
+            <option value="IO">British Indian Ocean Territory</option>
+            <option value="BN">Brunei Darussalam</option>
+            <option value="BG">Bulgaria</option>
+            <option value="BF">Burkina Faso</option>
+            <option value="BI">Burundi</option>
+            <option value="KH">Cambodia</option>
+            <option value="CM">Cameroon</option>
+            <option value="CA">Canada</option>
+            <option value="CV">Cape Verde</option>
+            <option value="KY">Cayman Islands</option>
+            <option value="CF">Central African Republic</option>
+            <option value="TD">Chad</option>
+            <option value="CL">Chile</option>
+            <option value="CN">China</option>
+            <option value="CX">Christmas Island</option>
+            <option value="CC">Cocos (Keeling) Islands</option>
+            <option value="CO">Colombia</option>
+            <option value="KM">Comoros</option>
+            <option value="CG">Congo</option>
+            <option value="CD">Congo, The Democratic Republic of the</option>
+            <option value="CK">Cook Islands</option>
+            <option value="CR">Costa Rica</option>
+            <option value="CI">Cote d'Ivoire</option>
+            <option value="HR">Croatia</option>
+            <option value="CU">Cuba</option>
+            <option value="CY">Cyprus</option>
+            <option value="CZ">Czech Republic</option>
+            <option value="DK">Denmark</option>
+            <option value="DJ">Djibouti</option>
+            <option value="DM">Dominica</option>
+            <option value="DO">Dominican Republic</option>
+            <option value="EC">Ecuador</option>
+            <option value="EG">Egypt</option>
+            <option value="SV">El Salvador</option>
+            <option value="GQ">Equatorial Guinea</option>
+            <option value="ER">Eritrea</option>
+            <option value="EE">Estonia</option>
+            <option value="ET">Ethiopia</option>
+            <option value="FK">Falkland Islands (Malvinas)</option>
+            <option value="FO">Faroe Islands</option>
+            <option value="FJ">Fiji</option>
+            <option value="FI">Finland</option>
+            <option value="FR">France</option>
+            <option value="GF">French Guiana</option>
+            <option value="PF">French Polynesia</option>
+            <option value="TF">French Southern Territories</option>
+            <option value="GA">Gabon</option>
+            <option value="GM">Gambia</option>
+            <option value="GE">Georgia</option>
+            <option value="DE">Germany</option>
+            <option value="GH">Ghana</option>
+            <option value="GI">Gibraltar</option>
+            <option value="GR">Greece</option>
+            <option value="GL">Greenland</option>
+            <option value="GD">Grenada</option>
+            <option value="GP">Guadeloupe</option>
+            <option value="GU">Guam</option>
+            <option value="GT">Guatemala</option>
+            <option value="GG">Guernsey</option>
+            <option value="GN">Guinea</option>
+            <option value="GW">Guinea-Bissau</option>
+            <option value="GY">Guyana</option>
+            <option value="HT">Haiti</option>
+            <option value="HM">Heard Island and McDonald Islands</option>
+            <option value="VA">Holy See (Vatican City State)</option>
+            <option value="HN">Honduras</option>
+            <option value="HK">Hong Kong</option>
+            <option value="HU">Hungary</option>
+            <option value="IS">Iceland</option>
+            <option value="IN">India</option>
+            <option value="ID">Indonesia</option>
+            <option value="IR">Iran, Islamic Republic of</option>
+            <option value="IQ">Iraq</option>
+            <option value="IE">Ireland</option>
+            <option value="IM">Isle of Man</option>
+            <option value="IL">Israel</option>
+            <option value="IT">Italy</option>
+            <option value="JM">Jamaica</option>
+            <option value="JP">Japan</option>
+            <option value="JE">Jersey</option>
+            <option value="JO">Jordan</option>
+            <option value="KZ">Kazakhstan</option>
+            <option value="KE">Kenya</option>
+            <option value="KI">Kiribati</option>
+            <option value="KP">Korea, Democratic People's Republic of</option>
+            <option value="KR">Korea, Republic of</option>
+            <option value="KW">Kuwait</option>
+            <option value="KG">Kyrgyzstan</option>
+            <option value="LA">Lao People's Democratic Republic</option>
+            <option value="LV">Latvia</option>
+            <option value="LB">Lebanon</option>
+            <option value="LS">Lesotho</option>
+            <option value="LR">Liberia</option>
+            <option value="LY">Libyan Arab Jamahiriya</option>
+            <option value="LI">Liechtenstein</option>
+            <option value="LT">Lithuania</option>
+            <option value="LU">Luxembourg</option>
+            <option value="MO">Macao</option>
+            <option value="MK">
+              Macedonia, The Former Yugoslav Republic of
+            </option>
+            <option value="MG">Madagascar</option>
+            <option value="MW">Malawi</option>
+            <option value="MY">Malaysia</option>
+            <option value="MV">Maldives</option>
+            <option value="ML">Mali</option>
+            <option value="MT">Malta</option>
+            <option value="MH">Marshall Islands</option>
+            <option value="MQ">Martinique</option>
+            <option value="MR">Mauritania</option>
+            <option value="MU">Mauritius</option>
+            <option value="YT">Mayotte</option>
+            <option value="MX">Mexico</option>
+            <option value="FM">Micronesia, Federated States of</option>
+            <option value="MD">Moldova, Republic of</option>
+            <option value="MC">Monaco</option>
+            <option value="MN">Mongolia</option>
+            <option value="ME">Montenegro</option>
+            <option value="MS">Montserrat</option>
+            <option value="MA">Morocco</option>
+            <option value="MZ">Mozambique</option>
+            <option value="MM">Myanmar</option>
+            <option value="NA">Namibia</option>
+            <option value="NR">Nauru</option>
+            <option value="NP">Nepal</option>
+            <option value="NL">Netherlands</option>
+            <option value="AN">Netherlands Antilles</option>
+            <option value="NC">New Caledonia</option>
+            <option value="NZ">New Zealand</option>
+            <option value="NI">Nicaragua</option>
+            <option value="NE">Niger</option>
+            <option value="NG">Nigeria</option>
+            <option value="NU">Niue</option>
+            <option value="NF">Norfolk Island</option>
+            <option value="MP">Northern Mariana Islands</option>
+            <option value="NO">Norway</option>
+            <option value="OM">Oman</option>
+            <option value="PK">Pakistan</option>
+            <option value="PW">Palau</option>
+            <option value="PS">Palestinian Territory, Occupied</option>
+            <option value="PA">Panama</option>
+            <option value="PG">Papua New Guinea</option>
+            <option value="PY">Paraguay</option>
+            <option value="PE">Peru</option>
+            <option value="PH">Philippines</option>
+            <option value="PN">Pitcairn</option>
+            <option value="PL">Poland</option>
+            <option value="PT">Portugal</option>
+            <option value="PR">Puerto Rico</option>
+            <option value="QA">Qatar</option>
+            <option value="RE">Reunion</option>
+            <option value="RO">Romania</option>
+            <option value="RU">Russian Federation</option>
+            <option value="SH">Saint Helena</option>
+            <option value="KN">Saint Kitts and Nevis</option>
+            <option value="LC">Saint Lucia</option>
+            <option value="PM">Saint Pierre and Miquelon</option>
+            <option value="VC">Saint Vincent and the Grenadines</option>
+            <option value="WS">Samoa</option>
+            <option value="SM">San Marino</option>
+            <option value="ST">Sao Tome and Principe</option>
+            <option value="SA">Saudi Arabia</option>
+            <option value="SN">Senegal</option>
+            <option value="RS">Serbia</option>
+            <option value="SC">Seychelles</option>
+            <option value="SL">Sierra Leone</option>
+            <option value="SG">Singapore</option>
+            <option value="SK">Slovakia</option>
+            <option value="SI">Slovenia</option>
+            <option value="SB">Solomon Islands</option>
+            <option value="SO">Somalia</option>
+            <option value="ZA">South Africa</option>
+            <option value="GS">
+              South Georgia and the South Sandwich Islands
+            </option>
+            <option value="SS">South Sudan</option>
+            <option value="ES">Spain</option>
+            <option value="LK">Sri Lanka</option>
+            <option value="SD">Sudan</option>
+            <option value="SR">Suriname</option>
+            <option value="SJ">Svalbard and Jan Mayen</option>
+            <option value="SZ">Swaziland</option>
+            <option value="SE">Sweden</option>
+            <option value="CH">Switzerland</option>
+            <option value="SY">Syrian Arab Republic</option>
+            <option value="TW">Taiwan, Province of China</option>
+            <option value="TJ">Tajikistan</option>
+            <option value="TZ">Tanzania, United Republic of</option>
+            <option value="TH">Thailand</option>
+            <option value="TL">Timor-Leste</option>
+            <option value="TG">Togo</option>
+            <option value="TK">Tokelau</option>
+            <option value="TO">Tonga</option>
+            <option value="TT">Trinidad and Tobago</option>
+            <option value="TN">Tunisia</option>
+            <option value="TR">Turkey</option>
+            <option value="TM">Turkmenistan</option>
+            <option value="TC">Turks and Caicos Islands</option>
+            <option value="TV">Tuvalu</option>
+            <option value="UG">Uganda</option>
+            <option value="UA">Ukraine</option>
+            <option value="AE">United Arab Emirates</option>
+            <option value="GB">United Kingdom</option>
+            <option value="US">United States</option>
+            <option value="UM">United States Minor Outlying Islands</option>
+            <option value="UY">Uruguay</option>
+            <option value="UZ">Uzbekistan</option>
+            <option value="VU">Vanuatu</option>
+            <option value="VE">Venezuela</option>
+            <option value="VN">Viet Nam</option>
+            <option value="VG">Virgin Islands, British</option>
+            <option value="VI">Virgin Islands, U.S.</option>
+            <option value="WF">Wallis and Futuna</option>
+            <option value="EH">Western Sahara</option>
+            <option value="YE">Yemen</option>
+            <option value="ZM">Zambia</option>
+            <option value="ZW">Zimbabwe</option>
+          </select>
+          <p id="countryError" class="error-text hidden"></p>
+        </div>
+
         <div id="schoolCountryField" class="picker-container hidden">
-          <label class="sr-only" for="schoolCountrySelect">School Country</label>
+          <label class="sr-only" for="schoolCountrySelect"
+            >School Country</label
+          >
           <select id="schoolCountrySelect" class="picker">
             <option value="">Select Country</option>
             <option value="AF">Afghanistan</option>
@@ -478,7 +786,11 @@
         <p id="schoolCountryError" class="error-text hidden"></p>
 
         <div id="educationLevelField" class="picker-container hidden">
-          <select id="educationLevelSelect" class="picker" data-i18n-placeholder="educationLevel">
+          <select
+            id="educationLevelSelect"
+            class="picker"
+            data-i18n-placeholder="educationLevel"
+          >
             <option value="">Select Level</option>
             <option value="junior">Junior High</option>
             <option value="high">Senior High</option>
@@ -493,7 +805,13 @@
         <p id="gradeError" class="error-text hidden"></p>
 
         <div id="programField" class="input-container hidden">
-          <input id="programInput" type="text" placeholder="" class="input" data-i18n-placeholder="program" />
+          <input
+            id="programInput"
+            type="text"
+            placeholder=""
+            class="input"
+            data-i18n-placeholder="program"
+          />
           <p id="programError" class="error-text hidden"></p>
         </div>
 
@@ -524,19 +842,38 @@
         <p id="teacherGradeError" class="error-text hidden"></p>
 
         <div id="teacherSubjectField" class="input-container hidden">
-          <label class="sr-only" for="teacherSubjectInput">Subject/Program</label>
-          <input id="teacherSubjectInput" type="text" placeholder="Subject" class="input" />
+          <label class="sr-only" for="teacherSubjectInput"
+            >Subject/Program</label
+          >
+          <input
+            id="teacherSubjectInput"
+            type="text"
+            placeholder="Subject"
+            class="input"
+          />
         </div>
         <p id="teacherSubjectError" class="error-text hidden"></p>
 
-        <button id="requestOtpButton" class="submit-button" type="button" disabled>
+        <button
+          id="requestOtpButton"
+          class="submit-button"
+          type="button"
+          disabled
+        >
           Request OTP
         </button>
       </div>
 
       <div id="otpSection" class="form-section hidden">
         <label class="sr-only" for="otpInput">Enter OTP</label>
-        <input id="otpInput" type="text" placeholder="Enter OTP" class="input" inputmode="numeric" pattern="[0-9]*" />
+        <input
+          id="otpInput"
+          type="text"
+          placeholder="Enter OTP"
+          class="input"
+          inputmode="numeric"
+          pattern="[0-9]*"
+        />
         <p id="otpError" class="error-text hidden"></p>
         <button id="verifyOtpButton" class="submit-button" type="button">
           Verify OTP
@@ -549,7 +886,11 @@
       </p>
 
       <p id="messageText" class="text-center text-sm font-medium opacity-0"></p>
-      <a href="./login.html" id="loginLink" class="text-center text-blue-600 mt-5 block">
+      <a
+        href="./login.html"
+        id="loginLink"
+        class="text-center text-blue-600 mt-5 block"
+      >
         Already have an account? Login
       </a>
     </div>
@@ -578,384 +919,376 @@
             The platform reserves the right to suspend accounts for violations.
           </p>
         </div>
-        <button id="closeModalButton" class="bg-gray-200 text-gray-800 p-3 rounded-lg font-bold">
+        <button
+          id="closeModalButton"
+          class="bg-gray-200 text-gray-800 p-3 rounded-lg font-bold"
+        >
           Close
         </button>
       </div>
     </div>
 
-    <div id="messageAlertBox" class="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-xl hidden transition-opacity duration-300 z-[1001]">
+    <div
+      id="messageAlertBox"
+      class="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-xl hidden transition-opacity duration-300 z-[1001]"
+    >
       <span id="messageAlertText"></span>
-      <button onclick="document.getElementById('messageAlertBox').classList.add('hidden')" class="ml-4 text-white font-bold">
+      <button
+        onclick="document.getElementById('messageAlertBox').classList.add('hidden')"
+        class="ml-4 text-white font-bold"
+      >
         &times;
       </button>
     </div>
-<script>
-  const termsModal = document.getElementById("termsModal");
-  const openTermsLink = document.getElementById("openTermsLink");
-  const closeModalButton = document.getElementById("closeModalButton");
-  const signupFormSection = document.getElementById("signupFormSection");
-  const otpSection = document.getElementById("otpSection");
-  const firstnameInput = document.getElementById("firstnameInput");
-  const lastnameInput = document.getElementById("lastnameInput");
-  const emailInput = document.getElementById("emailInput");
-  const phoneInput = document.getElementById("phoneInput");
-  const passwordInput = document.getElementById("passwordInput");
-  const confirmPasswordInput = document.getElementById("confirmPasswordInput");
-  const occupationSelect = document.getElementById("occupationSelect");
-  const educationLevelSelect = document.getElementById("educationLevelSelect");
-  const schoolNameInput = document.getElementById("schoolNameInput");
-  const schoolCountrySelect = document.getElementById("schoolCountrySelect");
-  const gradeSelect = document.getElementById("gradeSelect");
-  const teacherGradeSelect = document.getElementById("teacherGradeSelect");
-  const teacherSubjectInput = document.getElementById("teacherSubjectInput");
-  const schoolNameField = document.getElementById("schoolNameField");
-  const schoolCountryField = document.getElementById("schoolCountryField");
-  const educationLevelField = document.getElementById("educationLevelField");
-  const gradeField = document.getElementById("gradeField");
-  const teacherGradeField = document.getElementById("teacherGradeField");
-  const teacherSubjectField = document.getElementById("teacherSubjectField");
-  const programField = document.getElementById("programField");
-  const programInput = document.getElementById("programInput");
-  const requestOtpButton = document.getElementById("requestOtpButton");
-  const verifyOtpButton = document.getElementById("verifyOtpButton");
-  const otpInput = document.getElementById("otpInput");
-  const messageAlertBox = document.getElementById("messageAlertBox");
-  const messageAlertText = document.getElementById("messageAlertText");
+    <script>
+      const termsModal = document.getElementById("termsModal");
+      const openTermsLink = document.getElementById("openTermsLink");
+      const closeModalButton = document.getElementById("closeModalButton");
+      const signupFormSection = document.getElementById("signupFormSection");
+      const otpSection = document.getElementById("otpSection");
 
-  const API_REQUEST_OTP = "https://api.smartstudentact.com/users/signup-otp";
-  const API_VERIFY_OTP = "https://api.smartstudentact.com/users/verify-otp";
+      const firstnameInput = document.getElementById("firstnameInput");
+      const lastnameInput = document.getElementById("lastnameInput");
+      const emailInput = document.getElementById("emailInput");
+      const phoneInput = document.getElementById("phoneInput");
+      const passwordInput = document.getElementById("passwordInput");
+      const confirmPasswordInput = document.getElementById(
+        "confirmPasswordInput"
+      );
+      const occupationSelect = document.getElementById("occupationSelect");
 
-  let userData = {};
-  let isSubmitting = false;
+      const educationLevelSelect = document.getElementById(
+        "educationLevelSelect"
+      );
+      const schoolNameInput = document.getElementById("schoolNameInput");
+      const schoolCountrySelect = document.getElementById(
+        "schoolCountrySelect"
+      );
+      const gradeSelect = document.getElementById("gradeSelect");
+      const teacherGradeSelect = document.getElementById("teacherGradeSelect");
+      const teacherSubjectInput = document.getElementById(
+        "teacherSubjectInput"
+      );
+      const programInput = document.getElementById("programInput");
+      const countrySelect = document.getElementById("countrySelect"); // ✅ new for worker
 
-  function showMessage(message, type = "error") {
-    messageAlertText.textContent = message;
-    messageAlertBox.classList.remove("hidden", "bg-red-500", "bg-green-500");
-    messageAlertBox.classList.add(type === "error" ? "bg-red-500" : "bg-green-500");
-    messageAlertBox.classList.remove("hidden");
-  }
+      const schoolNameField = document.getElementById("schoolNameField");
+      const schoolCountryField = document.getElementById("schoolCountryField");
+      const educationLevelField = document.getElementById(
+        "educationLevelField"
+      );
+      const gradeField = document.getElementById("gradeField");
+      const teacherGradeField = document.getElementById("teacherGradeField");
+      const teacherSubjectField = document.getElementById(
+        "teacherSubjectField"
+      );
+      const programField = document.getElementById("programField");
+      const countryField = document.getElementById("countryField"); // ✅ new field container
 
-  function setLoadingState(button, isLoading, originalText) {
-    isSubmitting = isLoading;
-    if (isLoading) {
-      button.disabled = true;
-      button.innerHTML = '<span class="spinner"></span>';
-    } else {
-      button.disabled = false;
-      button.innerHTML = originalText;
-    }
-  }
+      const requestOtpButton = document.getElementById("requestOtpButton");
+      const verifyOtpButton = document.getElementById("verifyOtpButton");
+      const otpInput = document.getElementById("otpInput");
+      const messageAlertBox = document.getElementById("messageAlertBox");
+      const messageAlertText = document.getElementById("messageAlertText");
 
-  function validateForm() {
-    const errors = {};
-    const form = {
-      firstname: firstnameInput.value.trim(),
-      lastname: lastnameInput.value.trim(),
-      email: emailInput.value.trim(),
-      phone: phoneInput.value.trim(),
-      password: passwordInput.value,
-      confirmPassword: confirmPasswordInput.value,
-      occupation: occupationSelect.value,
-      educationLevel: educationLevelSelect.value,
-      schoolName: schoolNameInput.value.trim(),
-      schoolCountry: schoolCountrySelect.value,
-      grade: gradeSelect.value,
-      teacherGrade: teacherGradeSelect.value,
-      teacherSubject: teacherSubjectInput.value.trim(),
-      program: programInput ? programInput.value.trim() : "",
-    };
+      const API_REQUEST_OTP = "/api/users/signup-otp";
+      const API_VERIFY_OTP = "/api/users/verify-otp";
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      let userData = {};
+      let isSubmitting = false;
 
-    if (!form.firstname) errors.firstname = "First name is required.";
-    if (!form.lastname) errors.lastname = "Last name is required.";
-    if (!emailRegex.test(form.email)) errors.email = "Valid email required.";
-    if (!phoneRegex.test(form.phone)) errors.phone = "Valid phone required.";
-    if (!passRegex.test(form.password)) errors.password = "Password must be strong.";
-    if (form.password !== form.confirmPassword) errors.confirmPassword = "Passwords do not match.";
-    if (!form.occupation) errors.occupation = "Occupation is required.";
-
-    if (!form.schoolName) errors.schoolName = "School name required.";
-    if (!form.schoolCountry) errors.schoolCountry = "School country required.";
-
-    if (form.occupation === "student") {
-      if (!form.educationLevel) errors.educationLevel = "Education level required.";
-      if (!form.grade) errors.grade = "Grade is required.";
-
-      const gradeVal = Number(form.grade);
-      if ((form.educationLevel === "high" && gradeVal >= 10 && gradeVal <= 12) || (form.educationLevel === "university" && gradeVal >= 100 && gradeVal <= 400)) {
-        if (!form.program) errors.program = "Program required.";
+      function showMessage(message, type = "error") {
+        messageAlertText.textContent = message;
+        messageAlertBox.classList.remove(
+          "hidden",
+          "bg-red-500",
+          "bg-green-500"
+        );
+        messageAlertBox.classList.add(
+          type === "error" ? "bg-red-500" : "bg-green-500"
+        );
       }
-    } else if (form.occupation === "teacher") {
-      if (!form.teacherGrade) errors.teacherGrade = "Grade/Level required.";
-      if (!form.teacherSubject) errors.teacherSubject = "Subject required.";
-    }
 
-    return {
-      errors,
-      data: form
-    };
-  }
+      function setLoadingState(button, isLoading, originalText) {
+        isSubmitting = isLoading;
+        button.disabled = isLoading;
+        button.innerHTML = isLoading
+          ? '<span class="spinner"></span>'
+          : originalText;
+      }
 
-  function updateUI() {
-    const {
-      errors
-    } = validateForm();
-    const inputs = {
-      firstname: firstnameInput,
-      lastname: lastnameInput,
-      email: emailInput,
-      phone: phoneInput,
-      password: passwordInput,
-      confirmPassword: confirmPasswordInput,
-      occupation: occupationSelect,
-      educationLevel: educationLevelSelect,
-      schoolName: schoolNameInput,
-      schoolCountry: schoolCountrySelect,
-      grade: gradeSelect,
-      teacherGrade: teacherGradeSelect,
-      teacherSubject: teacherSubjectInput,
-      program: programInput,
-    };
+      function validateForm() {
+        const errors = {};
+        const form = {
+          firstname: firstnameInput.value.trim(),
+          lastname: lastnameInput.value.trim(),
+          email: emailInput.value.trim(),
+          phone: phoneInput.value.trim(),
+          password: passwordInput.value,
+          confirmPassword: confirmPasswordInput.value,
+          occupation: occupationSelect.value,
+          educationLevel: educationLevelSelect.value,
+          schoolName: schoolNameInput.value.trim(),
+          schoolCountry: schoolCountrySelect.value,
+          country: countrySelect ? countrySelect.value : "", // ✅ worker
+          grade: gradeSelect.value,
+          teacherGrade: teacherGradeSelect.value,
+          teacherSubject: teacherSubjectInput.value.trim(),
+          program: programInput ? programInput.value.trim() : "",
+        };
 
-    Object.keys(inputs).forEach((key) => {
-      const input = inputs[key];
-      const errorEl = document.getElementById(`${key}Error`);
-      if (errorEl) {
-        if (errors[key]) {
-          input.classList.add("error");
-          errorEl.textContent = errors[key];
-          errorEl.classList.remove("hidden");
-        } else {
-          input.classList.remove("error");
-          errorEl.classList.add("hidden");
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        const passRegex =
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+        if (!form.firstname) errors.firstname = "First name is required.";
+        if (!form.lastname) errors.lastname = "Last name is required.";
+        if (!emailRegex.test(form.email))
+          errors.email = "Valid email required.";
+        if (!phoneRegex.test(form.phone))
+          errors.phone = "Valid phone required.";
+        if (!passRegex.test(form.password))
+          errors.password = "Password must be strong.";
+        if (form.password !== form.confirmPassword)
+          errors.confirmPassword = "Passwords do not match.";
+        if (!form.occupation) errors.occupation = "Occupation is required.";
+
+        // 🧠 STUDENT
+        if (form.occupation === "student") {
+          if (!form.schoolName) errors.schoolName = "School name required.";
+          if (!form.schoolCountry)
+            errors.schoolCountry = "School country required.";
+          if (!form.educationLevel)
+            errors.educationLevel = "Education level required.";
+          if (!form.grade) errors.grade = "Grade required.";
+
+          const gradeVal = Number(form.grade);
+          if (
+            (form.educationLevel === "high" &&
+              gradeVal >= 10 &&
+              gradeVal <= 12) ||
+            (form.educationLevel === "university" &&
+              gradeVal >= 100 &&
+              gradeVal <= 400)
+          ) {
+            if (!form.program) errors.program = "Program required.";
+          }
         }
+
+        // 🧠 TEACHER
+        else if (form.occupation === "teacher") {
+          if (!form.schoolName) errors.schoolName = "School name required.";
+          if (!form.schoolCountry)
+            errors.schoolCountry = "School country required.";
+          if (!form.teacherGrade) errors.teacherGrade = "Grade/Level required.";
+          if (!form.teacherSubject) errors.teacherSubject = "Subject required.";
+        }
+
+        // 🧠 WORKER
+        else if (form.occupation === "worker") {
+          if (!form.country) errors.country = "Country is required.";
+          // Mirror logic: schoolCountry == country
+          form.schoolCountry = form.country;
+        }
+
+        return { errors, data: form };
       }
-    });
 
-    requestOtpButton.disabled = Object.keys(errors).length > 0;
-  }
+      function updateUI() {
+        const { errors } = validateForm();
+        const inputs = {
+          firstname: firstnameInput,
+          lastname: lastnameInput,
+          email: emailInput,
+          phone: phoneInput,
+          password: passwordInput,
+          confirmPassword: confirmPasswordInput,
+          schoolName: schoolNameInput,
+          schoolCountry: schoolCountrySelect,
+          educationLevel: educationLevelSelect,
+          grade: gradeSelect,
+          teacherGrade: teacherGradeSelect,
+          teacherSubject: teacherSubjectInput,
+          program: programInput,
+          country: countrySelect,
+        };
 
-  function populateGradeOptions() {
-    const level = educationLevelSelect.value;
-    gradeSelect.innerHTML = ""; // Clear existing options
+        Object.keys(inputs).forEach((key) => {
+          const input = inputs[key];
+          const errorEl = document.getElementById(`${key}Error`);
+          if (errorEl) {
+            if (errors[key]) {
+              input.classList.add("error");
+              errorEl.textContent = errors[key];
+              errorEl.classList.remove("hidden");
+            } else {
+              input.classList.remove("error");
+              errorEl.classList.add("hidden");
+            }
+          }
+        });
 
-    let options = [];
-    if (level === "junior") {
-      options = [{
-        value: "",
-        text: "Select Grade"
-      }, {
-        value: "5",
-        text: "Grade 5"
-      }, {
-        value: "6",
-        text: "Grade 6"
-      }, {
-        value: "7",
-        text: "Grade 7"
-      }, {
-        value: "8",
-        text: "Grade 8"
-      }, {
-        value: "9",
-        text: "Grade 9"
-      }, ];
-    } else if (level === "high") {
-      options = [{
-        value: "",
-        text: "Select Grade"
-      }, {
-        value: "10",
-        text: "Grade 10"
-      }, {
-        value: "11",
-        text: "Grade 11"
-      }, {
-        value: "12",
-        text: "Grade 12"
-      }, ];
-    } else if (level === "university") {
-      options = [{
-        value: "",
-        text: "Select Level"
-      }, {
-        value: "100",
-        text: "Level 100"
-      }, {
-        value: "200",
-        text: "Level 200"
-      }, {
-        value: "300",
-        text: "Level 300"
-      }, {
-        value: "400",
-        text: "Level 400"
-      }, ];
-    }
+        requestOtpButton.disabled = Object.keys(errors).length > 0;
+      }
 
-    options.forEach((option) => {
-      const opt = document.createElement("option");
-      opt.value = option.value;
-      opt.textContent = option.text;
-      gradeSelect.appendChild(opt);
-    });
+      function populateGradeOptions() {
+        const level = educationLevelSelect.value;
+        gradeSelect.innerHTML = "";
+        let options = [];
 
-    if (level) {
-      gradeField.classList.remove("hidden");
-    } else {
-      gradeField.classList.add("hidden");
-    }
-  }
+        if (level === "junior") {
+          options = ["5", "6", "7", "8", "9"];
+        } else if (level === "high") {
+          options = ["10", "11", "12"];
+        } else if (level === "university") {
+          options = ["100", "200", "300", "400"];
+        }
 
-  educationLevelSelect.addEventListener("change", () => {
-    populateGradeOptions();
-    if (educationLevelSelect.value === "high" || educationLevelSelect.value === "university") {
-      programField.classList.remove("hidden");
-    } else {
-      programField.classList.add("hidden");
-      programInput.value = "";
-    }
-    updateUI();
-  });
+        const defaultOpt = document.createElement("option");
+        defaultOpt.value = "";
+        defaultOpt.textContent = "Select Grade/Level";
+        gradeSelect.appendChild(defaultOpt);
 
-  occupationSelect.addEventListener("change", () => {
-    schoolNameField.classList.add("hidden");
-    schoolCountryField.classList.add("hidden");
-    educationLevelField.classList.add("hidden");
-    gradeField.classList.add("hidden");
-    teacherGradeField.classList.add("hidden");
-    teacherSubjectField.classList.add("hidden");
-    if (programField) programField.classList.add("hidden");
+        options.forEach((v) => {
+          const opt = document.createElement("option");
+          opt.value = v;
+          opt.textContent =
+            level === "university" ? `Level ${v}` : `Grade ${v}`;
+          gradeSelect.appendChild(opt);
+        });
 
-    if (occupationSelect.value === "student") {
-      schoolNameField.classList.remove("hidden");
-      schoolCountryField.classList.remove("hidden");
-      educationLevelField.classList.remove("hidden");
-      populateGradeOptions();
-    } else if (occupationSelect.value === "teacher") {
-      schoolNameField.classList.remove("hidden");
-      schoolCountryField.classList.remove("hidden");
-      teacherGradeField.classList.remove("hidden");
-      teacherSubjectField.classList.remove("hidden");
-    }
-    updateUI();
-  });
+        gradeField.classList.toggle("hidden", !level);
+      }
 
-  [
-    firstnameInput,
-    lastnameInput,
-    emailInput,
-    phoneInput,
-    passwordInput,
-    confirmPasswordInput,
-    schoolNameInput,
-    schoolCountrySelect,
-    educationLevelSelect,
-    gradeSelect,
-    teacherGradeSelect,
-    teacherSubjectInput,
-    programInput,
-  ].forEach((input) => {
-    input.addEventListener("input", updateUI);
-  });
+      occupationSelect.addEventListener("change", () => {
+        // Hide all
+        schoolNameField.classList.add("hidden");
+        schoolCountryField.classList.add("hidden");
+        educationLevelField.classList.add("hidden");
+        gradeField.classList.add("hidden");
+        teacherGradeField.classList.add("hidden");
+        teacherSubjectField.classList.add("hidden");
+        programField.classList.add("hidden");
+        if (countryField) countryField.classList.add("hidden");
 
- 
-requestOtpButton.addEventListener("click", async () => {
-  if (isSubmitting) return;
+        const occ = occupationSelect.value;
 
-  const { errors, data } = validateForm();
-  if (Object.keys(errors).length > 0) {
-    updateUI();
-    return;
-  }
+        if (occ === "student") {
+          schoolNameField.classList.remove("hidden");
+          schoolCountryField.classList.remove("hidden");
+          educationLevelField.classList.remove("hidden");
+          populateGradeOptions();
+        } else if (occ === "teacher") {
+          schoolNameField.classList.remove("hidden");
+          schoolCountryField.classList.remove("hidden");
+          teacherGradeField.classList.remove("hidden");
+          teacherSubjectField.classList.remove("hidden");
+        } else if (occ === "worker") {
+          // ✅ Show only country
+          countryField.classList.remove("hidden");
+        }
 
-  setLoadingState(requestOtpButton, true, "Request OTP");
+        updateUI();
+      });
 
-  try {
-    const response = await fetch(API_REQUEST_OTP, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+      [
+        firstnameInput,
+        lastnameInput,
+        emailInput,
+        phoneInput,
+        passwordInput,
+        confirmPasswordInput,
+        schoolNameInput,
+        schoolCountrySelect,
+        educationLevelSelect,
+        gradeSelect,
+        teacherGradeSelect,
+        teacherSubjectInput,
+        programInput,
+        countrySelect,
+      ].forEach((input) => input && input.addEventListener("input", updateUI));
 
-    const result = await response.json();
+      // OTP logic unchanged
+      requestOtpButton.addEventListener("click", async () => {
+        if (isSubmitting) return;
 
-    if (response.ok) {
-      
-      userData = { ...data, otpToken: result.otpToken };
+        const { errors, data } = validateForm();
+        if (Object.keys(errors).length > 0) {
+          updateUI();
+          return;
+        }
 
-      showMessage("OTP sent successfully! Check your email.", "success");
-      signupFormSection.classList.add("hidden");
-      otpSection.classList.remove("hidden");
-    } else {
-      showMessage(result.message || "Failed to request OTP. Please try again.");
-    }
-  } catch (error) {
-    showMessage("Network error. Please try again.");
-  } finally {
-    setLoadingState(requestOtpButton, false, "Request OTP");
-  }
-});
+        setLoadingState(requestOtpButton, true, "Request OTP");
+        try {
+          const response = await fetch(API_REQUEST_OTP, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          const result = await response.json();
 
+          if (response.ok) {
+            userData = { ...data, otpToken: result.otpToken };
+            showMessage("OTP sent successfully! Check your email.", "success");
+            signupFormSection.classList.add("hidden");
+            otpSection.classList.remove("hidden");
+          } else {
+            showMessage(result.message || "Failed to request OTP.");
+          }
+        } catch {
+          showMessage("Network error. Please try again.");
+        } finally {
+          setLoadingState(requestOtpButton, false, "Request OTP");
+        }
+      });
 
-verifyOtpButton.addEventListener("click", async () => {
-  if (isSubmitting) return;
+      verifyOtpButton.addEventListener("click", async () => {
+        if (isSubmitting) return;
 
-  const code = otpInput.value.trim();
-  if (!code) {
-    document.getElementById("otpError").textContent = "OTP is required.";
-    document.getElementById("otpError").classList.remove("hidden");
-    return;
-  }
+        const code = otpInput.value.trim();
+        if (!code) {
+          document.getElementById("otpError").textContent = "OTP is required.";
+          document.getElementById("otpError").classList.remove("hidden");
+          return;
+        }
 
-  setLoadingState(verifyOtpButton, true, "Verify OTP");
+        setLoadingState(verifyOtpButton, true, "Verify OTP");
+        try {
+          const response = await fetch(API_VERIFY_OTP, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              code,
+              email: userData.email,
+              password: userData.password,
+              otpToken: userData.otpToken,
+            }),
+          });
+          const result = await response.json();
 
-  try {
-    const response = await fetch(API_VERIFY_OTP, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", 
-      body: JSON.stringify({
-        code,
-        email: userData.email,
-        password: userData.password,
-        otpToken: userData.otpToken,
-      }),
-    });
+          if (response.ok) {
+            showMessage(result.message, "success");
+            window.location.href = result.redirectUrl;
+          } else {
+            showMessage(result.message || "Invalid OTP.");
+          }
+        } catch {
+          showMessage("Network error. Please try again.");
+        } finally {
+          setLoadingState(verifyOtpButton, false, "Verify OTP");
+        }
+      });
 
-    const result = await response.json();
+      openTermsLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        termsModal.style.display = "flex";
+      });
+      closeModalButton.addEventListener("click", () => {
+        termsModal.style.display = "none";
+      });
 
-    if (response.ok) {
-      showMessage(result.message, "success");
-      window.location.href = result.redirectUrl; 
-    } else {
-      showMessage(result.message || "Invalid OTP. Please try again.");
-    }
-  } catch (err) {
-    showMessage("Network error. Please try again.");
-  } finally {
-    setLoadingState(verifyOtpButton, false, "Verify OTP");
-  }
-});
-
-
-
-
-  openTermsLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    termsModal.style.display = "flex";
-  });
-
-  closeModalButton.addEventListener("click", () => {
-    termsModal.style.display = "none";
-  });
-
-  
-  updateUI();
-</script>
+      updateUI();
+    </script>
   </body>
 </html>

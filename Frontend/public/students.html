@@ -229,6 +229,7 @@
         <ul class="space-y-4">
           <li><a href="./students.html" class="text-blue-600 font-semibold hover:underline">Dashboard</a></li>
           <li><a href="./financial.html" class="text-blue-600 font-semibold hover:underline">Financial</a></li>
+          <li><a href="./special-link.html" class="text-blue-600 font-semibold hover:underline">Special Links</a></li>
           <li><a href="./settings.html" class="hover:underline">Settings</a></li>
           <li><a href="./rewards.html" class="hover:underline">Rewards</a></li>
            <li><a href="./contact.html" class="block px-4 py-2 text-sm hover:bg-gray-100">📩 Contact</a></li>
@@ -244,7 +245,7 @@
   
 
 <script>
-  const API_BASE_URL = "https://api.smartstudentact.com/api";
+  const API_BASE_URL = "https://smart-student-57b2svy6h-debucks-projects.vercel.app/api";
 
   async function subscribeUserToPush() {
     if (!("serviceWorker" in navigator)) return;
@@ -619,7 +620,7 @@ fetchStudentMessages();
       }
 
       try {
-        await fetchWithAuth("/rewards/goals", {
+        await fetchWithAuth("/goals", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -642,7 +643,7 @@ fetchStudentMessages();
 
     async function fetchGoal() {
       try {
-        const goals = await fetchWithAuth("/rewards/goals");
+        const goals = await fetchWithAuth("/goals");
         DOM.savedGoalsList.innerHTML = goals.length ?
           goals.map(
             (g) =>
@@ -781,7 +782,7 @@ fetchStudentMessages();
     if (DOM.saveGoalBtn) DOM.saveGoalBtn.addEventListener("click", handleSaveGoal);
     if (DOM.generateInsightsBtn) DOM.generateInsightsBtn.addEventListener("click", async () => {
       try {
-        const advice = await fetchWithAuth("/rewards/advice");
+        const advice = await fetchWithAuth("/advice");
         DOM.insightsPlaceholder.classList.add("hidden");
         DOM.insightsContent.classList.remove("hidden");
         DOM.insightsContent.innerText = advice.message || "No advice received.";
