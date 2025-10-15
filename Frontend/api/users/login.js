@@ -1,12 +1,52 @@
 // /api/public/login.js
 import bcrypt from "bcryptjs";
 import { connectDb } from "@/utils/connectDb";
-import { generateAccessToken, generateRefreshToken, setAuthCookies } from "@/api/_middlewares/auth";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  setAuthCookies,
+} from "@/api/_middlewares/auth";
 import { getRedirectUrl } from "@/utils/helpers";
 import User from "@/models/User";
 import logger from "@/utils/logger";
 
+// ✅ CORS handler
+function runCors(req, res) {
+  return new Promise((resolve) => {
+    const allowedOrigins = [
+      "https://www.smartstudentact.com",
+      "https://smart-student-57b2svy6h-debucks-projects.vercel.app",
+      "http://localhost:3000",
+    ];
+
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+    }
+
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+
+    // ✅ Handle preflight
+    if (req.method === "OPTIONS") {
+      res.status(200).end();
+      return resolve();
+    }
+
+    resolve();
+  });
+}
+
 export default async function handler(req, res) {
+  await runCors(req, res); // ✅ Apply CORS early
+
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
@@ -16,29 +56,37 @@ export default async function handler(req, res) {
     const { email, password } = req.body;
 
     if (!email || !password)
-      return res.status(400).json({ message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
 
     const user = await User.findOne({ email }).select("+password +refreshToken");
-
     if (!user)
       return res.status(401).json({ message: "Invalid credentials" });
 
     if (!user.password)
-      return res.status(400).json({ message: "User must set a password first" });
+      return res
+        .status(400)
+        .json({ message: "User must set a password first" });
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword)
       return res.status(401).json({ message: "Invalid credentials" });
 
-    // Check if account is suspended or expired trial
+    // ✅ Check trial or suspension
     const now = new Date();
-    if (user.trial_end_at && now > user.trial_end_at && user.subscription_status === "inactive") {
+    if (
+      user.trial_end_at &&
+      now > user.trial_end_at &&
+      user.subscription_status === "inactive"
+    ) {
       return res.status(403).json({
         message: "Your trial period has expired. Please subscribe to continue.",
-        redirectUrl: "/payment"
+        redirectUrl: "/payment",
       });
     }
 
+    // ✅ Generate tokens and set cookies
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
     user.refreshToken = refreshToken;
