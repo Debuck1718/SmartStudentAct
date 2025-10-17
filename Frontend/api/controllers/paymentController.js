@@ -1,6 +1,6 @@
-const { getUserPrice } = require("../services/pricingService");
-const { initPaystackPayment } = require("../services/paystackService");
-const { initFlutterwavePayment } = require("../services/flutterwaveService");
+const { getUserPrice } = require("../../../Backend/api/services/pricingService");
+const { initPaystackPayment } = require("../../../Backend/api/services/paystackService");
+const { initFlutterwavePayment } = require("../../../Backend/api/services/flutterwaveService");
 const { handleWebhook } = require("./webhookController");
 
 async function initializePayment(req, res) {

@@ -9,16 +9,16 @@ import { hasRole } from "./middlewares/roles.js";
 
 // ---- Route group imports ----
 import userRoutes from "./users/index.js";
-import teacherRoutes from "./teacher/index.js";
-import studentRoutes from "./student/index.js";
-import workerRoutes from "./worker/index.js";
-import profileRoutes from "./profile/index.js";
-import settingsRoutes from "./settings/index.js";
-import specialLinksRoutes from "./special-links/index.js";
-import adminRoutes from "./admin/index.js";
-import overseerRoutes from "./overseer/index.js";
-import globalOverseerRoutes from "./global-overseer/index.js";
-import servicesRoutes from "./services/index.js";
+import teacherRoutes from "../../Backend/api/teacher/index.js";
+import studentRoutes from "../../Backend/api/student/index.js";
+import workerRoutes from "../../Backend/api/worker/index.js";
+import profileRoutes from "../../Backend/api/profile/index.js";
+import settingsRoutes from "../../Backend/api/settings/index.js";
+import specialLinksRoutes from "../../Backend/api/special-links/index.js";
+import adminRoutes from "../../Backend/api/admin/index.js";
+import overseerRoutes from "../../Backend/api/overseer/index.js";
+import globalOverseerRoutes from "../../Backend/api/global-overseer/index.js";
+import servicesRoutes from "../../Backend/api/services/index.js";
 
 // Single-file endpoints (still routers)
 import leaderboard from "./leaderboard.js";
