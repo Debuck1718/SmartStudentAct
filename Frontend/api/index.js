@@ -1,14 +1,14 @@
 // /api/index.js
 import express from "express";
 import cors from "cors";
-import { connectDb } from "./lib/db.js";
+import { connectDb } from "../../Backend/api/lib/db.js";
 
 // Middleware imports (for use in subroutes if needed)
-import { authenticateJWT } from "./middlewares/auth.js";
-import { hasRole } from "./middlewares/roles.js";
+import { authenticateJWT } from "../../Backend/api/middlewares/auth.js";
+import { hasRole } from "../../Backend/api/middlewares/roles.js";
 
 // ---- Route group imports ----
-import userRoutes from "./users/index.js";
+import userRoutes from "../../Backend/api/users/index.js";
 import teacherRoutes from "../../Backend/api/teacher/index.js";
 import studentRoutes from "../../Backend/api/student/index.js";
 import workerRoutes from "../../Backend/api/worker/index.js";
@@ -21,10 +21,10 @@ import globalOverseerRoutes from "../../Backend/api/global-overseer/index.js";
 import servicesRoutes from "../../Backend/api/services/index.js";
 
 // Single-file endpoints (still routers)
-import leaderboard from "./leaderboard.js";
-import payment from "./payment.js";
-import school from "./school.js";
-import webhook from "./webhook.js";
+import leaderboard from "../../Backend/api/leaderboard.js";
+import payment from "../../Backend/api/payment.js";
+import school from "../../Backend/api/school.js";
+import webhook from "../../Backend/api/webhook.js";
 import cronRoutes from "./cron/index.js";
 
 const app = express();

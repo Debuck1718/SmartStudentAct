@@ -7,7 +7,7 @@ import { NextResponse } from "next/server"; // only needed if using Next.js API 
 import logger from "../../../Frontend/utils/logger.js";
 import fetch from "node-fetch"; 
 import { splitEssay, mergeFeedback } from "../../utils/essayHelpers.js"; // optional helper file
-import { User } from "../../../Frontend/api/models/index.js";
+import { User } from "../models/index.js";
 
 const API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";

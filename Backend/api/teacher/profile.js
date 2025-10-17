@@ -1,6 +1,6 @@
 // /api/teacher/profile.js
 import { connectDb } from "../../../Frontend/utils/connectDb";
-import { authenticateJWT } from "../../../Frontend/api/middlewares/auth";
+import { authenticateJWT } from "../middlewares/auth";
 import User from "../../models/User";
 
 export default async function handler(req, res) {

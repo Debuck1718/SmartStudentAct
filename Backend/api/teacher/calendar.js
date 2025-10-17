@@ -1,9 +1,9 @@
 // /api/teacher/calendar.js
 import { connectDb } from "../../../Frontend/utils/connectDb";
 import { withMiddleware } from "../../../Frontend/utils/withMiddleware";
-import { authenticateJWT, hasRole } from "../../../Frontend/api/middlewares/auth";
-import User from "../../../Frontend/api/models/User";
-import SchoolCalendar from "../../../Frontend/api/models/SchoolCalendar";
+import { authenticateJWT, hasRole } from "../middlewares/auth";
+import User from "../models/User";
+import SchoolCalendar from "../models/SchoolCalendar";
 
 async function handler(req, res) {
   await connectDb();

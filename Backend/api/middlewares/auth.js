@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import logger from "../../utils/logger.js";
+import logger from "../../../Frontend/utils/logger.js";
 import models from "../models/index.js";
 
 const { User } = models;

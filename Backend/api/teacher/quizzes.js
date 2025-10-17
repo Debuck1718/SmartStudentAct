@@ -1,9 +1,9 @@
 // /api/teacher/quizzes/index.js
 import { connectDb } from "../../../Frontend/utils/connectDb";
 import { withMiddleware } from "../../../Frontend/utils/withMiddleware";
-import { authenticateJWT, hasRole } from "../../../Frontend/api/middlewares/auth";
-import Quiz from "../../../Frontend/api/models/Quiz";
-import SpecialLink from "../../../Frontend/api/models/SpecialLink";
+import { authenticateJWT, hasRole } from "../middlewares/auth";
+import Quiz from "../models/Quiz";
+import SpecialLink from "../models/SpecialLink";
 
 async function handler(req, res) {
   await connectDb();

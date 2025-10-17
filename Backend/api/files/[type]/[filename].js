@@ -1,5 +1,5 @@
 // /api/files/[type]/[filename].js
-import { connectDb } from "../../../utils/connectDb";
+import { connectDb } from "../../../../Frontend/utils/connectDb";
 import { authenticateJWT } from "../../../middlewares/auth";
 import Assignment from "../../../models/Assignment";
 import Submission from "../../../models/Submission";

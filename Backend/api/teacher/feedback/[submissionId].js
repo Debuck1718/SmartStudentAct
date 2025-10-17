@@ -1,9 +1,9 @@
 // /api/teacher/feedback/[submissionId].js
 import { connectDb } from "../../../../Frontend/utils/connectDb";
 import { withMiddleware } from "../../../../Frontend/utils/withMiddleware";
-import { authenticateJWT, hasRole } from "../../../../Frontend/api/middlewares/auth";
-import Submission from "../../../../Frontend/api/models/Submission";
-import Assignment from "../../../../Frontend/api/models/Assignment";
+import { authenticateJWT, hasRole } from "../../middlewares/auth";
+import Submission from "../../models/Submission";
+import Assignment from "../../models/Assignment";
 
 async function handler(req, res) {
   await connectDb();

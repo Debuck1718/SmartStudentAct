@@ -1,7 +1,7 @@
-import { connectDB } from "../../../Frontend/api/lib/db.js";
-import models from "../../../Frontend/api/models/index.js";
-import { authenticateJWT } from "../../../Frontend/api/middlewares/auth.js";
-import { hasRole } from "../../../Frontend/api/middlewares/roles.js";
+import { connectDB } from "../lib/db.js";
+import models from "../models/index.js";
+import { authenticateJWT } from "../middlewares/auth.js";
+import { hasRole } from "../middlewares/roles.js";
 import { localUpload } from "../middlewares/upload.js";
 import eventBus from "../../../Frontend/utils/eventBus.js";
 import logger from "../../../Frontend/utils/logger.js";
