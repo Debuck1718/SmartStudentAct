@@ -8,7 +8,7 @@ import { authenticateJWT } from "../../Backend/api/middlewares/auth.js";
 import { hasRole } from "../../Backend/api/middlewares/roles.js";
 
 // ---- Route group imports ----
-import userRoutes from "../../Backend/api/users/index.js";
+import userRoutes from "./users/index.js";
 import teacherRoutes from "../../Backend/api/teacher/index.js";
 import studentRoutes from "../../Backend/api/student/index.js";
 import workerRoutes from "../../Backend/api/worker/index.js";
