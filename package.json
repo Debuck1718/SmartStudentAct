@@ -2,6 +2,7 @@
   "dependencies": {
     "@vercel/node": "^5.4.0",
     "express": "^5.1.0",
+    "type":"module",
     "node-fetch": "^3.3.2"
   }
 }
