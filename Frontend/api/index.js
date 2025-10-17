@@ -57,7 +57,7 @@ app.use("/school", school);
 app.use("/webhook", webhook);
 app.use("/cron", cronRoutes);
 
-// --- Default health check route ---
+
 app.get("/", (req, res) => {
   res.status(200).json({
     status: "OK",
