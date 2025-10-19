@@ -1,10 +1,11 @@
-const http = require("http");
-const mongoose = require("mongoose");
-const Agenda = require("agenda");
-const fetch = require("node-fetch");
-const { app, eventBus } = require("./app");
+import http from "http";
+import mongoose from "mongoose";
+import Agenda from "agenda";
+import fetch from "node-fetch";
+import { app, eventBus } from "./app.js"; // ensure app.js exports `app`
 
 const PORT = process.env.PORT || 4000;
+const HOST = "0.0.0.0"; // ✅ Required by Render
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
@@ -45,22 +46,25 @@ const startAgenda = async () => {
   }
 };
 
-// ---------- HTTP Server ----------
-const server = http.createServer(app);
-
+// ---------- Start the Server ----------
 const startApp = async () => {
   try {
     await connectMongo();
     await startAgenda();
 
-    // ✅ Dual-stack binding (IPv4 + IPv6)
-    server.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} [${NODE_ENV}]`);
+    const server = http.createServer(app);
 
+    // ✅ Bind explicitly to 0.0.0.0
+    server.listen(PORT, HOST, () => {
+      console.log(`🚀 Server running at http://${HOST}:${PORT} [${NODE_ENV}]`);
+
+      // Optional: safe self-ping for Render uptime
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
+        const url = process.env.RENDER_EXTERNAL_URL;
+        console.log(`🌍 Self-pinging enabled for ${url}`);
         setInterval(async () => {
           try {
-            await fetch(process.env.RENDER_EXTERNAL_URL);
+            await fetch(url);
             console.log("🔄 Self-ping successful:", new Date().toISOString());
           } catch (err) {
             console.error("⚠️ Self-ping failed:", err.message);
@@ -68,61 +72,45 @@ const startApp = async () => {
         }, 5 * 60 * 1000);
       }
     });
+
+    // ---------- Graceful Shutdown ----------
+    const shutdown = async (signal) => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
+      console.log(`\n🚦 Received ${signal}, starting graceful shutdown...`);
+
+      try {
+        await new Promise((resolve) => server.close(resolve));
+        console.log("✅ Server closed. No new connections accepted.");
+
+        if (agenda) {
+          await agenda.stop();
+          console.log("✅ Agenda job scheduler stopped.");
+        }
+
+        if (mongoose.connection.readyState === 1) {
+          await mongoose.disconnect();
+          console.log("✅ MongoDB disconnected.");
+        }
+
+        console.log("✅ Graceful shutdown complete. Exiting.");
+        process.exit(0);
+      } catch (err) {
+        console.error("❌ Error during shutdown:", err);
+        process.exit(1);
+      }
+    };
+
+    process.on("SIGTERM", shutdown);
+    process.on("SIGINT", shutdown);
   } catch (err) {
     console.error("❌ Fatal startup error:", err);
     process.exit(1);
   }
 };
 
-// ---------- Root + Healthcheck ----------
-app.get("/", (req, res) => {
-  res.status(200).send("SmartStudentAct API is running 🚀");
-});
-
-app.get(["/health", "/healthz"], (req, res) => {
-  const mongoStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
-  res.status(200).json({
-    status: "ok",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    environment: NODE_ENV,
-    mongo: mongoStatus,
-    agenda: global.agendaStarted ? "running" : "stopped",
-  });
-});
-
-// ---------- Graceful Shutdown ----------
-const shutdown = async (signal) => {
-  if (isShuttingDown) return;
-  isShuttingDown = true;
-  console.log(`\n🚦 Received ${signal}, starting graceful shutdown...`);
-
-  try {
-    await new Promise((resolve) => server.close(resolve));
-    console.log("✅ Server closed. No new connections accepted.");
-
-    if (agenda) {
-      await agenda.stop();
-      console.log("✅ Agenda job scheduler stopped.");
-    }
-
-    if (mongoose.connection.readyState === 1) {
-      await mongoose.disconnect();
-      console.log("✅ MongoDB disconnected.");
-    }
-
-    console.log("✅ Graceful shutdown complete. Exiting.");
-    process.exit(0);
-  } catch (err) {
-    console.error("❌ Error during shutdown:", err);
-    process.exit(1);
-  }
-};
-
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);
-
 startApp();
+
 
 
 
