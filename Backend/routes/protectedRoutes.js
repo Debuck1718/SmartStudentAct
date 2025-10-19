@@ -1,43 +1,43 @@
-const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs").promises;
-const crypto = require("crypto");
-const Joi = require("joi");
-const logger = require("../utils/logger");
-const webpush = require("web-push");
-const jwt = require("jsonwebtoken");
-const { eventBus } = require("../utils/eventBus");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const { authenticateJWT } = require("../middlewares/auth");
-const checkSubscription = require("../middlewares/checkSubscription");
+import express from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs/promises";
+import crypto from "crypto";
+import Joi from "joi";
+import logger from "../utils/logger.js";
+import webpush from "web-push";
+import jwt from "jsonwebtoken";
+import { eventBus } from "../utils/eventBus.js";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { authenticateJWT } from "../middlewares/auth.js";
+import checkSubscription from "../middlewares/checkSubscription.js";
 
-const User = require("../models/User");
-const Goal = require("../models/Goal");
-const Budget = require("../models/Budget");
-const Assignment = require("../models/Assignment");
-const Submission = require("../models/Submission");
-const PushSub = require("../models/PushSub");
-const School = require("../models/School");
-const Quiz = require("../models/Quiz");
-const StudentTask = require("../models/StudentTask"); 
-const SchoolCalendar = require("../models/SchoolCalendar");
-const Message = require("../models/Message");
+import User from "../models/User.js";
+import Goal from "../models/Goal.js";
+import Budget from "../models/Budget.js";
+import Assignment from "../models/Assignment.js";
+import Submission from "../models/Submission.js";
+import PushSub from "../models/PushSub.js";
+import School from "../models/School.js";
+import Quiz from "../models/Quiz.js";
+import StudentTask from "../models/StudentTask.js";
+import SchoolCalendar from "../models/SchoolCalendar.js";
+import Message from "../models/Message.js";
 
-const advancedGoalsRouter = require("./advancedGoals");
-const essayRouter = require("./essay");
-const budgetRouter = require("./budget");
-const schoolRouter = require("./schoolRoutes");
-const uploadRouter = require("./uploadRoutes");
+import advancedGoalsRouter from "./advancedGoals.js";
+import essayRouter from "./essay.js";
+import budgetRouter from "./budget.js";
+import schoolRouter from "./schoolRoutes.js";
+import uploadRouter from "./uploadRoutes.js";
 
-const { toIsoCountryCode, fromIsoCountryCode } = require("../utils/countryHelper");
+import { toIsoCountryCode, fromIsoCountryCode } from "../utils/countryHelper.js";
+import * as paymentController from "../controllers/paymentController.js";
+import { getUserPrice } from "../services/pricingService.js";
 
-const paymentController = require("../controllers/paymentController");
-const { getUserPrice } = require('../services/pricingService');
-
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const smsApi = {};
+
 async function sendSMS(phone, message) {
   if (!phone) return;
   const recipient = phone.startsWith("+") ? phone : `+${phone}`;
@@ -52,6 +52,7 @@ async function sendSMS(phone, message) {
     logger.error(`[Brevo SMS] Failed to send to ${recipient}: ${err.message}`);
   }
 }
+
 async function sendPushToUser(userId, payload) {
   const sub = await PushSub.findOne({ user_id: userId });
   if (sub && sub.subscription) {
@@ -66,13 +67,14 @@ async function sendPushToUser(userId, payload) {
     }
   }
 }
+
 async function notifyUser(userId, title, message, url) {
   const user = await User.findById(userId).select("phone");
   await sendPushToUser(userId, { title, body: message, url });
   await sendSMS(user?.phone, `${title}: ${message}`);
 }
-const agenda = { schedule: () => {} };
 
+const agenda = { schedule: () => {} };
 const protectedRouter = express.Router();
 
 const hasRole = (allowedRoles) => (req, res, next) => {
@@ -85,6 +87,7 @@ const hasRole = (allowedRoles) => (req, res, next) => {
   next();
 };
 
+// ✅ Middleware to protect all routes
 protectedRouter.use(authenticateJWT, checkSubscription);
 
 const localDiskStorage = multer.diskStorage({
@@ -2415,4 +2418,5 @@ protectedRouter.use("/essay", essayRouter);
 protectedRouter.use("/schools", schoolRouter);
 protectedRouter.use("/uploads", uploadRouter);
 
-module.exports = protectedRouter;
+export default protectedRouter;
+

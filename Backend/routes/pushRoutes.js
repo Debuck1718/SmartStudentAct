@@ -1,8 +1,8 @@
+import express from "express";
+import User from "../models/User.js";
+import { authenticateJWT } from "../middlewares/auth.js";
 
-const express = require("express");
 const router = express.Router();
-const User = require("../models/User"); 
-const { authenticateJWT } = require("../middlewares/auth"); 
 
 router.post("/push/subscribe", authenticateJWT, async (req, res) => {
   try {
@@ -11,7 +11,6 @@ router.post("/push/subscribe", authenticateJWT, async (req, res) => {
     if (!subscription || !subscription.endpoint) {
       return res.status(400).json({ message: "Invalid subscription object" });
     }
-
 
     await User.findByIdAndUpdate(req.user.id, {
       PushSub: subscription,
@@ -24,4 +23,5 @@ router.post("/push/subscribe", authenticateJWT, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
+

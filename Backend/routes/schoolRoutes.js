@@ -1,7 +1,9 @@
-const express = require('express');
+import express from "express";
+import { addSchool } from "../controllers/schoolController.js";
+
 const router = express.Router();
-const { addSchool } = require('../controllers/schoolController');
 
-router.post('/', addSchool);
+router.post("/", addSchool);
 
-module.exports = router;
+export default router;
+
