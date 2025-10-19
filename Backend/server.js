@@ -1,3 +1,4 @@
+// server.js
 import http from "http";
 import mongoose from "mongoose";
 import Agenda from "agenda";
@@ -5,7 +6,7 @@ import fetch from "node-fetch";
 import { app, eventBus } from "./app.js"; // ensure app.js exports `app`
 
 const PORT = process.env.PORT || 4000;
-const HOST = "0.0.0.0"; // ✅ Required by Render
+const HOST = "0.0.0.0"; // ✅ Render requires this
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
@@ -18,7 +19,11 @@ global.agendaStarted = false;
 const connectMongo = async () => {
   try {
     console.log("📡 Connecting to MongoDB...");
-    await mongoose.connect(MONGO_URI);
+    await mongoose.connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 20000,
+    });
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
@@ -29,16 +34,20 @@ const connectMongo = async () => {
 // ---------- Agenda Scheduler ----------
 const startAgenda = async () => {
   try {
-    agenda = new Agenda({ db: { address: MONGO_URI, collection: "agendaJobs" } });
+    agenda = new Agenda({
+      db: { address: MONGO_URI, collection: "agendaJobs" },
+      processEvery: "1 minute",
+    });
 
+    // Example background job
     agenda.define("test job", async () => {
       console.log(`⏳ Running test job at ${new Date().toISOString()}`);
     });
 
     await agenda.start();
     await agenda.every("1 minute", "test job");
-    global.agendaStarted = true;
 
+    global.agendaStarted = true;
     console.log("📅 Agenda job scheduler started!");
   } catch (err) {
     console.error("❌ Agenda startup error:", err);
@@ -46,7 +55,7 @@ const startAgenda = async () => {
   }
 };
 
-// ---------- Start the Server ----------
+// ---------- Start Application ----------
 const startApp = async () => {
   try {
     await connectMongo();
@@ -54,22 +63,26 @@ const startApp = async () => {
 
     const server = http.createServer(app);
 
-    // ✅ Bind explicitly to 0.0.0.0
+    // ✅ Explicit 0.0.0.0 binding for Render
     server.listen(PORT, HOST, () => {
-      console.log(`🚀 Server running at http://${HOST}:${PORT} [${NODE_ENV}]`);
+      console.log(`🚀 SmartStudentAct API running at http://${HOST}:${PORT} [${NODE_ENV}]`);
 
-      // Optional: safe self-ping for Render uptime
+      // Optional: Self-ping to prevent Render sleep
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         const url = process.env.RENDER_EXTERNAL_URL;
         console.log(`🌍 Self-pinging enabled for ${url}`);
         setInterval(async () => {
           try {
-            await fetch(url);
-            console.log("🔄 Self-ping successful:", new Date().toISOString());
+            const res = await fetch(url);
+            if (res.ok) {
+              console.log("🔄 Self-ping OK:", new Date().toISOString());
+            } else {
+              console.warn("⚠️ Self-ping response:", res.status);
+            }
           } catch (err) {
             console.error("⚠️ Self-ping failed:", err.message);
           }
-        }, 5 * 60 * 1000);
+        }, 5 * 60 * 1000); // every 5 minutes
       }
     });
 
@@ -77,15 +90,15 @@ const startApp = async () => {
     const shutdown = async (signal) => {
       if (isShuttingDown) return;
       isShuttingDown = true;
-      console.log(`\n🚦 Received ${signal}, starting graceful shutdown...`);
+      console.log(`\n🚦 Received ${signal}. Starting graceful shutdown...`);
 
       try {
         await new Promise((resolve) => server.close(resolve));
-        console.log("✅ Server closed. No new connections accepted.");
+        console.log("✅ HTTP server closed.");
 
         if (agenda) {
           await agenda.stop();
-          console.log("✅ Agenda job scheduler stopped.");
+          console.log("✅ Agenda scheduler stopped.");
         }
 
         if (mongoose.connection.readyState === 1) {
@@ -93,7 +106,7 @@ const startApp = async () => {
           console.log("✅ MongoDB disconnected.");
         }
 
-        console.log("✅ Graceful shutdown complete. Exiting.");
+        console.log("🟢 Shutdown complete. Exiting cleanly.");
         process.exit(0);
       } catch (err) {
         console.error("❌ Error during shutdown:", err);

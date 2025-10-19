@@ -5,9 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "echo 'No build step needed for Railway deployment'",
-    "omit-dev": "npm install --omit=dev"
+    "dev": "nodemon server.js"
   },
   "keywords": [
     "smartstudent",
