@@ -1,15 +1,15 @@
-const express = require("express");
-const router = express.Router();
-const Joi = require("joi");
-const logger = require("../utils/logger");
+import express from "express";
+import Joi from "joi";
+import logger from "../utils/logger.js";
+import { authenticateJWT } from "../middlewares/auth.js";
+import checkSubscription from "../middlewares/checkSubscription.js";
 
-const { authenticateJWT } = require("../middlewares/auth");
-const checkSubscription = require("../middlewares/checkSubscription");
+const router = express.Router();
 
 const API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
 
-// ===== Validation Schemas =====
+// ===== Validation =====
 const essaySchema = Joi.object({
   essayText: Joi.string().min(50).required(),
   citationData: Joi.object({
@@ -28,214 +28,134 @@ const detectSchema = Joi.object({
 function safeJSONParse(text) {
   try {
     return JSON.parse(text);
-  } catch (err) {
-    logger.error("Failed to parse JSON:", err, "Text:", text);
+  } catch {
     return null;
   }
 }
 
 function generateEssayPrompt(essayText, citationData) {
   const citationText = citationData
-    ? `
-**Citation**:
-This feedback was generated using ${citationData.source} accessed on ${citationData.accessDate} from ${citationData.url}.
-Use the following citation if required:
-"${citationData.title}". ${citationData.source}, ${citationData.accessDate}, ${citationData.url}.`
+    ? `\nCitation:\n"${citationData.title}". ${citationData.source}, ${citationData.accessDate}, ${citationData.url}.`
     : "";
-
   return `
-You are a helpful and detailed academic writing tutor. Analyze the following essay chunk and provide constructive feedback on:
+You are an academic writing tutor. Analyze:
 1. Grammar & Spelling
-2. Clarity & Coherence
-3. Argument Strength
-4. Tone & Style
+2. Clarity
+3. Argument
+4. Tone
 
-Format response as JSON:
+Return JSON:
 {
-  "grammar": [],
-  "clarity": [],
-  "argument": [],
-  "style": []
+  "grammar": [], "clarity": [], "argument": [], "style": []
 }
 
-${citationText}
-
-Essay chunk:
+Essay:
 "${essayText}"
+${citationText}
 `;
 }
 
 function generateDetectPrompt(text) {
   return `
-You are an AI writing detector. Your job is to analyze whether the following text is AI-generated or human-written.
-
-Text:
+Analyze whether this text is AI-generated or human-written:
 "${text}"
 
-Respond strictly in JSON format:
+Return JSON:
 {
-  "analysis": "<brief explanation>",
-  "confidence": "<High | Medium | Low>",
-  "verdict": "<Likely AI-generated | Likely Human-written>"
-}
-`;
+  "analysis": "",
+  "confidence": "High|Medium|Low",
+  "verdict": "Likely AI-generated|Likely Human-written"
+}`;
 }
 
 async function generateWithRetry(payload, retries = 3) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("API key is not configured.");
-
-  const apiUrlWithKey = `${API_URL}${apiKey}`;
-
-  for (let attempt = 1; attempt <= retries; attempt++) {
+  const apiUrl = `${API_URL}${process.env.GEMINI_API_KEY}`;
+  for (let i = 1; i <= retries; i++) {
     try {
-      const response = await fetch(apiUrlWithKey, {
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        logger.error(
-          `API call failed with status ${response.status}: ${errorText}`
-        );
-        throw new Error(`API call failed with status ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(`Gemini returned ${response.status}`);
       const result = await response.json();
-      const generatedText =
-        result?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!generatedText) {
-        throw new Error("Invalid or empty response from Gemini API.");
-      }
-
-      const parsed = safeJSONParse(generatedText);
-      if (!parsed) throw new Error("Invalid JSON format in API response.");
-
+      const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const parsed = safeJSONParse(text);
+      if (!parsed) throw new Error("Invalid JSON");
       return parsed;
     } catch (err) {
-      logger.warn(`Gemini API attempt ${attempt} failed:`, err.message);
-      if (attempt === retries) {
-        logger.error("All Gemini API attempts failed. Final error:", err);
-        throw err;
-      }
-      const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      logger.warn(`Gemini attempt ${i} failed: ${err.message}`);
+      if (i === retries) throw err;
+      await new Promise((r) => setTimeout(r, i * 2000));
     }
   }
 }
 
-// ===== Essay Analyzer =====
+function splitEssay(text, max = 2000) {
+  const chunks = [];
+  for (let i = 0; i < text.length; i += max)
+    chunks.push(text.slice(i, i + max));
+  return chunks;
+}
+
+function mergeFeedback(arr) {
+  return arr.reduce(
+    (acc, f) => ({
+      grammar: acc.grammar.concat(f.grammar || []),
+      clarity: acc.clarity.concat(f.clarity || []),
+      argument: acc.argument.concat(f.argument || []),
+      style: acc.style.concat(f.style || []),
+    }),
+    { grammar: [], clarity: [], argument: [], style: [] }
+  );
+}
+
+// ===== Routes =====
 router.post("/check", authenticateJWT, checkSubscription, async (req, res) => {
   const { error, value } = essaySchema.validate(req.body);
-  if (error) {
-    return res
-      .status(400)
-      .json({ status: "Validation Error", message: error.details[0].message });
-  }
-
-  const { essayText, citationData } = value;
+  if (error)
+    return res.status(400).json({ message: error.details[0].message });
 
   try {
-    const chunks = splitEssay(essayText);
-    const feedbackPromises = chunks.map((chunk) => {
-      const prompt = generateEssayPrompt(chunk, citationData);
-      const payload = {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              grammar: { type: "ARRAY", items: { type: "STRING" } },
-              clarity: { type: "ARRAY", items: { type: "STRING" } },
-              argument: { type: "ARRAY", items: { type: "STRING" } },
-              style: { type: "ARRAY", items: { type: "STRING" } },
-            },
-          },
-        },
-      };
-      return generateWithRetry(payload, 3);
-    });
-
-    const feedbackResults = await Promise.all(feedbackPromises);
-    const feedback = mergeFeedback(feedbackResults);
-
-    feedback.citation = citationData
-      ? `"${citationData.title}". ${citationData.source}, ${citationData.accessDate}, ${citationData.url}.`
-      : "";
-
-    res.json({ feedback });
+    const chunks = splitEssay(value.essayText);
+    const results = await Promise.all(
+      chunks.map(async (chunk) => {
+        const prompt = generateEssayPrompt(chunk, value.citationData);
+        return generateWithRetry({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: "application/json" },
+        });
+      })
+    );
+    res.json({ feedback: mergeFeedback(results) });
   } catch (err) {
-    logger.error("Top-level error analyzing essay:", err);
+    logger.error("Essay check failed:", err);
     res
       .status(500)
-      .json({ message: "Failed to analyze essay. Please try again later." });
+      .json({ message: "Essay analysis failed. Try again later." });
   }
 });
 
 router.post("/detect", authenticateJWT, checkSubscription, async (req, res) => {
   const { error, value } = detectSchema.validate(req.body);
-  if (error) {
-    return res
-      .status(400)
-      .json({ status: "Validation Error", message: error.details[0].message });
-  }
-
-  const { text } = value;
+  if (error)
+    return res.status(400).json({ message: error.details[0].message });
 
   try {
-    const prompt = generateDetectPrompt(text);
-    const payload = {
+    const prompt = generateDetectPrompt(value.text);
+    const result = await generateWithRetry({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            analysis: { type: "STRING" },
-            confidence: { type: "STRING" },
-            verdict: { type: "STRING" },
-          },
-        },
-      },
-    };
-
-    const result = await generateWithRetry(payload, 3);
+      generationConfig: { responseMimeType: "application/json" },
+    });
     res.json({ result });
   } catch (err) {
-    logger.error("Top-level error detecting AI text:", err);
-    res
-      .status(500)
-      .json({ message: "Failed to detect AI text. Please try again later." });
+    logger.error("AI detect failed:", err);
+    res.status(500).json({ message: "Detection failed." });
   }
 });
 
-// ===== Helpers =====
-function splitEssay(essayText, maxChunkLength = 2000) {
-  const chunks = [];
-  let start = 0;
-  while (start < essayText.length) {
-    chunks.push(essayText.slice(start, start + maxChunkLength));
-    start += maxChunkLength;
-  }
-  return chunks;
-}
+export default router;
 
-function mergeFeedback(feedbackArray) {
-  const merged = { grammar: [], clarity: [], argument: [], style: [] };
-  feedbackArray.forEach((f) => {
-    merged.grammar.push(...(f.grammar || []));
-    merged.clarity.push(...(f.clarity || []));
-    merged.argument.push(...(f.argument || []));
-    merged.style.push(...(f.style || []));
-  });
-  return merged;
-}
-
-module.exports = router;
 
 
 

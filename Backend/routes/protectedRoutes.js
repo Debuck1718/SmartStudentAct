@@ -7,7 +7,7 @@ import Joi from "joi";
 import logger from "../utils/logger.js";
 import webpush from "web-push";
 import jwt from "jsonwebtoken";
-import { eventBus } from "../utils/eventBus.js";
+import eventBus, { emailTemplates } from '../utils/eventBus.js';
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { authenticateJWT } from "../middlewares/auth.js";
 import checkSubscription from "../middlewares/checkSubscription.js";

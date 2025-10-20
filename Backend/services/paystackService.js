@@ -1,9 +1,9 @@
-const Paystack = require("@paystack/paystack-sdk").default;
-const config = require("../config/paymentConfig");
+import Paystack from "@paystack/paystack-sdk";
+import config from "../config/paymentConfig.js";
 
 const paystack = new Paystack(config.paystack.secretKey);
 
-async function initPaystackPayment({ email, ghsAmount }) {
+export async function initPaystackPayment({ email, ghsAmount }) {
   try {
     if (!email || !ghsAmount) {
       throw new Error("Missing required Paystack payment parameters.");
@@ -30,9 +30,6 @@ async function initPaystackPayment({ email, ghsAmount }) {
     throw error;
   }
 }
-
-module.exports = { initPaystackPayment };
-
 
 
 

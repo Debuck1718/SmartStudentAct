@@ -1,11 +1,11 @@
 // utils/currencyConverter.js
-const axios = require("axios");
+import axios from "axios";
+
 const apiKey = process.env.EXCHANGE_RATE_API_KEY;
 
 let ratesCache = { data: {}, timestamp: null };
 
-async function getRate(fromCurrency = "USD", toCurrency = "GHS") {
- 
+export async function getRate(fromCurrency = "USD", toCurrency = "GHS") {
   if (fromCurrency.toUpperCase() === toCurrency.toUpperCase()) {
     console.log(`⚡ Skipping conversion: ${fromCurrency} → ${toCurrency} is the same.`);
     return 1;
@@ -48,7 +48,5 @@ async function getRate(fromCurrency = "USD", toCurrency = "GHS") {
     return null;
   }
 }
-
-module.exports = { getRate };
 
 

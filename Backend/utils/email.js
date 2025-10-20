@@ -1,15 +1,14 @@
+import Brevo from "@getbrevo/brevo";
+import nodemailer from "nodemailer";
 
-const Brevo = require("@getbrevo/brevo");
-const nodemailer = require("nodemailer");
-
-
+// --- Brevo setup ---
 const apiInstance = new Brevo.TransactionalEmailsApi();
 apiInstance.setApiKey(
   Brevo.TransactionalEmailsApiApiKeys.apiKey,
   process.env.BREVO_API_KEY
 );
 
-
+// --- SMTP fallback setup ---
 const smtpTransporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
   port: process.env.MAIL_PORT,
@@ -21,7 +20,8 @@ const smtpTransporter = nodemailer.createTransport({
   tls: { rejectUnauthorized: false },
 });
 
-const TEMPLATE_IDS = {
+// --- Template IDs ---
+export const TEMPLATE_IDS = {
   welcome: 2,
   otp: 3,
   reset: 4,
@@ -33,23 +33,25 @@ const TEMPLATE_IDS = {
   goalBudgetUpdate: 10,
   paymentReceipt: 11,
   subscriptionRenewal: 12,
+  specialLink: 13, // new template for special link request
 };
 
-
+// --- Helper delay ---
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// --- Brevo sending ---
 async function tryBrevoAPI(toEmail, templateId, params) {
   await apiInstance.sendTransacEmail({
     templateId,
     to: [{ email: toEmail }],
     params,
   });
-  console.log(`Email sent via Brevo API to ${toEmail} (template ${templateId})`);
+  console.log(`📧 Email sent via Brevo API to ${toEmail} (template ${templateId})`);
 }
 
-
+// --- SMTP fallback ---
 async function trySMTP(toEmail, templateId, params) {
   const subject = "SmartStudentAct Notification";
   const html = `
@@ -64,11 +66,12 @@ async function trySMTP(toEmail, templateId, params) {
     subject,
     html,
   });
-  console.log(`Email sent via SMTP fallback to ${toEmail}`);
+
+  console.log(`📨 Email sent via SMTP fallback to ${toEmail}`);
 }
 
-
-async function sendTemplateEmail(toEmail, templateId, params = {}) {
+// --- Main template sender ---
+export async function sendTemplateEmail(toEmail, templateId, params = {}) {
   if (!toEmail || !templateId) {
     console.warn("[Email] Skipped – missing email or templateId");
     return false;
@@ -81,7 +84,7 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
     try {
       attempt++;
       await tryBrevoAPI(toEmail, templateId, params);
-      return true; 
+      return true;
     } catch (apiError) {
       console.error(
         `⚠️ Brevo API failed (attempt ${attempt}) for ${toEmail}:`,
@@ -93,15 +96,12 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
           await trySMTP(toEmail, templateId, params);
           return true;
         } catch (smtpError) {
-          console.error(
-            `❌ SMTP fallback failed for ${toEmail}:`,
-            smtpError.message
-          );
+          console.error(`❌ SMTP fallback failed for ${toEmail}:`, smtpError.message);
           return false;
         }
       }
 
-      const delay = Math.pow(2, attempt) * 1000; 
+      const delay = Math.pow(2, attempt) * 1000;
       console.log(`⏳ Retrying in ${delay / 1000}s...`);
       await wait(delay);
     }
@@ -110,17 +110,17 @@ async function sendTemplateEmail(toEmail, templateId, params = {}) {
   return false;
 }
 
-
-const sendOTPEmail = (email, firstname, otp) =>
+// --- Template-specific helpers ---
+export const sendOTPEmail = (email, firstname, otp) =>
   sendTemplateEmail(email, TEMPLATE_IDS.otp, { firstname, otp });
 
-const sendWelcomeEmail = (email, firstname) =>
+export const sendWelcomeEmail = (email, firstname) =>
   sendTemplateEmail(email, TEMPLATE_IDS.welcome, { firstname });
 
-const sendResetEmail = (email, resetLink) =>
+export const sendResetEmail = (email, resetLink) =>
   sendTemplateEmail(email, TEMPLATE_IDS.reset, { reset_link: resetLink });
 
-const sendQuizNotificationEmail = (email, firstname, quizTitle, dueDate, link) =>
+export const sendQuizNotificationEmail = (email, firstname, quizTitle, dueDate, link) =>
   sendTemplateEmail(email, TEMPLATE_IDS.quizNotification, {
     firstname,
     quiz_title: quizTitle,
@@ -128,7 +128,7 @@ const sendQuizNotificationEmail = (email, firstname, quizTitle, dueDate, link) =
     link,
   });
 
-const sendAssignmentNotificationEmail = (
+export const sendAssignmentNotificationEmail = (
   email,
   firstname,
   assignmentTitle,
@@ -142,7 +142,7 @@ const sendAssignmentNotificationEmail = (
     link,
   });
 
-const sendFeedbackNotificationEmail = (
+export const sendFeedbackNotificationEmail = (
   email,
   firstname,
   feedbackMessage,
@@ -154,7 +154,7 @@ const sendFeedbackNotificationEmail = (
     link,
   });
 
-const sendAssignmentGradedEmail = (
+export const sendAssignmentGradedEmail = (
   email,
   firstname,
   assignmentTitle,
@@ -168,22 +168,21 @@ const sendAssignmentGradedEmail = (
     link,
   });
 
-
-const sendRewardEarnedEmail = (email, firstname, rewardType, link) =>
+export const sendRewardEarnedEmail = (email, firstname, rewardType, link) =>
   sendTemplateEmail(email, TEMPLATE_IDS.rewardNotification, {
     firstname,
     reward_type: rewardType,
     link,
   });
 
-const sendGoalBudgetUpdateEmail = (email, firstname, message, link) =>
+export const sendGoalBudgetUpdateEmail = (email, firstname, message, link) =>
   sendTemplateEmail(email, TEMPLATE_IDS.goalBudgetUpdate, {
     firstname,
     message,
     link,
   });
 
-const sendPaymentReceiptEmail = (
+export const sendPaymentReceiptEmail = (
   email,
   firstname,
   planName,
@@ -201,7 +200,7 @@ const sendPaymentReceiptEmail = (
     link,
   });
 
-const sendSubscriptionRenewalEmail = (
+export const sendSubscriptionRenewalEmail = (
   email,
   firstname,
   planName,
@@ -217,8 +216,16 @@ const sendSubscriptionRenewalEmail = (
     link,
   });
 
+// --- NEW: Special Link Request Email ---
+export const sendSpecialLinkEmail = (email, firstname, linkType, link) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.specialLink, {
+    firstname,
+    link_type: linkType,
+    link,
+  });
 
-module.exports = {
+// ✅ Default export (for import mailer from "./email.js")
+export default {
   sendTemplateEmail,
   sendOTPEmail,
   sendWelcomeEmail,
@@ -231,7 +238,6 @@ module.exports = {
   sendGoalBudgetUpdateEmail,
   sendPaymentReceiptEmail,
   sendSubscriptionRenewalEmail,
-  TEMPLATE_IDS,
+  sendSpecialLinkEmail,
 };
-
 

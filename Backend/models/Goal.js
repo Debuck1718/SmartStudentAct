@@ -1,13 +1,18 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
-const goalSchema = new mongoose.Schema({
-    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+const goalSchema = new mongoose.Schema(
+  {
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     text: { type: String, required: true },
     completed: { type: Boolean, default: false },
     target_value: { type: Number, default: 100 },
-    current_value: { type: Number, default: 0 }
-}, { timestamps: true });
+    current_value: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
 
 goalSchema.index({ user_id: 1 });
 
-module.exports = mongoose.model('Goal', goalSchema);
+const Goal = mongoose.model("Goal", goalSchema);
+
+export default Goal;

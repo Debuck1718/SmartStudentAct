@@ -1,14 +1,14 @@
-const School = require("../models/School");
-const { getRate } = require("../utils/currencyConverter");
-const logger = require("../utils/logger");
+import School from "../models/School.js";
+import { getRate } from "../utils/currencyConverter.js";
+import logger from "../utils/logger.js";
 
-// --- Local caches for performance ---
+
 const schoolCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000; 
 const rateCache = new Map();
-const RATE_TTL = 10 * 60 * 1000; // 10 minutes
+const RATE_TTL = 10 * 60 * 1000; 
 
-// --- Ghana base and tiered prices (GHS) ---
+
 const GH_PRICES = { student: 15, teacher: 52, admin: 73, worker: 35 };
 const GH_TIERS = {
   5: { student: 241, teacher: 266, admin: 302 },
@@ -16,20 +16,24 @@ const GH_TIERS = {
   4: { student: 55, teacher: 75, admin: 110 },
 };
 
-// --- Worker pricing (constant) ---
+
 const WORKER_PRICING = {
-  GH: 35, // Ghana
-  AFRICA: 55, // Other African countries
-  NON_AFRICA: 120, // Outside Africa
+  GH: 35, 
+  AFRICA: 55, 
+  NON_AFRICA: 120, 
 };
 
-// --- African countries using USD (approx conversions) ---
-const AFRICA_COUNTRIES_USD = ["ZA", "ZM", "TN", "LY", "MA", "NG", "KE", "TZ", "UG", "RW", "BW", "CM", "SN", "GH"];
 
-// --- Non-African countries using USD ---
-const NON_AFRICA_COUNTRIES_USD = ["US", "CA", "GB", "FR", "DE", "AU", "IT", "ES", "NL", "JP", "CN"];
+const AFRICA_COUNTRIES_USD = [
+  "ZA", "ZM", "TN", "LY", "MA", "NG", "KE", "TZ", "UG", "RW", "BW", "CM", "SN", "GH"
+];
 
-// ----------------------------------------------------------------------
+
+const NON_AFRICA_COUNTRIES_USD = [
+  "US", "CA", "GB", "FR", "DE", "AU", "IT", "ES", "NL", "JP", "CN"
+];
+
+
 
 async function getCachedRate(from, to) {
   const key = `${from}_${to}`;
@@ -83,13 +87,13 @@ function validateRole(role) {
   return valid.includes(role) ? role : "student";
 }
 
-// ----------------------------------------------------------------------
 
-async function getUserPrice(user, role, schoolName, schoolCountry) {
+
+export async function getUserPrice(user, role, schoolName, schoolCountry) {
   if (!user) throw new Error("User data missing");
   role = validateRole(role?.toLowerCase() || "student");
 
-  // Overseer roles are free
+ 
   if (["overseer", "global_overseer"].includes(role)) {
     return {
       ghsPrice: 0,
@@ -102,7 +106,6 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     };
   }
 
-  // Default to Ghana if no country is found
   if (!schoolCountry) {
     logger.warn("School country missing for user, defaulting to GH");
     schoolCountry = "GH";
@@ -113,7 +116,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
   const isAfrica = AFRICA_COUNTRIES_USD.includes(countryCode);
   const isNonAfrica = NON_AFRICA_COUNTRIES_USD.includes(countryCode);
 
-  // --- Worker-specific pricing ---
+
   if (role === "worker") {
     let ghsPrice = WORKER_PRICING.GH;
     let usdPrice = 0;
@@ -152,7 +155,7 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     };
   }
 
-  // --- Regular roles (student, teacher, admin) ---
+  
   const tier = (await getSchoolTier(schoolName)) || 1;
   let basePrice = GH_TIERS[tier] ? GH_TIERS[tier][role] : GH_PRICES[role];
   let ghsPrice = basePrice;
@@ -199,9 +202,6 @@ async function getUserPrice(user, role, schoolName, schoolCountry) {
     pricingType,
   };
 }
-
-module.exports = { getUserPrice };
-
 
 
 

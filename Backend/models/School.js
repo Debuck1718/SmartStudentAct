@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+// models/School.js
+import mongoose from "mongoose";
 
 const schoolSchema = new mongoose.Schema(
   {
@@ -25,8 +26,6 @@ const schoolSchema = new mongoose.Schema(
 
 schoolSchema.index({ schoolName: 1, schoolCountry: 1 }, { unique: true });
 
-module.exports = mongoose.model('School', schoolSchema);
-
-
-
+export const School = mongoose.model("School", schoolSchema);
+export default School;
 

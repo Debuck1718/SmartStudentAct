@@ -1,10 +1,10 @@
-const EventEmitter = require("events");
-const webpush = require("web-push");
-const smsApi = require("./sms");
-const logger = require("./logger");
-const mailer = require("./email");
-const mongoose = require("mongoose");
-const Agenda = require("agenda"); // ✅ import agenda
+import EventEmitter from "events";
+import webpush from "web-push";
+import smsApi from "./sms.js";
+import logger from "./logger.js";
+import mongoose from "mongoose";
+import Agenda from "agenda";
+import mailer from "./email.js";
 
 const User = mongoose.models.User;
 const Assignment = mongoose.models.Assignment;
@@ -16,7 +16,6 @@ const agenda = new Agenda({
   db: { address: process.env.MONGO_URI, collection: "jobs" },
 });
 
-// Start Agenda after Mongo connects
 agenda.on("ready", async () => {
   logger.info("✅ Agenda connected, starting...");
   await agenda.start();
@@ -25,7 +24,7 @@ agenda.on("ready", async () => {
 // Shared event bus instance
 const eventBus = new EventEmitter();
 
-const emailTemplates = {
+export const emailTemplates = {
   otp: 3,
   welcome: 2,
   passwordReset: 4,
@@ -37,12 +36,14 @@ const emailTemplates = {
   goalBudgetUpdate: 10,
 };
 
+// ✅ VAPID Configuration for Push Notifications
 webpush.setVapidDetails(
   "mailto:support@smartstudentact.com",
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );
 
+// ===== Utility functions =====
 async function sendSMS(phone, message) {
   if (!phone) return;
   const recipient = phone.startsWith("+") ? phone : `+${phone}`;
@@ -106,9 +107,7 @@ async function fetchStudentsForAssignmentOrQuiz(item) {
   return students;
 }
 
-/**
- * Assignment created → notify + schedule reminders
- */
+// ===== Assignment Events =====
 eventBus.on("assignment_created", async ({ assignmentId, title }) => {
   try {
     const assignment = await Assignment.findById(assignmentId);
@@ -176,9 +175,7 @@ agenda.define("assignment_reminder", async (job) => {
   }
 });
 
-/**
- * Student Task → creation + reminder
- */
+// ===== Task Events =====
 eventBus.on("task_created", async ({ taskId, studentId, title }) => {
   try {
     const task = await StudentTask.findById(taskId);
@@ -189,8 +186,7 @@ eventBus.on("task_created", async ({ taskId, studentId, title }) => {
       student,
       "Task Created",
       `Your task "${title}" is set for ${task.due_date.toDateString()}`,
-      "/student/tasks",
-      null
+      "/student/tasks"
     );
 
     const reminderHours = [6, 2];
@@ -223,17 +219,14 @@ agenda.define("task_reminder", async (job) => {
       student,
       "Task Reminder",
       `Your task "${title}" is due in ${hoursBefore} hours.`,
-      "/student/tasks",
-      null
+      "/student/tasks"
     );
   } catch (err) {
     logger.error(`task_reminder job failed: ${err.message}`);
   }
 });
 
-/**
- * Quiz created
- */
+// ===== Quiz Events =====
 eventBus.on("quiz_created", async ({ quizId, title }) => {
   try {
     const quiz = await Quiz.findById(quizId);
@@ -256,9 +249,7 @@ eventBus.on("quiz_created", async ({ quizId, title }) => {
   }
 });
 
-/**
- * Feedback received
- */
+// ===== Feedback & Grades =====
 eventBus.on("feedback_given", async ({ assignmentId, studentId, feedback }) => {
   try {
     const assignment = await Assignment.findById(assignmentId);
@@ -282,9 +273,6 @@ eventBus.on("feedback_given", async ({ assignmentId, studentId, feedback }) => {
   }
 });
 
-/**
- * Assignment graded
- */
 eventBus.on("assignment_graded", async ({ assignmentId, studentId, grade }) => {
   try {
     const assignment = await Assignment.findById(assignmentId);
@@ -308,18 +296,15 @@ eventBus.on("assignment_graded", async ({ assignmentId, studentId, grade }) => {
   }
 });
 
-
+// ===== Rewards, Goals, Budgets =====
 eventBus.on("reward_granted", async ({ userId, type, points, reason }) => {
   try {
     const user = await User.findById(userId).select("_id phone email firstname PushSub");
     if (!user) return;
 
-    let message;
-    if (points) {
-      message = `You just earned ${points} points! ${reason ? `Reason: ${reason}` : ""}`;
-    } else {
-      message = `You just earned the "${type}" reward!`;
-    }
+    const message = points
+      ? `You just earned ${points} points! ${reason ? `Reason: ${reason}` : ""}`
+      : `You just earned the "${type}" reward!`;
 
     await notifyUser(
       user,
@@ -327,21 +312,13 @@ eventBus.on("reward_granted", async ({ userId, type, points, reason }) => {
       message,
       "/student/rewards",
       emailTemplates.rewardNotification,
-      {
-        firstname: user.firstname,
-        rewardType: type,
-        points,
-        reason,
-      }
+      { firstname: user.firstname, rewardType: type, points, reason }
     );
   } catch (err) {
     logger.error(`reward_granted event failed: ${err.message}`);
   }
 });
 
-/**
- * Goal + Budget notifications
- */
 eventBus.on("goal_notification", async ({ userId, message }) => {
   try {
     const user = await User.findById(userId).select("_id phone email firstname PushSub");
@@ -378,7 +355,10 @@ eventBus.on("budget_notification", async ({ userId, message }) => {
   }
 });
 
+
 eventBus.setMaxListeners(50);
 
-module.exports = { eventBus, emailTemplates, agenda };
+export default eventBus;
+export { agenda };
+
 

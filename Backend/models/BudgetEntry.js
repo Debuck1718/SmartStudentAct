@@ -1,22 +1,16 @@
-// In models/BudgetEntry.js
+import mongoose from "mongoose";
 
-const mongoose = require('mongoose');
-
-const budgetEntrySchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
+const budgetEntrySchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     amount: { type: Number, required: true },
     category: { type: String, required: true },
     description: { type: String },
-    type: {
-        type: String,
-        enum: ['income', 'expense'],
-        required: true
-    },
-    date: { type: Date, required: true }
-}, { timestamps: true });
+    type: { type: String, enum: ["income", "expense"], required: true },
+    date: { type: Date, required: true },
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('BudgetEntry', budgetEntrySchema);
+const BudgetEntry = mongoose.model("BudgetEntry", budgetEntrySchema);
+export default BudgetEntry;

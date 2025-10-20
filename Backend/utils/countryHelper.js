@@ -1,5 +1,6 @@
 // utils/countryHelper.js
-const countries = {
+
+export const countries = {
   AF: "Afghanistan",
   AX: "Aland Islands",
   AL: "Albania",
@@ -245,8 +246,7 @@ const countries = {
   ZW: "Zimbabwe",
 };
 
-
-function toIsoCountryCode(countryName) {
+export function toIsoCountryCode(countryName) {
   if (!countryName) return null;
   const entry = Object.entries(countries).find(
     ([, name]) => name.toLowerCase() === countryName.toLowerCase()
@@ -254,10 +254,9 @@ function toIsoCountryCode(countryName) {
   return entry ? entry[0] : null;
 }
 
-
-function fromIsoCountryCode(isoCode) {
+export function fromIsoCountryCode(isoCode) {
   if (!isoCode) return null;
   return countries[isoCode.toUpperCase()] || null;
 }
 
-module.exports = { toIsoCountryCode, fromIsoCountryCode, countries };
+export default { toIsoCountryCode, fromIsoCountryCode, countries };

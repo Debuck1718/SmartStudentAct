@@ -1,23 +1,23 @@
 // File: routes/publicRoutes.js
-const express = require("express");
-const rateLimit = require("express-rate-limit");
-const Joi = require("joi");
-const crypto = require("crypto");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const School = require("../models/School");
-const logger = require("../utils/logger");
-const {
+import express from "express";
+import rateLimit from "express-rate-limit";
+import Joi from "joi";
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import School from "../models/School.js";
+import logger from "../utils/logger.js";
+import {
   generateAccessToken,
   generateRefreshToken,
   setAuthCookies,
-} = require("../middlewares/auth");
-const {
+} from "../middlewares/auth.js";
+import {
   sendOTPEmail,
   sendWelcomeEmail,
   sendResetEmail,
-  sendContactEmail,
-} = require("../utils/email");
+} from "../utils/email.js";
+
 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
 const IS_PROD = process.env.NODE_ENV === "production";
@@ -25,7 +25,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const PASSWORD_RESET_EXPIRY = 3600000;
 
 if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined in env vars.");
-
 
 const redirectPaths = {
   web: {
@@ -51,7 +50,6 @@ const redirectPaths = {
     contact: "/contact",
   },
 };
-
 
 function isAppRequest(req) {
   return (
@@ -79,11 +77,9 @@ function getGenericRedirect(req, path = "login") {
   return target[path] || target.login;
 }
 
-// ---------------- Module ----------------
-module.exports = (eventBus) => {
+export default function publicRoutes(eventBus) {
   const publicRouter = express.Router();
 
-  // --- Rate Limiters ---
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 50,
@@ -96,7 +92,6 @@ module.exports = (eventBus) => {
     message: "Too many requests. Try again later.",
   });
 
-  // --- Validation Schemas ---
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
     email: Joi.string().email().required(),
@@ -107,7 +102,7 @@ module.exports = (eventBus) => {
       .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
       .required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    occupation: Joi.string().valid("student", "teacher").required(),
+    occupation: Joi.string().valid("student", "teacher", "worker").required(),
     schoolName: Joi.string().required(),
     schoolCountry: Joi.string().required(),
     educationLevel: Joi.string().when("occupation", {
@@ -135,7 +130,14 @@ module.exports = (eventBus) => {
       then: Joi.required(),
       otherwise: Joi.allow(""),
     }),
+     
+    country: Joi.string().when("occupation",{
+      is: "worker",
+      then: Joi.required(),
+      otherwise: Joi.allow(""),
+    }),
   });
+
 
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
@@ -181,7 +183,6 @@ module.exports = (eventBus) => {
     }
     next();
   };
-
 
   publicRouter.post(
     "/users/signup-otp",
