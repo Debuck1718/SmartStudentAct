@@ -1,3 +1,7 @@
+// utils/eventBus.js
+import dotenv from "dotenv";
+dotenv.config(); // ✅ Load environment variables first
+
 import EventEmitter from "events";
 import webpush from "web-push";
 import smsApi from "./sms.js";
@@ -11,9 +15,14 @@ const Assignment = mongoose.models.Assignment;
 const StudentTask = mongoose.models.StudentTask;
 const Quiz = mongoose.models.Quiz;
 
-// ✅ Initialize Agenda with Mongo connection
+// ✅ Ensure Mongo URI exists before Agenda starts
+if (!process.env.MONGODB_URI) {
+  logger.error("❌ Missing MONGODB_URI in environment. Agenda will not start.");
+}
+
+// ✅ Initialize Agenda with Mongo connection safely
 const agenda = new Agenda({
-  db: { address: process.env.MONGO_URI, collection: "jobs" },
+  db: { address: process.env.MONGODB_URI || "", collection: "jobs" },
 });
 
 agenda.on("ready", async () => {
@@ -24,6 +33,7 @@ agenda.on("ready", async () => {
 // Shared event bus instance
 const eventBus = new EventEmitter();
 
+// ✅ Email template IDs
 export const emailTemplates = {
   otp: 3,
   welcome: 2,
@@ -36,16 +46,26 @@ export const emailTemplates = {
   goalBudgetUpdate: 10,
 };
 
-// ✅ VAPID Configuration for Push Notifications
-webpush.setVapidDetails(
-  "mailto:support@smartstudentact.com",
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+// ✅ Configure VAPID for push notifications safely
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    "mailto:support@smartstudentact.com",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+  logger.info("✅ Web Push VAPID keys configured successfully");
+} else {
+  logger.warn("⚠️ Missing VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY — Push notifications disabled");
+}
 
 // ===== Utility functions =====
 async function sendSMS(phone, message) {
   if (!phone) return;
+  if (!process.env.BREVO_API_KEY) {
+    logger.warn("[SMS] ⚠️ BREVO_API_KEY missing — skipping SMS send");
+    return;
+  }
+
   const recipient = phone.startsWith("+") ? phone : `+${phone}`;
   try {
     await smsApi.sendTransacSms({
@@ -94,7 +114,7 @@ async function fetchStudentsForAssignmentOrQuiz(item) {
   const otherGrades = item.assigned_to_other_grades || [];
   const schools = item.assigned_to_schools || [];
 
-  const students = await User.find({
+  return User.find({
     role: "student",
     $or: [
       { _id: { $in: userIds } },
@@ -103,18 +123,15 @@ async function fetchStudentsForAssignmentOrQuiz(item) {
       { school: { $in: schools } },
     ],
   }).select("_id phone email firstname PushSub");
-
-  return students;
 }
 
-// ===== Assignment Events =====
+// === Assignment Events ===
 eventBus.on("assignment_created", async ({ assignmentId, title }) => {
   try {
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) return;
 
     const students = await fetchStudentsForAssignmentOrQuiz(assignment);
-
     for (const student of students) {
       await notifyUser(
         student,
@@ -130,6 +147,7 @@ eventBus.on("assignment_created", async ({ assignmentId, title }) => {
       );
     }
 
+    // Schedule reminders
     const reminderHours = [6, 2];
     for (const hoursBefore of reminderHours) {
       const remindTime = new Date(assignment.due_date);
@@ -154,7 +172,6 @@ agenda.define("assignment_reminder", async (job) => {
     if (!assignment) return;
 
     const students = await fetchStudentsForAssignmentOrQuiz(assignment);
-
     for (const student of students) {
       await notifyUser(
         student,
@@ -174,7 +191,6 @@ agenda.define("assignment_reminder", async (job) => {
     logger.error(`assignment_reminder job failed: ${err.message}`);
   }
 });
-
 // ===== Task Events =====
 eventBus.on("task_created", async ({ taskId, studentId, title }) => {
   try {

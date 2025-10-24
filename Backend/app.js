@@ -1,7 +1,7 @@
-// app.js
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config(); // Must run BEFORE other imports
 
+// move this AFTER dotenv loads
 import express from "express";
 import mongoose from "mongoose";
 import helmet from "helmet";
@@ -12,6 +12,8 @@ import EventEmitter from "events";
 import path from "path";
 import cors from "cors";
 import listEndpoints from "express-list-endpoints";
+
+// ⚠️ move auth import BELOW dotenv.config()
 import { authenticateJWT } from "./middlewares/auth.js";
 
 import publicRoutes from "./routes/publicRoutes.js";

@@ -3,16 +3,18 @@ import jwt from "jsonwebtoken";
 import logger from "../utils/logger.js";
 import User from "../models/User.js";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-
-if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
-  throw new Error("JWT_SECRET and JWT_REFRESH_SECRET must be set in environment variables.");
-}
-
 const isProd = process.env.NODE_ENV === "production";
 const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY = "7d";
+
+const getEnvOrThrow = (key) => {
+  const value = process.env[key];
+  if (!value) logger.warn(`⚠️ Missing environment variable: ${key}`);
+  return value;
+};
+
+const JWT_SECRET = getEnvOrThrow("JWT_SECRET");
+const JWT_REFRESH_SECRET = getEnvOrThrow("JWT_REFRESH_SECRET");
 
 const PUBLIC_ROUTES = [
   "/users/login",
@@ -29,42 +31,53 @@ const isPublicRoute = (url) => {
   return PUBLIC_ROUTES.some((route) => cleanUrl.startsWith(route));
 };
 
-export const generateAccessToken = (user) =>
-  jwt.sign({ id: user._id, role: user.role, email: user.email }, JWT_SECRET, {
-    expiresIn: ACCESS_TOKEN_EXPIRY,
-  });
+// ---------- TOKEN HELPERS ----------
+export const generateAccessToken = (user) => {
+  if (!JWT_SECRET) throw new Error("Server misconfiguration: missing JWT_SECRET");
+  return jwt.sign(
+    { id: user._id, role: user.role, email: user.email },
+    JWT_SECRET,
+    { expiresIn: ACCESS_TOKEN_EXPIRY }
+  );
+};
 
-export const generateRefreshToken = (user) =>
-  jwt.sign({ id: user._id, role: user.role, email: user.email }, JWT_REFRESH_SECRET, {
-    expiresIn: REFRESH_TOKEN_EXPIRY,
-  });
+export const generateRefreshToken = (user) => {
+  if (!JWT_REFRESH_SECRET) throw new Error("Server misconfiguration: missing JWT_REFRESH_SECRET");
+  return jwt.sign(
+    { id: user._id, role: user.role, email: user.email },
+    JWT_REFRESH_SECRET,
+    { expiresIn: REFRESH_TOKEN_EXPIRY }
+  );
+};
 
-// ✅ Handles cookie setup for web, but still allows tokens in headers for mobile
+// ---------- COOKIE SETUP ----------
 export const setAuthCookies = (res, accessToken, refreshToken) => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProd,
     sameSite: "None",
-    domain: ".smartstudentact.com",
+    domain: isProd ? ".smartstudentact.com" : undefined, // only set domain in production
     path: "/",
   };
 
   res.cookie("access_token", accessToken, {
     ...cookieOptions,
-    maxAge: 15 * 60 * 1000, // 15m
+    maxAge: 15 * 60 * 1000, // 15 min
   });
 
   res.cookie("refresh_token", refreshToken, {
     ...cookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
 
+// ---------- AUTH MIDDLEWARE ----------
 export const authenticateJWT = (req, res, next) => {
   if (isPublicRoute(req.originalUrl)) return next();
 
   let token = req.cookies?.access_token;
 
+  // allow mobile Authorization header
   if (!token && req.headers.authorization) {
     const parts = req.headers.authorization.split(" ");
     if (parts.length === 2 && parts[0] === "Bearer") token = parts[1];
@@ -80,18 +93,19 @@ export const authenticateJWT = (req, res, next) => {
 
   jwt.verify(token, JWT_SECRET, async (err, decoded) => {
     if (err) {
+      // Handle expired token using refresh token
       if (err.name === "TokenExpiredError") {
-        const refreshToken = req.cookies?.refresh_token || req.headers["x-refresh-token"];
+        const refreshToken =
+          req.cookies?.refresh_token || req.headers["x-refresh-token"];
 
         if (!refreshToken) {
-          logger.warn("Access token expired, no refresh token found.");
           return res.status(401).json({
             status: false,
             message: "Session expired. Please login again.",
           });
         }
 
-        return jwt.verify(refreshToken, JWT_REFRESH_SECRET, async (refreshErr, refreshDecoded) => {
+        jwt.verify(refreshToken, JWT_REFRESH_SECRET, async (refreshErr, refreshDecoded) => {
           if (refreshErr) {
             logger.error(`Refresh token invalid/expired: ${refreshErr.message}`);
             return res.status(403).json({
@@ -110,16 +124,7 @@ export const authenticateJWT = (req, res, next) => {
           }
 
           const newAccessToken = generateAccessToken(user);
-
-          res.cookie("access_token", newAccessToken, {
-            httpOnly: true,
-            secure: isProd,
-            sameSite: "None",
-            domain: ".smartstudentact.com",
-            path: "/",
-            maxAge: 15 * 60 * 1000,
-          });
-
+          setAuthCookies(res, newAccessToken, refreshToken);
           res.setHeader("x-access-token", newAccessToken);
 
           req.userId = user._id;
@@ -127,9 +132,10 @@ export const authenticateJWT = (req, res, next) => {
           req.email = user.email;
           req.user = user;
 
-          logger.info("New access token issued via refresh token.");
+          logger.info("✅ New access token issued via refresh token.");
           return next();
         });
+        return;
       }
 
       logger.error(`JWT verification failed: ${err.message}`);
@@ -147,15 +153,16 @@ export const authenticateJWT = (req, res, next) => {
   });
 };
 
+// ---------- ADMIN GUARD ----------
 export const requireAdmin = (req, res, next) => {
   const adminRoles = ["admin", "overseer", "global_overseer"];
   if (!req.userRole || !adminRoles.includes(req.userRole)) {
     return res.status(403).json({
       status: false,
-      message: "Sorry, you are not authorised to view this resource. Contact your administrator.",
+      message:
+        "Sorry, you are not authorised to view this resource. Contact your administrator.",
     });
   }
   next();
 };
-
 

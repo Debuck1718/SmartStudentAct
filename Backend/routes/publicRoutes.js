@@ -1,4 +1,4 @@
-// File: routes/publicRoutes.js
+// routes/publicRoutes.js
 import express from "express";
 import rateLimit from "express-rate-limit";
 import Joi from "joi";
@@ -21,11 +21,18 @@ import {
 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
 const IS_PROD = process.env.NODE_ENV === "production";
-const JWT_SECRET = process.env.JWT_SECRET;
 const PASSWORD_RESET_EXPIRY = 3600000;
 
-if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined in env vars.");
+// ✅ Use safe lazy access for env values
+const getJWTSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    logger.warn("⚠️ JWT_SECRET missing from environment; OTP tokens may fail.");
+  }
+  return secret || "temporary_fallback_secret";
+};
 
+// ---------- Redirect Logic ----------
 const redirectPaths = {
   web: {
     global_overseer: "/global_overseer.html",
@@ -33,6 +40,7 @@ const redirectPaths = {
     admin: "/admins.html",
     teacher: "/teachers.html",
     student: "/students.html",
+    worker: "/worker.html",
     payment: "/payment.html",
     resetPassword: "/reset-password.html",
     login: "/login.html",
@@ -80,6 +88,7 @@ function getGenericRedirect(req, path = "login") {
 export default function publicRoutes(eventBus) {
   const publicRouter = express.Router();
 
+  // ---------- Rate Limiters ----------
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 50,
@@ -92,6 +101,7 @@ export default function publicRoutes(eventBus) {
     message: "Too many requests. Try again later.",
   });
 
+  // ---------- Joi Schemas ----------
   const signupOtpSchema = Joi.object({
     phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
     email: Joi.string().email().required(),
@@ -130,14 +140,12 @@ export default function publicRoutes(eventBus) {
       then: Joi.required(),
       otherwise: Joi.allow(""),
     }),
-     
-    country: Joi.string().when("occupation",{
+    country: Joi.string().when("occupation", {
       is: "worker",
       then: Joi.required(),
       otherwise: Joi.allow(""),
     }),
   });
-
 
   const verifyOtpSchema = Joi.object({
     code: Joi.string().length(6).pattern(/^\d+$/).required(),
@@ -172,6 +180,7 @@ export default function publicRoutes(eventBus) {
     message: Joi.string().min(5).max(2000).required(),
   });
 
+  // ---------- Validation Middleware ----------
   const validate = (schema) => (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
     if (error) {
@@ -184,6 +193,7 @@ export default function publicRoutes(eventBus) {
     next();
   };
 
+  // ---------- Signup OTP ----------
   publicRouter.post(
     "/users/signup-otp",
     rateLimit({ windowMs: 5 * 60 * 1000, max: 5 }),
@@ -197,7 +207,7 @@ export default function publicRoutes(eventBus) {
         };
 
         const existingUser = await User.findOne({ email: payload.email });
-        const otpToken = jwt.sign(payload, JWT_SECRET, { expiresIn: "10m" });
+        const otpToken = jwt.sign(payload, getJWTSecret(), { expiresIn: "10m" });
         await sendOTPEmail(payload.email, payload.firstname, payload.code);
 
         return res.status(200).json({

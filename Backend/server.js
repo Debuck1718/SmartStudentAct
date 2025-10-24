@@ -1,12 +1,17 @@
-// server.jsm nm
+// server.js
+import dotenv from "dotenv";
+dotenv.config();
+console.log("🚀 Starting SmartStudentAct backend initialization...");
+
 import http from "http";
 import mongoose from "mongoose";
 import Agenda from "agenda";
 import fetch from "node-fetch";
 import { app, eventBus } from "./app.js"; // ensure app.js exports `app`
 
+
 const PORT = process.env.PORT || 4000;
-const HOST = "0.0.0.0"; // ✅ Render requires this
+const HOST = "0.0.0.0"; // ✅ Required for Render and most hosting platforms
 const MONGO_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProd = NODE_ENV === "production";
@@ -63,11 +68,10 @@ const startApp = async () => {
 
     const server = http.createServer(app);
 
-    // ✅ Explicit 0.0.0.0 binding for Render
     server.listen(PORT, HOST, () => {
       console.log(`🚀 SmartStudentAct API running at http://${HOST}:${PORT} [${NODE_ENV}]`);
 
-      // Optional: Self-ping to prevent Render sleep
+      // Optional self-ping to prevent Render sleep
       if (isProd && process.env.RENDER_EXTERNAL_URL) {
         const url = process.env.RENDER_EXTERNAL_URL;
         console.log(`🌍 Self-pinging enabled for ${url}`);
@@ -122,9 +126,11 @@ const startApp = async () => {
   }
 };
 
-startApp();
-
-
+// ---------- Initialize App ----------
+startApp().catch((err) => {
+  console.error("❌ Uncaught error during application startup:", err);
+  process.exit(1);
+});
 
 
 
