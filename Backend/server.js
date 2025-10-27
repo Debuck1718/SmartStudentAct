@@ -135,9 +135,9 @@ app.use((err, req, res, next) => {
 // ---------- MongoDB Connection + Start Server ----------
 const startServer = async () => {
   try {
-    console.log("📡 Attempting to connect to MongoDB...");
+    console.log("📡 Attempting to connect to MongoDB..."); // ADDED LOG POINT
     await mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 20000, // Keep connection options for robustness
+        serverSelectionTimeoutMS: 20000, 
         useNewUrlParser: true,
         useUnifiedTopology: true,
     });
@@ -153,8 +153,8 @@ const startServer = async () => {
     }
   } catch (err) {
     console.error("❌ FATAL: MongoDB connection failed:", err.message || err);
-    // Use setTimeout to ensure the error log is flushed before the process exits
-    setTimeout(() => process.exit(1), 200); 
+    // Increased timeout to 1000ms (1 second) to ensure Render logs the error
+    setTimeout(() => process.exit(1), 1000); 
   }
 };
 
