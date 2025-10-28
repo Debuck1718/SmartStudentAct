@@ -50,7 +50,7 @@ const redirectPaths = {
     global_overseer: "/global_overseer",
     overseer: "/overseer",
     admin: "/admin",
-    teacher: "/(app)/(teachers-tabs)//teachers",
+    teacher: "/(app)/(teachers-tabs)/teachers",
     student: "/(app)/(students-tabs)/students",
     payment: "/payment",
     resetPassword: "/reset-password",

@@ -1,5 +1,6 @@
 import express from "express";
 import multer from "multer";
+import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs/promises";
 import crypto from "crypto";
@@ -11,6 +12,7 @@ import eventBus, { emailTemplates } from '../utils/eventBus.js';
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { authenticateJWT } from "../middlewares/auth.js";
 import checkSubscription from "../middlewares/checkSubscription.js";
+import { v2 as cloudinary } from "cloudinary";
 
 import User from "../models/User.js";
 import Goal from "../models/Goal.js";
@@ -90,6 +92,9 @@ const hasRole = (allowedRoles) => (req, res, next) => {
 // ✅ Middleware to protect all routes
 protectedRouter.use(authenticateJWT, checkSubscription);
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const localDiskStorage = multer.diskStorage({
   destination: (req, _file, cb) => {
     let dest;
@@ -113,7 +118,7 @@ const localDiskStorage = multer.diskStorage({
 });
 
 const cloudinaryStorage = new CloudinaryStorage({
-  cloudinary: require("cloudinary").v2,
+  cloudinary,
   params: {
     folder: "smartstudent-uploads",
     allowed_formats: ["jpg", "png", "jpeg", "webp", "gif"],
@@ -122,12 +127,13 @@ const cloudinaryStorage = new CloudinaryStorage({
 });
 
 const profilePictureStorage = new CloudinaryStorage({
-  cloudinary: require("cloudinary").v2,
+  cloudinary,
   params: {
     folder: "smartstudent-profile-pictures",
     allowed_formats: ["jpg", "png", "jpeg", "webp"],
   },
 });
+
 
 const createUploadMiddleware = (storageEngine) =>
   multer({
