@@ -14,13 +14,14 @@ import { v2 as cloudinary } from "cloudinary";
 import EventEmitter from "events";
 import path from "path";
 import cors from "cors";
+import fs from "fs";
 import listEndpoints from "express-list-endpoints";
 import http from "http";
 
 import { authenticateJWT } from "./middlewares/auth.js";
 
-// ---------- Core Setup ----------
-const app = express(); // ✅ must be defined before dynamic imports
+
+const app = express(); 
 const eventBus = new EventEmitter();
 const PORT = process.env.PORT || 4000;
 const HOST = "0.0.0.0";
@@ -90,6 +91,10 @@ app.use(
   })
 );
 
+const routes = listEndpoints(app);
+fs.writeFileSync("routes.json", JSON.stringify(routes, null, 2));
+console.log(`🧾 Saved all routes to routes.json (${routes.length} total)`);
+
 // ---------- Dynamic Route Import (SAFE ORDER) ----------
 console.log("--- STARTUP PHASE 2: Importing Routes ---");
 
@@ -97,14 +102,30 @@ const tryImport = async (label, routePath, mountPath) => {
   try {
     console.log(`🔍 Importing ${label} from ${routePath} ...`);
     const mod = (await import(routePath)).default;
-    console.log(`🧩 Mounting ${label} at "${mountPath}"`);
-    app.use(mountPath, mod);
-    console.log(`✅ Loaded ${label} at ${mountPath}`);
+
+    if (typeof mod === "function") {
+      const proxyApp = new Proxy(app, {
+        get(target, prop) {
+          if (["get","post","put","patch","delete","use"].includes(prop)) {
+            return (...args) => {
+              console.log(`Registering route: ${prop} ${args[0]}`);
+              return target[prop](...args);
+            };
+          }
+          return target[prop];
+        }
+      });
+      mod(proxyApp);
+      console.log(`✅ Loaded ${label} (function-style)`);
+    } else if (mod && typeof mod === "object") {
+      app.use(mountPath, mod);
+      console.log(`✅ Loaded ${label} (router-style)`);
+    } else {
+      throw new Error(`${label} has unsupported export type: ${typeof mod}`);
+    }
   } catch (err) {
     console.error(`❌ Error in ${label} (${routePath})`);
-    console.error("MESSAGE:", err.message);
-    console.error("STACK:", err.stack);
-    console.error("🔎 HINT: Look for malformed route path (missing '/' or malformed ':param').");
+    console.error(err);
   }
 };
 

@@ -2418,7 +2418,7 @@ protectedRouter.get("/user/status", authenticateJWT, async (req, res) => {
 });
 
 
-protectedRouter.use("/rewards", advancedGoalsRouter);
+protectedRouter.use("/advanced-goals", advancedGoalsRouter);
 protectedRouter.use("/budget", budgetRouter);
 protectedRouter.use("/essay", essayRouter);
 protectedRouter.use("/schools", schoolRouter);
