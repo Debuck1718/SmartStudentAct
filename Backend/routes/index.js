@@ -6,10 +6,11 @@ import pushRoutes from "./pushRoutes.js";
 
 export default (app, eventBus, agenda) => {
   const publicApiRouter = publicRoutes(eventBus, agenda);
-  const protectedApiRouter = protectedRoutes;
 
+  // ✅ These three are likely already express.Router() exports (not functions)
   app.use("/api", publicApiRouter);
   app.use("/api", webhookRoutes);
-  app.use("/api", protectedApiRouter);
+  app.use("/api", protectedRoutes);
   app.use("/api", pushRoutes);
 };
+
