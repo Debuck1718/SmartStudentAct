@@ -9,8 +9,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="api-config.js"></script>
 </head>
 
 <body class="bg-gray-50 text-gray-800">
@@ -125,7 +125,41 @@
   </footer>
 
   <script>
+    const API_BASE_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com/api');
     const userId = localStorage.getItem("user_id");
+
+    function showToast(message, type = "info") {
+      const container =
+        document.getElementById("toast-container") ||
+        (() => {
+          const el = document.createElement("div");
+          el.id = "toast-container";
+          el.className = "fixed top-4 right-4 z-[1000] space-y-2";
+          document.body.appendChild(el);
+          return el;
+        })();
+      const colors = { success: "bg-green-600", error: "bg-red-600", info: "bg-blue-600", warning: "bg-yellow-500 text-gray-900" };
+      const toast = document.createElement("div");
+      toast.className = `px-4 py-2 rounded text-white shadow ${colors[type] || colors.info}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    async function authFetch(endpoint, options = {}) {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        credentials: "include",
+        headers: {
+          ...(options.headers || {}),
+        },
+      });
+      if (res.status === 401) {
+        window.location.href = "/login.html";
+        return null;
+      }
+      return res;
+    }
     let translations = {};
 
     async function loadTranslations(lang) {
@@ -143,34 +177,41 @@
 
     async function loadOverview() {
       try {
-        const res = await axios.get(`/api/worker/overview?user_id=${userId}`);
-        const data = res.data.data;
+        const res = await authFetch(`/worker/overview`);
+        if (!res) return;
+        const body = await res.json();
+        const data = body.data;
         document.getElementById("motivationLevel").innerText = data.motivation_level + "%";
         document.getElementById("goalProgress").innerText = data.goal_progress_percent + "%";
         document.getElementById("streakStatus").innerText = data.active_streak_days + " days";
         renderFinanceChart(data.financial_summary);
       } catch (err) {
         console.error("Overview load error:", err);
+        showToast("Failed to load overview", "error");
       }
     }
 
     async function loadInsights() {
       try {
-        const res = await axios.get(`/api/worker/insight`);
-        const data = res.data.insights;
+        const res = await authFetch(`/worker/insight`);
+        if (!res) return;
+        const body = await res.json();
+        const data = body.insights;
         document.getElementById("goalInsight").innerText = data.goalInsight || "—";
         document.getElementById("financeInsight").innerText = data.financeInsight || "—";
         document.getElementById("motivationInsight").innerText = data.motivationInsight || "—";
         document.getElementById("adviceSummary").innerText = data.adviceSummary || "—";
       } catch (err) {
         console.error("Insight error:", err);
+        showToast("Failed to load insights", "error");
       }
     }
 
     async function loadRewards() {
       try {
-        const res = await axios.get(`/api/worker/rewards/dashboard`);
-        const r = res.data;
+        const res = await authFetch(`/worker/rewards/dashboard`);
+        if (!res) return;
+        const r = await res.json();
         document.getElementById("rewardData").innerHTML = `
           <div class="p-4 border rounded">
             <p><strong>Total Points:</strong> ${r.totalPoints}</p>
@@ -186,6 +227,7 @@
           </div>`;
       } catch (err) {
         console.error("Rewards load error:", err);
+        showToast("Failed to load rewards", "error");
       }
     }
 
@@ -214,11 +256,19 @@
         category: document.getElementById("goalCategory").value
       };
       try {
-        await axios.post("/api/worker/add-goal", payload);
-        alert("Goal added successfully!");
+        const res = await authFetch(`/worker/add-goal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res) return;
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.message || "Failed to add goal");
+        showToast("Goal added successfully!", "success");
         loadOverview();
       } catch (err) {
-        alert("Error adding goal: " + err.response?.data?.message);
+        console.error(err);
+        showToast(err.message || "Error adding goal", "error");
       }
     });
 
@@ -236,10 +286,18 @@
         is_recurring: document.getElementById("reminderRecurring").checked
       };
       try {
-        await axios.post("/api/worker/add-reminder", payload);
-        alert("Reminder added successfully!");
+        const res = await authFetch(`/worker/add-reminder`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res) return;
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.message || "Failed to add reminder");
+        showToast("Reminder added successfully!", "success");
       } catch (err) {
-        alert("Error adding reminder: " + err.response?.data?.message);
+        console.error(err);
+        showToast(err.message || "Error adding reminder", "error");
       }
     });
 
@@ -252,16 +310,18 @@
 const photoInput = document.getElementById("photoInput");
 const profilePhoto = document.getElementById("profilePhoto");
 
-async function loadProfilePhoto() {
-  try {
-    const res = await axios.get(`/api/profile/get-photo?user_id=${userId}`);
-    const url = res.data.photoUrl || "/images/default-avatar.png";
-    profilePhoto.src = url;
-  } catch (err) {
-    console.warn("Could not load profile photo:", err);
-    profilePhoto.src = "/images/default-avatar.png";
+  async function loadProfilePhoto() {
+    try {
+      const res = await authFetch(`/profile`);
+      if (!res) return;
+      const body = await res.json();
+      const url = body?.user?.photoUrl || body?.user?.profile_picture_url || body?.user?.imageUrl || "/images/default-avatar.png";
+      profilePhoto.src = url;
+    } catch (err) {
+      console.warn("Could not load profile photo:", err);
+      profilePhoto.src = "/images/default-avatar.png";
+    }
   }
-}
 
 profilePhoto.addEventListener("click", () => {
   photoInput.click();
@@ -275,14 +335,18 @@ photoInput.addEventListener("change", async (e) => {
   formData.append("profilePhoto", file);
 
   try {
-    const res = await axios.post("/api/profile/upload-photo", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
     });
-    alert("Profile photo updated successfully!");
-    profilePhoto.src = res.data.photoUrl;
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || "Upload failed");
+    showToast("Profile photo updated successfully!", "success");
+    profilePhoto.src = body.photoUrl || body.profile_picture_url || body.photoUrl;
   } catch (err) {
     console.error("Photo upload failed:", err);
-    alert("Error uploading photo. Please try again.");
+    showToast(err.message || "Error uploading photo", "error");
   }
 });
 

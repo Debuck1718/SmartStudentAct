@@ -14,6 +14,7 @@ const User = mongoose.models.User;
 const Assignment = mongoose.models.Assignment;
 const StudentTask = mongoose.models.StudentTask;
 const Quiz = mongoose.models.Quiz;
+const PushSubModel = mongoose.models.PushSub;
 
 // ✅ Ensure Mongo URI exists before Agenda starts
 if (!process.env.MONGODB_URI) {
@@ -91,6 +92,10 @@ async function sendPushToUser(pushSub, payload) {
 
 async function notifyUser(user, title, message, url, emailTemplateId, templateVariables = {}) {
   try {
+    if (!user.PushSub && user._id && PushSubModel) {
+      const found = await PushSubModel.findOne({ user_id: user._id }).lean();
+      if (found) user.PushSub = found;
+    }
     if (user.PushSub) {
       await sendPushToUser(user.PushSub, { title, body: message, url });
     }
@@ -242,6 +247,30 @@ agenda.define("task_reminder", async (job) => {
   }
 });
 
+// Define an Agenda job to auto-submit individual quiz submissions when time runs out
+agenda.define("auto_submit_quiz", async (job) => {
+  const { quizId, studentId } = job.attrs.data;
+  try {
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) return;
+    const submission = quiz.submissions.find(s => String(s.student_id) === String(studentId));
+    if (!submission || submission.submitted_at) return; // already submitted
+
+    let score = 0;
+    quiz.questions.forEach((q, idx) => {
+      if (submission.answers[idx] === q.correct) score++;
+    });
+    submission.score = score;
+    submission.submitted_at = new Date();
+    submission.auto_submitted = true;
+    await quiz.save();
+
+    eventBus.emit("quiz_auto_submitted", { quizId: quiz._id, studentId, score });
+  } catch (err) {
+    logger.error(`auto_submit_quiz job failed: ${err.message}`);
+  }
+});
+
 // ===== Quiz Events =====
 eventBus.on("quiz_created", async ({ quizId, title }) => {
   try {
@@ -335,6 +364,17 @@ eventBus.on("reward_granted", async ({ userId, type, points, reason }) => {
   }
 });
 
+// Backwards-compatible listener for reward_notification emitted by worker rewards route
+eventBus.on("reward_notification", async ({ userId, message }) => {
+  try {
+    const user = await User.findById(userId).select("_id phone email firstname PushSub");
+    if (!user) return;
+    await notifyUser(user, "Reward Update", message, "/worker/rewards");
+  } catch (err) {
+    logger.error(`reward_notification handler failed: ${err.message}`);
+  }
+});
+
 eventBus.on("goal_notification", async ({ userId, message }) => {
   try {
     const user = await User.findById(userId).select("_id phone email firstname PushSub");
@@ -368,6 +408,151 @@ eventBus.on("budget_notification", async ({ userId, message }) => {
     );
   } catch (err) {
     logger.error(`budget_notification event failed: ${err.message}`);
+  }
+});
+
+// ===== Worker Events =====
+eventBus.on("worker_transaction_added", async ({ workerId, transaction }) => {
+  try {
+    const worker = await User.findById(workerId).select("_id phone email firstname PushSub");
+    if (!worker) return;
+    await notifyUser(
+      worker,
+      "Transaction Added",
+      `A transaction of ${transaction.amount} (${transaction.type}) was added.`,
+      "/worker/overview"
+    );
+  } catch (err) {
+    logger.error(`worker_transaction_added handler failed: ${err.message}`);
+  }
+});
+
+eventBus.on("worker_goal_added", async ({ workerId, goal }) => {
+  try {
+    const worker = await User.findById(workerId).select("_id phone email firstname PushSub");
+    if (!worker) return;
+    await notifyUser(
+      worker,
+      "New Goal Added",
+      `Your goal "${goal.title}" has been saved.`,
+      "/worker/goals"
+    );
+  } catch (err) {
+    logger.error(`worker_goal_added handler failed: ${err.message}`);
+  }
+});
+
+eventBus.on("worker_progress_updated", async ({ workerId, updates }) => {
+  try {
+    const worker = await User.findById(workerId).select("_id phone email firstname PushSub");
+    if (!worker) return;
+    await notifyUser(
+      worker,
+      "Progress Update",
+      `Your progress was updated.`,
+      "/worker/overview"
+    );
+  } catch (err) {
+    logger.error(`worker_progress_updated handler failed: ${err.message}`);
+  }
+});
+
+// Agenda job to notify worker about reminders
+agenda.define("worker_reminder", async (job) => {
+  const { workerId, title, due_date } = job.attrs.data;
+  try {
+    const worker = await User.findById(workerId).select("_id phone email firstname PushSub");
+    if (!worker) return;
+    await notifyUser(
+      worker,
+      "Reminder",
+      `Reminder: ${title} is due on ${new Date(due_date).toLocaleString()}`,
+      "/worker/reminders",
+      emailTemplates.assignmentNotification,
+      { firstname: worker.firstname, reminderTitle: title, dueDate: new Date(due_date).toDateString() }
+    );
+  } catch (err) {
+    logger.error(`worker_reminder job failed: ${err.message}`);
+  }
+});
+
+// Notify teacher/student when a quiz is submitted
+eventBus.on("quiz_submitted", async ({ quizId, studentId, score }) => {
+  try {
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) return;
+    const teacher = await User.findById(quiz.teacher_id).select("_id phone email firstname PushSub");
+    const student = await User.findById(studentId).select("_id firstname lastname email PushSub");
+    if (!teacher || !student) return;
+
+    const message = `${student.firstname} ${student.lastname} submitted ${quiz.title} - Score: ${score}/${quiz.questions.length}`;
+    await notifyUser(
+      teacher,
+      "Quiz Submitted",
+      message,
+      `/quiz_dashboard.html?quizId=${quizId}`,
+      emailTemplates.quizNotification,
+      { firstname: teacher.firstname, studentName: `${student.firstname} ${student.lastname}`, quizTitle: quiz.title, score }
+    );
+  } catch (err) {
+    logger.error(`quiz_submitted handler failed: ${err.message}`);
+  }
+});
+
+// Notify teacher when a quiz was auto-submitted
+eventBus.on("quiz_auto_submitted", async ({ quizId, studentId, score }) => {
+  try {
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) return;
+    const teacher = await User.findById(quiz.teacher_id).select("_id phone email firstname PushSub");
+    const student = await User.findById(studentId).select("_id firstname lastname email PushSub");
+    if (!teacher || !student) return;
+
+    const message = `${student.firstname} ${student.lastname}'s time expired for ${quiz.title}. Auto-submitted - Score: ${score}/${quiz.questions.length}`;
+    await notifyUser(
+      teacher,
+      "Quiz Auto-Submitted",
+      message,
+      `/quiz_dashboard.html?quizId=${quizId}`,
+      emailTemplates.quizNotification,
+      { firstname: teacher.firstname, studentName: `${student.firstname} ${student.lastname}`, quizTitle: quiz.title, score }
+    );
+  } catch (err) {
+    logger.error(`quiz_auto_submitted handler failed: ${err.message}`);
+  }
+});
+
+// Notify student when teacher sends them a message
+eventBus.on("teacher_message", async ({ userId, message, teacherName }) => {
+  try {
+    const student = await User.findById(userId).select("_id phone email firstname PushSub");
+    if (!student) return;
+
+    await notifyUser(
+      student,
+      `Message from ${teacherName}`,
+      message,
+      "/student/messages"
+    );
+  } catch (err) {
+    logger.error(`teacher_message handler failed: ${err.message}`);
+  }
+});
+
+// Notify teacher/student when a new assignment submission is created
+eventBus.on("new_submission", async ({ assignmentId, studentId }) => {
+  try {
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) return;
+    const teacher = await User.findById(assignment.teacher_id).select("_id phone email firstname PushSub");
+    const student = await User.findById(studentId).select("_id firstname lastname email PushSub");
+    if (!teacher || !student) return;
+
+    const message = `${student.firstname} ${student.lastname} submitted ${assignment.title}`;
+    await notifyUser(teacher, "New Submission", message, "/teacher/feedback");
+    await notifyUser(student, "Submission Received", `Your submission for ${assignment.title} was received.`, "/student/submissions");
+  } catch (err) {
+    logger.error(`new_submission handler failed: ${err.message}`);
   }
 });
 

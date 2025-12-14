@@ -1,5 +1,7 @@
 import dbConnect from "@/lib/db";
 import Worker from "@/models/worker";
+import eventBus from "../utils/eventBus.js";
+import User from "../models/User.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -34,6 +36,15 @@ export default async function handler(req, res) {
     }
 
     await worker.save();
+    // Emit worker transaction event
+    try {
+      eventBus.emit("worker_transaction_added", {
+        workerId: worker.user_id,
+        transaction: { type, amount, description, category },
+      });
+    } catch (err) {
+      console.error("Event emit failed:", err.message);
+    }
     res.status(200).json({ success: true, message: "Transaction added successfully", data: worker.finance });
   } catch (error) {
     console.error("Add transaction error:", error);

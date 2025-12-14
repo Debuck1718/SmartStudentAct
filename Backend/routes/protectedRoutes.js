@@ -8,7 +8,7 @@ import Joi from "joi";
 import logger from "../utils/logger.js";
 import webpush from "web-push";
 import jwt from "jsonwebtoken";
-import eventBus, { emailTemplates } from '../utils/eventBus.js';
+import eventBus, { emailTemplates, agenda } from '../utils/eventBus.js';
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { authenticateJWT } from "../middlewares/auth.js";
 import checkSubscription from "../middlewares/checkSubscription.js";
@@ -25,12 +25,16 @@ import Quiz from "../models/Quiz.js";
 import StudentTask from "../models/StudentTask.js";
 import SchoolCalendar from "../models/SchoolCalendar.js";
 import Message from "../models/Message.js";
+import SpecialLink from "../models/SpecialLink.js";
+import Reward from "../models/Reward.js";
 
 import advancedGoalsRouter from "./advancedGoals.js";
 import essayRouter from "./essay.js";
 import budgetRouter from "./budget.js";
 import schoolRouter from "./schoolRoutes.js";
 import uploadRouter from "./uploadRoutes.js";
+import workerRouter from "../worker/index.js";
+import specialLinksHandler from "../special-links/index.js";
 
 import { toIsoCountryCode, fromIsoCountryCode } from "../utils/countryHelper.js";
 import * as paymentController from "../controllers/paymentController.js";
@@ -76,7 +80,6 @@ async function notifyUser(userId, title, message, url) {
   await sendSMS(user?.phone, `${title}: ${message}`);
 }
 
-const agenda = { schedule: () => {} };
 const protectedRouter = express.Router();
 
 const hasRole = (allowedRoles) => (req, res, next) => {
@@ -116,6 +119,28 @@ const localDiskStorage = multer.diskStorage({
         path.extname(file.originalname).toLowerCase()
     ),
 });
+
+// Helper - determine if a student is included in an assignment
+function isStudentAssignedToAssignment(assignment, user) {
+  if (!assignment || !user) return false;
+  const userId = String(user._id || user.id || user);
+  const userEmail = user.email;
+  const userGrade = user.grade;
+  const userProgram = user.program;
+  const userSchool = user.school || user.schoolName || (user.school && user.school._id);
+
+  // assigned_to_users may contain ObjectId refs or email strings
+  const assignedUsers = (assignment.assigned_to_users || []).map((u) => String(u));
+  if (assignedUsers.includes(userId) || assignedUsers.includes(userEmail)) return true;
+
+  if (Array.isArray(assignment.assigned_to_grades) && assignment.assigned_to_grades.includes(Number(userGrade))) return true;
+  if (Array.isArray(assignment.assigned_to_programs) && assignment.assigned_to_programs.includes(userProgram)) return true;
+  if (Array.isArray(assignment.assigned_to_other_grades) && assignment.assigned_to_other_grades.includes(Number(userGrade))) return true;
+  // assigned_to_schools may contain objectids or strings
+  const assignedSchools = (assignment.assigned_to_schools || []).map((s) => String(s));
+  if (userSchool && assignedSchools.includes(String(userSchool))) return true;
+  return false;
+}
 
 const cloudinaryStorage = new CloudinaryStorage({
   cloudinary,
@@ -176,6 +201,20 @@ Object.values(dirs).forEach(async (d) => {
     logger.error(`Failed to create upload directory ${d}: ${error.message}`);
   }
 });
+
+// Helper to compute profile picture URL with a default fallback
+function getProfileUrl(req, storedUrl) {
+  if (!storedUrl) return null;
+  if (storedUrl.startsWith("http://") || storedUrl.startsWith("https://")) return storedUrl;
+  // storedUrl may be a local path e.g. /uploads/... — return absolute URL for client
+  try {
+    const host = req.get("host");
+    const protocol = req.protocol;
+    return `${protocol}://${host}${storedUrl}`;
+  } catch (e) {
+    return storedUrl || DEFAULT_URL;
+  }
+}
 
 const timezoneSchema = Joi.object({
   timezone: Joi.string().required(),
@@ -371,6 +410,165 @@ protectedRouter.post(
   }
 );
 
+// Grant rewards (teacher or admin can grant): accepts array of grants
+protectedRouter.post(
+  "/teacher/calendar/grant",
+  authenticateJWT,
+  hasRole(["teacher", "admin", "global_overseer"]),
+  async (req, res) => {
+    try {
+      const { grants } = req.body; // [{ userId, type, points, description }]
+      if (!Array.isArray(grants) || !grants.length) return res.status(400).json({ message: "No grants provided." });
+
+      const results = [];
+      for (const g of grants) {
+        const { userId, type, points = 0, description = "" } = g;
+        if (!userId || !type) continue;
+        const reward = new Reward({ user_id: userId, type, points, description, granted_by: req.user.id });
+        await reward.save();
+        eventBus.emit("reward_granted", { userId, type, points, reason: description });
+        results.push(reward);
+      }
+
+      res.status(201).json({ message: "Rewards granted.", rewards: results });
+    } catch (err) {
+      logger.error("Error granting rewards:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// GET teacher calendar (by academicYear or latest)
+protectedRouter.get(
+  "/teacher/calendar",
+  authenticateJWT,
+  hasRole(["teacher", "admin", "global_overseer"]),
+  async (req, res) => {
+    try {
+      const requester = await User.findById(req.user.id).populate("school");
+      if (!requester) return res.status(404).json({ message: "User not found." });
+
+      const { academicYear, schoolId } = req.query;
+
+      let targetSchoolId = null;
+      if (requester.role === "teacher") {
+        if (!requester.school) return res.status(404).json({ message: "Teacher or school not found." });
+        targetSchoolId = requester.school._id;
+      } else if (["admin", "global_overseer"].includes(requester.role)) {
+        targetSchoolId = schoolId || (requester.school ? requester.school._id : null);
+        if (!targetSchoolId) return res.status(400).json({ message: "Please specify schoolId when calling this endpoint as admin." });
+      }
+
+      let calendar;
+      if (academicYear) {
+        calendar = await SchoolCalendar.findOne({ school: targetSchoolId, academicYear });
+      } else {
+        calendar = await SchoolCalendar.findOne({ school: targetSchoolId }).sort({ updatedAt: -1 });
+      }
+
+      if (!calendar) return res.status(200).json({ academicYear: null, terms: [] });
+
+      res.status(200).json({ academicYear: calendar.academicYear, terms: calendar.terms });
+    } catch (err) {
+      logger.error("Error fetching calendar:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// Compute term results for a school/term - accessible to teacher and admins
+protectedRouter.get(
+  "/teacher/calendar/results",
+  authenticateJWT,
+  hasRole(["teacher", "admin", "global_overseer"]),
+  async (req, res) => {
+    try {
+      const requester = await User.findById(req.user.id).populate("school");
+      if (!requester) return res.status(404).json({ message: "User not found." });
+
+      const { academicYear, termName, schoolId } = req.query;
+      if (!academicYear || !termName) return res.status(400).json({ message: "academicYear and termName are required" });
+      // determine target school
+      let targetSchoolId = null;
+      if (requester.role === "teacher") {
+        if (!requester.school) return res.status(404).json({ message: "Teacher or school not found." });
+        targetSchoolId = requester.school._id;
+      } else if (["admin", "global_overseer"].includes(requester.role)) {
+        if (schoolId) targetSchoolId = schoolId;
+        else if (requester.school) targetSchoolId = requester.school._id;
+        else return res.status(400).json({ message: "Please specify schoolId when calling this endpoint as admin." });
+      }
+
+      const calendar = await SchoolCalendar.findOne({ school: targetSchoolId, academicYear });
+      if (!calendar) return res.status(404).json({ message: "School calendar not found for the given academic year." });
+
+      const term = calendar.terms.find(t => t.termName === termName || t.termName === termName.trim());
+      if (!term) return res.status(404).json({ message: "Term not found in academic year." });
+
+      const start = new Date(term.startDate);
+      const end = new Date(term.endDate);
+
+      // fetch students in the school
+      const students = await User.find({ school: teacher.school._id, role: "student" }).select("_id firstname lastname email grade");
+
+      // Pre-fetch data
+      const assignments = await Assignment.find({ teacher_id: teacher._id });
+      const assignmentIds = assignments.map(a => a._id);
+      const submissions = await Submission.find({ assignment_id: { $in: assignmentIds }, submitted_at: { $gte: start, $lte: end } });
+      const quizzes = await Quiz.find({});
+      const rewards = await Reward.find({ granted_at: { $gte: start, $lte: end } });
+
+      const studentResults = [];
+
+      for (const s of students) {
+        // Assignment average
+        const subs = submissions.filter(sub => String(sub.user_id) === String(s._id) && typeof sub.feedback_grade === 'number');
+        let assignmentAvg = 0;
+        if (subs.length) assignmentAvg = subs.reduce((sum, x) => sum + (x.feedback_grade || 0), 0) / subs.length;
+
+        // Quiz avg (use quiz.submissions score)
+        let quizScores = [];
+        for (const q of quizzes) {
+          const qs = (q.submissions || []).filter(sub => String(sub.student_id) === String(s._id) && sub.submitted_at && new Date(sub.submitted_at) >= start && new Date(sub.submitted_at) <= end);
+          for (const sub of qs) {
+            if (typeof sub.score === 'number' && q.questions && q.questions.length) {
+              const percent = (sub.score / q.questions.length) * 100;
+              quizScores.push(percent);
+            }
+          }
+        }
+        const quizAvg = quizScores.length ? quizScores.reduce((a,b) => a+b,0) / quizScores.length : 0;
+
+        // Reward points in term
+        const rewardPoints = rewards.filter(r => String(r.user_id) === String(s._id)).reduce((sum,x)=> sum + (x.points || 0), 0);
+
+        // Activity: count submissions + quiz attempts
+        const activityCount = subs.length + quizScores.length;
+        const activityScore = Math.min(100, activityCount * 10 + rewardPoints);
+
+        const totalScore = Math.round(0.5 * assignmentAvg + 0.4 * quizAvg + 0.1 * activityScore);
+
+        studentResults.push({
+          student: { _id: s._id, firstname: s.firstname, lastname: s.lastname, email: s.email },
+          assignmentAvg: Math.round(assignmentAvg),
+          quizAvg: Math.round(quizAvg),
+          rewardPoints,
+          activityCount,
+          score: totalScore,
+        });
+      }
+
+      studentResults.sort((a,b)=> b.score - a.score);
+      studentResults.forEach((r, idx) => { r.position = idx+1; });
+
+      res.status(200).json({ term: { termName: term.termName, start: term.startDate, end: term.endDate }, results: studentResults });
+    } catch (err) {
+      logger.error("Error computing term results:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 protectedRouter.patch(
   "/settings",
   authenticateJWT,
@@ -479,7 +677,9 @@ protectedRouter.get("/profile", authenticateJWT, async (req, res) => {
         program: user.program,
         teacherGrade: user.teacherGrade,
         teacherSubject: user.teacherSubject,
-        profile_picture_url: user.profile_picture_url,
+        profile_picture_url: getProfileUrl(req, user.profile_picture_url),
+        imageUrl: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
+        photoUrl: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
       },
     });
   } catch (error) {
@@ -568,7 +768,9 @@ protectedRouter.patch("/profile", authenticateJWT, validate(settingsSchema), asy
         program: updatedUser.program,
         teacherGrade: updatedUser.teacherGrade,
         teacherSubject: updatedUser.teacherSubject,
-        profile_picture_url: updatedUser.profile_picture_url,
+  profile_picture_url: getProfileUrl(req, updatedUser.profile_picture_url || updatedUser.profile_photo_url),
+  imageUrl: getProfileUrl(req, updatedUser.profile_picture_url || updatedUser.profile_photo_url),
+  photoUrl: getProfileUrl(req, updatedUser.profile_picture_url || updatedUser.profile_photo_url),
       },
     });
   } catch (error) {
@@ -597,18 +799,34 @@ protectedRouter.post(
       return res.status(400).json({ message: "No file uploaded." });
     }
 
+
     try {
-      const photoUrl = req.file.path;
+      // Determine stored path: support cloudinary (http) or local uploads (/uploads/...)
+      let storedUrl = null;
+      if (req.file && req.file.path) {
+        const p = req.file.path;
+        if (p.startsWith("http://") || p.startsWith("https://")) {
+          storedUrl = p;
+        } else if (p.includes("/uploads/")) {
+          storedUrl = p.substring(p.indexOf("/uploads/"));
+        } else {
+          // best effort: if filename is present, store a local relative path
+          storedUrl = req.file.filename ? `/uploads/other/${req.file.filename}` : p;
+        }
+      }
 
       const result = await User.updateOne(
         { _id: userId },
-        { $set: { profile_picture_url: photoUrl } }
+        { $set: { profile_picture_url: storedUrl } }
       );
 
       if (result.modifiedCount > 0) {
+        const publicUrl = getProfileUrl(req, storedUrl);
         res.status(200).json({
           message: "Profile picture updated successfully.",
-          photoUrl: photoUrl,
+          profile_picture_url: storedUrl,
+          photoUrl: publicUrl,
+          imageUrl: publicUrl,
         });
       } else {
         res.status(200).json({ message: "No changes were made." });
@@ -1126,7 +1344,12 @@ protectedRouter.get(
       if (!teacher) {
         return res.status(404).json({ message: "Teacher profile not found." });
       }
-      res.status(200).json(teacher);
+      const t = teacher.toObject();
+      const computed = getProfileUrl(req, t.profile_picture_url || t.profile_photo_url);
+      t.profile_picture_url = computed;
+      t.imageUrl = computed;
+      t.photoUrl = computed;
+      res.status(200).json(t);
     } catch (error) {
       logger.error("Error fetching teacher profile:", error);
       res.status(500).json({ message: "Server error" });
@@ -1240,15 +1463,29 @@ protectedRouter.post(
 
       
       if (recipientType === "class") {
-        const students = await User.find({ isMyClass: true, role: "student" });
-        assigned_to_users = students.map((s) => new mongoose.Types.ObjectId(s._id));
+        // assign to teacher's grades in their school
+        const teacher = await User.findById(req.user.id);
+        if (teacher && Array.isArray(teacher.teacherGrade) && teacher.teacherGrade.length > 0) {
+          const classQuery = { role: "student", grade: { $in: teacher.teacherGrade } };
+          if (teacher.school) classQuery.school = teacher.school;
+          const students = await User.find(classQuery).select("_id");
+          assigned_to_users = students.map((s) => new mongoose.Types.ObjectId(s._id));
+        }
       } else if (recipientType === "otherGrade" && grade) {
-        const students = await User.find({ grade, role: "student" });
+        // assign to a specific other grade within teacher's school
+        const teacher = await User.findById(req.user.id);
+        const gradeQuery = { role: "student", grade: Number(grade) };
+        if (teacher && teacher.school) gradeQuery.school = teacher.school;
+        const students = await User.find(gradeQuery).select("_id");
         assigned_to_other_grades = students.map((s) => new mongoose.Types.ObjectId(s._id));
       } else {
-        
-        assigned_to_users = assigned_to_users.map((id) => new mongoose.Types.ObjectId(id));
-        assigned_to_schools = assigned_to_schools.map((id) => new mongoose.Types.ObjectId(id));
+        // explicit user ids or schools provided
+        assigned_to_users = Array.isArray(assigned_to_users)
+          ? assigned_to_users.map((id) => new mongoose.Types.ObjectId(id))
+          : [];
+        assigned_to_schools = Array.isArray(assigned_to_schools)
+          ? assigned_to_schools.map((id) => new mongoose.Types.ObjectId(id))
+          : [];
       }
 
       
@@ -1366,6 +1603,89 @@ protectedRouter.get(
   }
 );
 
+protectedRouter.get(
+  "/teacher/quizzes/:quizId/submissions",
+  authenticateJWT,
+  hasRole("teacher"),
+  async (req, res) => {
+    try {
+      const { quizId } = req.params;
+      const quiz = await Quiz.findById(quizId).populate("submissions.student_id", "firstname lastname email");
+      if (!quiz) return res.status(404).json({ message: "Quiz not found." });
+      if (String(quiz.teacher_id) !== String(req.user.id)) {
+        return res.status(403).json({ message: "Not authorized to view this quiz submissions." });
+      }
+
+      const submissions = quiz.submissions.map((sub) => {
+        const details = quiz.questions.map((q, idx) => ({
+          question: q.question || null,
+          studentAnswer: sub.answers?.[idx] || null,
+          correctAnswer: q.correct,
+          isCorrect: sub.answers?.[idx] === q.correct,
+          options: q.options || [],
+        }));
+        return {
+          student: sub.student_id,
+          score: sub.score,
+          submitted_at: sub.submitted_at,
+          auto_submitted: sub.auto_submitted,
+          details,
+        };
+      });
+
+      res.status(200).json({ quizTitle: quiz.title, submissions });
+    } catch (err) {
+      logger.error("Error fetching quiz submissions:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+// GET: /api/quizzes/:quizId/ranks - returns ranking for the quiz for teachers/students
+protectedRouter.get(
+  "/quizzes/:quizId/ranks",
+  authenticateJWT,
+  hasRole(["teacher", "student"]),
+  async (req, res) => {
+    try {
+      const { quizId } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(quizId)) return res.status(400).json({ message: "Invalid quiz ID." });
+
+      const quiz = await Quiz.findById(quizId).populate("submissions.student_id", "firstname lastname email");
+      if (!quiz) return res.status(404).json({ message: "Quiz not found." });
+
+      // Access: teacher or student who is assigned
+      if (req.user.role === "teacher") {
+        if (String(quiz.teacher_id) !== String(req.user.id)) {
+          return res.status(403).json({ message: "Not authorized." });
+        }
+      } else if (req.user.role === "student") {
+        const student = await User.findById(req.user.id).select("_id email grade schoolName");
+        const allowed =
+          quiz.assigned_to_users.some(u => String(u) === String(student._id)) ||
+          quiz.assigned_to_grades.includes(student.grade) ||
+          quiz.assigned_to_schools.some(s => String(s) === String(student.school)) ||
+          quiz.assigned_to_other_grades.includes(student.grade);
+        if (!allowed) return res.status(403).json({ message: "Not authorized for this quiz." });
+      }
+
+      const ranks = quiz.submissions
+        .filter(s => typeof s.score === 'number')
+        .map(s => ({
+          student: s.student_id,
+          score: s.score,
+        }))
+        .sort((a, b) => b.score - a.score)
+        .map((entry, index) => ({ position: index + 1, ...entry }));
+
+      res.status(200).json({ quizTitle: quiz.title, ranks });
+    } catch (err) {
+      logger.error("Error fetching quiz ranks:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 
 protectedRouter.post(
   "/teacher/quizzes",
@@ -1386,11 +1706,32 @@ protectedRouter.post(
         assigned_to_other_grades = [],
       } = req.body;
 
+      // normalize arrays and convert ids to ObjectId where applicable
+      const normAssignedUsers = Array.isArray(assigned_to_users)
+        ? assigned_to_users.map((id) => {
+            try {
+              return new mongoose.Types.ObjectId(id);
+            } catch (e) {
+              return null;
+            }
+          }).filter(Boolean)
+        : [];
+
+      const normAssignedSchools = Array.isArray(assigned_to_schools)
+        ? assigned_to_schools.map((id) => {
+            try {
+              return new mongoose.Types.ObjectId(id);
+            } catch (e) {
+              return null;
+            }
+          }).filter(Boolean)
+        : [];
+
       if (
-        !assigned_to_users.length &&
+        !normAssignedUsers.length &&
         !assigned_to_grades.length &&
         !assigned_to_programs.length &&
-        !assigned_to_schools.length &&
+        !normAssignedSchools.length &&
         !assigned_to_other_grades.length
       ) {
         return res.status(400).json({
@@ -1406,10 +1747,10 @@ protectedRouter.post(
         due_date,
         timeLimitMinutes,
         questions,
-        assigned_to_users,
+        assigned_to_users: normAssignedUsers,
         assigned_to_grades,
         assigned_to_programs,
-        assigned_to_schools,
+        assigned_to_schools: normAssignedSchools,
         assigned_to_other_grades,
       });
 
@@ -1479,6 +1820,28 @@ protectedRouter.get(
       res.status(200).json(assignedTasks);
     } catch (error) {
       logger.error("Error fetching assigned tasks:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.get(
+  "/teacher/quiz-summaries",
+  authenticateJWT,
+  hasRole("teacher"),
+  async (req, res) => {
+    try {
+      const teacherId = req.user.id;
+      const quizzes = await Quiz.find({ teacher_id: teacherId }).select("title questions submissions");
+      const summaries = quizzes.map(q => {
+        const count = q.submissions?.length || 0;
+        const scores = q.submissions?.filter(s => typeof s.score === 'number').map(s => s.score) || [];
+        const avg = scores.length ? (scores.reduce((a,b) => a + b, 0) / scores.length) : null;
+        return { quizId: q._id, title: q.title, questionsCount: q.questions?.length || 0, submissionsCount: count, averageScore: avg };
+      });
+      res.status(200).json(summaries);
+    } catch (err) {
+      logger.error("Error fetching quiz summaries:", err);
       res.status(500).json({ message: "Server error" });
     }
   }
@@ -1607,8 +1970,17 @@ protectedRouter.get(
         ];
       }
 
-      const otherStudents = await User.find(schoolQuery).select("firstname lastname email grade imageUrl");
-      res.status(200).json(otherStudents);
+      const otherStudents = await User.find(schoolQuery).select("firstname lastname email grade profile_picture_url");
+      const mappedOther = otherStudents.map(s => ({
+        _id: s._id,
+        firstname: s.firstname,
+        lastname: s.lastname,
+        email: s.email,
+        grade: s.grade,
+        profile_picture_url: getProfileUrl(req, s.profile_picture_url || s.profile_photo_url),
+        imageUrl: getProfileUrl(req, s.profile_picture_url || s.profile_photo_url),
+      }));
+      res.status(200).json(mappedOther);
     } catch (error) {
       logger.error("Error fetching students from other classes:", error);
       res.status(500).json({ message: "Server error" });
@@ -1647,8 +2019,17 @@ protectedRouter.get(
         ];
       }
 
-      const students = await User.find(schoolQuery).select("firstname lastname email grade imageUrl");
-      res.status(200).json(students || []);
+      const students = await User.find(schoolQuery).select("firstname lastname email grade profile_picture_url");
+      const mappedStudents = students.map(s => ({
+        _id: s._id,
+        firstname: s.firstname,
+        lastname: s.lastname,
+        email: s.email,
+        grade: s.grade,
+        profile_picture_url: getProfileUrl(req, s.profile_picture_url || s.profile_photo_url),
+        imageUrl: getProfileUrl(req, s.profile_picture_url || s.profile_photo_url),
+      }));
+      res.status(200).json(mappedStudents || []);
     } catch (error) {
       logger.error("Error fetching students for teacher's class:", error);
       res.status(500).json({ message: "Server error" });
@@ -1656,16 +2037,95 @@ protectedRouter.get(
   }
 );
 
+
+// Aggregated list of assignable students for teacher UIs
+protectedRouter.get(
+  "/teacher/assignable-students",
+  authenticateJWT,
+  hasRole("teacher"),
+  async (req, res) => {
+    try {
+      const teacher = await User.findById(req.user.id).populate("school");
+      if (!teacher) return res.status(404).json({ message: "Teacher not found." });
+
+      const { search } = req.query;
+
+      // 1) My grade students
+      let myGradeQuery = { role: "student", grade: { $in: teacher.teacherGrade } };
+      if (teacher.school) myGradeQuery.school = teacher.school._id;
+      if (search) myGradeQuery.$or = [
+        { firstname: { $regex: search, $options: "i" } },
+        { lastname: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+      const myGradeStudents = await User.find(myGradeQuery).select("_id firstname lastname email grade school");
+
+      // 2) Other students in same school (excluding my grades)
+      let otherQuery = { role: "student", grade: { $nin: teacher.teacherGrade } };
+      if (teacher.school) otherQuery.school = teacher.school._id;
+      if (search) otherQuery.$or = [
+        { firstname: { $regex: search, $options: "i" } },
+        { lastname: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+      const otherStudents = await User.find(otherQuery).select("_id firstname lastname email grade school profile_picture_url profile_photo_url");
+
+      // 3) Special linked students (cross-school)
+      const specialLinks = await SpecialLink.find({
+        $or: [{ teacher_id: teacher._id }, { student_id: teacher._id }],
+        status: "active",
+      })
+        .populate("teacher_id", "_id firstname lastname email school")
+        .populate("student_id", "_id firstname lastname email school");
+
+      const specialConnections = specialLinks.map((l) => {
+        const isTeacher = l.teacher_id._id.toString() === teacher._id.toString();
+        const partner = isTeacher ? l.student_id : l.teacher_id;
+        return { _id: partner._id, firstname: partner.firstname, lastname: partner.lastname, email: partner.email, school: partner.school, profile_picture_url: getProfileUrl(req, partner.profile_picture_url || partner.profile_photo_url), imageUrl: getProfileUrl(req, partner.profile_picture_url || partner.profile_photo_url) };
+      });
+
+      // 4) Available grades in school
+      const gradePipeline = [{ $match: { role: "student" } }];
+      if (teacher.school) gradePipeline.push({ $match: { school: teacher.school._id } });
+      gradePipeline.push({ $group: { _id: "$grade" } }, { $sort: { _id: 1 } });
+      const gradesAgg = await User.aggregate(gradePipeline);
+      const availableGrades = gradesAgg.map((g) => g._id).filter((g) => g != null);
+
+      // compute profile URLs for myGrade and otherStudents
+      const mapWithPhoto = (arr) => arr.map(s => ({ ...s.toObject ? s.toObject() : s, profile_picture_url: getProfileUrl(req, s.profile_picture_url || s.profile_photo_url), imageUrl: getProfileUrl(req, s.profile_picture_url || s.profile_photo_url) }));
+      res.status(200).json({ myGradeStudents: mapWithPhoto(myGradeStudents), otherStudents: mapWithPhoto(otherStudents), specialConnections, availableGrades });
+    } catch (err) {
+      logger.error("Error building assignable students list:", err);
+      res.status(500).json({ message: "Server error", error: err.message });
+    }
+  }
+);
+
 protectedRouter.get("/auth/check", authenticateJWT, (req, res) => {
-  res.json({
-    status: true,
-    message: "Authenticated",
-    user: {
-      id: req.user.id,
-      email: req.user.email,
-      role: req.user.role,
-    },
-  });
+  (async () => {
+    try {
+      const user = await User.findById(req.user.id).select("firstname lastname email role profile_picture_url profile_photo_url");
+      if (!user) return res.status(404).json({ status: false, message: "User not found." });
+      const photo = getProfileUrl(req, user.profile_picture_url || user.profile_photo_url);
+      res.json({
+        status: true,
+        message: "Authenticated",
+        user: {
+          id: user._id,
+          email: user.email,
+          role: user.role,
+          firstname: user.firstname,
+          lastname: user.lastname,
+          profile_picture_url: photo,
+          imageUrl: photo,
+          photoUrl: photo,
+        },
+      });
+    } catch (err) {
+      console.error("auth/check error:", err);
+      res.status(500).json({ status: false, message: "Server error" });
+    }
+  })();
 });
 
 
@@ -1894,16 +2354,35 @@ protectedRouter.get(
           sub => sub.student_id.toString() === student._id.toString()
         );
         if (!submission) {
+          const now = new Date();
           quiz.submissions.push({
             student_id: student._id,
             answers: [],
-            started_at: new Date(),
+            started_at: now,
           });
           await quiz.save();
+          // Schedule auto-submit if the quiz has a time limit
+          if (quiz.timeLimitMinutes && Number(quiz.timeLimitMinutes) > 0) {
+            const runAt = new Date(now.getTime() + quiz.timeLimitMinutes * 60000);
+            try {
+              await agenda.schedule(runAt, "auto_submit_quiz", {
+                quizId: quiz._id,
+                studentId: student._id,
+              });
+            } catch (e) {
+              logger.error(`Failed to schedule auto_submit_quiz for quiz ${quiz._id}, student ${student._id}: ${e.message}`);
+            }
+          }
         }
       }
 
-      res.status(200).json({ quizzes });
+      // sanitize quizzes: remove 'correct' answers from questions before sending to student
+      const sanitized = quizzes.map(q => {
+        const obj = q.toObject();
+        obj.questions = (obj.questions || []).map(qq => ({ question: qq.question, options: qq.options }));
+        return obj;
+      });
+      res.status(200).json({ quizzes: sanitized });
     } catch (error) {
       logger.error("Error fetching student quizzes:", error);
       res.status(500).json({ message: "Server error" });
@@ -2005,7 +2484,14 @@ protectedRouter.get(
         quizTitle: quiz.title,
         submittedAt: submission.submitted_at,
         score: submission.score,
-        answers: submission.answers,
+            answers: submission.answers,
+            details: quiz.questions.map((q, idx) => ({
+              question: q.question || null,
+              options: q.options || [],
+              studentAnswer: submission.answers?.[idx] ?? null,
+              correctAnswer: q.correct,
+              isCorrect: submission.answers?.[idx] === q.correct,
+            })),
         autoSubmitted: submission.auto_submitted
       });
     } catch (error) {
@@ -2036,7 +2522,25 @@ protectedRouter.get(
         return res.status(403).json({ message: "Not authorized for this quiz." });
       }
 
-      res.status(200).json({ quiz });
+      // ensure a submission record exists and schedule auto submit if needed
+      let submission = quiz.submissions.find((sub) => String(sub.student_id) === String(student._id));
+      if (!submission) {
+        const now = new Date();
+        quiz.submissions.push({ student_id: student._id, answers: [], started_at: now });
+        await quiz.save();
+        if (quiz.timeLimitMinutes && Number(quiz.timeLimitMinutes) > 0) {
+          const runAt = new Date(now.getTime() + quiz.timeLimitMinutes * 60000);
+          try {
+            await agenda.schedule(runAt, "auto_submit_quiz", { quizId: quiz._id, studentId: student._id });
+          } catch (e) {
+            logger.error(`Failed to schedule auto_submit_quiz for quiz ${quiz._id}, student ${student._id}: ${e.message}`);
+          }
+        }
+      }
+      // return sanitized quiz (hide correct answers)
+      const safeQuiz = quiz.toObject();
+      safeQuiz.questions = (safeQuiz.questions || []).map(q => ({ question: q.question, options: q.options }));
+      res.status(200).json({ quiz: safeQuiz });
     } catch (error) {
       logger.error("Error fetching quiz:", error);
       res.status(500).json({ message: "Server error" });
@@ -2075,9 +2579,19 @@ protectedRouter.get(
       }
 
       const teachers = await User.find(schoolQuery)
-        .select("firstname lastname email teacherSubject imageUrl");
+        .select("firstname lastname email teacherSubject profile_picture_url");
 
-      res.status(200).json({ teachers: teachers || [] });
+      // Convert to frontend-friendly keys
+      const mappedTeachers = (teachers || []).map(t => ({
+        firstname: t.firstname,
+        lastname: t.lastname,
+        email: t.email,
+        teacherSubject: t.teacherSubject,
+        profile_picture_url: getProfileUrl(req, t.profile_picture_url || t.profile_photo_url),
+        imageUrl: getProfileUrl(req, t.profile_picture_url || t.profile_photo_url),
+        photoUrl: getProfileUrl(req, t.profile_picture_url || t.profile_photo_url),
+      }));
+      res.status(200).json({ teachers: mappedTeachers });
     } catch (err) {
       logger.error("Error fetching teachers for student:", err);
       res.status(500).json({ message: "Failed to fetch teachers" });
@@ -2194,7 +2708,10 @@ protectedRouter.get(
         isAuthorized = true;
       } else {
         const assignment = await Assignment.findOne({
-          attachment_file: `/uploads/assignments/${filename}`,
+          $or: [
+            { file_path: `/uploads/assignments/${filename}` },
+            { attachment_file: `/uploads/assignments/${filename}` },
+          ],
         });
         if (assignment) {
           if (
@@ -2202,10 +2719,10 @@ protectedRouter.get(
             assignment.created_by.toString() === userId
           ) {
             isAuthorized = true;
-          } else if (
-            userRole === "student" &&
-            assignment.assigned_to_users.includes(req.user.email)
-          ) {
+          } else if (userRole === "student") {
+            // Use robust helper that considers grades, programs, and school
+            isAuthorized = isStudentAssignedToAssignment(assignment, req.user);
+          } else if (userRole === "student" && assignment.assigned_to_users.includes(req.user.email)) {
             isAuthorized = true;
           }
         }
@@ -2423,6 +2940,8 @@ protectedRouter.use("/budget", budgetRouter);
 protectedRouter.use("/essay", essayRouter);
 protectedRouter.use("/schools", schoolRouter);
 protectedRouter.use("/uploads", uploadRouter);
+protectedRouter.use("/worker", workerRouter);
+protectedRouter.use("/special-links", specialLinksHandler);
 
 export default protectedRouter;
 

@@ -13,13 +13,12 @@ const assignmentSchema = new mongoose.Schema(
     due_date: { type: Date, required: true },
 
 
-    assigned_to_users: [{ type: String, lowercase: true, trim: true }],
+    assigned_to_users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     assigned_to_grades: [{ type: Number, min: 1, max: 12 }],
     assigned_to_levels: [{ type: String, enum: ["100", "200", "300", "400"] }],
     assigned_to_programs: [{ type: String, trim: true }],
-    assigned_to_schools: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "School" },
-    ],
+    assigned_to_schools: [{ type: mongoose.Schema.Types.ObjectId, ref: "School" }],
+    assigned_to_other_grades: [{ type: Number, min: 1, max: 12 }],
   },
   { timestamps: true }
 );

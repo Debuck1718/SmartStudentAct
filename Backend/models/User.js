@@ -76,6 +76,7 @@ if (!existingModel) {
         },
       },
       program: { type: String, trim: true, maxlength: 100 },
+      profile_picture_url: { type: String, trim: true, default: null },
 
       teacherGrade: {
         type: [String],
@@ -176,6 +177,14 @@ if (!existingModel) {
       delete ret.reset_password_expires;
       return ret;
     },
+  });
+
+  // Virtuals for compatibility with front-end (imageUrl/photoUrl)
+  userSchema.virtual("imageUrl").get(function () {
+    return this.profile_picture_url || null;
+  });
+  userSchema.virtual("photoUrl").get(function () {
+    return this.profile_picture_url || null;
   });
 
   mongoose.model("User", userSchema);

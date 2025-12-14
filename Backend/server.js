@@ -13,6 +13,7 @@ import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
 import EventEmitter from "events";
 import path from "path";
+import { fileURLToPath } from "url";
 import cors from "cors";
 import fs from "fs";
 import listEndpoints from "express-list-endpoints";
@@ -134,6 +135,19 @@ try {
 // ───────────────────────────────────────────────
 // 7️⃣ Root Route
 // ────────────────────────────────────────────────
+
+// compute __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve uploaded files (assignments, submissions, feedback)
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "routes", "uploads"), { maxAge: "1d" })
+);
+
+// Serve frontend static assets (for convenience in dev)
+app.use(express.static(path.join(__dirname, "..", "Frontend", "public")));
 app.get("/", (req, res) => {
   res.json({ message: "SmartStudentAct Backend Running 🚀" });
 });

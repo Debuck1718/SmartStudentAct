@@ -211,6 +211,7 @@
           data-i18n="aiChecker"
           >🤖 AI Checker</a
         >
+        <button id="subscribeBtn" class="flex-1 text-center py-3 px-4 m-1 bg-gray-100 text-blue-600 font-semibold rounded-lg hover:bg-gray-200 transition duration-300">🔔 Subscribe</button>
       </nav>
       ---
       <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -317,12 +318,13 @@
               >
                 <select
                   id="assignment-student-select"
-                  class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+                  class="w-full p-3 bg-white text-gray-800 focus:outline-none max-h-48 overflow-auto"
                   multiple
                 ></select>
               </div>
             </div>
 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div id="assignment-grade-select-group" class="hidden">
               <label
                 for="assignment-grade-select"
@@ -335,7 +337,7 @@
               >
                 <select
                   id="assignment-grade-select"
-                  class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+                  class="w-full p-3 bg-white text-gray-800 focus:outline-none max-h-48 overflow-auto"
                 ></select>
               </div>
             </div>
@@ -356,52 +358,57 @@
                 ></select>
               </div>
             </div>
+            <div>
+              <label
+                for="assignmentTitle"
+                class="block text-gray-700 font-bold mb-2"
+                data-i18n="assignmentTitle"
+                >Assignment Title:</label
+              >
+              <input
+                type="text"
+                id="assignmentTitle"
+                maxlength="100"
+                class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., History Essay on World War II"
+              />
+            </div>
 
-            <label
-              for="assignmentTitle"
-              class="block text-gray-700 font-bold mb-2"
-              data-i18n="assignmentTitle"
-              >Assignment Title:</label
-            >
-            <input
-              type="text"
-              id="assignmentTitle"
-              maxlength="100"
-              class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., History Essay on World War II"
-            />
+            <div>
+              <label
+                for="assignmentDueDate"
+                class="block text-gray-700 font-bold mb-2"
+                data-i18n="dueDate"
+                >Due Date:</label
+              >
+              <input
+                type="datetime-local"
+                id="assignmentDueDate"
+                class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-            <label
-              for="assignmentDueDate"
-              class="block text-gray-700 font-bold mb-2"
-              data-i18n="dueDate"
-              >Due Date:</label
-            >
-            <input
-              type="datetime-local"
-              id="assignmentDueDate"
-              class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-
-            <label
-              for="assignmentText"
-              class="block text-gray-700 font-bold mb-2"
-              data-i18n="assignmentDetails"
-            >
-              Assignment Details (max 1000 words or attach file):
-            </label>
-            <textarea
-              id="assignmentText"
-              maxlength="5000"
-              class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-              placeholder="Type your assignment here..."
-            ></textarea>
-            <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">
-              Word count: 0
-            </p>
+            <div class="md:col-span-2">
+              <label
+                for="assignmentText"
+                class="block text-gray-700 font-bold mb-2"
+                data-i18n="assignmentDetails"
+              >
+                Assignment Details (max 1000 words or attach file):
+              </label>
+              <textarea
+                id="assignmentText"
+                maxlength="5000"
+                class="w-full min-h-[150px] p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                placeholder="Type your assignment here..."
+              ></textarea>
+              <p id="wordCountText" class="text-sm text-gray-500 text-right mb-4">
+                Word count: 0
+              </p>
+            </div>
 
             <div
-              class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4"
+              class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4 md:col-span-2"
             >
               <label class="custom-file-input cursor-pointer text-base">
                 <input
@@ -431,7 +438,13 @@
             >
               Send Assignment
             </button>
+            </div>
           </form>
+        </section>
+        ---
+        <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
+          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Recent Quiz Results</h2>
+          <div id="quizSummaries" class="grid gap-4"></div>
         </section>
         ---
         <section
@@ -561,6 +574,62 @@
             disabled
           >
             Add Points
+          </button>
+        </section>
+        ---
+        <section class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105">
+          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="grantRewardsTitle">🎖️ Grant Rewards</h2>
+          <div class="mb-4">
+            <label class="block text-gray-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <label class="inline-flex items-center">
+                <input type="radio" name="grantRecipient" value="single" class="form-radio text-indigo-600" checked />
+                <span class="ml-2 text-gray-700" data-i18n="singleStudent">Single Student</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" name="grantRecipient" value="multiple" class="form-radio text-indigo-600" />
+                <span class="ml-2 text-gray-700" data-i18n="multipleStudents">Multiple Students</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" name="grantRecipient" value="class" class="form-radio text-indigo-600" />
+                <span class="ml-2 text-gray-700" data-i18n="entireClass">Entire Class</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" name="grantRecipient" value="otherGrade" class="form-radio text-indigo-600" />
+                <span class="ml-2 text-gray-700" data-i18n="otherGrade">Another Grade</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="grant-select-group">
+            <label for="grant-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student(s):</label>
+            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+              <select id="grant-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none" multiple></select>
+            </div>
+          </div>
+
+          <div id="grant-grade-select-group" class="hidden">
+            <label for="grant-grade-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectGrade">Select Grade:</label>
+            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+              <select id="grant-grade-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+            </div>
+          </div>
+
+          <label for="grantType" class="block text-gray-700 font-bold mb-2" data-i18n="grantTypeLabel">Reward Type:</label>
+          <select id="grantType" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none">
+            <option value="badge">Badge</option>
+            <option value="bonus">Bonus</option>
+            <option value="custom">Custom</option>
+          </select>
+
+          <label for="grantPoints" class="block text-gray-700 font-bold mb-2" data-i18n="grantPointsLabel">Points (optional):</label>
+          <input type="number" id="grantPoints" min="0" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none" placeholder="e.g., 10" />
+
+          <label for="grantDescription" class="block text-gray-700 font-bold mb-2" data-i18n="grantDescriptionLabel">Description (optional):</label>
+          <textarea id="grantDescription" class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none resize-y" placeholder="e.g., Excellent participation"></textarea>
+
+          <button id="grantRewardsButton" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="grantRewardsButton" disabled>
+            Grant Rewards
           </button>
         </section>
         ---
@@ -729,7 +798,6 @@
           />
 
           <div id="termsContainer" class="space-y-4"></div>
-
           <button
             id="addTermButton"
             class="w-full py-2 mb-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300"
@@ -744,6 +812,18 @@
             Save Calendar
           </button>
 
+          <div class="mt-4 p-4 border border-gray-200 rounded-lg">
+            <h3 class="font-semibold mb-2" data-i18n="resultsTitle">Term Results</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+              <input type="text" id="resultsAcademicYear" class="p-2 border border-gray-300 rounded" placeholder="Academic Year (e.g. 2025/2026)" />
+              <select id="termSelect" class="p-2 border border-gray-300 rounded">
+                <option value="">Select Term</option>
+              </select>
+              <button id="loadResultsButton" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Load Results</button>
+            </div>
+            <div id="termResultsContainer" class="overflow-auto"></div>
+          </div>
+
           <p
             id="calendarMsg"
             class="text-center font-semibold mt-4 text-gray-700"
@@ -756,9 +836,10 @@
       </footer>
     </div>
 
+    <script src="api-config.js"></script>
     <script src="translate.js"></script>
     <script>
-      const API_BASE_URL =  "http://localhost:4000";
+      const API_BASE_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com/api');
       let translations = {};
       let currentLang = "en";
       let studentsCache = [];
@@ -927,23 +1008,34 @@
       }
 
       async function fetchStudents() {
-        let myGrade = [],
-          otherGrade = [];
-        const res = await fetchAPI("/teacher/students");
-        if (res && res.ok) myGrade = (await res.json()) || [];
-        const resOther = await fetchAPI("/teacher/students/other");
-        if (resOther && resOther.ok) otherGrade = (await resOther.json()) || [];
-        studentsCache = [...myGrade, ...otherGrade];
-        renderStudents(myGrade);
-        populateSelects(studentsCache, myGrade, otherGrade);
+        try {
+          const res = await fetchAPI("/teacher/assignable-students");
+          if (!res || !res.ok) throw new Error("Failed to fetch assignable students");
+          const data = await res.json();
+          const myGrade = data.myGradeStudents || [];
+          const otherGrade = data.otherStudents || [];
+          const specialConnections = data.specialConnections || [];
+          studentsCache = [...myGrade, ...otherGrade, ...specialConnections];
+          renderStudents(myGrade);
+          populateSelects(studentsCache, myGrade, otherGrade, specialConnections);
+        } catch (err) {
+          console.error("Failed to fetch students:", err);
+        }
       }
 
-      function populateSelects(allStudents, myGrade = [], otherGrade = []) {
+      function populateSelects(allStudents, myGrade = [], otherGrade = [], specialConnections = []) {
         const studentSelects = [
           document.getElementById("assignment-student-select"),
           document.getElementById("points-student-select"),
           document.getElementById("message-student-select"),
+          document.getElementById("grant-student-select"),
         ];
+
+        const toProgramOptions = () =>
+          [...new Set(allStudents.map((s) => s.program))]
+            .filter(Boolean)
+            .map((p) => `<option value="${p}">${p}</option>`)
+            .join("");
 
         const toOptions = (list) =>
           list
@@ -977,10 +1069,19 @@
               `;
         });
 
+        // special connections select
+        const specialSelect = document.getElementById("assignment-special-student-select");
+        if (specialSelect) {
+          specialSelect.innerHTML = specialConnections
+            .map((s) => `<option value="${s._id}">${s.firstname} ${s.lastname} (${s.email || ''}) — ${s.school ? (s.school.schoolName || s.school.name || s.school) : ''}</option>`)
+            .join("");
+        }
+
         const gradeSelects = [
           document.getElementById("assignment-grade-select"),
           document.getElementById("points-grade-select"),
           document.getElementById("message-grade-select"),
+          document.getElementById("grant-grade-select"),
         ];
         gradeSelects.forEach((select) => {
           if (!select) return;
@@ -988,6 +1089,9 @@
             `<option value="">${translateText("select_grade")}</option>` +
             toGradeOptions();
         });
+
+        const programSelect = document.getElementById("assignment-program-select");
+        if (programSelect) programSelect.innerHTML = `<option value="">${translateText("select_program")}</option>` + toProgramOptions();
       }
 
       async function fetchAssignedTasks() {
@@ -1027,6 +1131,35 @@
           container.innerHTML = `<div class="p-4 text-red-600">${translateText(
             "failed_load_tasks"
           )}</div>`;
+        }
+      }
+
+      async function fetchQuizSummaries() {
+        const container = document.getElementById('quizSummaries');
+        if (!container) return;
+        container.innerHTML = '<div class="p-4 text-gray-500">Loading...</div>';
+        try {
+          const res = await fetch('/api/teacher/quiz-summaries', { credentials: 'include' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Failed to fetch quiz summaries');
+          if (!data.length) {
+            container.innerHTML = '<div class="p-4 text-gray-500">No quiz summaries.</div>';
+            return;
+          }
+          container.innerHTML = data.map(q => `
+            <div class="p-4 border rounded flex justify-between items-center">
+              <div>
+                <div class="font-semibold">${q.title}</div>
+                <div class="text-gray-600 text-sm">Questions: ${q.questionsCount}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm text-gray-500">Submissions: ${q.submissionsCount}</div>
+                <div class="text-lg font-bold text-blue-600">Avg: ${q.averageScore !== null ? (q.averageScore).toFixed(2) : 'N/A'}</div>
+              </div>
+            </div>
+          `).join('');
+        } catch (err) {
+          container.innerHTML = `<div class="p-4 text-red-600">Error: ${err.message}</div>`;
         }
       }
 
@@ -1135,6 +1268,14 @@
                   `;
             termsContainer.appendChild(termDiv);
           });
+          // also populate the term select for results
+          const termSelect = document.getElementById("termSelect");
+          if (termSelect) {
+            termSelect.innerHTML = `<option value="">${translateText('selectTerm') || 'Select Term'}</option>` +
+              terms
+                .map(t => `<option value="${t.name || t.termName || ''}">${t.name || t.termName || ''}</option>`)
+                .join('');
+          }
         };
 
         const saveCalendar = async () => {
@@ -1168,12 +1309,94 @@
             calendarMsg.textContent = "Calendar saved successfully!";
             calendarMsg.className =
               "text-center font-semibold mt-4 text-green-600";
+            // refresh term select and optionally results
+            const calendarRes = await res.json().catch(()=>null);
+            // attempt to reload calendar from server to get canonical names
+            await loadCalendar();
+            if (typeof fetchCalendarResults === "function") fetchCalendarResults();
           } else {
             calendarMsg.textContent = "Failed to save calendar.";
             calendarMsg.className =
               "text-center font-semibold mt-4 text-red-600";
           }
         };
+
+        async function loadCalendar() {
+          const res = await fetchAPI(`/teacher/calendar`);
+          if (res && res.ok) {
+            const data = await res.json();
+            if (data.academicYear) document.getElementById("academicYear").value = data.academicYear;
+            if (document.getElementById("resultsAcademicYear")) document.getElementById("resultsAcademicYear").value = data.academicYear || '';
+            if (data.terms && data.terms.length) renderTerms(data.terms);
+          }
+        }
+
+        document.getElementById("loadResultsButton")?.addEventListener("click", async () => {
+          await fetchCalendarResults();
+        });
+
+        // expose fetchCalendarResults globally so other pieces can call it
+        window.fetchCalendarResults = async function fetchCalendarResults() {
+          const academicYear = document.getElementById("resultsAcademicYear").value || document.getElementById("academicYear").value;
+          const termName = document.getElementById("termSelect").value;
+          const resultsContainer = document.getElementById("termResultsContainer");
+          if (!academicYear || !termName) {
+            resultsContainer.innerHTML = `<div class="p-4 text-gray-500">${translateText('selectTerm') || 'Please select an academic year and term.'}</div>`;
+            return;
+          }
+          resultsContainer.innerHTML = `<div class="p-4 text-gray-500">${translateText('fetchingResults') || 'Loading results...'}</div>`;
+
+          try {
+            const res = await fetchAPI(`/teacher/calendar/results?academicYear=${encodeURIComponent(academicYear)}&termName=${encodeURIComponent(termName)}`);
+            if (!res || !res.ok) {
+              const err = res ? await res.json().catch(()=>({message:'Failed to fetch results'})) : { message: 'Network error' };
+              resultsContainer.innerHTML = `<div class="p-4 text-red-600">${err.message || translateText('noResults') || 'No results available.'}</div>`;
+              return;
+            }
+            const data = await res.json();
+            if (!data.results || !data.results.length) {
+              resultsContainer.innerHTML = `<div class="p-4 text-gray-500">${translateText('noResults') || 'No results for selected term.'}</div>`;
+              return;
+            }
+
+            resultsContainer.innerHTML = `
+              <div class="overflow-auto">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-gray-100 text-left">
+                    <tr>
+                      <th class="p-2">${translateText('position') || 'Pos'}</th>
+                      <th class="p-2">${translateText('student') || 'Student'}</th>
+                      <th class="p-2">${translateText('assignmentAvg') || 'Assignment Avg'}</th>
+                      <th class="p-2">${translateText('quizAvg') || 'Quiz Avg'}</th>
+                      <th class="p-2">${translateText('rewardPoints') || 'Reward Points'}</th>
+                      <th class="p-2">${translateText('activity') || 'Activity'}</th>
+                      <th class="p-2">${translateText('score') || 'Score'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${data.results.map(r => `
+                      <tr class="border-b">
+                        <td class="p-2">${r.position}</td>
+                        <td class="p-2">${r.student.firstname} ${r.student.lastname}</td>
+                        <td class="p-2">${r.assignmentAvg}</td>
+                        <td class="p-2">${r.quizAvg}</td>
+                        <td class="p-2">${r.rewardPoints}</td>
+                        <td class="p-2">${r.activityCount}</td>
+                        <td class="p-2 font-semibold">${r.score}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          } catch (err) {
+            console.error('Results fetch error', err);
+            resultsContainer.innerHTML = `<div class="p-4 text-red-600">${translateText('noResults') || 'No results available.'}</div>`;
+          }
+        };
+
+        // initial load
+        loadCalendar();
 
         const fetchCalendar = async () => {
           const res = await fetchAPI("/teacher/calendar");
@@ -1214,7 +1437,7 @@
     Select Special Student(s):
   </label>
   <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-    <select id="assignment-special-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none" multiple></select>
+      <select id="assignment-special-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none max-h-48 overflow-auto" multiple></select>
   </div>
 `;
       document
@@ -1302,32 +1525,35 @@
           programGroup,
           specialGroup
         ) => {
+          const hide = (el) => el && el.classList && el.classList.add("hidden");
+          const show = (el) => el && el.classList && el.classList.remove("hidden");
+
           if (recipientType === "student") {
-            studentGroup.classList.remove("hidden");
-            gradeGroup.classList.add("hidden");
-            programGroup.classList.add("hidden");
-            specialGroup.classList.add("hidden");
+            show(studentGroup);
+            hide(gradeGroup);
+            hide(programGroup);
+            hide(specialGroup);
           } else if (recipientType === "special_student") {
-            specialGroup.classList.remove("hidden");
-            studentGroup.classList.add("hidden");
-            gradeGroup.classList.add("hidden");
-            programGroup.classList.add("hidden");
+            show(specialGroup);
+            hide(studentGroup);
+            hide(gradeGroup);
+            hide(programGroup);
             loadSpecialStudents(); // load on demand
           } else if (recipientType === "otherGrade") {
-            gradeGroup.classList.remove("hidden");
-            studentGroup.classList.add("hidden");
-            programGroup.classList.add("hidden");
-            specialGroup.classList.add("hidden");
+            show(gradeGroup);
+            hide(studentGroup);
+            hide(programGroup);
+            hide(specialGroup);
           } else if (recipientType === "program") {
-            programGroup.classList.remove("hidden");
-            studentGroup.classList.add("hidden");
-            gradeGroup.classList.add("hidden");
-            specialGroup.classList.add("hidden");
+            show(programGroup);
+            hide(studentGroup);
+            hide(gradeGroup);
+            hide(specialGroup);
           } else {
-            studentGroup.classList.add("hidden");
-            gradeGroup.classList.add("hidden");
-            programGroup.classList.add("hidden");
-            specialGroup.classList.add("hidden");
+            hide(studentGroup);
+            hide(gradeGroup);
+            hide(programGroup);
+            hide(specialGroup);
           }
         };
 
@@ -1478,9 +1704,11 @@
                     .selectedOptions
                 ).map((opt) => opt.value)
               : [],
-            assigned_to_grades: recipients.includes("otherGrade")
-              ? [document.getElementById("assignment-grade-select").value]
+            assigned_to_other_grades: recipients.includes("otherGrade")
+              ? [Number(document.getElementById("assignment-grade-select").value)]
               : [],
+            recipientType: recipients.find(r => ["class","otherGrade","program","special_student","student"].includes(r)) || null,
+            grade: recipients.includes("otherGrade") ? Number(document.getElementById("assignment-grade-select").value) : null,
             assigned_to_programs: recipients.includes("program")
               ? [document.getElementById("assignment-program-select").value]
               : [],
@@ -1491,6 +1719,15 @@
                 ).map((opt) => opt.value)
               : [],
           };
+
+          // merge special student ids into assigned_to_users
+          if (assignmentData.specialStudentIds && assignmentData.specialStudentIds.length) {
+            assignmentData.assigned_to_users = [
+              ...(assignmentData.assigned_to_users || []),
+              ...assignmentData.specialStudentIds,
+            ];
+            delete assignmentData.specialStudentIds;
+          }
 
           Object.entries(assignmentData).forEach(([key, val]) => {
             if (Array.isArray(val)) {
@@ -1603,6 +1840,92 @@
           } catch (error) {
             showToast("An unexpected error occurred.", "error");
             console.error(error);
+          }
+        });
+
+        // Grant Rewards functionality
+        const grantRecipients = document.querySelectorAll('input[name="grantRecipient"]');
+        const grantStudentSelectGroup = document.getElementById("grant-select-group");
+        const grantGradeSelectGroup = document.getElementById("grant-grade-select-group");
+        const grantRewardsButton = document.getElementById("grantRewardsButton");
+
+        const validateGrantForm = () => {
+          const recipientType = document.querySelector('input[name="grantRecipient"]:checked')?.value;
+          const selectedStudents = Array.from(document.getElementById("grant-student-select").selectedOptions).map(o => o.value);
+          const grantType = document.getElementById("grantType").value;
+          const points = document.getElementById("grantPoints").value;
+
+          if ((recipientType === "single" || recipientType === "multiple") && selectedStudents.length === 0) {
+            grantRewardsButton.disabled = true;
+            return;
+          }
+
+          if (!grantType) {
+            grantRewardsButton.disabled = true;
+            return;
+          }
+
+          grantRewardsButton.disabled = false;
+        };
+
+        grantRecipients.forEach((input) => {
+          input.addEventListener("change", (e) => {
+            updateFormVisibility(
+              e.target.value,
+              grantStudentSelectGroup,
+              grantGradeSelectGroup
+            );
+            validateGrantForm();
+          });
+        });
+
+        document.getElementById("grant-student-select")?.addEventListener("change", validateGrantForm);
+        document.getElementById("grantType")?.addEventListener("change", validateGrantForm);
+        document.getElementById("grantPoints")?.addEventListener("input", validateGrantForm);
+        document.getElementById("grantDescription")?.addEventListener("input", validateGrantForm);
+
+        grantRewardsButton?.addEventListener("click", async () => {
+          const recipientType = document.querySelector('input[name="grantRecipient"]:checked')?.value;
+          let studentIds = [];
+          if (recipientType === "single" || recipientType === "multiple") {
+            studentIds = Array.from(document.getElementById("grant-student-select").selectedOptions).map(o => o.value);
+          } else if (recipientType === "class") {
+            studentIds = studentsCache.filter(s => s.grade === currentUser.grade).map(s => s._id || s.id);
+          } else if (recipientType === "otherGrade") {
+            const grade = document.getElementById("grant-grade-select").value;
+            studentIds = studentsCache.filter(s => String(s.grade) === String(grade)).map(s => s._id || s.id);
+          }
+
+          if (!studentIds.length) return showToast("Please select at least one student.", "warning");
+
+          const type = document.getElementById("grantType").value;
+          const points = Number(document.getElementById("grantPoints").value) || 0;
+          const description = document.getElementById("grantDescription").value || "";
+
+          const grants = studentIds.map(id => ({ userId: id, type, points, description }));
+
+          try {
+            const res = await fetchAPI("/teacher/calendar/grant", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ grants }),
+            });
+            if (res && res.ok) {
+              showToast(translateText('rewardGrantedSuccess') || "Rewards granted successfully!", "success");
+              // reset form
+              document.getElementById("grantDescription").value = "";
+              document.getElementById("grantPoints").value = "";
+              document.getElementById("grant-student-select").selectedIndex = -1;
+              grantRewardsButton.disabled = true;
+              // optionally refresh calendar results if UI present
+              if (typeof fetchCalendarResults === "function") fetchCalendarResults();
+            } else {
+              const err = await res.json();
+              showToast(err.message || translateText('rewardGrantedError') || "Failed to grant rewards.", "error");
+            }
+          } catch (error) {
+            console.error("Grant error:", error);
+            showToast("An unexpected error occurred.", "error");
           }
         });
 
@@ -1728,11 +2051,23 @@
           fetchOverdueTasks();
         });
 
+      function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      }
+
       window.addEventListener("load", async () => {
         await checkAuth();
         await fetchTeacherProfile();
         await fetchStudents();
         await fetchAssignedTasks();
+        await fetchQuizSummaries();
         await fetchFeedback();
         await fetchOverdueTasks();
         wireDashboardForms();
@@ -1740,6 +2075,31 @@
         hideLoadingOverlay();
         wireProfilePhotoUpload();
         applyTranslations();
+        // Push notification subscription behavior
+        const subscribeBtn = document.getElementById('subscribeBtn');
+        if (subscribeBtn) {
+          subscribeBtn.addEventListener('click', async () => {
+            try {
+              if (!('serviceWorker' in navigator)) throw new Error('Service Worker not supported');
+              await navigator.serviceWorker.register('/sw.js');
+              const reg = await navigator.serviceWorker.ready;
+              const subscription = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array('BIiReZmmNOxbUaqVrIob40QBGzO_CN5FcDvUlyx8_13PRxIC0Ru46KDW3VYRjJUQquvud5FSvIhWgvtgbjuP0fA'),
+              });
+              const res = await fetch('/api/push/subscribe', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(subscription),
+              });
+              if (!res.ok) throw new Error('Failed to subscribe');
+              alert('Subscribed to notifications');
+            } catch (err) {
+              alert('Subscription failed: ' + err.message);
+            }
+          });
+        }
       });
     </script>
   </body>

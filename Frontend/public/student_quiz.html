@@ -10,6 +10,8 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
   <script src="https://kit.fontawesome.com/a2e0e9c6e2.js" crossorigin="anonymous"></script>
+    <script src="api-config.js"></script>
+    <script src="translate.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8">
 
@@ -65,9 +67,60 @@
   <script src="translate.js"></script>
 
  <script>
-    const API_BASE = 'https://www.smartstudentact.com/api';
+        const API_BASE = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com/api');
+    
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container') || (() => {
+                const el = document.createElement('div');
+                el.id = 'toast-container';
+                el.style.position = 'fixed';
+                el.style.top = '20px';
+                el.style.right = '20px';
+                el.style.zIndex = 1000;
+                document.body.appendChild(el);
+                return el;
+            })();
+            const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-blue-600' };
+            const t = document.createElement('div');
+            t.className = `text-white px-3 py-2 rounded ${colors[type] || colors.info}`;
+            t.textContent = message;
+            container.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+
+        async function fetchWithAuth(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const opts = {
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options,
+            };
+
+            const res = await fetch(url, opts);
+            if (res.status === 401) {
+                window.location.href = '/login.html';
+                return;
+            }
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.message || `Request failed: ${res.status}`);
+            }
+            return res.json();
+        }
+
+        async function checkAuthentication() {
+            try {
+                await fetchWithAuth('/auth/check');
+                return true;
+            } catch (e) {
+                showToast('Please login first.', 'error');
+                setTimeout(() => (window.location.href = '/login.html'), 1200);
+                return false;
+            }
+        }
     const urlParams = new URLSearchParams(window.location.search);
     const quizId = urlParams.get('quizId');
+    let currentLang = 'en';
 
     const mainContent = document.getElementById('main-content');
     const loadingSpinner = document.getElementById('loading-spinner');
@@ -103,23 +156,12 @@
         }
 
         try {
-            const res = await fetch(`${API_BASE}/student/quizzes/${quizId}`, {
-                method: 'GET',
-                credentials: 'include'
-            });
-
-            if (res.status === 404) {
+            const data = await fetchWithAuth(`/student/quizzes/${quizId}`);
+            if (!data || !data.quiz) {
                 hideLoading();
                 questionsContainer.innerHTML = `<p class="text-gray-500 text-center text-lg mt-8" data-i18n="noQuizFound">No quiz found with this ID.</p>`;
                 return;
             }
-
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || 'Failed to load quiz.');
-            }
-
-            const data = await res.json();
             renderQuiz(data.quiz);
             hideLoading();
         } catch (err) {
@@ -185,24 +227,14 @@
         });
 
         try {
-            const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
+            const result = await fetchWithAuth(`/student/quizzes/${quizId}/submit`, {
                 method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    answers,
-                    autoSubmit: true
-                })
+                body: JSON.stringify({ answers, autoSubmit: true }),
             });
-
-            if (!res.ok) throw new Error('Auto-submit failed');
-            const result = await res.json();
             showResults(result.quiz, result.submission);
         } catch (err) {
             console.error(err);
-            alert(getTranslation('autoSubmitError'));
+            showToast(getTranslation('autoSubmitError') || 'Auto-submit failed', 'error');
         }
     };
 
@@ -265,23 +297,13 @@
         }
 
         try {
-            const res = await fetch(`${API_BASE}/student/quizzes/${quizId}/submit`, {
+            const result = await fetchWithAuth(`/student/quizzes/${quizId}/submit`, {
                 method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    answers,
-                    autoSubmit: false
-                })
+                body: JSON.stringify({ answers, autoSubmit: false }),
             });
-
-            if (!res.ok) throw new Error('Submit failed');
-            const result = await res.json();
             showResults(result.quiz, result.submission);
         } catch (err) {
-            alert(getTranslation('submittingError'));
+            showToast(getTranslation('submittingError') || 'Submit failed', 'error');
             console.error(err);
         }
     });
@@ -295,12 +317,14 @@
 
     languageSelect.addEventListener("change", (e) => {
         const lang = e.target.value;
+        currentLang = lang;
         translatePage('student-quiz', lang);
         document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         translatePage('student-quiz', 'en');
+        if (!(await checkAuthentication())) return;
         fetchQuiz();
     });
 </script>

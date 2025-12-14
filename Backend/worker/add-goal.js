@@ -1,5 +1,7 @@
 import dbConnect from "@/lib/db";
 import Worker from "@/models/worker";
+import eventBus from "../utils/eventBus.js";
+import User from "../models/User.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -28,6 +30,11 @@ export default async function handler(req, res) {
 
     await worker.save();
     res.status(200).json({ success: true, message: "Goal added successfully", data: worker.goals });
+    try {
+      eventBus.emit("worker_goal_added", { workerId: worker.user_id, goal: { title, description, target_completion_date, category } });
+    } catch (err) {
+      console.error("Event emit failed:", err.message);
+    }
   } catch (error) {
     console.error("Add goal error:", error);
     res.status(500).json({ success: false, message: "Internal server error", error: error.message });

@@ -1,13 +1,8 @@
-// api/special-links/list.js
-import dbConnect from "@/lib/db";
-import SpecialLink from "@/models/SpecialLink";
-import { authenticateJWT } from "@/middlewares/auth";
-import logger from "@/utils/logger";
+// Express-compatible handler for GET /api/special-links/list
+import SpecialLink from "../models/SpecialLink.js";
+import logger from "../utils/logger.js";
 
 export default async function handler(req, res) {
-  await dbConnect();
-  await authenticateJWT(req, res);
-
   const userId = req.userId;
 
   try {
@@ -22,16 +17,12 @@ export default async function handler(req, res) {
     })
       .populate("teacher_id", "firstname lastname email role school")
       .populate("student_id", "firstname lastname email role school")
-      .sort({ created_at: -1 });
+      .sort({ createdAt: -1 });
 
     if (!links.length) {
-      return res.status(200).json({
-        message: "No active special connections found.",
-        links: [],
-      });
+      return res.status(200).json({ message: "No active special connections found.", links: [] });
     }
 
-    // Format links to show the “other party” depending on who is logged in
     const formatted = links.map((link) => {
       const isTeacher = link.teacher_id._id.toString() === userId.toString();
       const partner = isTeacher ? link.student_id : link.teacher_id;
@@ -43,21 +34,14 @@ export default async function handler(req, res) {
         partnerName: `${partner.firstname} ${partner.lastname}`,
         partnerEmail: partner.email,
         partnerSchool: partner.school || null,
-        createdAt: link.created_at,
+        createdAt: link.createdAt,
         status: link.status,
       };
     });
 
-    res.status(200).json({
-      message: "Active special links retrieved successfully.",
-      count: formatted.length,
-      links: formatted,
-    });
+    res.status(200).json({ message: "Active special links retrieved successfully.", count: formatted.length, links: formatted });
   } catch (err) {
     logger.error("Error fetching special links list:", err);
-    res.status(500).json({
-      message: "Failed to fetch special links.",
-      error: err.message,
-    });
+    res.status(500).json({ message: "Failed to fetch special links.", error: err.message });
   }
 }

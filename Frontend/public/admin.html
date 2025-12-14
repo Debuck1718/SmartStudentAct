@@ -6,6 +6,7 @@
     <title id="page-title">Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <script src="api-config.js"></script>
     <link
       rel="icon"
       type="image/png"
@@ -180,7 +181,7 @@
     </div>
 
     <script>
-      const API_BASE_URL = 'https://smart-student-57b2svy6h-debucks-projects.vercel.app/api';
+      const API_BASE_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com/api');
 
       const router = {
         replace: (path) => (window.location.href = path),

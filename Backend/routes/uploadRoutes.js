@@ -11,9 +11,9 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 cloudinary.config({
-  cloud_name: "dojwivvg9",
-  api_key: "711866489426895",
-  api_secret: "u96Br5zFHI0qBLNjQS-mjzRwilE",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 router.post(
@@ -34,9 +34,10 @@ router.post(
         tags: ["profile_photo"],
       });
 
+      // store using unified field `profile_picture_url` for consistency
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id,
-        { profile_photo_url: result.secure_url },
+        { profile_picture_url: result.secure_url },
         { new: true, runValidators: true }
       );
 
@@ -46,7 +47,7 @@ router.post(
 
       res.status(200).json({
         message: "Profile photo uploaded successfully!",
-        photoUrl: updatedUser.profile_photo_url,
+        photoUrl: updatedUser.profile_picture_url,
       });
     } catch (err) {
       console.error("Error uploading to Cloudinary:", err);

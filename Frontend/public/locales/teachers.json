@@ -255,6 +255,62 @@
     "ar": "إضافة نقاط",
     "ru": "Добавить баллы"
   },
+  "grantRewardsTitle": {
+    "en": "🎖️ Grant Rewards",
+    "fr": "🎖️ Attribuer des récompenses",
+    "es": "🎖️ Otorgar recompensas",
+    "tr": "🎖️ Ödülleri Ver",
+    "ar": "🎖️ منح الجوائز",
+    "ru": "🎖️ Назначить награды"
+  },
+  "grantTypeLabel": {
+    "en": "Reward Type:",
+    "fr": "Type de récompense :",
+    "es": "Tipo de recompensa:",
+    "tr": "Ödül Türü:",
+    "ar": "نوع الجائزة:",
+    "ru": "Тип награды:"
+  },
+  "grantPointsLabel": {
+    "en": "Points (optional):",
+    "fr": "Points (optionnel) :",
+    "es": "Puntos (opcional):",
+    "tr": "Puanlar (isteğe bağlı):",
+    "ar": "النقاط (اختياري):",
+    "ru": "Баллы (необязательно):"
+  },
+  "grantDescriptionLabel": {
+    "en": "Description (optional):",
+    "fr": "Description (optionnelle) :",
+    "es": "Descripción (opcional):",
+    "tr": "Açıklama (isteğe bağlı):",
+    "ar": "الوصف (اختياري):",
+    "ru": "Описание (необязательно):"
+  },
+  "grantRewardsButton": {
+    "en": "Grant Rewards",
+    "fr": "Attribuer",
+    "es": "Otorgar",
+    "tr": "Ver",
+    "ar": "منح الجوائز",
+    "ru": "Назначить"
+  },
+  "rewardGrantedSuccess": {
+    "en": "Rewards granted successfully!",
+    "fr": "Récompenses attribuées avec succès !",
+    "es": "¡Recompensas otorgadas con éxito!",
+    "tr": "Ödüller başarıyla verildi!",
+    "ar": "تم منح الجوائز بنجاح!",
+    "ru": "Награды успешно присвоены!"
+  },
+  "rewardGrantedError": {
+    "en": "Failed to grant rewards.",
+    "fr": "Échec de l'attribution des récompenses.",
+    "es": "Error al otorgar recompensas.",
+    "tr": "Ödülleri vermek başarısız oldu.",
+    "ar": "فشل في منح الجوائز.",
+    "ru": "Не удалось назначить награды."
+  },
   "overdueTasks": {
     "en": "📌 Overdue Tasks",
     "fr": "📌 Tâches en retard",
@@ -303,6 +359,95 @@
     "ar": "نهاية الفصل الدراسي (YYYY-MM-DD)",
     "ru": "Конец семестра (ГГГГ-ММ-ДД)"
   },
+  "resultsTitle": {
+    "en": "Term Results",
+    "fr": "Résultats du trimestre",
+    "es": "Resultados del período",
+    "tr": "Dönem Sonuçları",
+    "ar": "نتائج الفصل",
+    "ru": "Результаты учебного периода"
+  },
+  "selectTerm": {
+    "en": "Select Term",
+    "fr": "Sélectionnez un trimestre",
+    "es": "Seleccionar período",
+    "tr": "Dönemi Seçin",
+    "ar": "اختر الفصل",
+    "ru": "Выберите период"
+  },
+  "fetchingResults": {
+    "en": "Loading results...",
+    "fr": "Chargement des résultats...",
+    "es": "Cargando resultados...",
+    "tr": "Sonuçlar yükleniyor...",
+    "ar": "جارٍ تحميل النتائج...",
+    "ru": "Загрузка результатов..."
+  },
+  "noResults": {
+    "en": "No results for selected term.",
+    "fr": "Aucun résultat pour le trimestre sélectionné.",
+    "es": "No hay resultados para el período seleccionado.",
+    "tr": "Seçili dönem için sonuç yok.",
+    "ar": "لا توجد نتائج للفترة المحددة.",
+    "ru": "Нет результатов за выбранный период."
+  },
+  "position": {
+    "en": "Pos",
+    "fr": "Pos",
+    "es": "Pos",
+    "tr": "Poz",
+    "ar": "المرتبة",
+    "ru": "Место"
+  },
+  "student": {
+    "en": "Student",
+    "fr": "Étudiant",
+    "es": "Estudiante",
+    "tr": "Öğrenci",
+    "ar": "الطالب",
+    "ru": "Студент"
+  },
+  "assignmentAvg": {
+    "en": "Assignment Avg",
+    "fr": "Moyenne devoirs",
+    "es": "Promedio tareas",
+    "tr": "Ödev Ort",
+    "ar": "متوسط الواجب",
+    "ru": "Средняя по заданиям"
+  },
+  "quizAvg": {
+    "en": "Quiz Avg",
+    "fr": "Moyenne quiz",
+    "es": "Promedio cuestionarios",
+    "tr": "Quiz Ort",
+    "ar": "متوسط الاختبار",
+    "ru": "Средняя по викторинам"
+  },
+  "rewardPoints": {
+    "en": "Reward Points",
+    "fr": "Points de récompense",
+    "es": "Puntos de recompensa",
+    "tr": "Ödül Puanları",
+    "ar": "نقاط المكافأة",
+    "ru": "Баллы вознаграждения"
+  },
+  "activity": {
+    "en": "Activity",
+    "fr": "Activité",
+    "es": "Actividad",
+    "tr": "Aktivite",
+    "ar": "النشاط",
+    "ru": "Активность"
+  },
+  "score": {
+    "en": "Score",
+    "fr": "Score",
+    "es": "Puntuación",
+    "tr": "Skor",
+    "ar": "النتيجة",
+    "ru": "Баллы"
+  },
+
   "saveCalendar": {
     "en": "Save Calendar",
     "fr": "Enregistrer le calendrier",

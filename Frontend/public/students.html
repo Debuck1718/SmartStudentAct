@@ -241,11 +241,12 @@
 
   <div id="toast-container"></div>
   
+  <script src="api-config.js"></script>
   <script src="translate.js"></script>
   
 
 <script>
-  const API_BASE_URL = "http://localhost:4000";
+  const API_BASE_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com/api');
 
   async function subscribeUserToPush() {
     if (!("serviceWorker" in navigator)) return;
@@ -362,7 +363,15 @@
     if (response.status === 401) {
       throw new Error("Unauthorized. Please log in again.");
     }
-    throw new Error(`HTTP error ${response.status}`);
+    // try to parse useful error message from body
+    let errMsg = `HTTP error ${response.status}`;
+    try {
+      const body = await response.json();
+      if (body && (body.message || body.error)) errMsg = body.message || body.error;
+    } catch (e) {}
+    // Provide more friendly message for 403 (subscription/permission)
+    if (response.status === 403 && !errMsg) errMsg = "You do not have permission to perform this action.";
+    throw new Error(errMsg);
   }
 
   return response.json();
@@ -545,18 +554,9 @@ fetchStudentMessages();
         const reminderTime = due - msBefore;
         if (reminderTime > now) {
           const delay = reminderTime - now;
+          // Show a local toast when reminder time hits (best-effort, only while tab is open)
           setTimeout(() => {
             showToast(`Reminder: "${title}" is due in ${h}h!`, "info");
-            fetchWithAuth("/student/reminders", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                title,
-                hours_before: h
-              }),
-            }).catch(() => {});
           }, delay);
         }
       });
@@ -620,7 +620,7 @@ fetchStudentMessages();
       }
 
       try {
-        await fetchWithAuth("/goals", {
+        await fetchWithAuth("/advanced-goals/goals", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -643,7 +643,8 @@ fetchStudentMessages();
 
     async function fetchGoal() {
       try {
-        const goals = await fetchWithAuth("/goals");
+        const data = await fetchWithAuth("/advanced-goals/goals");
+        const goals = (data && data.goals) || [];
         DOM.savedGoalsList.innerHTML = goals.length ?
           goals.map(
             (g) =>
@@ -658,7 +659,8 @@ fetchStudentMessages();
 
     async function fetchQuizzes() {
       try {
-        const quizzes = await fetchWithAuth("/student/quizzes");
+        const data = await fetchWithAuth("/student/quizzes");
+        const quizzes = (data && data.quizzes) || [];
         const quizzesList = document.getElementById("quizzes-list");
         quizzesList.innerHTML = quizzes.length ?
           quizzes.map(
@@ -685,7 +687,7 @@ fetchStudentMessages();
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Upload failed");
 
-        DOM.profilePreview.src = data.imageUrl || "./images/default-avatar.png";
+          DOM.profilePreview.src = data.photoUrl || data.imageUrl || data.profile_picture_url || "./images/default-avatar.png";
         showToast("Profile updated!", "success");
       } catch (e) {
         DOM.profilePreview.src = "./images/default-avatar.png";
@@ -694,35 +696,62 @@ fetchStudentMessages();
     }
 
 
-    function renderChart() {
+    async function renderChart() {
       if (!DOM.chartCanvas) return;
       const ctx = DOM.chartCanvas.getContext("2d");
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: ["Assignments", "Quizzes", "Budget"],
-          datasets: [{
-            label: "Activity",
-            data: [12, 19, 3], 
-            backgroundColor: ["#3b82f6", "#8b5cf6", "#ef4444"],
-            borderRadius: 10,
-          }, ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
+
+      try {
+        const res = await fetchWithAuth("/budget/entries");
+        const entries = (res && res.entries) || [];
+
+        // Update budget list UI
+        DOM.budgetList.innerHTML = entries.length ?
+          entries.map(
+            (e) =>
+              `<li class="p-2 border-b">${e.description}: $${e.amount} (${e.category || "N/A"}, ${new Date(e.date).toLocaleDateString()})</li>`
+          ).join("") :
+          "<li>No budget entries</li>";
+
+        // Aggregate totals by category for chart
+        const totals = {};
+        entries.forEach((e) => {
+          const cat = e.category || "Uncategorized";
+          totals[cat] = (totals[cat] || 0) + (Number(e.amount) || 0);
+        });
+
+        const labels = Object.keys(totals);
+        const data = labels.map((l) => totals[l]);
+
+        // Destroy previous chart if present
+        if (window._studentsAnalyticsChart) {
+          try { window._studentsAnalyticsChart.destroy(); } catch (err) {}
+        }
+
+        window._studentsAnalyticsChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Spending",
+                data,
+                backgroundColor: labels.map((_, i) => ["#3b82f6", "#8b5cf6", "#ef4444", "#f59e0b"][i % 4]),
+                borderRadius: 8,
+              },
+            ],
           },
-          plugins: {
-            legend: {
-              display: false
-            }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true },
+            },
+            plugins: { legend: { display: false } },
           },
-        },
-      });
+        });
+      } catch (err) {
+        console.error("renderChart error:", err);
+      }
     }
 
 
@@ -755,11 +784,8 @@ fetchStudentMessages();
 
 
     if (await checkAuthentication()) {
-      fetchAssignments();
-      fetchBudget();
-      fetchGoal();
-      fetchQuizzes();
-      renderChart();
+      await Promise.all([fetchAssignments(), fetchBudget(), fetchGoal(), fetchQuizzes()]);
+      await renderChart();
     }
 
     // 🎛 Event Listeners
@@ -782,10 +808,12 @@ fetchStudentMessages();
     if (DOM.saveGoalBtn) DOM.saveGoalBtn.addEventListener("click", handleSaveGoal);
     if (DOM.generateInsightsBtn) DOM.generateInsightsBtn.addEventListener("click", async () => {
       try {
-        const advice = await fetchWithAuth("/advice");
+        const res = await fetchWithAuth("/advanced-goals/advice");
+        const advice = res && res.advice ? res.advice : null;
         DOM.insightsPlaceholder.classList.add("hidden");
         DOM.insightsContent.classList.remove("hidden");
-        DOM.insightsContent.innerText = advice.message || "No advice received.";
+        if (advice) DOM.insightsContent.innerText = `${advice.studyAdvice || ''}\n\n${advice.spendingAdvice || ''}`.trim();
+        else DOM.insightsContent.innerText = "No advice received.";
       } catch (e) {
         showToast(e.message, "error");
       }

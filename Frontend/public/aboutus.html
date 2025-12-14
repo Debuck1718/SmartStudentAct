@@ -126,6 +126,8 @@
             "Teachers can effortlessly send announcements to classes or individual students.",
           notifications_list_4:
             "Receive alerts when your AI essay feedback is ready or when a new badge is unlocked.",
+          notifications_list_5:
+            "Upload a profile picture or use our default avatar; assignments and submissions allow attachments.",
           rewards_showcase_heading: "Rewards & Badges",
           goal_crusher_title: "Goal Crusher",
           goal_crusher_text: "Achieved set goals consistently",
@@ -153,6 +155,8 @@
           approach_text_10: "rewards",
           approach_text_11:
             "we support both the academic and personal growth of every learner. Teachers guide, students engage, and progress is rewarded.",
+          approach_text_12:
+            "Our interface supports multiple languages so learners and teachers worldwide enjoy the experience in their native tongue.",
           footer_text: "© 2025 SmartStudentAct. All rights reserved.",
         },
         fr: {
@@ -199,6 +203,8 @@
           notifications_heading: "Notifications et alertes en temps réel",
           notifications_list_1:
             "Ne manquez jamais rien! Recevez des pings instantanés pour les nouveaux devoirs et quiz.",
+          notifications_list_5:
+            "Téléchargez une photo de profil ou utilisez notre avatar par défaut ; les devoirs et les soumissions acceptent les pièces jointes.",
           notifications_list_2:
             "Gardez une longueur d'avance avec des rappels opportuns pour les délais qui approchent.",
           notifications_list_3:
@@ -234,6 +240,8 @@
           approach_text_10: "récompenses",
           approach_text_11:
             "nous soutenons à la fois la croissance académique et personnelle de chaque apprenant. Les enseignants guident, les étudiants s'engagent et les progrès sont récompensés.",
+          approach_text_12:
+            "Notre interface prend en charge plusieurs langues afin que les apprenants et les enseignants du monde entier puissent profiter de l'expérience dans leur langue maternelle.",
           footer_text: "© 2025 SmartStudentAct. Tous droits réservés.",
         },
         es: {
@@ -546,14 +554,27 @@
         },
       };
 
-      
+      // Load polished about translations from external locale file (if available).
+      (async function loadAboutLocales() {
+        try {
+          const res = await fetch('./locales/about.json');
+          if (res.ok) {
+            const remote = await res.json();
+            Object.keys(remote).forEach((lang) => {
+              translations[lang] = Object.assign({}, translations[lang] || {}, remote[lang]);
+            });
+          }
+        } catch (err) {
+          console.warn('Could not load about page locales:', err);
+        }
+      })();
+
       function translatePage(lang) {
         const elements = document.querySelectorAll("[data-i18n]");
         elements.forEach((element) => {
           const key = element.getAttribute("data-i18n");
-          if (translations[lang] && translations[lang][key]) {
-            element.innerHTML = translations[lang][key];
-          }
+          const text = (translations[lang] && translations[lang][key]) || (translations['en'] && translations['en'][key]) || '';
+          element.innerHTML = text;
         });
         document.documentElement.lang = lang;
       }
@@ -771,6 +792,9 @@
                     Receive alerts when your AI essay feedback is ready or when
                     a new badge is unlocked.
                   </li>
+                  <li data-i18n="notifications_list_5">
+                    Upload a profile picture or use our default avatar; assignments and submissions support attachments.
+                  </li>
                 </ul>
               </div>
             </div>
@@ -905,6 +929,7 @@
                 learner. Teachers guide, students engage, and progress is
                 rewarded.</span
               >
+              <span data-i18n="approach_text_12"> Our interface supports multiple languages so learners and teachers worldwide enjoy the experience in their native tongue.</span>
             </p>
           </div>
         </section>

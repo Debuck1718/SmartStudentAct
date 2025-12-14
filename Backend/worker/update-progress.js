@@ -1,5 +1,7 @@
 import dbConnect from "@/lib/db";
 import Worker from "@/models/worker";
+import eventBus from "../utils/eventBus.js";
+import User from "../models/User.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -79,6 +81,13 @@ export default async function handler(req, res) {
 
     // --- Save Worker Data ---
     await worker.save();
+
+    // Emit worker progress update
+    try {
+      eventBus.emit("worker_progress_updated", { workerId: worker.user_id, updates });
+    } catch (err) {
+      console.error("Event emit failed:", err.message);
+    }
 
     return res.status(200).json({
       success: true,

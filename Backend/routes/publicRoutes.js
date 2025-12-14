@@ -351,6 +351,10 @@ export default function publicRoutes(eventBus) {
           email: user.email,
           role: user.role,
           id: user._id,
+          firstname: user.firstname,
+          lastname: user.lastname,
+          profile_picture_url: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
+          imageUrl: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
           subscriptionActive,
           trialActive,
         },
@@ -385,6 +389,22 @@ export default function publicRoutes(eventBus) {
     } catch (err) {
       logger.error("❌ Logout error:", err);
       res.status(500).json({ error: "Server error." });
+    }
+  });
+
+  // Find user by email (used by special-links UI)
+  publicRouter.get("/users/find", async (req, res) => {
+    try {
+      const email = (req.query.email || "").trim().toLowerCase();
+      if (!email) return res.status(400).json({ message: "Email query parameter required." });
+
+      const user = await User.findOne({ email }).select("firstname lastname email role");
+      if (!user) return res.status(404).json({ message: "User not found." });
+
+      return res.status(200).json({ userId: user._id, firstname: user.firstname, lastname: user.lastname, email: user.email, role: user.role });
+    } catch (err) {
+      logger.error("Error finding user:", err);
+      return res.status(500).json({ message: "Failed to find user." });
     }
   });
 

@@ -38,6 +38,7 @@
         white-space: nowrap;
       }
     </style>
+    <script src="api-config.js"></script>
   </head>
   <body class="bg-gray-100 min-h-screen p-6">
     <div class="container mx-auto bg-white rounded-2xl shadow-lg p-8">
@@ -281,7 +282,7 @@
     </div>
 
     <script>
-      const API_BASE_URL = "https://smart-student-57b2svy6h-debucks-projects.vercel.app/api";
+      const API_BASE_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com/api');
       let filesData = [];
 
       const dashboardCards = document.getElementById("dashboard-cards");
@@ -354,11 +355,29 @@
         dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${msg}</div>`;
       }
 
+      function showToast(message, type = "info") {
+        const container =
+          document.getElementById("toast-container") ||
+          (() => {
+            const el = document.createElement("div");
+            el.id = "toast-container";
+            el.className = "fixed top-4 right-4 z-[1000] space-y-2";
+            document.body.appendChild(el);
+            return el;
+          })();
+        const colors = { success: "bg-green-600", error: "bg-red-600", info: "bg-blue-600", warning: "bg-yellow-500 text-gray-900" };
+        const toast = document.createElement("div");
+        toast.className = `px-4 py-2 rounded text-white shadow ${colors[type] || colors.info}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3500);
+      }
+
 
       async function fetchWithAuth(endpoint, options = {}) {
         const res = await fetch(`${API_BASE_URL}${endpoint}`, {
           ...options,
-          credentials: "include", 
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
             ...(options.headers || {}),
@@ -366,7 +385,6 @@
         });
 
         if (res.status === 401) {
-          
           window.location.href = "/login.html";
           return;
         }
@@ -379,16 +397,7 @@
         return res.json();
       }
 
-     async function fetchWithAuth(endpoint, options = {}) {
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      credentials: "include",
-    });
-    if (!res.ok) throw new Error((await res.json()).message || "Request failed");
-    return res.json();
-  }
-
-  async function checkAuthentication() {
+  async function checkAuth() {
     try {
       await fetchWithAuth("/auth/check");
       return true;
@@ -480,6 +489,44 @@
             '<tr><td colspan="4" class="text-center py-4 text-red-600">Could not fetch files.</td></tr>';
         }
       }
+
+        async function promoteUser(email) {
+          if (!confirm(`Promote ${email}?`)) return;
+          try {
+            const res = await fetch(`${API_BASE_URL}/admin/promote`, {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+            const body = await res.json();
+            if (!res.ok) throw new Error(body.message || "Failed to promote user");
+            showToast(body.message || "User promoted", "success");
+            loadUsers(userSearch.value);
+          } catch (err) {
+            console.error(err);
+            showToast(err.message || "Promotion failed", "error");
+          }
+        }
+
+        async function removeUser(email) {
+          if (!confirm(`Remove ${email}?`)) return;
+          try {
+            const res = await fetch(`${API_BASE_URL}/admin/remove-user`, {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+            const body = await res.json();
+            if (!res.ok) throw new Error(body.message || "Failed to remove user");
+            showToast(body.message || "User removed", "success");
+            loadUsers(userSearch.value);
+          } catch (err) {
+            console.error(err);
+            showToast(err.message || "Remove failed", "error");
+          }
+        }
       function renderFiles() {
         const search = fileSearch.value.toLowerCase(),
           filter = fileFilter.value;

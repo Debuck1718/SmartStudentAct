@@ -9,6 +9,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
+  <script src="api-config.js"></script>
   <script src="translate.js"></script>
   <style>
     body { font-family: "Inter", system-ui, sans-serif; }
@@ -129,7 +130,7 @@
   <div id="toast" class="message-box"></div>
 
 <script>
-  const API_BASE_URL = "https://api.smartstudentact.com/api";
+  const API_BASE_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com/api');
   let currentLang = localStorage.getItem("lang") || "en";
   let userData = {};
 
