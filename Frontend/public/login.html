@@ -253,7 +253,7 @@ function showBanner(message, type = 'error') {
 }
 
 async function handleLogin(event) {
-    event.preventDefault(); 
+    event.preventDefault();
 
     const email = emailInput.value.trim().toLowerCase();
     const password = passwordInput.value;
@@ -263,6 +263,7 @@ async function handleLogin(event) {
         return;
     }
 
+    // Disable login button and show spinner
     loginButton.disabled = true;
     loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
 
@@ -276,32 +277,45 @@ async function handleLogin(event) {
 
         const data = await res.json();
 
+        // Handle non-OK response
         if (!res.ok) {
+            if (data.redirectUrl) {
+                // If backend provides a redirect, navigate immediately
+                window.location.href = data.redirectUrl;
+                return;
+            }
             showBanner(data.message || translations[currentLang].loginFail, "error");
             return;
         }
 
-        if (data.user && data.user.trialActive && !data.user.subscriptionActive && data.user.trial_end_at) {
-            const trialEnd = new Date(data.user.trial_end_at).toLocaleDateString(currentLang);
-            showBanner(`${translations[currentLang].trialActive} ${trialEnd}`, "success");
-        } else {
-            showBanner(translations[currentLang].loginSuccess, "success");
+        // Successful login handling
+        if (data.user) {
+            if (data.user.trialActive && !data.user.subscriptionActive && data.user.trial_end_at) {
+                const trialEnd = new Date(data.user.trial_end_at).toLocaleDateString(currentLang);
+                showBanner(`${translations[currentLang].trialActive} ${trialEnd}`, "success");
+            } else {
+                showBanner(translations[currentLang].loginSuccess, "success");
+            }
         }
 
+        // Redirect if provided by backend
         if (data.redirectUrl) {
             setTimeout(() => window.location.href = data.redirectUrl, 1200);
-        } else {
+        } else if (!data.user) {
+            // No redirect and no user info, unexpected response
             showBanner(translations[currentLang].unexpectedResponse, "error");
         }
 
-    } catch(err) {
+    } catch (err) {
         console.error("Login error:", err);
         showBanner(translations[currentLang].unexpectedError, "error");
     } finally {
+        // Re-enable login button and reset text
         loginButton.disabled = false;
         loginButton.textContent = translations[currentLang].login;
     }
 }
+
 
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
