@@ -71,12 +71,25 @@ const MONGO_URI = process.env.MONGODB_URI;
 // ───────────────────────────────────────────────
 const app = express();
 
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : "*",
-    credentials: true,
-  })
-);
+// Configure CORS to properly support credentials and dynamic origins
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map(s => s.trim()) : [];
+console.log("CORS allowed origins:", allowedOrigins.length ? allowedOrigins : "<none>");
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow non-browser requests like curl/servers (no origin)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.length === 0) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Support wildcard entry in env
+    if (allowedOrigins.includes("*")) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"), false);
+  },
+  credentials: true,
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization","X-Requested-With","Accept"],
+  preflightContinue: false,
+}));
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
