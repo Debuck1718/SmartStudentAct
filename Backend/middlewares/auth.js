@@ -26,6 +26,8 @@ const PUBLIC_ROUTES = [
   "api/auth/forgot-password",
   "api/auth/reset-password",
   "api/contact",
+  "api/auth/check",   // ✅ REQUIRED
+  "api/pricing"
 ];
 
 // Normalizes a URL (removes leading slashes and query string) and checks if it matches a public route
