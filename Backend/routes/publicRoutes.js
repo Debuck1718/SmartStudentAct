@@ -304,44 +304,85 @@ export default function publicRoutes(eventBus) {
 
 
   publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
+    // Detailed tracing to pinpoint where validation errors occur
+    console.log('>>> ENTER LOGIN HANDLER');
+    const email = req.body.email?.trim().toLowerCase();
+    console.log('Login attempt for email:', email);
+    logger.info(`Login attempt for email: ${email}`);
+
     try {
-      const email = req.body.email?.trim().toLowerCase();
       const password = req.body.password?.trim();
 
+      logger.info('Login: fetching user by email');
       const user = await User.findOne({ email }).select("+password");
-      if (!user) return res.status(401).json({ status: false, message: "Invalid credentials." });
+      if (!user) {
+        logger.info('Login: user not found: ' + email);
+        return res.status(401).json({ status: false, message: "Invalid credentials." });
+      }
 
-      const match = await user.comparePassword(password);
-      if (!match) return res.status(401).json({ status: false, message: "Invalid credentials." });
+      logger.info('Login: verifying password for user ' + user._id);
+      let match;
+      try {
+        match = await user.comparePassword(password);
+      } catch (pwErr) {
+        logger.error('Login: password comparison failed', pwErr);
+        throw pwErr;
+      }
+
+      if (!match) {
+        logger.info('Login: password mismatch for user ' + user._id);
+        return res.status(401).json({ status: false, message: "Invalid credentials." });
+      }
 
       const now = new Date();
       let subscriptionActive = false;
       let trialActive = false;
 
+      logger.info('Login: checking subscription and trial status for user ' + user._id);
       if (user.subscription_status === "active" && user.payment_date) {
         const expiry = user.nextBillingDate
           ? new Date(user.nextBillingDate)
           : new Date(user.payment_date);
         if (!user.nextBillingDate) expiry.setMonth(expiry.getMonth() + 1);
         subscriptionActive = now < expiry;
+        logger.info('Login: subscriptionActive=' + subscriptionActive + ' for user ' + user._id);
         if (!subscriptionActive) {
-          user.subscription_status = "expired";
-          await user.save();
+          logger.info('Login: marking subscription expired for user ' + user._id);
+          // Avoid triggering validators that require payment fields when marking expired
+          await User.updateOne({ _id: user._id }, { $set: { subscription_status: 'expired' } }, { runValidators: false });
+          user.subscription_status = 'expired';
         }
       }
 
       if (user.is_on_trial && user.trial_end_at) {
         trialActive = now < new Date(user.trial_end_at);
+        logger.info('Login: trialActive=' + trialActive + ' for user ' + user._id);
         if (!trialActive) {
+          logger.info('Login: ending trial for user ' + user._id);
+          // Mark trial as ended without running schema validators that require payment fields
+          await User.updateOne({ _id: user._id }, { $set: { is_on_trial: false, subscription_status: 'inactive' } }, { runValidators: false });
+          // Keep local user object in sync for subsequent logic
           user.is_on_trial = false;
-          await user.save();
+          user.subscription_status = 'inactive';
         }
       }
 
+      console.log('Login: subscriptionActive=', subscriptionActive, 'trialActive=', trialActive, 'for user', user._id);
       const hasAccess = subscriptionActive || trialActive;
+      logger.info('Login: hasAccess=' + hasAccess + ' for user ' + user._id);
+
+      if (!hasAccess) {
+        // Ensure user record reflects expired trial/subscription without running validators
+        await User.updateOne({ _id: user._id }, { $set: { is_on_trial: false, subscription_status: 'expired' } }, { runValidators: false });
+        return res.status(403).json({ status: false, message: 'Your trial or subscription has expired. Please subscribe to continue.', redirectUrl: getGenericRedirect(req, 'payment') });
+      }
+
       const accessToken = generateAccessToken(user);
+      logger.info('Login: generated access token for user ' + user._id);
       const refreshToken = generateRefreshToken(user);
-      await User.findByIdAndUpdate(user._id, { refreshToken });
+      logger.info('Login: generated refresh token for user ' + user._id);
+      // Use updateOne with runValidators:false to avoid triggering required-field validators
+      await User.updateOne({ _id: user._id }, { $set: { refreshToken } }, { runValidators: false });
       setAuthCookies(res, accessToken, refreshToken);
 
       res.json({

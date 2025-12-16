@@ -24,9 +24,8 @@ const checkSubscription = async (req, res, next) => {
 
     // 🕒 Handle trial expiration
     if (user.is_on_trial && user.trial_end_at && user.trial_end_at < now) {
-      user.is_on_trial = false;
-      user.subscription_status = "expired";
-      await user.save();
+      // Avoid running schema validators which require payment fields
+      await User.updateOne({ _id: user._id }, { $set: { is_on_trial: false, subscription_status: 'expired' } }, { runValidators: false });
 
       console.info(`Trial expired for user ${user._id} at ${now.toISOString()}`);
 
@@ -41,8 +40,7 @@ const checkSubscription = async (req, res, next) => {
       expiryDate.setMonth(expiryDate.getMonth() + 1);
 
       if (now > expiryDate) {
-        user.subscription_status = "expired";
-        await user.save();
+        await User.updateOne({ _id: user._id }, { $set: { subscription_status: 'expired' } }, { runValidators: false });
 
         console.info(
           `Subscription expired for user ${user._id} at ${now.toISOString()}`

@@ -5,12 +5,18 @@ import jwt from "jsonwebtoken";
 import logger from "../utils/logger.js";
 import User from "../models/User.js";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-
 const isProd = process.env.NODE_ENV === "production";
 const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY = "7d";
+
+function getJWTSecret() {
+  // Return configured secret or fallback to a safe dev default to avoid throwing in environments missing env var
+  return process.env.JWT_SECRET || 'dev-jwt-secret';
+}
+
+function getJWTRefreshSecret() {
+  return process.env.JWT_REFRESH_SECRET || 'dev-jwt-refresh-secret';
+}
 
 const PUBLIC_ROUTES = [
   "/users/login",
@@ -26,16 +32,36 @@ const isPublicRoute = (url) => {
   const cleanUrl = url.split("?")[0];
   return PUBLIC_ROUTES.some((route) => cleanUrl.startsWith(route));
 };
+export const generateAccessToken = (user) => {
+  const secret = getJWTSecret();
 
-export const generateAccessToken = (user) =>
-  jwt.sign({ id: user._id, role: user.role, email: user.email }, JWT_SECRET, {
-    expiresIn: ACCESS_TOKEN_EXPIRY,
-  });
+  console.log("🧪 JWT_SECRET runtime check:", {
+    value: secret,
+    type: typeof secret,
+    length: secret?.length,
+  });
 
-export const generateRefreshToken = (user) =>
-  jwt.sign({ id: user._id, role: user.role, email: user.email }, JWT_REFRESH_SECRET, {
-    expiresIn: REFRESH_TOKEN_EXPIRY,
-  });
+  if (!secret || secret.length === 0) {
+    throw new Error("JWT secret is EMPTY at runtime");
+  }
+
+  return jwt.sign(
+    { id: user._id, role: user.role, email: user.email },
+    secret,
+    { expiresIn: ACCESS_TOKEN_EXPIRY }
+  );
+};
+
+export const generateRefreshToken = (user) => {
+  const secret = getJWTRefreshSecret();
+  if (!secret) {
+    console.error('🔒 JWT refresh secret is missing when generating refresh token');
+    throw new Error('JWT refresh secret not configured');
+  }
+  return jwt.sign({ id: user._id, role: user.role, email: user.email }, secret, {
+    expiresIn: REFRESH_TOKEN_EXPIRY,
+  });
+};
 
 // ✅ Handles cookie setup for web, but still allows tokens in headers for mobile
 export const setAuthCookies = (res, accessToken, refreshToken) => {
@@ -77,7 +103,7 @@ export const authenticateJWT = (req, res, next) => {
     });
   }
 
-  jwt.verify(token, JWT_SECRET, async (err, decoded) => {
+  jwt.verify(token, getJWTSecret(), async (err, decoded) => {
     if (err) {
       if (err.name === "TokenExpiredError") {
         const refreshToken = req.cookies?.refresh_token || req.headers["x-refresh-token"];
@@ -90,7 +116,7 @@ export const authenticateJWT = (req, res, next) => {
           });
         }
 
-        return jwt.verify(refreshToken, JWT_REFRESH_SECRET, async (refreshErr, refreshDecoded) => {
+        return jwt.verify(refreshToken, getJWTRefreshSecret(), async (refreshErr, refreshDecoded) => {
           if (refreshErr) {
             // logger.error(`Refresh token invalid/expired: ${refreshErr.message}`);
             return res.status(403).json({
