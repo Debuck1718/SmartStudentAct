@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+// Canonical Worker model implementation
+// Note: we also ship a lowercase `worker.js` for case-insensitive import compatibility on some hosts.
 const goalSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true, maxlength: 100 },
   description: { type: String, trim: true, maxlength: 500 },

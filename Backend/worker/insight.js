@@ -1,6 +1,6 @@
 // api/worker/insight.js
 import dbConnect from "../lib/db.js";
-import Worker from "../models/Worker.js";
+import Worker from "../models/worker.js";
 import { authenticateJWT } from "../middlewares/auth.js";
 import logger from "../utils/logger.js";
 

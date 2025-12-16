@@ -1,5 +1,5 @@
 import dbConnect from "../lib/db.js";
-import Worker from "../models/Worker.js";
+import Worker from "../models/worker.js";
 import eventBus from "../utils/eventBus.js";
 import User from "../models/User.js";
 

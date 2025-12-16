@@ -1,5 +1,5 @@
 import dbConnect from "../lib/db.js";
-import Worker from "../models/Worker.js";
+import Worker from "../models/worker.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {

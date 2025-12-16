@@ -14,7 +14,7 @@ import StudentRewards from "./StudentRewards.js";
 import StudentTask from "./StudentTask.js";
 import Submission from "./Submission.js";
 import User from "./User.js";
-import Worker from "./Worker.js";
+import Worker from "./worker.js";
 import WorkerRewards from "./WorkerRewards.js";
 
 const models = {
