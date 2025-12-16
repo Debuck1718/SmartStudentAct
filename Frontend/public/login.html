@@ -263,7 +263,6 @@ async function handleLogin(event) {
         return;
     }
 
-    // Disable login button and show spinner
     loginButton.disabled = true;
     loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
 
@@ -272,45 +271,32 @@ async function handleLogin(event) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password }),
         });
 
         const data = await res.json();
 
-        // Handle non-OK response
+        if (data.redirectUrl) {
+            window.location.href = data.redirectUrl;
+            return;
+        }
+
         if (!res.ok) {
-            if (data.redirectUrl) {
-                // If backend provides a redirect, navigate immediately
-                window.location.href = data.redirectUrl;
-                return;
-            }
             showBanner(data.message || translations[currentLang].loginFail, "error");
             return;
         }
 
-        // Successful login handling
-        if (data.user) {
-            if (data.user.trialActive && !data.user.subscriptionActive && data.user.trial_end_at) {
-                const trialEnd = new Date(data.user.trial_end_at).toLocaleDateString(currentLang);
-                showBanner(`${translations[currentLang].trialActive} ${trialEnd}`, "success");
-            } else {
-                showBanner(translations[currentLang].loginSuccess, "success");
-            }
-        }
+        
+        showBanner(translations[currentLang].loginSuccess, "success");
 
-        // Redirect if provided by backend
-        if (data.redirectUrl) {
-            setTimeout(() => window.location.href = data.redirectUrl, 1200);
-        } else if (!data.user) {
-            // No redirect and no user info, unexpected response
-            showBanner(translations[currentLang].unexpectedResponse, "error");
-        }
+        setTimeout(() => {
+            window.location.href = "/dashboard.html";
+        }, 1000);
 
     } catch (err) {
         console.error("Login error:", err);
         showBanner(translations[currentLang].unexpectedError, "error");
     } finally {
-        // Re-enable login button and reset text
         loginButton.disabled = false;
         loginButton.textContent = translations[currentLang].login;
     }
