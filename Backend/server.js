@@ -71,6 +71,16 @@ const MONGO_URI = process.env.MONGODB_URI;
 // ───────────────────────────────────────────────
 const app = express();
 
+// Trust proxy configuration to allow correct client IP detection behind proxies (Render, CDNs)
+// Set via TRUST_PROXY env or automatically enable in production
+const TRUST_PROXY_SETTING = process.env.TRUST_PROXY || (process.env.NODE_ENV === 'production' ? '1' : '');
+if (TRUST_PROXY_SETTING) {
+  app.set('trust proxy', TRUST_PROXY_SETTING);
+  console.log('✅ Express trust proxy set to', app.get('trust proxy'));
+} else {
+  console.log('Express trust proxy not set (development)');
+}
+
 // Configure CORS to properly support credentials and dynamic origins
 const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map(s => s.trim()) : [];
 console.log("CORS allowed origins:", allowedOrigins.length ? allowedOrigins : "<none>");
