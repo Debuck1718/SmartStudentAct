@@ -64,3 +64,9 @@
 {"level":"info","message":"Ensured upload directory exists: C:\\Users\\ASUS\\OneDrive\\Desktop\\SmartStudentAct\\Backend\\routes\\uploads\\assignments","timestamp":"2025-12-16 07:04:24"}
 {"level":"info","message":"Ensured upload directory exists: C:\\Users\\ASUS\\OneDrive\\Desktop\\SmartStudentAct\\Backend\\routes\\uploads\\submissions","timestamp":"2025-12-16 07:04:24"}
 {"level":"info","message":"✅ Agenda connected, starting...","timestamp":"2025-12-16 07:04:26"}
+{"level":"info","message":"✅ Web Push VAPID keys configured successfully","timestamp":"2025-12-16 07:20:08"}
+{"level":"info","message":"Ensured upload directory exists: C:\\Users\\ASUS\\OneDrive\\Desktop\\SmartStudentAct\\Backend\\routes\\uploads\\feedback","timestamp":"2025-12-16 07:20:08"}
+{"level":"info","message":"Ensured upload directory exists: C:\\Users\\ASUS\\OneDrive\\Desktop\\SmartStudentAct\\Backend\\routes\\uploads\\other","timestamp":"2025-12-16 07:20:08"}
+{"level":"info","message":"Ensured upload directory exists: C:\\Users\\ASUS\\OneDrive\\Desktop\\SmartStudentAct\\Backend\\routes\\uploads\\assignments","timestamp":"2025-12-16 07:20:08"}
+{"level":"info","message":"Ensured upload directory exists: C:\\Users\\ASUS\\OneDrive\\Desktop\\SmartStudentAct\\Backend\\routes\\uploads\\submissions","timestamp":"2025-12-16 07:20:08"}
+{"level":"info","message":"✅ Agenda connected, starting...","timestamp":"2025-12-16 07:20:09"}
