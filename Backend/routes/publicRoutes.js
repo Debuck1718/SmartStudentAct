@@ -85,8 +85,36 @@ function getGenericRedirect(req, path = "login") {
   return target[path] || target.login;
 }
 
+// Helper to compute profile picture URL (same logic used in protectedRoutes)
+function getProfileUrl(req, storedUrl) {
+  if (!storedUrl) return null;
+  if (typeof storedUrl !== 'string') return null;
+  if (storedUrl.startsWith("http://") || storedUrl.startsWith("https://")) return storedUrl;
+  try {
+    const host = req.get("host");
+    const protocol = req.protocol;
+    return `${protocol}://${host}${storedUrl}`;
+  } catch (e) {
+    return storedUrl || null;
+  }
+}
+
 export default function publicRoutes(eventBus) {
   const publicRouter = express.Router();
+
+  // Local helper to compute profile picture URL (ensures availability in route handlers)
+  function getProfileUrl(req, storedUrl) {
+    if (!storedUrl) return null;
+    if (typeof storedUrl !== 'string') return null;
+    if (storedUrl.startsWith('http://') || storedUrl.startsWith('https://')) return storedUrl;
+    try {
+      const host = req.get('host');
+      const protocol = req.protocol;
+      return `${protocol}://${host}${storedUrl}`;
+    } catch (e) {
+      return storedUrl || null;
+    }
+  }
 
   // ---------- Rate Limiters ----------
   const loginLimiter = rateLimit({
@@ -371,19 +399,36 @@ export default function publicRoutes(eventBus) {
       const hasAccess = subscriptionActive || trialActive;
       logger.info('Login: hasAccess=' + hasAccess + ' for user ' + user._id);
 
-      if (!hasAccess) {
-        // Ensure user record reflects expired trial/subscription without running validators
-        await User.updateOne({ _id: user._id }, { $set: { is_on_trial: false, subscription_status: 'expired' } }, { runValidators: false });
-        return res.status(403).json({ status: false, message: 'Your trial or subscription has expired. Please subscribe to continue.', redirectUrl: getGenericRedirect(req, 'payment') });
-      }
-
+      // Generate tokens and set cookies so the client is authenticated even if payment is required
       const accessToken = generateAccessToken(user);
       logger.info('Login: generated access token for user ' + user._id);
       const refreshToken = generateRefreshToken(user);
       logger.info('Login: generated refresh token for user ' + user._id);
-      // Use updateOne with runValidators:false to avoid triggering required-field validators
       await User.updateOne({ _id: user._id }, { $set: { refreshToken } }, { runValidators: false });
       setAuthCookies(res, accessToken, refreshToken);
+
+      if (!hasAccess) {
+        // Mark trial/subscription state in DB without triggering validators
+        await User.updateOne({ _id: user._id }, { $set: { is_on_trial: false, subscription_status: 'expired' } }, { runValidators: false });
+        // Return 200 so front-end can access payment page which requires the user to be logged in
+        return res.status(200).json({
+          status: true,
+          message: 'Login successful. Subscription required.',
+          user: {
+            email: user.email,
+            role: user.role,
+            id: user._id,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            profile_picture_url: (typeof getProfileUrl === 'function') ? getProfileUrl(req, user.profile_picture_url || user.profile_photo_url) : null,
+            imageUrl: (typeof getProfileUrl === 'function') ? getProfileUrl(req, user.profile_picture_url || user.profile_photo_url) : null,
+            subscriptionActive,
+            trialActive,
+          },
+
+          redirectUrl: getGenericRedirect(req, 'payment'),
+        });
+      }
 
       res.json({
         status: true,
@@ -394,15 +439,19 @@ export default function publicRoutes(eventBus) {
           id: user._id,
           firstname: user.firstname,
           lastname: user.lastname,
-          profile_picture_url: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
-          imageUrl: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
+          profile_picture_url: (typeof getProfileUrl === 'function') ? getProfileUrl(req, user.profile_picture_url || user.profile_photo_url) : null,
+          imageUrl: (typeof getProfileUrl === 'function') ? getProfileUrl(req, user.profile_picture_url || user.profile_photo_url) : null,
           subscriptionActive,
           trialActive,
         },
         redirectUrl: getRedirectUrl(user, hasAccess, req),
       });
     } catch (err) {
-      logger.error("❌ Login error:", err);
+      // Log detailed error info to aid debugging (message + stack)
+      logger.error("❌ Login error: %s", err?.message || err);
+      logger.error(err && err.stack ? err.stack : err);
+      console.error("❌ Login error (console):", err?.message || err);
+      console.error(err && err.stack ? err.stack : err);
       return res.status(500).json({ status: false, message: "Server error" });
     }
   });

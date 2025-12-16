@@ -19,18 +19,19 @@ function getJWTRefreshSecret() {
 }
 
 const PUBLIC_ROUTES = [
-  "api/users/login",
-  "api/users/signup",
-  "api/users/verify-otp",
-  "api/users/refresh",
-  "api/auth/forgot-password",
-  "api/auth/reset-password",
-  "api/contact",
+  "api/users/login",
+  "api/users/signup",
+  "api/users/verify-otp",
+  "api/users/refresh",
+  "api/auth/forgot-password",
+  "api/auth/reset-password",
+  "api/contact",
 ];
 
+// Normalizes a URL (removes leading slashes and query string) and checks if it matches a public route
 const isPublicRoute = (url) => {
-  const cleanUrl = url.split("?")[0];
-  return PUBLIC_ROUTES.some((route) => cleanUrl.startsWith(route));
+  const cleanUrl = url.split("?")[0].replace(/^\/+/, ""); // remove leading slashes
+  return PUBLIC_ROUTES.some((route) => cleanUrl.startsWith(route.replace(/^\/+/, "")));
 };
 export const generateAccessToken = (user) => {
   const secret = getJWTSecret();
@@ -65,23 +66,23 @@ export const generateRefreshToken = (user) => {
 
 // ✅ Handles cookie setup for web, but still allows tokens in headers for mobile
 export const setAuthCookies = (res, accessToken, refreshToken) => {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: "None",
-    domain: ".smartstudentact.com",
-    path: "/",
-  };
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "None" : "Lax",
+    domain: isProd ? ".smartstudentact.com" : undefined,
+    path: "/",
+  };
 
-  res.cookie("access_token", accessToken, {
-    ...cookieOptions,
-    maxAge: 15 * 60 * 1000, // 15m
-  });
+  res.cookie("access_token", accessToken, {
+    ...cookieOptions,
+    maxAge: 15 * 60 * 1000, // 15m
+  });
 
-  res.cookie("refresh_token", refreshToken, {
-    ...cookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
-  });
+  res.cookie("refresh_token", refreshToken, {
+    ...cookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
+  });
 };
 
 export const authenticateJWT = (req, res, next) => {
