@@ -1,9 +1,22 @@
 // server.js
 
 import dotenv from "dotenv";
-dotenv.config(); // Load .env before everything else
+// Explicitly resolve .env relative to this file so the backend loads its own .env
+import { fileURLToPath } from "url";
+import path from "path";
+const envPath = fileURLToPath(new URL("./.env", import.meta.url));
+const dotenvResult = dotenv.config({ path: envPath });
+if (dotenvResult.error) {
+  console.warn("⚠️ dotenv failed to load Backend/.env:", dotenvResult.error.message);
+} else {
+  console.log("✅ dotenv loaded Backend/.env");
+}
 
 console.log("✅ Environment loaded, starting SmartStudentAct...");
+// Debug: show whether key env vars loaded (values redacted)
+console.log("Loaded env: MONGODB_URI:", !!process.env.MONGODB_URI);
+console.log("Loaded env: BREVO_API_KEY:", !!process.env.BREVO_API_KEY);
+console.log("Loaded env: VAPID_PUBLIC_KEY:", !!process.env.VAPID_PUBLIC_KEY, "VAPID_PRIVATE_KEY:", !!process.env.VAPID_PRIVATE_KEY);
 
 import express from "express";
 import mongoose from "mongoose";
@@ -12,8 +25,6 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
 import EventEmitter from "events";
-import path from "path";
-import { fileURLToPath } from "url";
 import cors from "cors";
 import fs from "fs";
 import listEndpoints from "express-list-endpoints";
@@ -24,21 +35,33 @@ import { authenticateJWT } from "./middlewares/auth.js";
 
 // 1️⃣ Environment Validation
 // ───────────────────────────────────────────────
-const requiredEnvVars = [
-  "PORT",
-  "MONGODB_URI",
+// Require only the MongoDB URI for startup; warn for other recommended vars
+if (!process.env.MONGODB_URI) {
+  console.warn("⚠️ MONGODB_URI not set. Database features will be disabled until you set MONGODB_URI or start a MongoDB instance.");
+}
+
+// For local development, warn about but do not fatal for other recommended variables
+const recommendedVars = [
   "SESSION_SECRET",
   "JWT_SECRET",
   "CLOUDINARY_CLOUD_NAME",
   "CLOUDINARY_API_KEY",
   "CLOUDINARY_API_SECRET",
 ];
-requiredEnvVars.forEach((key) => {
-  if (!process.env[key]) {
-    console.error(`❌ Missing required env variable: ${key}`);
-    process.exit(1);
-  }
-});
+const missingRecommended = recommendedVars.filter((k) => !process.env[k]);
+if (missingRecommended.length) {
+  console.warn(`⚠️ Missing recommended env vars: ${missingRecommended.join(", ")}. Some features may be limited.`);
+}
+
+// Provide safe defaults for session/JWT in development to avoid hard crashes
+if (!process.env.SESSION_SECRET) {
+  process.env.SESSION_SECRET = "dev-session-secret";
+  console.warn("⚠️ SESSION_SECRET not set. Using temporary default (dev-session-secret). Do not use this in production.");
+}
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = "dev-jwt-secret";
+  console.warn("⚠️ JWT_SECRET not set. Using temporary default (dev-jwt-secret). Do not use this in production.");
+}
 
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGODB_URI;
@@ -78,14 +101,23 @@ try {
 // ───────────────────────────────────────────────
 // 4️⃣ MongoDB Connection with Logging
 // ───────────────────────────────────────────────
+let DB_CONNECTED = false;
 async function connectMongo() {
+  if (!MONGO_URI) {
+    console.warn("⚠️ Skipping MongoDB connection because MONGODB_URI is not set.");
+    DB_CONNECTED = false;
+    return;
+  }
+
   try {
     console.log(`📡 Connecting to MongoDB at ${new Date().toISOString()}...`);
     await mongoose.connect(MONGO_URI);
+    DB_CONNECTED = true;
     console.log("✅ MongoDB connected successfully!");
   } catch (err) {
-    console.error(`❌ MongoDB connection error at ${new Date().toISOString()}:`, err);
-    process.exit(1);
+    DB_CONNECTED = false;
+    console.warn(`⚠️ MongoDB connection failed at ${new Date().toISOString()}: ${err.message}`);
+    console.warn("Starting server in degraded mode. To enable database features, start a MongoDB instance or set MONGODB_URI in your environment.");
   }
 }
 
@@ -94,6 +126,11 @@ async function connectMongo() {
 // ───────────────────────────────────────────────
 let agenda;
 async function startAgenda() {
+  if (!DB_CONNECTED) {
+    console.warn("⚠️ Agenda will not start because MongoDB is not connected.");
+    return;
+  }
+
   try {
     agenda = new Agenda({
       db: { address: MONGO_URI, collection: "agendaJobs" },

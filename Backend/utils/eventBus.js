@@ -21,15 +21,27 @@ if (!process.env.MONGODB_URI) {
   logger.error("❌ Missing MONGODB_URI in environment. Agenda will not start.");
 }
 
-// ✅ Initialize Agenda with Mongo connection safely
-const agenda = new Agenda({
-  db: { address: process.env.MONGODB_URI || "", collection: "jobs" },
-});
+// ✅ Initialize Agenda only if a MongoDB URI is configured. Otherwise use a no-op stub
+let agenda;
+if (!process.env.MONGODB_URI) {
+  // Create an API-compatible no-op agenda to avoid runtime crashes when Mongo is unavailable
+  agenda = {
+    define: () => {},
+    schedule: async () => {},
+    start: async () => {},
+    every: async () => {},
+    on: () => {},
+  };
+} else {
+  agenda = new Agenda({
+    db: { address: process.env.MONGODB_URI, collection: "jobs" },
+  });
 
-agenda.on("ready", async () => {
-  logger.info("✅ Agenda connected, starting...");
-  await agenda.start();
-});
+  agenda.on("ready", async () => {
+    logger.info("✅ Agenda connected, starting...");
+    await agenda.start();
+  });
+}
 
 // Shared event bus instance
 const eventBus = new EventEmitter();

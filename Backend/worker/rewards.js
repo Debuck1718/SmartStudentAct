@@ -1,13 +1,13 @@
 // routes/worker/rewards.js
-const express = require("express");
-const router = express.Router();
-const Joi = require("joi");
-const logger = require("../../../Frontend/utils/logger");
-const eventBus = require("../../../Frontend/utils/eventBus");
-const { authenticateJWT } = require("../../middlewares/auth");
-const checkSubscription = require("../../middlewares/checkSubscription");
+import express from "express";
+import Joi from "joi";
+import logger from "../utils/logger.js";
+import eventBus from "../utils/eventBus.js";
+import { authenticateJWT } from "../middlewares/auth.js";
+import checkSubscription from "../middlewares/checkSubscription.js";
+import WorkerRewards from "../models/WorkerRewards.js";
 
-const WorkerRewards = require("../../models/WorkerRewards");
+const router = express.Router();
 
 // --- Validation Schemas ---
 const rewardActionSchema = Joi.object({
@@ -139,4 +139,4 @@ router.get("/leaderboard", async (req, res) => {
 });
 
 
-module.exports = router;
+export default router;

@@ -1,8 +1,8 @@
 // api/leaderboard.js
-import { connectDB } from "@/lib/db.js";
-import models from "@/models/index.js";
-import { authenticateJWT } from "@/middlewares/auth.js";
-import logger from "@/utils/logger.js";
+import { connectDB } from "./lib/db.js";
+import models from "./models/index.js";
+import { authenticateJWT } from "./middlewares/auth.js";
+import logger from "./utils/logger.js";
 
 export default async function handler(req, res) {
   await connectDB();

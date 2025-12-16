@@ -86,7 +86,8 @@ const workerSchema = new mongoose.Schema(
   { timestamps: true, collection: "workers" }
 );
 
-workerSchema.index({ user_id: 1 });
+// Removed explicit index because `user_id` already has `unique: true` which creates an index.
+// This prevents duplicate index warnings during startup.
 
 const Worker = mongoose.model("Worker", workerSchema);
 

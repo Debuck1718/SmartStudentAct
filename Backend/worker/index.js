@@ -4,7 +4,7 @@ import addGoal from "./add-goal.js";
 import addReminder from "./add-reminder.js";
 import addTransaction from "./add-transaction.js";
 import create from "./create.js";
-import insights from "./insights.js";
+import insights from "./insight.js";
 import overview from "./overview.js";
 import rewards from "./rewards.js";
 import updateProgress from "./update-progress.js";

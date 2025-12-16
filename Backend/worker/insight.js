@@ -1,8 +1,8 @@
 // api/worker/insight.js
-import dbConnect from "@/lib/db";
-import Worker from "@/models/Worker";
-import { authenticateJWT } from "@/middlewares/auth";
-import logger from "@/utils/logger";
+import dbConnect from "../lib/db.js";
+import Worker from "../models/Worker.js";
+import { authenticateJWT } from "../middlewares/auth.js";
+import logger from "../utils/logger.js";
 
 const API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";

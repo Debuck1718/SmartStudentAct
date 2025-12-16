@@ -1,6 +1,6 @@
-import dbConnect from "@/lib/db";
-import Worker from "@/models/worker";
-import User from "@/models/User";
+import dbConnect from "../lib/db.js";
+import Worker from "../models/Worker.js";
+import User from "../models/User.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
