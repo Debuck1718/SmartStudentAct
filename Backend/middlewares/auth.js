@@ -19,13 +19,13 @@ function getJWTRefreshSecret() {
 }
 
 const PUBLIC_ROUTES = [
-  "/users/login",
-  "/users/signup",
-  "/users/verify-otp",
-  "/users/refresh",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-  "/contact",
+  "api/users/login",
+  "api/users/signup",
+  "api/users/verify-otp",
+  "api/users/refresh",
+  "api/auth/forgot-password",
+  "api/auth/reset-password",
+  "api/contact",
 ];
 
 const isPublicRoute = (url) => {

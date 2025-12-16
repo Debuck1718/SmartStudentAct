@@ -253,54 +253,55 @@ function showBanner(message, type = 'error') {
 }
 
 async function handleLogin(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    const email = emailInput.value.trim().toLowerCase();
-    const password = passwordInput.value;
+  const email = emailInput.value.trim().toLowerCase();
+  const password = passwordInput.value;
 
-    if (!email || !password) {
-        showBanner(translations[currentLang].requiredFields, "error");
+  if (!email || !password) {
+    showBanner(translations[currentLang].requiredFields, "error");
+    return;
+  }
+
+  loginButton.disabled = true;
+  loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/users/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (data.redirectUrl) {
+        window.location.replace(data.redirectUrl);
         return;
+      }
+
+      showBanner(data.message || translations[currentLang].loginFail, "error");
+      return;
     }
 
-    loginButton.disabled = true;
-    loginButton.innerHTML = '<div class="spinner mx-auto"></div>';
-
-    try {
-        const res = await fetch(`${API_BASE_URL}/users/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ email, password }),
-        });
-
-        const data = await res.json();
-
-        if (data.redirectUrl) {
-            window.location.href = data.redirectUrl;
-            return;
-        }
-
-        if (!res.ok) {
-            showBanner(data.message || translations[currentLang].loginFail, "error");
-            return;
-        }
-
-        
-        showBanner(translations[currentLang].loginSuccess, "success");
-
-        setTimeout(() => {
-            window.location.href = "/dashboard.html";
-        }, 1000);
-
-    } catch (err) {
-        console.error("Login error:", err);
-        showBanner(translations[currentLang].unexpectedError, "error");
-    } finally {
-        loginButton.disabled = false;
-        loginButton.textContent = translations[currentLang].login;
+    if (data.redirectUrl) {
+      window.location.replace(data.redirectUrl);
+      return;
     }
+
+    showBanner(translations[currentLang].unexpectedResponse, "error");
+
+  } catch (err) {
+    console.error("Login error:", err);
+    showBanner(translations[currentLang].unexpectedError, "error");
+  } finally {
+    loginButton.disabled = false;
+    loginButton.textContent = translations[currentLang].login;
+  }
 }
+
 
 
 // Event Listeners
