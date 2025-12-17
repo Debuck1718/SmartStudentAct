@@ -274,7 +274,7 @@
 
       async function checkAuth() {
         try {
-          const res = await authFetch(`${API_BASE_URL}/auth/check`);
+          const res = await authFetch(`${API_BASE_URL}api/auth/check`);
           const data = await res.json();
           paymentEmail = data.email || data.user?.email || "";
           console.log("Auth email resolved:", paymentEmail);
