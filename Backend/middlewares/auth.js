@@ -66,23 +66,25 @@ export const generateRefreshToken = (user) => {
 
 // ✅ Handles cookie setup for web, but still allows tokens in headers for mobile
 export const setAuthCookies = (res, accessToken, refreshToken) => {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: "None",
-    domain: ".smartstudentact.com",
-    path: "/",
-  };
+  // In production, set cookies for the main domain and with SameSite=None; Secure for cross-site usage (Vercel + Render)
+  // In development, do not set domain so cookies work on localhost
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "None" : "Lax",
+    domain: isProd ? ".smartstudentact.com" : undefined,
+    path: "/",
+  };
 
-  res.cookie("access_token", accessToken, {
-    ...cookieOptions,
-    maxAge: 15 * 60 * 1000, // 15m
-  });
+  res.cookie("access_token", accessToken, {
+    ...cookieOptions,
+    maxAge: 15 * 60 * 1000, // 15m
+  });
 
-  res.cookie("refresh_token", refreshToken, {
-    ...cookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
-  });
+  res.cookie("refresh_token", refreshToken, {
+    ...cookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
+  });
 };
 
 export const authenticateJWT = (req, res, next) => {

@@ -206,14 +206,7 @@ app.use(
   express.static(path.join(__dirname, "routes", "uploads"), { maxAge: "1d" })
 );
 
-// Compatibility aliases for legacy frontend endpoints
-// These redirect concise client-side calls like `/auth/check` or `/pricing` to their API counterparts at `/api/*`.
-// Using 307 preserves HTTP method for non-GET requests (e.g. payment initiation on POST).
-app.use(["/auth/check", "/pricing", "/payment/initiate", "/payment/verify"], (req, res) => {
-  const target = `/api${req.originalUrl}`;
-  console.log(`↪️ Redirecting ${req.method} ${req.originalUrl} -> ${target}`);
-  return res.redirect(307, target);
-});
+// Only expose /api endpoints for all API calls. Do not allow legacy non-/api routes.
 
 // Serve frontend static assets (for convenience in dev)
 app.use(express.static(path.join(__dirname, "..", "Frontend", "public")));
