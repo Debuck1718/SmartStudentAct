@@ -93,7 +93,7 @@ const hasRole = (allowedRoles) => (req, res, next) => {
 };
 
 // ✅ Middleware to protect all routes
-protectedRouter.use(authenticateJWT, checkSubscription);
+protectedRouter.use(authenticateJWT);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
