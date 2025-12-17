@@ -445,7 +445,7 @@ protectedRouter.get(
   hasRole(["teacher", "admin", "global_overseer"]),
   async (req, res) => {
     try {
-      const requester = await User.findById(req.user.id).populate("school");
+      const requester = await User.findById(req.userId).populate("school");
       if (!requester) return res.status(404).json({ message: "User not found." });
 
       const { academicYear, schoolId } = req.query;
@@ -483,7 +483,7 @@ protectedRouter.get(
   hasRole(["teacher", "admin", "global_overseer"]),
   async (req, res) => {
     try {
-      const requester = await User.findById(req.user.id).populate("school");
+      const requester = await User.findById(req.userId).populate("school");
       if (!requester) return res.status(404).json({ message: "User not found." });
 
       const { academicYear, termName, schoolId } = req.query;
@@ -1340,7 +1340,7 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacher = await User.findById(req.user.id).select("-password");
+      const teacher = await User.findById(req.userId).select("-password");
       if (!teacher) {
         return res.status(404).json({ message: "Teacher profile not found." });
       }
@@ -1363,7 +1363,7 @@ protectedRouter.post(
   hasRole("teacher"),
   async (req, res) => {
     const { academicYear, terms } = req.body;
-    const teacherId = req.user.id || req.user._id;
+    const teacherId = req.userId;
 
     if (!academicYear || !Array.isArray(terms) || terms.length === 0) {
       return res.status(400).json({ message: "Academic year and at least one term are required." });
@@ -1447,7 +1447,7 @@ protectedRouter.post(
   localUpload.single("file"),
   async (req, res) => {
     try {
-      const teacherId = new mongoose.Types.ObjectId(req.user.id);
+      const teacherId = new mongoose.Types.ObjectId(req.userId);
       let {
         title,
         description,
@@ -1464,7 +1464,7 @@ protectedRouter.post(
       
       if (recipientType === "class") {
         // assign to teacher's grades in their school
-        const teacher = await User.findById(req.user.id);
+        const teacher = await User.findById(req.userId);
         if (teacher && Array.isArray(teacher.teacherGrade) && teacher.teacherGrade.length > 0) {
           const classQuery = { role: "student", grade: { $in: teacher.teacherGrade } };
           if (teacher.school) classQuery.school = teacher.school;
@@ -1473,7 +1473,7 @@ protectedRouter.post(
         }
       } else if (recipientType === "otherGrade" && grade) {
         // assign to a specific other grade within teacher's school
-        const teacher = await User.findById(req.user.id);
+        const teacher = await User.findById(req.userId);
         const gradeQuery = { role: "student", grade: Number(grade) };
         if (teacher && teacher.school) gradeQuery.school = teacher.school;
         const students = await User.find(gradeQuery).select("_id");
@@ -1541,11 +1541,11 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+      if (!mongoose.Types.ObjectId.isValid(req.userId)) {
         return res.status(400).json({ message: "Invalid teacher ID." });
       }
 
-      const teacherId = new mongoose.Types.ObjectId(req.user.id);
+      const teacherId = new mongoose.Types.ObjectId(req.userId);
       const assignments = await Assignment.find({ teacher_id: teacherId }).sort({ createdAt: -1 });
       res.status(200).json(assignments);
     } catch (error) {
@@ -1569,7 +1569,7 @@ protectedRouter.post(
       if (!submission) return res.status(404).json({ message: "Submission not found" });
 
       const assignment = submission.assignment_id;
-      if (!assignment || assignment.teacher_id !== req.user.id) {
+      if (!assignment || assignment.teacher_id !== req.userId) {
         return res.status(403).json({ message: "Not authorized to give feedback" });
       }
 
@@ -1594,7 +1594,7 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const quizzes = await Quiz.find({ teacher_id: req.user.id }).sort({ createdAt: -1 });
+      const quizzes = await Quiz.find({ teacher_id: req.userId }).sort({ createdAt: -1 });
       res.status(200).json(quizzes);
     } catch (error) {
       logger.error("Error fetching teacher quizzes:", error);
@@ -1612,7 +1612,7 @@ protectedRouter.get(
       const { quizId } = req.params;
       const quiz = await Quiz.findById(quizId).populate("submissions.student_id", "firstname lastname email");
       if (!quiz) return res.status(404).json({ message: "Quiz not found." });
-      if (String(quiz.teacher_id) !== String(req.user.id)) {
+      if (String(quiz.teacher_id) !== String(req.userId)) {
         return res.status(403).json({ message: "Not authorized to view this quiz submissions." });
       }
 
@@ -1656,11 +1656,11 @@ protectedRouter.get(
 
       // Access: teacher or student who is assigned
       if (req.user.role === "teacher") {
-        if (String(quiz.teacher_id) !== String(req.user.id)) {
+        if (String(quiz.teacher_id) !== String(req.userId)) {
           return res.status(403).json({ message: "Not authorized." });
         }
       } else if (req.user.role === "student") {
-        const student = await User.findById(req.user.id).select("_id email grade schoolName");
+        const student = await User.findById(req.userId).select("_id email grade schoolName");
         const allowed =
           quiz.assigned_to_users.some(u => String(u) === String(student._id)) ||
           quiz.assigned_to_grades.includes(student.grade) ||
@@ -1741,7 +1741,7 @@ protectedRouter.post(
       }
 
       const quiz = new Quiz({
-        teacher_id: req.user.id,
+        teacher_id: req.userId,
         title,
         description,
         due_date,
@@ -1790,12 +1790,12 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+      if (!mongoose.Types.ObjectId.isValid(req.userId)) {
         return res.status(400).json({ message: "Invalid teacher ID." });
       }
       
       const now = new Date();
-      const teacherId = new mongoose.Types.ObjectId(req.user.id);
+      const teacherId = new mongoose.Types.ObjectId(req.userId);
       const overdueAssignments = await Assignment.find({
         teacher_id: teacherId,
         due_date: { $lt: now },
@@ -1816,7 +1816,7 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const assignedTasks = await Assignment.find({ teacher_id: req.user.id });
+      const assignedTasks = await Assignment.find({ teacher_id: req.userId });
       res.status(200).json(assignedTasks);
     } catch (error) {
       logger.error("Error fetching assigned tasks:", error);
@@ -1831,7 +1831,7 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacherId = req.user.id;
+      const teacherId = req.userId;
       const quizzes = await Quiz.find({ teacher_id: teacherId }).select("title questions submissions");
       const summaries = quizzes.map(q => {
         const count = q.submissions?.length || 0;
@@ -1853,11 +1853,11 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+      if (!mongoose.Types.ObjectId.isValid(req.userId)) {
         return res.status(400).json({ message: "Invalid teacher ID." });
       }
 
-      const teacherId = new mongoose.Types.ObjectId(req.user.id);
+      const teacherId = new mongoose.Types.ObjectId(req.userId);
       const teacherAssignments = await Assignment.find({ teacher_id: teacherId }).select("_id");
       const assignmentIds = teacherAssignments.map((a) => a._id);
 
@@ -1945,7 +1945,7 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacher = await User.findById(req.user.id);
+      const teacher = await User.findById(req.userId);
       if (!teacher || (!teacher.school && !teacher.schoolName) || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
         return res.status(200).json([]);
       }
@@ -1994,7 +1994,7 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacher = await User.findById(req.user.id);
+      const teacher = await User.findById(req.userId);
       if (!teacher || (!teacher.school && !teacher.schoolName) || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
         return res.status(200).json([]);
       }
@@ -2104,7 +2104,7 @@ protectedRouter.get(
 protectedRouter.get("/auth/check", authenticateJWT, (req, res) => {
   (async () => {
     try {
-      const user = await User.findById(req.user.id).select("firstname lastname email role profile_picture_url profile_photo_url");
+      const user = await User.findById(req.userId).select("firstname lastname email role profile_picture_url profile_photo_url");
       if (!user) return res.status(404).json({ status: false, message: "User not found." });
       const photo = getProfileUrl(req, user.profile_picture_url || user.profile_photo_url);
       res.json({

@@ -130,7 +130,7 @@
   <div id="toast" class="message-box"></div>
 
 <script>
-  const API_BASE_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com');
+  const API_BASE_URL = window.API_BASE_URL;
   let currentLang = localStorage.getItem("lang") || "en";
   let userData = {};
 

@@ -125,7 +125,7 @@
   </footer>
 
   <script>
-    const API_BASE_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com');
+    const API_BASE_URL = window.API_BASE_URL;
     const userId = localStorage.getItem("user_id");
 
     function showToast(message, type = "info") {
