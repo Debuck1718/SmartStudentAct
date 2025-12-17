@@ -2148,9 +2148,8 @@ protectedRouter.get(
         ? new mongoose.Types.ObjectId(student.school._id)
         : null;
 
-     
       const conditions = [
-        { assigned_to_users: { $in: [studentIdObj, studentEmail] } }, // support both ObjectId + email
+        { assigned_to_users: { $in: [studentIdObj] } },
       ];
 
       if (studentProgram) {
@@ -2342,9 +2341,9 @@ protectedRouter.get(
 
       const quizzes = await Quiz.find({
         $or: [
-          { assigned_to_users: student.email },
+          { assigned_to_users: student._id },
           { assigned_to_grades: student.grade },
-          { assigned_to_schools: student.schoolName },
+          { assigned_to_schools: student.school },
         ],
       });
 

@@ -1,5 +1,5 @@
 
-const translationCache = {};
+window.translationCache = window.translationCache || {};
 
 async function translatePage(dashboardName, lang = "en") {
   const filePath = `./locales/${dashboardName}.json`;
