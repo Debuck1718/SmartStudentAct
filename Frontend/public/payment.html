@@ -289,7 +289,7 @@
         const lang = languageSelector.value;
         showLoading(translations[lang].loadingPrice);
         try {
-          const res = await authFetch(`${API_BASE_URL}/pricing`);
+          const res = await authFetch(`${API_BASE_URL}api/pricing`);
           const data = await res.json();
           finalAmount = parseFloat(data.localPrice || 0);
           finalCurrency = data.currency || "USD";
@@ -314,7 +314,7 @@
         try {
           // ✅ FIX: Remove the amount from the request body.
           // The backend should calculate and use its own trusted price.
-          const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
+          const initRes = await authFetch(`${API_BASE_URL}api/payment/initiate`, {
             method: "POST",
             body: JSON.stringify({
               gateway: "paystack",
