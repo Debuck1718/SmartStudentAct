@@ -15,10 +15,9 @@ const checkSubscription = async (req, res, next) => {
     }
 
     const now = new Date();
-    const bypassRoles = ["overseer", "global_overseer"];
 
-    // 🚀 Allow special roles to bypass subscription check
-    if (bypassRoles.includes(user.role)) {
+    // 🚀 Always allow overseer/global_overseer to bypass subscription check
+    if (["overseer", "global_overseer"].includes(user.role)) {
       return next();
     }
 

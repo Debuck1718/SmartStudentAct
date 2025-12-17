@@ -85,6 +85,20 @@ function getGenericRedirect(req, path = "login") {
   return target[path] || target.login;
 }
 
+// Helper to compute profile picture URL (same logic as in protectedRoutes)
+function getProfileUrl(req, storedUrl) {
+  if (!storedUrl) return null;
+  if (typeof storedUrl !== 'string') return null;
+  if (storedUrl.startsWith('http://') || storedUrl.startsWith('https://')) return storedUrl;
+  try {
+    const host = req.get('host');
+    const protocol = req.protocol;
+    return `${protocol}://${host}${storedUrl}`;
+  } catch (e) {
+    return storedUrl || null;
+  }
+}
+
 export default function publicRoutes(eventBus) {
   const publicRouter = express.Router();
 
@@ -338,7 +352,13 @@ export default function publicRoutes(eventBus) {
         }
       }
 
-      const hasAccess = subscriptionActive || trialActive;
+      // Bypass subscription/trial check for overseer and global_overseer
+      const bypassRoles = ["overseer", "global_overseer"];
+      let hasAccess = subscriptionActive || trialActive;
+      if (bypassRoles.includes(user.role)) {
+        hasAccess = true;
+      }
+
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
       await User.findByIdAndUpdate(user._id, { refreshToken });
