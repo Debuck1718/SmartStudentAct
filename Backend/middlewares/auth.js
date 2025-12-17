@@ -25,6 +25,7 @@ const PUBLIC_ROUTES = [
   "/users/refresh",
   "/auth/forgot-password",
   "/auth/reset-password",
+  "/auth/check",
   "/contact",
 ];
 

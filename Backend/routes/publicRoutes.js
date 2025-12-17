@@ -85,36 +85,8 @@ function getGenericRedirect(req, path = "login") {
   return target[path] || target.login;
 }
 
-// Helper to compute profile picture URL (same logic used in protectedRoutes)
-function getProfileUrl(req, storedUrl) {
-  if (!storedUrl) return null;
-  if (typeof storedUrl !== 'string') return null;
-  if (storedUrl.startsWith("http://") || storedUrl.startsWith("https://")) return storedUrl;
-  try {
-    const host = req.get("host");
-    const protocol = req.protocol;
-    return `${protocol}://${host}${storedUrl}`;
-  } catch (e) {
-    return storedUrl || null;
-  }
-}
-
 export default function publicRoutes(eventBus) {
   const publicRouter = express.Router();
-
-  // Local helper to compute profile picture URL (ensures availability in route handlers)
-  function getProfileUrl(req, storedUrl) {
-    if (!storedUrl) return null;
-    if (typeof storedUrl !== 'string') return null;
-    if (storedUrl.startsWith('http://') || storedUrl.startsWith('https://')) return storedUrl;
-    try {
-      const host = req.get('host');
-      const protocol = req.protocol;
-      return `${protocol}://${host}${storedUrl}`;
-    } catch (e) {
-      return storedUrl || null;
-    }
-  }
 
   // ---------- Rate Limiters ----------
   const loginLimiter = rateLimit({
@@ -332,103 +304,45 @@ export default function publicRoutes(eventBus) {
 
 
   publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
-    // Detailed tracing to pinpoint where validation errors occur
-    console.log('>>> ENTER LOGIN HANDLER');
-    const email = req.body.email?.trim().toLowerCase();
-    console.log('Login attempt for email:', email);
-    logger.info(`Login attempt for email: ${email}`);
-
     try {
+      const email = req.body.email?.trim().toLowerCase();
       const password = req.body.password?.trim();
 
-      logger.info('Login: fetching user by email');
       const user = await User.findOne({ email }).select("+password");
-      if (!user) {
-        logger.info('Login: user not found: ' + email);
-        return res.status(401).json({ status: false, message: "Invalid credentials." });
-      }
+      if (!user) return res.status(401).json({ status: false, message: "Invalid credentials." });
 
-      logger.info('Login: verifying password for user ' + user._id);
-      let match;
-      try {
-        match = await user.comparePassword(password);
-      } catch (pwErr) {
-        logger.error('Login: password comparison failed', pwErr);
-        throw pwErr;
-      }
-
-      if (!match) {
-        logger.info('Login: password mismatch for user ' + user._id);
-        return res.status(401).json({ status: false, message: "Invalid credentials." });
-      }
+      const match = await user.comparePassword(password);
+      if (!match) return res.status(401).json({ status: false, message: "Invalid credentials." });
 
       const now = new Date();
       let subscriptionActive = false;
       let trialActive = false;
 
-      logger.info('Login: checking subscription and trial status for user ' + user._id);
       if (user.subscription_status === "active" && user.payment_date) {
         const expiry = user.nextBillingDate
           ? new Date(user.nextBillingDate)
           : new Date(user.payment_date);
         if (!user.nextBillingDate) expiry.setMonth(expiry.getMonth() + 1);
         subscriptionActive = now < expiry;
-        logger.info('Login: subscriptionActive=' + subscriptionActive + ' for user ' + user._id);
         if (!subscriptionActive) {
-          logger.info('Login: marking subscription expired for user ' + user._id);
-          // Avoid triggering validators that require payment fields when marking expired
-          await User.updateOne({ _id: user._id }, { $set: { subscription_status: 'expired' } }, { runValidators: false });
-          user.subscription_status = 'expired';
+          user.subscription_status = "expired";
+          await user.save();
         }
       }
 
       if (user.is_on_trial && user.trial_end_at) {
         trialActive = now < new Date(user.trial_end_at);
-        logger.info('Login: trialActive=' + trialActive + ' for user ' + user._id);
         if (!trialActive) {
-          logger.info('Login: ending trial for user ' + user._id);
-          // Mark trial as ended without running schema validators that require payment fields
-          await User.updateOne({ _id: user._id }, { $set: { is_on_trial: false, subscription_status: 'inactive' } }, { runValidators: false });
-          // Keep local user object in sync for subsequent logic
           user.is_on_trial = false;
-          user.subscription_status = 'inactive';
+          await user.save();
         }
       }
 
-      console.log('Login: subscriptionActive=', subscriptionActive, 'trialActive=', trialActive, 'for user', user._id);
       const hasAccess = subscriptionActive || trialActive;
-      logger.info('Login: hasAccess=' + hasAccess + ' for user ' + user._id);
-
-      // Generate tokens and set cookies so the client is authenticated even if payment is required
       const accessToken = generateAccessToken(user);
-      logger.info('Login: generated access token for user ' + user._id);
       const refreshToken = generateRefreshToken(user);
-      logger.info('Login: generated refresh token for user ' + user._id);
-      await User.updateOne({ _id: user._id }, { $set: { refreshToken } }, { runValidators: false });
+      await User.findByIdAndUpdate(user._id, { refreshToken });
       setAuthCookies(res, accessToken, refreshToken);
-
-      if (!hasAccess) {
-        // Mark trial/subscription state in DB without triggering validators
-        await User.updateOne({ _id: user._id }, { $set: { is_on_trial: false, subscription_status: 'expired' } }, { runValidators: false });
-        // Return 200 so front-end can access payment page which requires the user to be logged in
-        return res.status(200).json({
-          status: true,
-          message: 'Login successful. Subscription required.',
-          user: {
-            email: user.email,
-            role: user.role,
-            id: user._id,
-            firstname: user.firstname,
-            lastname: user.lastname,
-            profile_picture_url: (typeof getProfileUrl === 'function') ? getProfileUrl(req, user.profile_picture_url || user.profile_photo_url) : null,
-            imageUrl: (typeof getProfileUrl === 'function') ? getProfileUrl(req, user.profile_picture_url || user.profile_photo_url) : null,
-            subscriptionActive,
-            trialActive,
-          },
-
-          redirectUrl: getGenericRedirect(req, 'payment'),
-        });
-      }
 
       res.json({
         status: true,
@@ -439,19 +353,15 @@ export default function publicRoutes(eventBus) {
           id: user._id,
           firstname: user.firstname,
           lastname: user.lastname,
-          profile_picture_url: (typeof getProfileUrl === 'function') ? getProfileUrl(req, user.profile_picture_url || user.profile_photo_url) : null,
-          imageUrl: (typeof getProfileUrl === 'function') ? getProfileUrl(req, user.profile_picture_url || user.profile_photo_url) : null,
+          profile_picture_url: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
+          imageUrl: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
           subscriptionActive,
           trialActive,
         },
         redirectUrl: getRedirectUrl(user, hasAccess, req),
       });
     } catch (err) {
-      // Log detailed error info to aid debugging (message + stack)
-      logger.error("❌ Login error: %s", err?.message || err);
-      logger.error(err && err.stack ? err.stack : err);
-      console.error("❌ Login error (console):", err?.message || err);
-      console.error(err && err.stack ? err.stack : err);
+      logger.error("❌ Login error:", err);
       return res.status(500).json({ status: false, message: "Server error" });
     }
   });
