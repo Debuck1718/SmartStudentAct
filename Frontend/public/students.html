@@ -562,6 +562,22 @@ fetchStudentMessages();
           method: "PATCH"
         });
         showToast("Task marked as completed!", "success");
+        // Move the completed task to localStorage for completed page
+        const [_, studentTasks] = await Promise.all([
+          fetchWithAuth("/student/assignments"),
+          fetchWithAuth("/student/tasks"),
+        ]);
+        const completedTask = studentTasks.find(t => t._id === taskId);
+        if (completedTask) {
+          let completed = JSON.parse(localStorage.getItem("completedTasks") || "[]");
+          completed.push({
+            title: completedTask.title,
+            description: completedTask.description,
+            date: completedTask.due_date,
+            completedAt: new Date().toISOString()
+          });
+          localStorage.setItem("completedTasks", JSON.stringify(completed));
+        }
         fetchAssignments(); 
       } catch (e) {
         showToast(e.message, "error");

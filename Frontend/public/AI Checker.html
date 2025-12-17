@@ -134,7 +134,15 @@
   </style>
 </head>
 <body>
+
   <header id="headerTitle">AI Checker</header>
+
+  <!-- Back button for teachers -->
+  <div class="w-full max-w-2xl mb-4" style="margin: 0 auto;">
+    <a href="teachers.html" class="inline-block px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition">
+      ← Back
+    </a>
+  </div>
 
   <div class="container">
     <div class="language-selector">
@@ -174,7 +182,16 @@
 
     <button id="analyzeButton">Analyze</button>
     <div id="result" class="result"></div>
+
   </div>
+
+  <!-- Teacher Dashboard Navigation Bar -->
+  <nav class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md mt-8 mb-2 max-w-2xl mx-auto">
+    <a href="./my-students.html" class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300" data-i18n="myClass">👨‍🎓 My Class</a>
+    <a href="./completed-assignment.html" class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300" data-i18n="completedTasks">✅ Completed Tasks</a>
+    <a href="./quiz_dashboard.html" class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition duration-300" data-i18n="quizDashboard">📝 Quiz Dashboard</a>
+    <a href="./AI Checker.html" class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300" data-i18n="aiChecker">🤖 AI Checker</a>
+  </nav>
 
   <script>
     const translations = {

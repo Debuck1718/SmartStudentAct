@@ -121,19 +121,19 @@
               <option value="university">University</option>
             </select>
           </div>
-          <div>
+          <div id="grade-group">
             <label data-i18n="gradeLabel" class="block text-sm font-medium mb-1">Grade</label>
             <input id="grade" name="grade" type="text" class="input w-full border rounded-lg px-3 py-2" />
           </div>
-          <div>
+          <div id="university-group" style="display:none;">
             <label data-i18n="universityLabel" class="block text-sm font-medium mb-1">University</label>
             <input id="university" name="university" type="text" class="input w-full border rounded-lg px-3 py-2" />
           </div>
-          <div>
+          <div id="uniLevel-group" style="display:none;">
             <label data-i18n="uniLevelLabel" class="block text-sm font-medium mb-1">University Level</label>
             <input id="uniLevel" name="uniLevel" type="text" class="input w-full border rounded-lg px-3 py-2" />
           </div>
-          <div>
+          <div id="program-group" style="display:none;">
             <label data-i18n="programLabel" class="block text-sm font-medium mb-1">Program</label>
             <input id="program" name="program" type="text" class="input w-full border rounded-lg px-3 py-2" />
           </div>
@@ -233,12 +233,19 @@
       // Student fields
       if (userData.occupation === "student") {
         $("educationLevel").value = userData.educationLevel || "";
-        $("grade").value = userData.grade || "";
-
+        // Show/hide fields based on educationLevel
+        showStudentFields(userData.educationLevel);
         if (userData.educationLevel === "university") {
           $("university").value = userData.university || "";
           $("uniLevel").value = userData.uniLevel || "";
           $("program").value = userData.program || "";
+        } else {
+          $("grade").value = userData.grade || "";
+        }
+        // Always display program if present
+        if (userData.program) {
+          $("program-group").style.display = "block";
+          $("program").value = userData.program;
         }
       }
 
@@ -351,6 +358,13 @@ $("avatar-input").addEventListener("change", async (e) => {
 
   // Init
   document.addEventListener("DOMContentLoaded", () => {
+        // Show/hide student fields on educationLevel change
+        const eduLevel = $("educationLevel");
+        if (eduLevel) {
+          eduLevel.addEventListener("change", (e) => {
+            showStudentFields(e.target.value);
+          });
+        }
     $("lang").value = currentLang;
     if (typeof translatePage === "function") translatePage("profile", currentLang);
     $("lang").addEventListener("change", (e) => {
@@ -359,6 +373,21 @@ $("avatar-input").addEventListener("change", async (e) => {
       if (typeof translatePage === "function") translatePage("profile", currentLang);
     });
     loadProfile();
+    // Helper to show/hide student fields
+    window.showStudentFields = function(level) {
+      if (!$("grade-group") || !$("university-group") || !$("uniLevel-group") || !$("program-group")) return;
+      if (level === "university") {
+        $("grade-group").style.display = "none";
+        $("university-group").style.display = "block";
+        $("uniLevel-group").style.display = "block";
+        $("program-group").style.display = "block";
+      } else {
+        $("grade-group").style.display = "block";
+        $("university-group").style.display = "none";
+        $("uniLevel-group").style.display = "none";
+        $("program-group").style.display = "none";
+      }
+    }
   });
 </script>
 </body>
