@@ -226,7 +226,7 @@
           phoneNumberLabel: "Номер телефона",
         },
       };
-      const API_BASE_URL = window.API_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com');
+      const API_BASE_URL = window.API_URL = window.API_BASE_URL || (window.location.hostname.includes('localhost') ? '/api' : 'https://api.smartstudentact.com/api');
 
       const payButton = document.getElementById("payButton");
       const messageDiv = document.getElementById("message");
@@ -274,7 +274,7 @@
 
       async function checkAuth() {
         try {
-          const res = await authFetch(`${API_BASE_URL}api/auth/check`);
+          const res = await authFetch(`${API_BASE_URL}/auth/check`);
           const data = await res.json();
           paymentEmail = data.email || data.user?.email || "";
           console.log("Auth email resolved:", paymentEmail);
@@ -289,7 +289,7 @@
         const lang = languageSelector.value;
         showLoading(translations[lang].loadingPrice);
         try {
-          const res = await authFetch(`${API_BASE_URL}api/pricing`);
+          const res = await authFetch(`${API_BASE_URL}/pricing`);
           const data = await res.json();
           finalAmount = parseFloat(data.localPrice || 0);
           finalCurrency = data.currency || "USD";
@@ -314,7 +314,7 @@
         try {
           // ✅ FIX: Remove the amount from the request body.
           // The backend should calculate and use its own trusted price.
-          const initRes = await authFetch(`${API_BASE_URL}api/payment/initiate`, {
+          const initRes = await authFetch(`${API_BASE_URL}/payment/initiate`, {
             method: "POST",
             body: JSON.stringify({
               gateway: "paystack",
