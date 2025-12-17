@@ -70,9 +70,8 @@ export const generateRefreshToken = (user) => {
 export const setAuthCookies = (res, accessToken, refreshToken) => {
   const cookieOptions = {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "None" : "Lax",
-    domain: isProd ? "wwww.smartstudentact.com" : undefined,
+    secure: true,
+    sameSite:  "None",
     path: "/",
   };
 
@@ -150,7 +149,6 @@ export const authenticateJWT = (req, res, next) => {
             httpOnly: true,
             secure: isProd,
             sameSite: "None",
-            domain: "wwww.smartstudentact.com",
             path: "/",
             maxAge: 15 * 60 * 1000,
           });
