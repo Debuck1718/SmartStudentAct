@@ -67,18 +67,6 @@ function isAppRequest(req) {
   );
 }
 
-function getRedirectUrl(user, hasAccess, req) {
-  const { role } = user || {};
-  const target = isAppRequest(req) ? redirectPaths.app : redirectPaths.web;
-
-  const bypassRoles = ["global_overseer", "overseer"];
-  if (bypassRoles.includes(role)) return target[role] || target.login;
-
-  if (role && target[role]) {
-    return hasAccess ? target[role] : target.payment;
-  }
-  return target.login;
-}
 
 function getGenericRedirect(req, path = "login") {
   const target = isAppRequest(req) ? redirectPaths.app : redirectPaths.web;
@@ -317,98 +305,85 @@ export default function publicRoutes(eventBus) {
   });
 
 
-  publicRouter.post("/users/login", loginLimiter, validate(loginSchema), async (req, res) => {
-    try {
-      const email = req.body.email?.trim().toLowerCase();
-      const password = req.body.password?.trim();
+  publicRouter.post(
+    "/users/login",
+    loginLimiter,
+    validate(loginSchema),
+    async (req, res) => {
+      try {
+        const email = req.body.email.trim().toLowerCase();
+        const password = req.body.password.trim();
 
-      const user = await User.findOne({ email }).select("+password");
-      if (!user) return res.status(401).json({ status: false, message: "Invalid credentials." });
-
-      const match = await user.comparePassword(password);
-      if (!match) return res.status(401).json({ status: false, message: "Invalid credentials." });
-
-      const now = new Date();
-      let subscriptionActive = false;
-      let trialActive = false;
-
-      if (user.subscription_status === "active" && user.payment_date) {
-        const expiry = user.nextBillingDate
-          ? new Date(user.nextBillingDate)
-          : new Date(user.payment_date);
-        if (!user.nextBillingDate) expiry.setMonth(expiry.getMonth() + 1);
-        subscriptionActive = now < expiry;
-        if (!subscriptionActive) {
-          user.subscription_status = "expired";
-          await user.save();
+        const user = await User.findOne({ email }).select("+password");
+        if (!user || !(await user.comparePassword(password))) {
+          return res.status(401).json({ message: "Invalid credentials." });
         }
-      }
 
-      if (user.is_on_trial && user.trial_end_at) {
-        trialActive = now < new Date(user.trial_end_at);
-        if (!trialActive) {
-          user.is_on_trial = false;
-          await user.save();
+        const now = new Date();
+        let subscriptionActive = false;
+        let trialActive = false;
+
+        if (user.subscription_status === "active" && user.payment_date) {
+          const expiry = new Date(user.payment_date);
+          expiry.setMonth(expiry.getMonth() + 1);
+          subscriptionActive = now < expiry;
+          if (!subscriptionActive) {
+            user.subscription_status = "expired";
+            await user.save();
+          }
         }
+
+        if (user.is_on_trial && user.trial_end_at) {
+          trialActive = now < new Date(user.trial_end_at);
+          if (!trialActive) {
+            user.is_on_trial = false;
+            await user.save();
+          }
+        }
+
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+        user.refreshToken = refreshToken;
+        await user.save();
+        setAuthCookies(res, accessToken, refreshToken);
+
+        return res.json({
+          status: true,
+          message: "Login successful",
+          user: {
+            id: user._id,
+            email: user.email,
+            role: user.role,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            imageUrl: getProfileUrl(
+              req,
+              user.profile_picture_url || user.profile_photo_url
+            ),
+            subscriptionActive,
+            trialActive,
+          },
+  
+          redirectUrl: getDashboardRedirect(user, req),
+        });
+      } catch (err) {
+        logger.error("❌ Login error:", err);
+        res.status(500).json({ message: "Server error" });
       }
-
-      // Bypass subscription/trial check for overseer and global_overseer
-      const bypassRoles = ["overseer", "global_overseer"];
-      let hasAccess = subscriptionActive || trialActive;
-      if (bypassRoles.includes(user.role)) {
-        hasAccess = true;
-      }
-
-      const accessToken = generateAccessToken(user);
-      const refreshToken = generateRefreshToken(user);
-      await User.findByIdAndUpdate(user._id, { refreshToken });
-      setAuthCookies(res, accessToken, refreshToken);
-
-      res.json({
-        status: true,
-        message: "Login successful",
-        user: {
-          email: user.email,
-          role: user.role,
-          id: user._id,
-          firstname: user.firstname,
-          lastname: user.lastname,
-          profile_picture_url: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
-          imageUrl: getProfileUrl(req, user.profile_picture_url || user.profile_photo_url),
-          subscriptionActive,
-          trialActive,
-        },
-        redirectUrl: getRedirectUrl(user, hasAccess, req),
-      });
-    } catch (err) {
-      logger.error("❌ Login error:", err);
-      return res.status(500).json({ status: false, message: "Server error" });
     }
-  });
+  );
 
  
-  publicRouter.post("/users/logout", async (req, res) => {
+ publicRouter.post("/users/logout", async (req, res) => {
     try {
-      const refreshToken = req.cookies.refresh_token;
-      if (refreshToken)
-        await User.updateOne({ refreshToken }, { $unset: { refreshToken: "" } });
-
-      const cookieOptions = {
-        httpOnly: true,
-        secure: IS_PROD,
-        sameSite: "None",
-        domain: IS_PROD ? ".smartstudentact.com" : undefined,
-      };
-      res.clearCookie("access_token", cookieOptions);
-      res.clearCookie("refresh_token", cookieOptions);
-
+      res.clearCookie("access_token");
+      res.clearCookie("refresh_token");
       res.json({
-        message: "Logged out successfully.",
+        message: "Logged out successfully",
         redirectUrl: getGenericRedirect(req, "login"),
       });
     } catch (err) {
-      logger.error("❌ Logout error:", err);
-      res.status(500).json({ error: "Server error." });
+      res.status(500).json({ message: "Logout failed" });
     }
   });
 
