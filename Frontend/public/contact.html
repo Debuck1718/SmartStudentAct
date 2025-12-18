@@ -15,12 +15,40 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
+        .cute-back-btn {
+          display: inline-flex;
+          align-items: center;
+          background: linear-gradient(90deg, #f472b6 0%, #60a5fa 100%);
+          color: #fff;
+          font-weight: 600;
+          border-radius: 9999px;
+          box-shadow: 0 2px 8px rgba(100,100,255,0.08);
+          padding: 0.6rem 1.4rem;
+          font-size: 1.1rem;
+          margin-bottom: 1.5rem;
+          border: none;
+          transition: background 0.2s, transform 0.2s;
+          cursor: pointer;
+          gap: 0.5rem;
+        }
+        .cute-back-btn:hover {
+          background: linear-gradient(90deg, #60a5fa 0%, #f472b6 100%);
+          transform: scale(1.04);
+          box-shadow: 0 4px 16px rgba(100,100,255,0.13);
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <!-- Main container for the contact form -->
-    <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg transition-all duration-300 transform scale-100 hover:shadow-2xl">
+        <!-- Cute Back Button -->
+        <div class="w-full flex justify-start max-w-lg mx-auto mt-4">
+            <a href="javascript:history.back()" class="cute-back-btn">
+                <span style="font-size:1.3em;">🐾</span> Back
+            </a>
+        </div>
+
+        <!-- Main container for the contact form -->
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg transition-all duration-300 transform scale-100 hover:shadow-2xl">
         <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Contact Us</h1>
         <p class="text-center text-gray-500 mb-8">We'd love to hear from you. Please fill out the form below.</p>
 

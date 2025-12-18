@@ -10,6 +10,27 @@
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="icon" href="/favicon.ico" />
   <style>
+    .cute-back-btn {
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(90deg, #f472b6 0%, #60a5fa 100%);
+      color: #fff;
+      font-weight: 600;
+      border-radius: 9999px;
+      box-shadow: 0 2px 8px rgba(100,100,255,0.08);
+      padding: 0.6rem 1.4rem;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      border: none;
+      transition: background 0.2s, transform 0.2s;
+      cursor: pointer;
+      gap: 0.5rem;
+    }
+    .cute-back-btn:hover {
+      background: linear-gradient(90deg, #60a5fa 0%, #f472b6 100%);
+      transform: scale(1.04);
+      box-shadow: 0 4px 16px rgba(100,100,255,0.13);
+    }
     :root {
       --primary-color: #2563eb;
       --background-color: #f8fafc;
@@ -55,12 +76,8 @@
       border-bottom: 3px solid transparent;
       transition: all 0.2s;
     }
-    .tab.active {
-      border-bottom: 3px solid var(--primary-color);
-      color: var(--primary-color);
-    }
+    /* Removed Teacher Dashboard Navigation Bar */
     textarea {
-      width: 100%;
       min-height: 150px;
       padding: 1rem;
       border: 1px solid var(--border-color);
@@ -137,10 +154,11 @@
 
   <header id="headerTitle">AI Checker</header>
 
-  <!-- Back button for teachers -->
-  <div class="w-full max-w-2xl mb-4" style="margin: 0 auto;">
-    <a href="teachers.html" class="inline-block px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition">
-      ← Back
+
+  <!-- Cute Back Button -->
+  <div class="w-full flex justify-start max-w-2xl mx-auto mt-4">
+    <a href="javascript:history.back()" class="cute-back-btn">
+      <span style="font-size:1.3em;">🐾</span> Back
     </a>
   </div>
 

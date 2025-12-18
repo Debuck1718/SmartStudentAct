@@ -1,3 +1,51 @@
+// GET: /api/teacher/students - returns students in the teacher's class/school
+protectedRouter.get(
+  "/teacher/students",
+  authenticateJWT,
+  hasRole("teacher"),
+  async (req, res) => {
+    try {
+      const teacher = await User.findById(req.userId);
+      if (!teacher || (!teacher.school && !teacher.schoolName) || !Array.isArray(teacher.teacherGrade) || teacher.teacherGrade.length === 0) {
+        return res.status(200).json([]);
+      }
+
+      const { search } = req.query;
+      const classQuery = {
+        role: "student",
+        grade: { $in: teacher.teacherGrade },
+      };
+
+      if (teacher.school) {
+        classQuery.school = teacher.school;
+      } else if (teacher.schoolName) {
+        classQuery.schoolName = teacher.schoolName;
+      }
+
+      if (search) {
+        classQuery.$or = [
+          { firstname: { $regex: search, $options: "i" } },
+          { lastname: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const students = await User.find(classQuery).select("_id firstname lastname email grade profile_picture_url");
+      const mapped = students.map(s => ({
+        _id: s._id,
+        firstname: s.firstname,
+        lastname: s.lastname,
+        email: s.email,
+        grade: s.grade,
+        profile_picture_url: s.profile_picture_url || s.profile_photo_url || null,
+      }));
+      res.status(200).json(mapped);
+    } catch (error) {
+      logger.error("Error fetching students in teacher's class:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
 import express from "express";
 import multer from "multer";
 import { fileURLToPath } from "url";

@@ -1,5 +1,5 @@
-    <!-- Bottom Tab Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.1)] py-2 px-4 rounded-t-3xl z-40">
+    <!-- Bottom Tab Navigation (hidden on md and up) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.1)] py-2 px-4 rounded-t-3xl z-40 md:hidden">
       <div class="flex justify-around items-center h-full">
         <a href="./students.html" class="tab-link flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-500 transition-colors" data-tab="dashboard">
           <i class="fas fa-home text-2xl mb-1"></i><span class="text-xs font-medium">Dashboard</span>
@@ -33,6 +33,27 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
     <style>
+      .cute-back-btn {
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(90deg, #f472b6 0%, #60a5fa 100%);
+        color: #fff;
+        font-weight: 600;
+        border-radius: 9999px;
+        box-shadow: 0 2px 8px rgba(100,100,255,0.08);
+        padding: 0.6rem 1.4rem;
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        border: none;
+        transition: background 0.2s, transform 0.2s;
+        cursor: pointer;
+        gap: 0.5rem;
+      }
+      .cute-back-btn:hover {
+        background: linear-gradient(90deg, #60a5fa 0%, #f472b6 100%);
+        transform: scale(1.04);
+        box-shadow: 0 4px 16px rgba(100,100,255,0.13);
+      }
       @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
       body {
         font-family: 'Roboto', sans-serif;
@@ -103,6 +124,12 @@
     </style>
   </head>
   <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 md:p-8">
+    <!-- Cute Back Button -->
+    <div class="w-full flex justify-start max-w-5xl mx-auto mt-4">
+      <a href="javascript:history.back()" class="cute-back-btn">
+        <span style="font-size:1.3em;">🐾</span> Back
+      </a>
+    </div>
     <header
       class="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between mb-6 md:mb-10"
     >

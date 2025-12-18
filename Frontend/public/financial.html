@@ -21,8 +21,27 @@
     body { font-family: "Inter", sans-serif; background-color: #f5f5f5; }
     .container { padding: 20px; background-color: #f5f5f5; min-height: 100vh; }
     .loading-container { display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; }
-    .back-link { color:#007bff; margin-bottom:15px; font-size:16px; font-weight:500; cursor:pointer; text-decoration:none; }
-    .back-link:hover { text-decoration:underline; }
+    .cute-back-btn {
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(90deg, #f472b6 0%, #60a5fa 100%);
+      color: #fff;
+      font-weight: 600;
+      border-radius: 9999px;
+      box-shadow: 0 2px 8px rgba(100,100,255,0.08);
+      padding: 0.6rem 1.4rem;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      border: none;
+      transition: background 0.2s, transform 0.2s;
+      cursor: pointer;
+      gap: 0.5rem;
+    }
+    .cute-back-btn:hover {
+      background: linear-gradient(90deg, #60a5fa 0%, #f472b6 100%);
+      transform: scale(1.04);
+      box-shadow: 0 4px 16px rgba(100,100,255,0.13);
+    }
     .title { font-size:24px; font-weight:bold; margin-bottom:15px; color:#333; text-align:center; }
     .tips-grid { display:grid; gap:12px; grid-template-columns: repeat(1, minmax(0,1fr)); }
     @media (min-width:640px) { .tips-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
@@ -48,6 +67,14 @@
       <option value="ru">Русский (USD)</option>
       <option value="pt">Português (USD)</option>
     </select>
+  </div>
+
+
+  <!-- Cute Back Button -->
+  <div class="w-full flex justify-start max-w-3xl mx-auto mt-4">
+    <a href="javascript:history.back()" class="cute-back-btn">
+      <span style="font-size:1.3em;">🐾</span> Back
+    </a>
   </div>
 
   <div id="app-root" class="container"></div>
@@ -234,7 +261,6 @@
         return;
       }
       root.innerHTML = `
-        <a href="students.html" class="back-link">${t.backLink}</a>
         <h1 class="title">${t.mainTitle}</h1>
         <div class="tips-grid">
           ${t.tips.map((tip,i)=>`<div class="tip-card" style="background-color:${tipColors[i%tipColors.length]}">${tip}</div>`).join("")}

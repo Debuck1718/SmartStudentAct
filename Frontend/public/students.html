@@ -76,6 +76,14 @@
 
       <h1 data-i18n="welcome_heading" class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mt-8 mb-4">Welcome to SmartStudentAct</h1>
       <p data-i18n="welcome_text" class="text-lg text-center text-gray-600 mb-8">Your learning & financial companion</p>
+
+      <!-- Notification Subscription Button -->
+      <div class="flex justify-center mb-6">
+        <button id="notification-btn" class="px-6 py-2 rounded-full font-semibold shadow transition-colors bg-blue-500 text-white hover:bg-blue-600 flex items-center gap-2">
+          <span id="notification-btn-icon">🔔</span>
+          <span id="notification-btn-text">Subscribe to Notifications</span>
+        </button>
+      </div>
       
       <section class="bg-white rounded-3xl shadow-xl p-6 mb-6 transform hover:scale-105 transition-transform duration-300">
         <h2 data-i18n="assignments_title" class="text-2xl font-semibold mb-4 text-gray-800 flex items-center">📚 Assignments</h2>
@@ -299,8 +307,45 @@
       }
 
       console.log('✅ Successfully subscribed to push');
+      updateNotificationBtn(true);
     } catch (err) {
       console.error('❌ Push subscription failed:', err);
+      updateNotificationBtn(false);
+      async function isUserSubscribedToPush() {
+        if (!('serviceWorker' in navigator)) return false;
+        const reg = await navigator.serviceWorker.ready;
+        const subscription = await reg.pushManager.getSubscription();
+        return !!subscription;
+      }
+
+      function updateNotificationBtn(isSubscribed) {
+        const btn = document.getElementById('notification-btn');
+        const icon = document.getElementById('notification-btn-icon');
+        const text = document.getElementById('notification-btn-text');
+        if (!btn || !icon || !text) return;
+        if (isSubscribed) {
+          btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+          btn.classList.add('bg-green-500', 'hover:bg-green-600');
+          icon.textContent = '🔔';
+          text.textContent = 'Subscribed to Notifications';
+        } else {
+          btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+          btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+          icon.textContent = '🔕';
+          text.textContent = 'Subscribe to Notifications';
+        }
+      }
+
+      async function unsubscribeUserFromPush() {
+        if (!('serviceWorker' in navigator)) return;
+        const reg = await navigator.serviceWorker.ready;
+        const subscription = await reg.pushManager.getSubscription();
+        if (subscription) {
+          await subscription.unsubscribe();
+          updateNotificationBtn(false);
+          showToast('Unsubscribed from notifications', 'info');
+        }
+      }
     }
   }
 
@@ -308,6 +353,21 @@
   document.addEventListener("DOMContentLoaded", async () => {
     let currentLang = "en";
     const dashboardName = "students";
+
+    // Notification button logic
+    const notificationBtn = document.getElementById('notification-btn');
+    if (notificationBtn) {
+      // Set initial state
+      isUserSubscribedToPush().then(updateNotificationBtn);
+      notificationBtn.addEventListener('click', async () => {
+        const isSubscribed = await isUserSubscribedToPush();
+        if (isSubscribed) {
+          await unsubscribeUserFromPush();
+        } else {
+          await subscribeUserToPush();
+        }
+      });
+    }
 
 
     if (typeof translatePage === "function") {
