@@ -1443,13 +1443,18 @@
 
       const assignmentForm = document.getElementById("assignmentForm");
       const assignmentTitle = document.getElementById("assignmentTitle");
-      if (assignmentForm && assignmentTitle && assignmentTitle.parentElement) {
+      if (
+        assignmentForm &&
+        assignmentTitle &&
+        assignmentTitle.parentElement &&
+        assignmentTitle.parentElement.parentElement === assignmentForm
+      ) {
         assignmentForm.insertBefore(
           specialStudentSelectGroup,
           assignmentTitle.parentElement
         );
       } else {
-        console.warn("Assignment form or title not found; skipping special student select group insertion.");
+        console.warn("Assignment form or title not found, or parent is not a child of form; skipping special student select group insertion.");
       }
 
       async function loadSpecialStudents() {
