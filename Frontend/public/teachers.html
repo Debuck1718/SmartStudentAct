@@ -945,14 +945,7 @@
             data.name || "Teacher";
           document.getElementById("profileAvatar").src =
             data.profile_picture_url || "./images/default-avatar.png";
-          // Render school name and country in professional details
-          if (data.school) {
-            document.getElementById("schoolName").innerText = data.school.schoolName || data.school.name || "-";
-            document.getElementById("schoolCountry").innerText = data.school.schoolCountry || data.school.country || "-";
-          } else {
-            document.getElementById("schoolName").innerText = "-";
-            document.getElementById("schoolCountry").innerText = "-";
-          }
+          // School name and country display removed from this page
         }
       }
 
