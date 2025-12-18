@@ -256,98 +256,99 @@
 <script>
   const API_BASE_URL = window.API_BASE_URL;
 
-  async function subscribeUserToPush() {
-    if (!('serviceWorker' in navigator)) return;
-
-    // Ensure service worker is registered
-    try {
-      await navigator.serviceWorker.register('/sw.js');
-    } catch (err) {
-      console.warn('Service worker registration failed or already registered:', err.message || err);
-    }
-
+  async function isUserSubscribedToPush() {
+    if (!('serviceWorker' in navigator)) return false;
     const reg = await navigator.serviceWorker.ready;
+    const subscription = await reg.pushManager.getSubscription();
+    return !!subscription;
+  }
 
-    try {
-      // Ask for notification permission if not decided yet
-      if (Notification.permission === 'default') {
-        const p = await Notification.requestPermission();
-        if (p !== 'granted') {
-          console.log('Push permission not granted');
-          return;
-        }
-      }
+  async function subscribeUserToPush() {
+  if (!('serviceWorker' in navigator)) return;
 
-      if (Notification.permission !== 'granted') return;
+  // Ensure service worker is registered
+  try {
+    await navigator.serviceWorker.register('/sw.js');
+  } catch (err) {
+    console.warn('Service worker registration failed or already registered:', err.message || err);
+  }
 
-      // If already subscribed, reuse the subscription
-      let subscription = await reg.pushManager.getSubscription();
-      if (!subscription) {
-        subscription = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(
-            'BIiReZmmNOxbUaqVrIob40QBGzO_CN5FcDvUlyx8_13PRxIC0Ru46KDW3VYRjJUQquvud5FSvIhWgvtgbjuP0fA'
-          ),
-        });
-      }
+  const reg = await navigator.serviceWorker.ready;
 
-      console.log('📡 Push Subscription:', subscription);
-
-      // Send to server to save (idempotent)
-      const res = await fetch(`${API_BASE_URL}/push/subscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(subscription),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || 'Failed to save push subscription');
-      }
-
-      console.log('✅ Successfully subscribed to push');
-      updateNotificationBtn(true);
-    } catch (err) {
-      console.error('❌ Push subscription failed:', err);
-      updateNotificationBtn(false);
-      async function isUserSubscribedToPush() {
-        if (!('serviceWorker' in navigator)) return false;
-        const reg = await navigator.serviceWorker.ready;
-        const subscription = await reg.pushManager.getSubscription();
-        return !!subscription;
-      }
-
-      function updateNotificationBtn(isSubscribed) {
-        const btn = document.getElementById('notification-btn');
-        const icon = document.getElementById('notification-btn-icon');
-        const text = document.getElementById('notification-btn-text');
-        if (!btn || !icon || !text) return;
-        if (isSubscribed) {
-          btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-          btn.classList.add('bg-green-500', 'hover:bg-green-600');
-          icon.textContent = '🔔';
-          text.textContent = 'Subscribed to Notifications';
-        } else {
-          btn.classList.remove('bg-green-500', 'hover:bg-green-600');
-          btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
-          icon.textContent = '🔕';
-          text.textContent = 'Subscribe to Notifications';
-        }
-      }
-
-      async function unsubscribeUserFromPush() {
-        if (!('serviceWorker' in navigator)) return;
-        const reg = await navigator.serviceWorker.ready;
-        const subscription = await reg.pushManager.getSubscription();
-        if (subscription) {
-          await subscription.unsubscribe();
-          updateNotificationBtn(false);
-          showToast('Unsubscribed from notifications', 'info');
-        }
+  try {
+    // Ask for notification permission if not decided yet
+    if (Notification.permission === 'default') {
+      const p = await Notification.requestPermission();
+      if (p !== 'granted') {
+        console.log('Push permission not granted');
+        return;
       }
     }
+
+    if (Notification.permission !== 'granted') return;
+
+    // If already subscribed, reuse the subscription
+    let subscription = await reg.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(
+          'BIiReZmmNOxbUaqVrIob40QBGzO_CN5FcDvUlyx8_13PRxIC0Ru46KDW3VYRjJUQquvud5FSvIhWgvtgbjuP0fA'
+        ),
+      });
+    }
+
+    console.log('📡 Push Subscription:', subscription);
+
+    // Send to server to save (idempotent)
+    const res = await fetch(`${API_BASE_URL}/push/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(subscription),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.message || 'Failed to save push subscription');
+    }
+
+    console.log('✅ Successfully subscribed to push');
+    updateNotificationBtn(true);
+  } catch (err) {
+    console.error('❌ Push subscription failed:', err);
+    updateNotificationBtn(false);
   }
+}
+
+function updateNotificationBtn(isSubscribed) {
+  const btn = document.getElementById('notification-btn');
+  const icon = document.getElementById('notification-btn-icon');
+  const text = document.getElementById('notification-btn-text');
+  if (!btn || !icon || !text) return;
+  if (isSubscribed) {
+    btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+    btn.classList.add('bg-green-500', 'hover:bg-green-600');
+    icon.textContent = '🔔';
+    text.textContent = 'Subscribed to Notifications';
+  } else {
+    btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+    btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+    icon.textContent = '🔕';
+    text.textContent = 'Subscribe to Notifications';
+  }
+}
+
+async function unsubscribeUserFromPush() {
+  if (!('serviceWorker' in navigator)) return;
+  const reg = await navigator.serviceWorker.ready;
+  const subscription = await reg.pushManager.getSubscription();
+  if (subscription) {
+    await subscription.unsubscribe();
+    updateNotificationBtn(false);
+    showToast('Unsubscribed from notifications', 'info');
+  }
+}
 
 
   document.addEventListener("DOMContentLoaded", async () => {
