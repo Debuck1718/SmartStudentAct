@@ -243,6 +243,7 @@
         let currentView = "my-class";
         let searchTimeout;
 
+        // Use the same fetch logic as other working pages
         const authFetch = async (url, options = {}) => {
           return fetch(url, {
             ...options,
