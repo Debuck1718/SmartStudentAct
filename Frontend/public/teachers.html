@@ -1440,12 +1440,17 @@
       <select id="assignment-special-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none max-h-48 overflow-auto" multiple></select>
   </div>
 `;
-      document
-        .getElementById("assignmentForm")
-        .insertBefore(
+
+      const assignmentForm = document.getElementById("assignmentForm");
+      const assignmentTitle = document.getElementById("assignmentTitle");
+      if (assignmentForm && assignmentTitle && assignmentTitle.parentElement) {
+        assignmentForm.insertBefore(
           specialStudentSelectGroup,
-          document.getElementById("assignmentTitle").parentElement
+          assignmentTitle.parentElement
         );
+      } else {
+        console.warn("Assignment form or title not found; skipping special student select group insertion.");
+      }
 
       async function loadSpecialStudents() {
         try {
