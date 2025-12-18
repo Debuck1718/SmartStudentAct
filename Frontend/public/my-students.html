@@ -223,7 +223,12 @@
       }
 
       document.addEventListener("DOMContentLoaded", () => {
-        const API_BASE_URL = window.API_BASE_URL;
+        let API_BASE_URL = window.API_BASE_URL;
+        if (!API_BASE_URL) {
+          // Try to set a fallback or warn
+          API_BASE_URL = '/api'; // fallback for local dev, adjust as needed
+          console.warn('API_BASE_URL was not set. Using fallback:', API_BASE_URL);
+        }
         const contentArea = document.getElementById("content-area");
         const myClassBtn = document.getElementById("my-class-btn");
         const otherStudentsBtn = document.getElementById("other-students-btn");
