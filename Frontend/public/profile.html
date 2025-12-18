@@ -354,6 +354,11 @@ $("avatar-input").addEventListener("change", async (e) => {
     $("student-section").classList.toggle("hidden", role !== "student");
     $("teacher-section").classList.toggle("hidden", role !== "teacher");
     $("admin-section").classList.toggle("hidden", role !== "admin");
+    // Always show schoolName and schoolCountry for teachers
+    if (role === "teacher") {
+      $("schoolName").parentElement.classList.remove("hidden");
+      $("schoolCountry").parentElement.classList.remove("hidden");
+    }
   }
 
   // Init
