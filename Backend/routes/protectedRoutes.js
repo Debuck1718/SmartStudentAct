@@ -961,15 +961,30 @@ protectedRouter.get(
   }
 );
 
+protectedRouter.get(
+  "/admin/schools",
+  authenticateJWT,
+  hasRole(["global_overseer"]),
+  async (req, res) => {
+    try {
+      const schools = await School.find({}).sort({ schoolName: 1 });
+      res.status(200).json(schools);
+    } catch (error) {
+      logger.error("Error fetching all schools:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 protectedRouter.post(
   "/admin/schools/add",
   authenticateJWT,
   hasRole(["overseer", "global_overseer"]),
   validate(schoolSchema),
   async (req, res) => {
-    const { name, country, tier } = req.body;
+    const { schoolName, schoolCountry, tier } = req.body;
     try {
-      const newSchool = new School({ name, country, tier });
+      const newSchool = new School({ schoolName, schoolCountry, tier });
       await newSchool.save();
       res.status(201).json(newSchool);
     } catch (error) {
@@ -980,6 +995,43 @@ protectedRouter.post(
       }
       logger.error("Error adding school:", error);
       res.status(500).json({ error: "Internal server error." });
+    }
+  }
+);
+
+protectedRouter.patch(
+  "/admin/schools/:id",
+  authenticateJWT,
+  hasRole(["global_overseer"]),
+  validate(schoolSchema),
+  async (req, res) => {
+    const { id } = req.params;
+    const { schoolName, schoolCountry, tier } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid school ID." });
+    }
+
+    try {
+      const updatedSchool = await School.findByIdAndUpdate(
+        id,
+        { schoolName, schoolCountry, tier },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedSchool) {
+        return res.status(404).json({ message: "School not found." });
+      }
+
+      res.status(200).json({ message: "School updated successfully.", school: updatedSchool });
+    } catch (error) {
+      if (error.code === 11000) {
+        return res
+          .status(409)
+          .json({ error: "A school with this name already exists." });
+      }
+      logger.error("Error adding school:", error);
+      res.status(500).json({ message: "Server error while updating school." });
     }
   }
 );
@@ -1535,6 +1587,47 @@ protectedRouter.post(
   }
 );
 
+protectedRouter.patch(
+  "/teacher/assignments/:id",
+  authenticateJWT,
+  hasRole("teacher"),
+  localUpload.single("file"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const teacherId = new mongoose.Types.ObjectId(req.userId);
+
+      const assignment = await Assignment.findOne({ _id: id, teacher_id: teacherId });
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found or you are not the owner." });
+      }
+
+      const { title, description, due_date } = req.body;
+      if (title) assignment.title = title;
+      if (description) assignment.description = description;
+      if (due_date) assignment.due_date = due_date;
+
+      if (req.file) {
+        assignment.file_path = `/uploads/assignments/${req.file.filename}`;
+      }
+
+      // Note: This doesn't handle re-assigning users, grades, etc.
+      // That would be a more complex operation. This just updates the content.
+
+      await assignment.save();
+
+      res.status(200).json({
+        message: "Assignment updated successfully",
+        assignment,
+      });
+
+    } catch (error) {
+      logger.error("Error updating assignment:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
 protectedRouter.get(
   "/teacher/assignments",
   authenticateJWT,
@@ -1550,6 +1643,53 @@ protectedRouter.get(
       res.status(200).json(assignments);
     } catch (error) {
       logger.error("Error fetching assignments:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.get(
+  "/teacher/submissions",
+  authenticateJWT,
+  hasRole("teacher"),
+  async (req, res) => {
+    try {
+      const teacherId = new mongoose.Types.ObjectId(req.userId);
+      const assignments = await Assignment.find({ teacher_id: teacherId }).select('_id');
+      const assignmentIds = assignments.map(a => a._id);
+
+      const submissions = await Submission.find({ assignment_id: { $in: assignmentIds } })
+        .populate('user_id', 'firstname lastname email')
+        .populate('assignment_id', 'title due_date')
+        .sort({ submitted_at: -1 });
+
+      res.status(200).json(submissions);
+    } catch (error) {
+      logger.error("Error fetching teacher submissions:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.post(
+  "/teacher/submissions/:submissionId/grade",
+  authenticateJWT,
+  hasRole("teacher"),
+  async (req, res) => {
+    try {
+      const { submissionId } = req.params;
+      const { score, feedback } = req.body;
+
+      const submission = await Submission.findById(submissionId);
+      if (!submission) return res.status(404).json({ message: "Submission not found." });
+
+      submission.feedback_grade = score;
+      submission.feedback_comments = feedback;
+      await submission.save();
+
+      res.status(200).json({ message: "Submission graded successfully.", submission });
+    } catch (error) {
+      logger.error("Error grading submission:", error);
       res.status(500).json({ message: "Server error" });
     }
   }
@@ -1610,23 +1750,34 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const { quizId } = req.params;
-      const quiz = await Quiz.findById(quizId).populate("submissions.student_id", "firstname lastname email");
+      const quiz = await Quiz.findById(quizId).populate({
+        path: "submissions.student_id",
+        select: "firstname lastname email"
+      });
       if (!quiz) return res.status(404).json({ message: "Quiz not found." });
       if (String(quiz.teacher_id) !== String(req.userId)) {
         return res.status(403).json({ message: "Not authorized to view this quiz submissions." });
       }
 
       const submissions = quiz.submissions.map((sub) => {
-        const details = quiz.questions.map((q, idx) => ({
-          question: q.question || null,
-          studentAnswer: sub.answers?.[idx] || null,
-          correctAnswer: q.correct,
-          isCorrect: sub.answers?.[idx] === q.correct,
-          options: q.options || [],
-        }));
+        const details = sub.answers.map(ans => {
+          const question = quiz.questions.id(ans.questionId);
+          return {
+            question: question ? question.question : 'Unknown Question',
+            questionType: question ? question.type : 'unknown',
+            studentAnswer: ans.answer,
+            isCorrect: ans.isCorrect,
+            pointsAwarded: ans.pointsAwarded,
+            pointsPossible: question ? question.points : 1,
+            questionId: ans.questionId
+          };
+        });
+
         return {
+          _id: sub._id,
           student: sub.student_id,
           score: sub.score,
+          status: sub.status,
           submitted_at: sub.submitted_at,
           auto_submitted: sub.auto_submitted,
           details,
@@ -1637,6 +1788,64 @@ protectedRouter.get(
     } catch (err) {
       logger.error("Error fetching quiz submissions:", err);
       res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.patch(
+  "/teacher/submissions/:submissionId/grade",
+  authenticateJWT,
+  hasRole(["teacher"]),
+  async (req, res) => {
+    try {
+      const { submissionId } = req.params;
+      const { gradedAnswers } = req.body; // Expects [{ questionId: "...", points: 2 }]
+
+      if (!Array.isArray(gradedAnswers)) {
+        return res.status(400).json({ message: "gradedAnswers must be an array." });
+      }
+
+      const quiz = await Quiz.findOne({ "submissions._id": submissionId });
+      if (!quiz) {
+        return res.status(404).json({ message: "Submission not found." });
+      }
+
+      if (quiz.teacher_id.toString() !== req.userId) {
+        return res.status(403).json({ message: "You are not authorized to grade this submission." });
+      }
+
+      const submission = quiz.submissions.id(submissionId);
+      if (!submission) {
+        return res.status(404).json({ message: "Submission not found within the quiz." });
+      }
+
+      let totalScore = 0;
+
+      submission.answers.forEach(answerDetail => {
+        const manualGrade = gradedAnswers.find(g => g.questionId === answerDetail.questionId.toString());
+        const question = quiz.questions.id(answerDetail.questionId);
+
+        if (manualGrade && question && question.type === 'short-answer') {
+          const awarded = Number(manualGrade.points);
+          answerDetail.pointsAwarded = Math.min(Math.max(0, awarded), question.points || 1);
+          answerDetail.isCorrect = answerDetail.pointsAwarded > 0;
+        }
+        
+        totalScore += answerDetail.pointsAwarded;
+      });
+
+      submission.score = totalScore;
+      submission.status = 'graded';
+
+      await quiz.save();
+
+      eventBus.emit("quiz_graded", { quizId: quiz._id, studentId: submission.student_id, score: submission.score });
+
+      res.status(200).json({ message: "Quiz graded successfully.", submission });
+
+    } catch (error) {
+      logger.error("Error grading submission:", error);
+      res.status(500).json({ message: "Server error while grading." });
     }
   }
 );
@@ -2434,22 +2643,47 @@ protectedRouter.post(
       submission.answers = answers;
 
       if (finalize || (quiz.timeLimitMinutes && autoSubmit)) {
-        let score = 0;
-        quiz.questions.forEach((q, idx) => {
-          if (answers[idx] === q.correct) score++;
+        let autoGradedScore = 0;
+        let hasManualGrading = false;
+        const answerDetails = [];
+
+        quiz.questions.forEach((q, index) => {
+          const studentAnswer = answers[q._id] !== undefined ? answers[q._id] : answers[index];
+          let isCorrect = null;
+          let pointsAwarded = 0;
+
+          if (q.type === 'multiple-choice') {
+          isCorrect = studentAnswer && q.correct.includes(studentAnswer);
+            if (isCorrect) pointsAwarded = q.points || 1;
+          } else if (q.type === 'checkboxes') {
+            const sortedStudent = Array.isArray(studentAnswer) ? [...studentAnswer].sort() : [];
+            const sortedCorrect = Array.isArray(q.correct) ? [...q.correct].sort() : [];
+            isCorrect = JSON.stringify(sortedStudent) === JSON.stringify(sortedCorrect);
+            if (isCorrect) pointsAwarded = q.points || 1;
+          } else if (q.type === 'short-answer') {
+            hasManualGrading = true;
+            isCorrect = null;
+            pointsAwarded = 0;
+          }
+          
+          autoGradedScore += pointsAwarded;
+
+          answerDetails.push({
+            questionId: q._id,
+            answer: studentAnswer,
+            isCorrect: isCorrect,
+            pointsAwarded: pointsAwarded
+          });
         });
-        submission.score = score;
+
+        submission.answers = answerDetails;
+        submission.score = autoGradedScore;
         submission.submitted_at = new Date();
         submission.auto_submitted = !!autoSubmit;
+        submission.status = hasManualGrading ? 'submitted' : 'graded';
       }
 
       await quiz.save();
-
-      eventBus.emit("quiz_submitted", {
-        quizId,
-        studentId: student._id,
-        score: submission.score,
-      });
 
       res.status(201).json({
         message: finalize ? "Quiz submitted successfully!" : "Answers auto-saved.",
@@ -2538,7 +2772,20 @@ protectedRouter.get(
       }
       // return sanitized quiz (hide correct answers)
       const safeQuiz = quiz.toObject();
-      safeQuiz.questions = (safeQuiz.questions || []).map(q => ({ question: q.question, options: q.options }));
+      safeQuiz.questions = (safeQuiz.questions || []).map(q => ({
+        _id: q._id,
+        question: q.question,
+        options: q.options,
+        type: q.type,
+        points: q.points
+      }));
+
+      // Shuffle questions for the student
+      for (let i = safeQuiz.questions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [safeQuiz.questions[i], safeQuiz.questions[j]] = [safeQuiz.questions[j], safeQuiz.questions[i]];
+      }
+
       res.status(200).json({ quiz: safeQuiz });
     } catch (error) {
       logger.error("Error fetching quiz:", error);
@@ -2943,4 +3190,3 @@ protectedRouter.use("/worker", workerRouter);
 protectedRouter.use("/special-links", specialLinksHandler);
 
 export default protectedRouter;
-

@@ -1919,7 +1919,7 @@
           }
 
           try {
-            const res = await fetchAPI("/teacher/points/add", {
+            const res = await fetchAPI("/advanced-goals/teacher/add-points", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -2070,7 +2070,7 @@
           }
 
           try {
-            const res = await fetchAPI("/teacher/messages", {
+            const res = await fetchAPI("/teacher/message", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({

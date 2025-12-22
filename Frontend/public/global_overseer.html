@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Global Overseer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
+    <link rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
     />
     <style>
       body {
@@ -37,125 +36,51 @@
       table td {
         white-space: nowrap;
       }
+      .sidebar {
+        transition: transform 0.3s ease-in-out;
+      }
     </style>
     <script src="api-config.js"></script>
   </head>
-  <body class="bg-gray-100 min-h-screen p-6">
-    <div class="container mx-auto bg-white rounded-2xl shadow-lg p-8">
-      <!-- Header -->
-      <header
-        class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4"
-      >
-        <h1 class="text-3xl font-bold text-gray-800">
-          Global Overseer Dashboard
-        </h1>
-        <button
-          id="logout-btn"
-          class="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition shadow-md"
-        >
-          Logout
-        </button>
-      </header>
-
-      <!-- Regional Overview -->
-      <section class="mb-10">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">
-          Regional Overview
-        </h2>
-        <div
-          id="dashboard-cards"
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-        ></div>
-      </section>
-
-      <!-- User Management -->
-      <section class="mb-10">
-        <div
-          class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4"
-        >
-          <h2 class="text-2xl font-semibold text-gray-700">User Management</h2>
-          <div class="flex gap-2">
-            <button
-              id="open-assign-region"
-              class="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md"
-            >
-              Assign Region
+  <body class="bg-gray-100 min-h-screen flex">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar bg-white w-64 min-h-screen p-4 shadow-lg fixed lg:relative transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out z-30">
+        <div class="text-center mb-10">
+            <h1 class="text-2xl font-bold text-blue-600">Overseer</h1>
+        </div>
+        <nav class="space-y-2">
+            <button onclick="changeTab('dashboard')" class="w-full flex items-center space-x-2 py-2 px-4 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <span>Dashboard</span>
             </button>
-            <button
-              id="open-request-btn"
-              class="px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition shadow-md"
-            >
-              Make Request
+            <button onclick="changeTab('users')" class="w-full flex items-center space-x-2 py-2 px-4 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <span>User Management</span>
             </button>
-          </div>
-        </div>
-        <input
-          type="text"
-          id="user-search"
-          placeholder="Search users by email"
-          class="w-full mb-4 px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition"
-        />
+            <button onclick="changeTab('files')" class="w-full flex items-center space-x-2 py-2 px-4 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <span>File Management</span>
+            </button>
+        </nav>
+    </aside>
 
-        <div class="overflow-x-auto bg-white rounded-xl shadow-inner p-4">
-          <table class="min-w-full bg-white rounded-xl">
-            <thead>
-              <tr class="bg-gray-200 text-left text-gray-600 uppercase text-sm">
-                <th class="py-3 px-6">Email</th>
-                <th class="py-3 px-6">Role</th>
-                <th class="py-3 px-6">School/Region</th>
-                <th class="py-3 px-6">Actions</th>
-              </tr>
-            </thead>
-            <tbody
-              id="users-table-body"
-              class="text-gray-600 text-sm font-light"
-            ></tbody>
-          </table>
-        </div>
-      </section>
+    <div class="flex-1 flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-md p-4 flex justify-between items-center">
+            <button id="menu-toggle" class="lg:hidden text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+            <h1 id="header-title" class="text-xl font-semibold text-gray-800">Dashboard</h1>
+            <button id="logout-btn" class="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition shadow-md text-sm">
+                Logout
+            </button>
+        </header>
 
-      <!-- File Management -->
-      <section>
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">
-          File Management
-        </h2>
-        <div class="flex flex-col sm:flex-row gap-4 mb-4">
-          <input
-            type="text"
-            id="file-search"
-            placeholder="Search files by name"
-            class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition"
-          />
-          <select
-            id="file-filter"
-            class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition"
-          >
-            <option value="">All Types</option>
-            <option value="Policy">Policy</option>
-            <option value="Form">Form</option>
-            <option value="Guide">Guide</option>
-            <option value="Report">Report</option>
-            <option value="Syllabus">Syllabus</option>
-          </select>
-        </div>
-        <div class="overflow-x-auto bg-white rounded-xl shadow-inner p-4">
-          <table class="min-w-full bg-white rounded-xl">
-            <thead>
-              <tr class="bg-gray-200 text-left text-gray-600 uppercase text-sm">
-                <th class="py-3 px-6">Filename</th>
-                <th class="py-3 px-6">Type</th>
-                <th class="py-3 px-6">Uploaded By</th>
-                <th class="py-3 px-6">Uploaded At</th>
-              </tr>
-            </thead>
-            <tbody
-              id="files-table-body"
-              class="text-gray-600 text-sm font-light"
-            ></tbody>
-          </table>
-        </div>
-      </section>
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 p-6 overflow-y-auto">
+            <!-- Content will be injected here -->
+        </main>
     </div>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"></div>
 
     <div
       id="assign-region-modal"
@@ -196,6 +121,25 @@
           >
             Assign
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit School Modal -->
+    <div id="edit-school-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-white rounded-2xl p-8 max-w-sm w-full relative modal-content">
+        <button id="edit-school-close" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+        <h2 class="text-2xl font-bold mb-4">Edit School</h2>
+        <input type="hidden" id="edit-school-id" />
+        <input type="text" id="edit-school-name" placeholder="School Name" class="mb-4 w-full px-4 py-2 border rounded-lg" />
+        <select id="edit-school-country" class="mb-4 w-full px-4 py-2 border rounded-lg bg-white">
+            <option value="">Select Country</option>
+            <!-- Options will be populated by JS -->
+        </select>
+        <input type="number" id="edit-school-tier" placeholder="Pricing Tier (e.g., 1, 2, 3)" min="1" class="mb-4 w-full px-4 py-2 border rounded-lg" />
+        <div class="flex justify-end gap-2">
+          <button id="edit-school-cancel" class="px-4 py-2 border rounded-full hover:bg-gray-100">Cancel</button>
+          <button id="edit-school-confirm" class="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700">Save Changes</button>
         </div>
       </div>
     </div>
@@ -320,10 +264,10 @@
       const confirmModal = document.getElementById("confirm-modal");
       const confirmTitle = document.getElementById("confirm-title");
       const confirmMessage = document.getElementById("confirm-message");
-      const confirmConfirmBtn = document.getElementById("confirm-confirm");
+      const confirmConfirmBtn = document.getElementById("confirm-confirm"); // This will be the action button
       const confirmCancelBtn = document.getElementById("confirm-cancel");
 
-      function showAlert(title, message) {
+      const showAlert = (title, message) => {
         alertTitle.textContent = title;
         alertMessage.textContent = message;
         alertModal.classList.remove("hidden");
@@ -331,26 +275,30 @@
 
       function showConfirm(title, message, onConfirm) {
         confirmTitle.textContent = title;
-        confirmMessage.textContent = message;
+        confirmMessage.innerHTML = message; // Use innerHTML to allow for styled messages
         confirmModal.classList.remove("hidden");
 
-        const confirmHandler = () => {
+        // Clone and replace to remove old event listeners
+        const newConfirmBtn = confirmConfirmBtn.cloneNode(true);
+        confirmConfirmBtn.parentNode.replaceChild(newConfirmBtn, confirmConfirmBtn);
+        
+        newConfirmBtn.onclick = () => {
           onConfirm();
           confirmModal.classList.add("hidden");
-          confirmConfirmBtn.removeEventListener("click", confirmHandler);
         };
-        const cancelHandler = () => {
+
+        confirmCancelBtn.onclick = () => {
           confirmModal.classList.add("hidden");
-          confirmCancelBtn.removeEventListener("click", cancelHandler);
         };
-
-        confirmConfirmBtn.addEventListener("click", confirmHandler);
-        confirmCancelBtn.addEventListener("click", cancelHandler);
       }
 
-      function showLoading() {
-        dashboardCards.innerHTML = '<div class="spinner mx-auto"></div>';
-      }
+      const showLoading = (container) => {
+        container.innerHTML = `<div class="flex justify-center items-center p-10">
+                                <div class="spinner"></div>
+                                <p class="ml-4 text-gray-600">Loading...</p>
+                               </div>`;
+      };
+
       function showError(msg) {
         dashboardCards.innerHTML = `<div class="text-red-600 font-bold">${msg}</div>`;
       }
@@ -408,17 +356,108 @@
     }
   }
 
-      async function loadDashboard() {
-        showLoading();
+      let activeTab = 'dashboard';
+      let usersData = [];
+      let schoolsData = [];
+
+      const changeTab = (tab) => {
+        activeTab = tab;
+        document.getElementById('header-title').textContent = tab.charAt(0).toUpperCase() + tab.slice(1);
+        renderContent();
+      };
+      window.changeTab = changeTab; // Make it globally accessible for onclick
+
+      const renderContent = () => {
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = ''; // Clear previous content
+
+        if (activeTab === 'dashboard') {
+            mainContent.innerHTML = `
+                <section class="mb-10">
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Regional Overview</h2>
+                    <div id="dashboard-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </section>
+            `;
+            loadDashboard();
+        } else if (activeTab === 'users') {
+            mainContent.innerHTML = `
+                <section class="mb-10">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                        <h2 class="text-2xl font-semibold text-gray-700">User Management</h2>
+                        <div class="flex gap-2">
+                            <button id="open-assign-region" class="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md">Assign Region</button>
+                            <button id="open-request-btn" class="px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition shadow-md">Make Request</button>
+                        </div>
+                    </div>
+                    <input type="text" id="user-search" placeholder="Search users by email" class="w-full mb-4 px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition"/>
+                    <div class="overflow-x-auto bg-white rounded-xl shadow-inner p-4">
+                        <table class="min-w-full bg-white rounded-xl">
+                            <thead><tr class="bg-gray-200 text-left text-gray-600 uppercase text-sm"><th class="py-3 px-6">Email</th><th class="py-3 px-6">Role</th><th class="py-3 px-6">School/Region</th><th class="py-3 px-6">Actions</th></tr></thead>
+                            <tbody id="users-table-body" class="text-gray-600 text-sm font-light"></tbody>
+                        </table>
+                    </div>
+                </section>
+            `;
+            loadUsers();
+            document.getElementById('user-search').addEventListener('input', (e) => loadUsers(e.target.value));
+            document.getElementById('open-assign-region').addEventListener('click', () => assignRegionModal.classList.remove('hidden'));
+            document.getElementById('open-request-btn').addEventListener('click', () => requestModal.classList.remove('hidden'));
+        } else if (activeTab === 'files') {
+            mainContent.innerHTML = `
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">File Management</h2>
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                        <input type="text" id="file-search" placeholder="Search files by name" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition"/>
+                        <select id="file-filter" class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="">All Types</option><option value="Policy">Policy</option><option value="Form">Form</option><option value="Guide">Guide</option><option value="Report">Report</option><option value="Syllabus">Syllabus</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto bg-white rounded-xl shadow-inner p-4">
+                        <table class="min-w-full bg-white rounded-xl">
+                            <thead><tr class="bg-gray-200 text-left text-gray-600 uppercase text-sm"><th class="py-3 px-6">Filename</th><th class="py-3 px-6">Type</th><th class="py-3 px-6">Uploaded By</th><th class="py-3 px-6">Uploaded At</th></tr></thead>
+                            <tbody id="files-table-body" class="text-gray-600 text-sm font-light"></tbody>
+                        </table>
+                    </div>
+                </section>
+            `;
+            loadFiles();
+            document.getElementById('file-search').addEventListener('input', renderFiles);
+            document.getElementById('file-filter').addEventListener('change', renderFiles);
+        } else if (activeTab === 'schools') {
+            mainContent.innerHTML = `
+                <section>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-700">School Management</h2>
+                        <button id="open-create-school-alt" class="px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition shadow-md">Create School</button>
+                    </div>
+                    <div class="overflow-x-auto bg-white rounded-xl shadow-inner p-4">
+                        <table class="min-w-full bg-white rounded-xl">
+                            <thead><tr class="bg-gray-200 text-left text-gray-600 uppercase text-sm"><th class="py-3 px-6">School Name</th><th class="py-3 px-6">Country</th><th class="py-3 px-6">Tier</th><th class="py-3 px-6">Actions</th></tr></thead>
+                            <tbody id="schools-table-body" class="text-gray-600 text-sm font-light"></tbody>
+                        </table>
+                    </div>
+                </section>
+            `;
+            loadSchools();
+            document.getElementById('open-create-school-alt').addEventListener('click', () => createSchoolModal.classList.remove('hidden'));
+        }
+      };
+
+      const loadDashboard = async () => {
+        const cardsContainer = document.getElementById("dashboard-cards");
+        if (!cardsContainer) return;
+        showLoading(cardsContainer);
         try {
           const data = await fetchWithAuth("/global-overseer/dashboard");
           renderDashboard(data);
         } catch (err) {
           console.error(err);
-          showError(err.message || "Failed to load dashboard.");
+          cardsContainer.innerHTML = `<div class="col-span-full text-red-600 font-bold">${err.message || "Failed to load dashboard."}</div>`;
         }
       }
       function renderDashboard(data) {
+        const dashboardCards = document.getElementById("dashboard-cards");
+        if (!dashboardCards) return;
         dashboardCards.innerHTML = "";
         (data.managedRegions || []).forEach((region) => {
           const card = document.createElement("div");
@@ -439,7 +478,8 @@
           const data = await fetchWithAuth(
             `/global-overseer/users?search=${encodeURIComponent(query)}`
           );
-          renderUsers(data.users || []);
+          usersData = data.users || [];
+          renderUsers();
         } catch (err) {
           console.error(err);
           usersTableBody.innerHTML =
@@ -447,13 +487,14 @@
         }
       }
       function renderUsers(users) {
+        const usersToRender = users || usersData;
         usersTableBody.innerHTML = "";
-        if (users.length === 0) {
+        if (usersToRender.length === 0) {
           usersTableBody.innerHTML =
             '<tr><td colspan="4" class="text-center py-4 text-gray-500">No users found.</td></tr>';
           return;
         }
-        users.forEach((user) => {
+        usersToRender.forEach((user) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `<td class="border-t px-6 py-4 text-gray-700">${
             user.email
@@ -466,8 +507,11 @@
                       }</td>
                       <td class="border-t px-6 py-4 space-x-2">
                         <button class="bg-green-600 text-white px-3 py-1 rounded-full text-xs hover:bg-green-700 transition shadow-sm" onclick="promoteUser('${
-                          user.email
-                        }')">Promote</button>
+                          user.email, 'teacher'
+                        }')">Promote to Teacher</button>
+                        <button class="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs hover:bg-yellow-600 transition shadow-sm" onclick="promoteUser('${
+                          user.email, 'student'
+                        }')">Demote to Student</button>
                         <button class="bg-red-600 text-white px-3 py-1 rounded-full text-xs hover:bg-red-700 transition shadow-sm" onclick="removeUser('${
                           user.email
                         }')">Remove</button>
@@ -490,43 +534,70 @@
         }
       }
 
-        async function promoteUser(email) {
-          if (!confirm(`Promote ${email}?`)) return;
-          try {
-            const res = await fetch(`${API_BASE_URL}/admin/promote`, {
-              method: "POST",
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email }),
-            });
-            const body = await res.json();
-            if (!res.ok) throw new Error(body.message || "Failed to promote user");
-            showToast(body.message || "User promoted", "success");
-            loadUsers(userSearch.value);
-          } catch (err) {
-            console.error(err);
-            showToast(err.message || "Promotion failed", "error");
-          }
-        }
+      const renderSchoolManagement = () => {
+        const schoolsTableBody = document.getElementById('schools-table-body');
+        if (!schoolsTableBody) return;
 
-        async function removeUser(email) {
-          if (!confirm(`Remove ${email}?`)) return;
+        if (schoolsData.length === 0) {
+            schoolsTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No schools found.</td></tr>';
+        } else {
+            schoolsTableBody.innerHTML = schoolsData.map(school => `
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-6">${school.schoolName}</td>
+                    <td class="py-3 px-6">${school.schoolCountry}</td>
+                    <td class="py-3 px-6">${school.tier}</td>
+                    <td class="py-3 px-6">
+                        <button class="text-blue-600 hover:underline" onclick="openEditSchoolModal('${school._id}')">Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+      };
+
+      const loadSchools = async () => {
+        const mainContent = document.getElementById('main-content');
+        showLoading(mainContent);
+        try {
+            const data = await fetchWithAuth("/admin/schools");
+            schoolsData = data || [];
+            renderSchoolManagement();
+        } catch (err) {
+            console.error("Failed to load schools", err);
+            mainContent.innerHTML = `<div class="text-red-500">${err.message || 'Failed to load schools.'}</div>`;
+        }
+      };
+
+      window.promoteUser = (email, role) => {
+        showConfirm(`Confirm ${role === 'teacher' ? 'Promotion' : 'Demotion'}`, `Are you sure you want to set <strong>${email}</strong>'s role to <strong>${role}</strong>?`, async () => {
           try {
-            const res = await fetch(`${API_BASE_URL}/admin/remove-user`, {
+            const res = await fetchWithAuth(`/admin/promote`, {
               method: "POST",
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email }),
+              body: JSON.stringify({ email, role }),
             });
-            const body = await res.json();
-            if (!res.ok) throw new Error(body.message || "Failed to remove user");
-            showToast(body.message || "User removed", "success");
+            showToast(res.message || `User role set to ${role}`, "success");
             loadUsers(userSearch.value);
           } catch (err) {
             console.error(err);
-            showToast(err.message || "Remove failed", "error");
+            showToast(err.message || "Action failed", "error");
           }
+        });
+      }
+
+      window.removeUser = (email) => {
+        showConfirm(`Confirm Removal`, `Are you sure you want to remove <strong>${email}</strong>? This action cannot be undone.`, async () => {
+        try {
+          const res = await fetchWithAuth(`/admin/remove-user`, {
+            method: "POST",
+            body: JSON.stringify({ email }),
+          });
+          showToast(res.message || "User removed", "success");
+          loadUsers(userSearch.value);
+        } catch (err) {
+          console.error(err);
+          showToast(err.message || "Remove failed", "error");
         }
+        });
+      }
       function renderFiles() {
         const search = fileSearch.value.toLowerCase(),
           filter = fileFilter.value;
@@ -630,15 +701,100 @@
       });
       fileSearch.addEventListener("input", renderFiles);
       fileFilter.addEventListener("change", renderFiles);
-      userSearch.addEventListener("input", () => loadUsers(userSearch.value));
+
+      const menuToggle = document.getElementById('menu-toggle');
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+      menuToggle.addEventListener('click', () => {
+          sidebar.classList.toggle('-translate-x-full');
+          sidebarOverlay.classList.toggle('hidden');
+      });
+      sidebarOverlay.addEventListener('click', () => {
+          sidebar.classList.add('-translate-x-full');
+          sidebarOverlay.classList.add('hidden');
+      });
+
+      // Create School Modal Logic
+      const createSchoolModal = document.getElementById('create-school-modal');
+      const createSchoolClose = document.getElementById('create-school-close');
+      const createSchoolCancel = document.getElementById('create-school-cancel');
+      const createSchoolConfirm = document.getElementById('create-school-confirm');
+
+      createSchoolClose.addEventListener('click', () => createSchoolModal.classList.add('hidden'));
+      createSchoolCancel.addEventListener('click', () => createSchoolModal.classList.add('hidden'));
+      createSchoolConfirm.addEventListener('click', async () => {
+        const schoolName = document.getElementById('new-school-name').value.trim();
+        const schoolCountry = document.getElementById('new-school-country').value;
+        const tier = document.getElementById('new-school-tier').value;
+
+        if (!schoolName || !schoolCountry || !tier) {
+          showToast('All fields are required.', 'error');
+          return;
+        }
+
+        try {
+          const res = await fetchWithAuth('/admin/schools/add', {
+            method: 'POST',
+            body: JSON.stringify({ schoolName, schoolCountry, tier: Number(tier) }),
+          });
+          showToast('School created successfully!', 'success');
+          createSchoolModal.classList.add('hidden');
+          if (activeTab === 'schools') loadSchools();
+        } catch (err) {
+          console.error(err);
+          showToast(err.message || 'Failed to create school.', 'error');
+        }
+      });
+
+      // Edit School Modal Logic
+      const editSchoolModal = document.getElementById('edit-school-modal');
+      const editSchoolClose = document.getElementById('edit-school-close');
+      const editSchoolCancel = document.getElementById('edit-school-cancel');
+      const editSchoolConfirm = document.getElementById('edit-school-confirm');
+
+      editSchoolClose.addEventListener('click', () => editSchoolModal.classList.add('hidden'));
+      editSchoolCancel.addEventListener('click', () => editSchoolModal.classList.add('hidden'));
+      editSchoolConfirm.addEventListener('click', async () => {
+        const schoolId = document.getElementById('edit-school-id').value;
+        const schoolName = document.getElementById('edit-school-name').value.trim();
+        const schoolCountry = document.getElementById('edit-school-country').value;
+        const tier = document.getElementById('edit-school-tier').value;
+
+        if (!schoolName || !schoolCountry || !tier) {
+          showToast('All fields are required.', 'error');
+          return;
+        }
+
+        try {
+          const res = await fetchWithAuth(`/admin/schools/${schoolId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ schoolName, schoolCountry, tier: Number(tier) }),
+          });
+          showToast(res.message || 'School updated successfully!', 'success');
+          editSchoolModal.classList.add('hidden');
+          loadSchools(); // Refresh the list
+        } catch (err) {
+          console.error(err);
+          showToast(err.message || 'Failed to update school.', 'error');
+        }
+      });
+
+      window.openEditSchoolModal = (schoolId) => {
+        const school = schoolsData.find(s => s._id === schoolId);
+        if (!school) return showToast('School not found.', 'error');
+        document.getElementById('edit-school-id').value = school._id;
+        document.getElementById('edit-school-name').value = school.schoolName;
+        document.getElementById('edit-school-country').value = school.schoolCountry;
+        document.getElementById('edit-school-tier').value = school.tier;
+        editSchoolModal.classList.remove('hidden');
+      };
 
       // Init
       document.addEventListener("DOMContentLoaded", async () => {
         const auth = await checkAuth();
         if (!auth) return;
-        loadDashboard();
-        loadUsers();
-        loadFiles();
+        renderContent();
       });
     </script>
   </body>

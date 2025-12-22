@@ -2,18 +2,35 @@ import mongoose from "mongoose";
 
 const questionSchema = new mongoose.Schema({
   question: { type: String, required: true },
-  options: [{ type: String, required: true }],
-  correct: { type: String, required: true },
+  type: {
+    type: String,
+    enum: ['multiple-choice', 'checkboxes', 'short-answer'],
+    default: 'multiple-choice'
+  },
+  points: { type: Number, default: 1 },
+  options: [String],
+  correct: [String], // Array of correct answers
 });
+
+const answerDetailSchema = new mongoose.Schema({
+  questionId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  answer: { type: mongoose.Schema.Types.Mixed }, // Student's answer (String or [String])
+  isCorrect: { type: Boolean, default: null }, // null for manually graded questions
+  pointsAwarded: { type: Number, default: 0 }
+}, { _id: false });
 
 const submissionSchema = new mongoose.Schema({
   student_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  answers: [String],
+  answers: [answerDetailSchema],
   score: Number,
+  status: {
+    type: String,
+    enum: ['in-progress', 'submitted', 'graded'],
+    default: 'in-progress'
+  },
   started_at: { type: Date, default: Date.now },
   submitted_at: { type: Date },
   auto_submitted: { type: Boolean, default: false },
-  last_saved_at: { type: Date, default: Date.now },
 });
 
 const quizSchema = new mongoose.Schema(
@@ -36,5 +53,3 @@ const quizSchema = new mongoose.Schema(
 
 const Quiz = mongoose.model("Quiz", quizSchema);
 export default Quiz;
-
-

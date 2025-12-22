@@ -44,7 +44,14 @@
 
       
         <div id="questionsContainer" class="space-y-6"></div>
-        <button type="button" id="addQuestionBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700" data-i18n="addQuestion">➕ Add Question</button>
+        <div class="flex gap-2 flex-wrap items-center">
+            <button type="button" id="addQuestionBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700" data-i18n="addQuestion">➕ Add Question</button>
+            <label class="bg-gray-600 text-white px-4 py-2 rounded shadow hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                <span>📂 Import CSV</span>
+                <input type="file" id="importCsvInput" accept=".csv" class="hidden" />
+            </label>
+            <p class="text-xs text-gray-500 ml-2">Format: Question, Type, Points, Correct Answer(s), Option 1, Option 2...</p>
+        </div>
 
        
         <div class="mt-6">
@@ -83,6 +90,9 @@
                     <button id="close-submissions-modal" class="absolute top-4 right-4 text-gray-600 text-2xl">&times;</button>
                     <h3 id="submissions-modal-title" class="text-xl font-bold mb-4">Submissions</h3>
                     <div id="submissions-list" class="space-y-4 max-h-96 overflow-auto"></div>
+                    <div class="mt-4 text-right">
+                        <button id="save-grades-btn" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 hidden">Save All Grades</button>
+                    </div>
                 </div>
             </div>
     </div>
@@ -116,6 +126,21 @@ async function loadTranslations() {
     try {
         const res = await fetch("/locales/quiz-dashboard.json");
         translations = res.ok ? await res.json() : {};
+        // Add new translations if not present in file
+        const defaultNew = {
+            multipleChoice: { en: "Multiple Choice", fr: "Choix Multiple" },
+            checkboxes: { en: "Checkboxes", fr: "Cases à cocher" },
+            shortAnswer: { en: "Short Answer", fr: "Réponse courte" },
+            points: { en: "Points", fr: "Points" },
+            addOption: { en: "Add Option", fr: "Ajouter une option" },
+            optionPlaceholder: { en: "Option", fr: "Option" },
+            shortAnswerGradingNote: { en: "Short answers require manual grading.", fr: "Les réponses courtes nécessitent une correction manuelle." },
+            removeQuestion: { en: "Remove", fr: "Supprimer" },
+            incompleteQuizAlert: { en: "Please ensure all questions have text, at least one option, and a correct answer selected.", fr: "Veuillez vous assurer que toutes les questions ont un texte, au moins une option et une réponse correcte sélectionnée." }
+        };
+        for (const key in defaultNew) {
+            if (!translations[key]) translations[key] = defaultNew[key];
+        }
     } catch (err) {
         console.warn("⚠️ Could not load translations:", err.message);
         translations = {};
@@ -195,28 +220,99 @@ function populateDropdowns() {
     programDropdown.innerHTML = programsCache.map(p=>`<option value="${p}">${p}</option>`).join("");
 }
 
+function renderOptionsForQuestionType(type, container, questionId) {
+    container.innerHTML = ''; // Clear previous options
+    const name = `correctAnswer_${questionId}`;
+    
+    if (type === 'multiple-choice' || type === 'checkboxes') {
+        const optionInputType = type === 'multiple-choice' ? 'radio' : 'checkbox';
+        container.innerHTML = `
+            <div class="options-list space-y-2 mt-2">
+                <div class="flex items-center gap-2">
+                    <input type="${optionInputType}" name="${name}" class="correct-answer-check h-5 w-5 text-blue-600 focus:ring-blue-500"/>
+                    <input type="text" name="optionText" placeholder="${t('optionPlaceholder')}" class="w-full border p-2 rounded">
+                    <button type="button" class="remove-option-btn text-red-500 hover:text-red-700 text-sm">✖</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="${optionInputType}" name="${name}" class="correct-answer-check h-5 w-5 text-blue-600 focus:ring-blue-500"/>
+                    <input type="text" name="optionText" placeholder="${t('optionPlaceholder')}" class="w-full border p-2 rounded">
+                    <button type="button" class="remove-option-btn text-red-500 hover:text-red-700 text-sm">✖</button>
+                </div>
+            </div>
+            <button type="button" class="add-option-btn mt-2 text-sm text-blue-600 hover:underline">${t('addOption')}</button>
+        `;
+    } else if (type === 'short-answer') {
+        container.innerHTML = `<p class="text-sm text-gray-500 italic mt-2">${t('shortAnswerGradingNote')}</p>`;
+    }
+
+    container.addEventListener('click', e => {
+        if (e.target.classList.contains('add-option-btn')) {
+            const optionsList = container.querySelector('.options-list');
+            const newOption = document.createElement('div');
+            newOption.className = 'flex items-center gap-2';
+            newOption.innerHTML = `
+                <input type="${type === 'multiple-choice' ? 'radio' : 'checkbox'}" name="${name}" class="correct-answer-check h-5 w-5 text-blue-600 focus:ring-blue-500" />
+                <input type="text" name="optionText" placeholder="${t('optionPlaceholder')}" class="w-full border p-2 rounded">
+                <button type="button" class="remove-option-btn text-red-500 hover:text-red-700 text-sm">✖</button>
+            `;
+            optionsList.appendChild(newOption);
+        }
+        if (e.target.classList.contains('remove-option-btn')) {
+            if (container.querySelectorAll('.options-list > div').length > 1) {
+                e.target.parentElement.remove();
+            } else {
+                alert("A question must have at least one option.");
+            }
+        }
+    });
+}
+
 function createQuestionBlock() {
     questionCount++;
     const qDiv = document.createElement("div");
-    qDiv.className="border p-4 rounded bg-gray-50";
+    qDiv.className="border p-4 rounded bg-gray-50 space-y-3";
+    qDiv.dataset.questionId = questionCount;
     qDiv.innerHTML=`
-        <label class="block font-semibold">${t('questionLabel')} ${questionCount}</label>
-        <input type="text" name="questionText" placeholder="${t('questionPlaceholder')}" class="w-full border p-2 rounded mb-2" required>
-        <div class="space-y-2">
-            <input type="text" name="option1" placeholder="${t('optionA')}" class="w-full border p-2 rounded" required>
-            <input type="text" name="option2" placeholder="${t('optionB')}" class="w-full border p-2 rounded" required>
-            <input type="text" name="option3" placeholder="${t('optionC')}" class="w-full border p-2 rounded">
-            <input type="text" name="option4" placeholder="${t('optionD')}" class="w-full border p-2 rounded">
+        <div class="flex justify-between items-center">
+            <label class="block font-semibold">${t('questionLabel')} ${questionCount}</label>
+            <button type="button" class="remove-question-btn text-red-500 hover:text-red-700 text-sm">${t('removeQuestion')}</button>
         </div>
-        <label class="block mt-2">${t('correctAnswer')}</label>
-        <select name="correctAnswer" class="w-full border p-2 rounded">
-            <option value="A">${t('optionA')}</option>
-            <option value="B">${t('optionB')}</option>
-            <option value="C">${t('optionC')}</option>
-            <option value="D">${t('optionD')}</option>
-        </select>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+                <input type="text" name="questionText" placeholder="${t('questionPlaceholder')}" class="w-full border p-2 rounded" required>
+            </div>
+            <div>
+                <select name="questionType" class="w-full border p-2 rounded question-type-select">
+                    <option value="multiple-choice">${t('multipleChoice')}</option>
+                    <option value="checkboxes">${t('checkboxes')}</option>
+                    <option value="short-answer">${t('shortAnswer')}</option>
+                </select>
+            </div>
+        </div>
+        <div class="options-and-answer-container"></div>
+        <div>
+            <label class="text-sm font-medium">${t('points')}: </label>
+            <input type="number" name="points" value="1" min="0" class="w-20 border p-1 rounded">
+        </div>
     `;
     questionsContainer.appendChild(qDiv);
+
+    const questionTypeSelect = qDiv.querySelector('.question-type-select');
+    const optionsContainer = qDiv.querySelector('.options-and-answer-container');
+    
+    renderOptionsForQuestionType(questionTypeSelect.value, optionsContainer, questionCount);
+
+    questionTypeSelect.addEventListener('change', (e) => {
+        renderOptionsForQuestionType(e.target.value, optionsContainer, questionCount);
+    });
+
+    qDiv.querySelector('.remove-question-btn').addEventListener('click', () => {
+        qDiv.remove();
+        document.querySelectorAll('#questionsContainer > div').forEach((div, index) => {
+            div.querySelector('label.font-semibold').textContent = `${t('questionLabel')} ${index + 1}`;
+        });
+        questionCount = document.querySelectorAll('#questionsContainer > div').length;
+    });
 }
 addQuestionBtn.addEventListener("click", createQuestionBlock);
 
@@ -306,31 +402,97 @@ async function fetchQuizSubmissions(quizId) {
             list.innerHTML = '<p class="text-gray-600">No submissions yet.</p>';
             return;
         }
-        list.innerHTML = data.submissions.map(sub => `
-            <div class="border rounded p-3 bg-gray-50">
+        list.innerHTML = data.submissions.map(sub => {
+            const isFullyGraded = sub.status === 'graded';
+            const scoreDisplay = isFullyGraded ? `${sub.score}` : `${sub.score} (Pending)`;
+
+            const detailsHtml = sub.details.map((d, idx) => {
+                let answerGradingHtml = '';
+                if (d.questionType === 'short-answer' && !isFullyGraded) {
+                    answerGradingHtml = `
+                        <div class="mt-2">
+                            <label class="text-xs font-bold">Grade:</label>
+                            <input type="number" class="manual-grade-input w-20 border p-1 rounded" 
+                                   data-question-id="${d.questionId}" 
+                                   data-submission-id="${sub._id}"
+                                   value="${d.pointsAwarded}" 
+                                   min="0" 
+                                   max="${d.pointsPossible}" /> / ${d.pointsPossible}
+                        </div>
+                    `;
+                } else {
+                    answerGradingHtml = `<div class="text-sm mt-1">Points: ${d.pointsAwarded} / ${d.pointsPossible}</div>`;
+                }
+
+                return `
+                    <div class="p-2 border rounded ${d.isCorrect === false ? 'bg-red-50' : (d.isCorrect === true ? 'bg-green-50' : 'bg-yellow-50')}">
+                        <div class="text-sm font-semibold">Q${idx+1}: ${d.question || ''}</div>
+                        <div class="text-sm italic text-gray-700">Answer: ${Array.isArray(d.studentAnswer) ? d.studentAnswer.join(', ') : (d.studentAnswer || 'N/A')}</div>
+                        ${answerGradingHtml}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+            <div class="border rounded p-3 bg-gray-50" data-submission-container-id="${sub._id}">
                 <div class="flex justify-between items-center">
                     <div>
                         <strong>${sub.student?.firstname || 'Unknown'} ${sub.student?.lastname || ''}</strong>
-                        <div class="text-sm text-gray-500">Score: ${sub.score}/${sub.details?.length || 0}</div>
+                        <div class="text-sm text-gray-500">Score: ${scoreDisplay}</div>
                         <div class="text-sm text-gray-500">Submitted: ${sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : 'Not yet'}</div>
                     </div>
                 </div>
                 <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-                    ${sub.details.map((d, idx) => `
-                        <div class="p-2 border rounded ${d.isCorrect ? 'bg-green-50' : 'bg-red-50'}">
-                            <div class="text-sm font-semibold">Q${idx+1}: ${d.question || ''}</div>
-                            <div class="text-sm">Answer: ${d.studentAnswer || 'N/A'}</div>
-                            <div class="text-sm">Correct: ${d.correctAnswer}</div>
-                        </div>
-                    `).join('')}
+                    ${detailsHtml}
                 </div>
             </div>
-        `).join('');
+        `}).join('');
+
+        const saveBtn = document.getElementById('save-grades-btn');
+        if (data.submissions.some(s => s.status !== 'graded')) {
+            saveBtn.classList.remove('hidden');
+            saveBtn.onclick = () => saveAllManualGrades(quizId, data.submissions);
+        } else {
+            saveBtn.classList.add('hidden');
+        }
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     } catch (err) {
         list.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
     }
+}
+
+async function saveAllManualGrades(quizId, submissions) {
+    const submissionsToGrade = submissions.filter(s => s.status !== 'graded');
+    const saveBtn = document.getElementById('save-grades-btn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+    for (const sub of submissionsToGrade) {
+        const gradeInputs = document.querySelectorAll(`.manual-grade-input[data-submission-id="${sub._id}"]`);
+        
+        const gradedAnswers = Array.from(gradeInputs).map(input => ({
+            questionId: input.dataset.questionId,
+            points: Number(input.value)
+        }));
+
+        if (gradedAnswers.length > 0) {
+            try {
+                const res = await authFetch(`/teacher/submissions/${sub._id}/grade`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ gradedAnswers })
+                });
+                if (!res.ok) throw new Error(`Failed for ${sub.student.firstname}`);
+            } catch (err) {
+                alert(`Error saving grades: ${err.message}`);
+            }
+        }
+    }
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save All Grades';
+    alert('All pending grades have been submitted!');
+    fetchQuizSubmissions(quizId); // Refresh the view
 }
 
 document.addEventListener('click', (e) => {

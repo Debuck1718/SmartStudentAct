@@ -20,6 +20,7 @@
       href="./images/icon.png"
     />
     <link rel="manifest" href="/site.webmanifest" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -28,7 +29,8 @@
     />
     <style>
       body {
-        font-family: "Inter", sans-serif;
+        font-family: 'Inter', sans-serif;
+        background-color: #f3f4f6;
       }
 
       .container {
@@ -98,10 +100,81 @@
       .tab-button.active {
         border-bottom-color: #3b82f6; 
       }
+      
+      /* Sidebar transition */
+      .sidebar {
+        transition: transform 0.3s ease-in-out;
+      }
+      
+      .sidebar-open {
+        transform: translateX(0);
+      }
+      
+      .sidebar-closed {
+        transform: translateX(-100%);
+      }
+
+      @media (min-width: 1024px) {
+        .sidebar-closed {
+            transform: translateX(0);
+        }
+      }
     </style>
   </head>
-  <body class="bg-gray-100 antialiased">
-    <div id="app-container" class="container"></div>
+  <body class="bg-gray-100 antialiased flex h-screen overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar sidebar-closed fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg lg:static lg:translate-x-0 flex flex-col">
+        <div class="flex items-center justify-center h-16 border-b border-gray-200">
+            <span class="text-xl font-bold text-blue-600">Admin Panel</span>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <button onclick="changeTab('dashboard')" id="nav-dashboard" class="flex items-center w-full px-4 py-2 text-gray-600 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <i class="fas fa-chart-pie mr-3"></i> Dashboard
+            </button>
+            <button onclick="changeTab('users')" id="nav-users" class="flex items-center w-full px-4 py-2 text-gray-600 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <i class="fas fa-users mr-3"></i> Manage Users
+            </button>
+            <button onclick="changeTab('files')" id="nav-files" class="flex items-center w-full px-4 py-2 text-gray-600 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <i class="fas fa-folder-open mr-3"></i> Manage Files
+            </button>
+        </nav>
+        <div class="p-4 border-t border-gray-200">
+            <button id="logout-button" class="flex items-center w-full px-4 py-2 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                <i class="fas fa-sign-out-alt mr-3"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="flex items-center justify-between px-6 py-4 bg-white shadow-sm">
+            <button id="menu-toggle" class="text-gray-500 focus:outline-none lg:hidden">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+            <h1 id="header-title" class="text-xl font-semibold text-gray-800">Dashboard</h1>
+            <div class="flex items-center space-x-4">
+                 <select id="lang-select" class="border border-gray-300 rounded-md p-1 text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="en">EN</option>
+                    <option value="fr">FR</option>
+                    <option value="es">ES</option>
+                    <option value="tr">TR</option>
+                    <option value="ar">AR</option>
+                    <option value="ru">RU</option>
+                </select>
+                <div class="relative">
+                    <img id="admin-avatar" src="https://placehold.co/40x40" alt="Admin" class="w-10 h-10 rounded-full object-cover border border-gray-200">
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6" id="main-content">
+            <!-- Content injected here -->
+        </main>
+    </div>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <div
       id="alert-modal"
@@ -195,6 +268,7 @@
           loading: "Loading dashboard...",
           logout: "Logout",
           manageUsers: "Manage Users",
+          dashboard: "Dashboard",
           manageFiles: "Manage Files",
           filters: "Filters",
           searchLabel: "Search by Name/Email:",
@@ -276,6 +350,7 @@
           loading: "Chargement du tableau de bord...",
           logout: "Déconnexion",
           manageUsers: "Gérer les utilisateurs",
+          dashboard: "Tableau de bord",
           manageFiles: "Gérer les fichiers",
           filters: "Filtres",
           searchLabel: "Rechercher par nom/e-mail :",
@@ -357,6 +432,7 @@
       loading: "Cargando panel...",
       logout: "Cerrar sesión",
       manageUsers: "Administrar Usuarios",
+      dashboard: "Tablero",
       manageFiles: "Administrar Archivos",
       filters: "Filtros",
       searchLabel: "Buscar por Nombre/Correo:",
@@ -397,6 +473,7 @@
       loading: "Panel yükleniyor...",
       logout: "Çıkış Yap",
       manageUsers: "Kullanıcıları Yönet",
+      dashboard: "Gösterge Paneli",
       manageFiles: "Dosyaları Yönet",
       filters: "Filtreler",
       searchLabel: "İsim/E-posta ile Ara:",
@@ -437,6 +514,7 @@
       loading: "جارٍ تحميل لوحة التحكم...",
       logout: "تسجيل الخروج",
       manageUsers: "إدارة المستخدمين",
+      dashboard: "لوحة القيادة",
       manageFiles: "إدارة الملفات",
       filters: "الفلاتر",
       searchLabel: "البحث بالاسم/البريد الإلكتروني:",
@@ -477,6 +555,7 @@
       loading: "Загрузка панели...",
       logout: "Выйти",
       manageUsers: "Управление Пользователями",
+      dashboard: "Панель управления",
       manageFiles: "Управление Файлами",
       filters: "Фильтры",
       searchLabel: "Поиск по Имени/Эл.почте:",
@@ -525,6 +604,11 @@
         document.documentElement.lang = lang;
         render(); 
         
+        document.getElementById('nav-dashboard').innerHTML = `<i class="fas fa-chart-pie mr-3"></i> ${translations[currentLang].dashboard}`;
+        document.getElementById('nav-users').innerHTML = `<i class="fas fa-users mr-3"></i> ${translations[currentLang].manageUsers}`;
+        document.getElementById('nav-files').innerHTML = `<i class="fas fa-folder-open mr-3"></i> ${translations[currentLang].manageFiles}`;
+        document.getElementById('logout-button').innerHTML = `<i class="fas fa-sign-out-alt mr-3"></i> ${translations[currentLang].logout}`;
+
         document.getElementById('alert-cancel').textContent = translations[currentLang].alert.cancel;
         document.getElementById('alert-confirm').textContent = translations[currentLang].alert.ok;
         document.getElementById('contact-title').textContent = translations[currentLang].contactForm.title;
@@ -534,7 +618,8 @@
         document.getElementById('closeContact').textContent = translations[currentLang].contactForm.cancel;
         document.querySelector('#contactForm button[type="submit"]').textContent = translations[currentLang].contactForm.send;
 
-        document.getElementById('search-term').placeholder = translations[currentLang].searchPlaceholder;
+        const searchInput = document.getElementById('search-term');
+        if(searchInput) searchInput.placeholder = translations[currentLang].searchPlaceholder;
       };
 
 
@@ -607,69 +692,76 @@
         gradeFilter: "all",
         searchTerm: "",
         activeTab: "users",
-        isLoading: true,
+        isLoading: false,
       };
 
    
 const renderHeader = () => {
-  const container = document.getElementById("app-container");
-
-
-  const header = `
-    <div class="flex justify-between items-center mb-5 pb-2 border-b border-gray-200">
-      <div class="flex items-center space-x-4">
-        <img src="${state.user?.profile_picture_url || 'https://placehold.co/40x40/94a3b8/ffffff?text=U'}" class="rounded-full w-10 h-10 shadow-md"/>
-        <button onclick="router.push('/profile.html')" class="p-2 text-gray-700 hover:text-gray-900"><i class="fas fa-user-circle text-2xl"></i></button>
-        <button onclick="router.push('/settings.html')" class="p-2 text-gray-700 hover:text-gray-900"><i class="fas fa-cog text-2xl"></i></button>
-      </div>
-      <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex-1 text-center">${translations[currentLang].title}</h1>
-      <div class="flex items-center space-x-2">
-        <select id="lang-select" class="border rounded-lg px-2 py-1">
-          <option value="en" ${currentLang==='en'?'selected':''}>EN</option>
-          <option value="fr" ${currentLang==='fr'?'selected':''}>FR</option>
-          <option value="es" ${currentLang==='es'?'selected':''}>ES</option>
-          <option value="tr" ${currentLang==='tr'?'selected':''}>TR</option>
-          <option value="ar" ${currentLang==='ar'?'selected':''}>AR</option>
-          <option value="ru" ${currentLang==='ru'?'selected':''}>RU</option>
-        </select>
-        <button id="logout-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 ml-4">
-          ${translations[currentLang].logout}
-        </button>
-      </div>
-    </div>
-  `;
-
-  container.innerHTML = header; 
-
-
-  const langDropdown = document.getElementById("lang-select");
-  langDropdown.addEventListener("change", (e) => updateLang(e.target.value));
-
-  const tabs = `
-    <div class="flex border-b border-gray-300 mb-5">
-      <button id="tab-users" class="tab-button ${state.activeTab === "users" ? "active text-blue-600" : "text-gray-600"}" onclick="changeTab('users')">
-        ${translations[currentLang].manageUsers}
-      </button>
-      <button id="tab-files" class="tab-button ${state.activeTab === "files" ? "active text-blue-600" : "text-gray-600"}" onclick="changeTab('files')">
-        ${translations[currentLang].manageFiles}
-      </button>
-    </div>
-  `;
-  container.innerHTML += tabs;
-
- 
-  if (state.activeTab === "users") {
-    renderUserManagement();
-  } else if (state.activeTab === "files") {
-    renderFileManagement();
+  // Header logic moved to static HTML structure
+  const adminAvatar = document.getElementById('admin-avatar');
+  if(adminAvatar && state.user) {
+      adminAvatar.src = state.user.profile_picture_url || 'https://placehold.co/40x40/94a3b8/ffffff?text=A';
   }
-
-
-  document.getElementById("logout-button").addEventListener("click", handleLogout);
+  
+  const langSelect = document.getElementById('lang-select');
+  if(langSelect) {
+      langSelect.value = currentLang;
+      langSelect.onchange = (e) => updateLang(e.target.value);
+  }
 };
 
+      const renderDashboard = () => {
+          const container = document.getElementById("main-content");
+          container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                            <i class="fas fa-users text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Total Users</p>
+                            <p class="text-2xl font-bold text-gray-800">${state.users.length}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                            <i class="fas fa-chalkboard-teacher text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Teachers</p>
+                            <p class="text-2xl font-bold text-gray-800">${state.users.filter(u => u.role === 'teacher').length}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                            <i class="fas fa-user-graduate text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Students</p>
+                            <p class="text-2xl font-bold text-gray-800">${state.users.filter(u => u.role === 'student').length}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+                <div class="flex gap-4">
+                    <button onclick="changeTab('users')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Manage Users</button>
+                    <button onclick="changeTab('files')" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">Manage Files</button>
+                </div>
+            </div>
+          `;
+      }
+
       const renderUserManagement = () => {
-        const container = document.getElementById("app-container");
+        const container = document.getElementById("main-content");
+        container.innerHTML = ''; // Clear content
         const usersSection = document.createElement("div");
 
         const filtersHtml = `
@@ -756,7 +848,7 @@ const renderHeader = () => {
         usersSection.appendChild(note);
 
         container.appendChild(usersSection);
-
+        
         document.getElementById("search-term").addEventListener("input", (e) => {
           state.searchTerm = e.target.value;
           filterUsers();
@@ -769,7 +861,8 @@ const renderHeader = () => {
       };
 
       const renderFileManagement = () => {
-        const container = document.getElementById("app-container");
+        const container = document.getElementById("main-content");
+        container.innerHTML = '';
         const filesSection = document.createElement("div");
         const filesListHeading = document.createElement("h2");
         filesListHeading.className = "text-lg sm:text-xl font-semibold text-gray-800 mb-4";
@@ -805,13 +898,36 @@ const renderHeader = () => {
       };
 
       const changeTab = (tab) => {
+        // Update active state in sidebar
+        document.querySelectorAll('aside nav button').forEach(btn => {
+            btn.classList.remove('bg-blue-50', 'text-blue-600');
+            btn.classList.add('text-gray-600');
+        });
+        const activeBtn = document.getElementById(`nav-${tab}`);
+        if(activeBtn) {
+            activeBtn.classList.add('bg-blue-50', 'text-blue-600');
+            activeBtn.classList.remove('text-gray-600');
+        }
+
+        // Close mobile sidebar if open
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (!sidebar.classList.contains('sidebar-closed') && window.innerWidth < 1024) {
+             sidebar.classList.add('sidebar-closed');
+             sidebar.classList.remove('sidebar-open');
+             overlay.classList.add('hidden');
+        }
+
         state.activeTab = tab;
-        state.isLoading = true;
-        render();
+        document.getElementById('header-title').textContent = translations[currentLang][tab] || 'Dashboard';
+
         if (tab === "users") {
           loadUsers();
         } else if (tab === "files") {
           loadFiles();
+        } else {
+            // Dashboard
+            renderDashboard();
         }
       };
 
@@ -840,7 +956,7 @@ const renderHeader = () => {
         state.isLoading = true;
         render();
         try {
-          const res = await fetchAPI("/global-overseer/users");
+          const res = await fetchAPI("/global-overseer/users"); // This endpoint handles admin role filtering on backend
           state.users = await res.json();
           filterUsers();
         } catch (err) {

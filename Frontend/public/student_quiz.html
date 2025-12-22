@@ -79,6 +79,16 @@
         </button>
       </form>
 
+      <!-- Review Section -->
+      <div id="review-section" class="hidden space-y-6">
+        <h3 class="text-2xl font-bold text-gray-800" data-i18n="reviewAnswersTitle">Review Your Answers</h3>
+        <div id="review-answers-container" class="space-y-4"></div>
+        <div class="flex flex-col sm:flex-row gap-4">
+            <button type="button" id="edit-answers-btn" class="w-full bg-gray-200 text-gray-800 px-4 py-3 rounded-lg font-bold hover:bg-gray-300 transition-colors" data-i18n="editAnswers">Back to Edit</button>
+            <button type="button" id="confirm-submit-btn" class="w-full bg-green-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-green-600 transition-colors" data-i18n="confirmSubmit">Confirm & Submit</button>
+        </div>
+      </div>
+
       <!-- Results -->
       <div id="quiz-result" class="mt-6 hidden text-center">
         <h3 class="text-2xl font-bold text-green-600 mb-2" data-i18n="quizSubmitted">✅ Quiz Submitted</h3>
@@ -164,6 +174,10 @@
     const quizTimer = document.getElementById('quiz-timer');
     const timeRemainingSpan = document.getElementById('time-remaining');
     const submitButton = document.getElementById('submit-button');
+    const reviewSection = document.getElementById('review-section');
+    const reviewAnswersContainer = document.getElementById('review-answers-container');
+    const editAnswersBtn = document.getElementById('edit-answers-btn');
+    const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
     const languageSelect = document.getElementById('language-select');
 
     let countdownInterval = null;
@@ -201,23 +215,27 @@
         }
     };
 
-    const startCountdown = (minutes) => {
-        if (!minutes) return;
+    const startCountdownFrom = (seconds) => {
+        if (countdownInterval) clearInterval(countdownInterval);
         quizTimer.classList.remove('hidden');
-        let remainingSeconds = minutes * 60;
+        let remainingSeconds = seconds;
 
         countdownInterval = setInterval(() => {
             const mins = Math.floor(remainingSeconds / 60);
             const secs = remainingSeconds % 60;
             timeRemainingSpan.textContent = `${mins}m ${secs}s`;
             remainingSeconds--;
-
             if (remainingSeconds < 0) {
                 clearInterval(countdownInterval);
                 alert(getTranslation('timeUpAutoSubmit'));
                 autoSubmitQuiz();
             }
         }, 1000);
+    };
+
+    const startCountdown = (minutes) => {
+        if (!minutes) return;
+        startCountdownFrom(minutes * 60);
     };
 
     const renderQuiz = (quiz) => {
@@ -230,19 +248,36 @@
         quiz.questions.forEach((q, idx) => {
             const div = document.createElement('div');
             div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
-            div.setAttribute("data-question", idx);
+            div.setAttribute("data-question-id", q._id || idx);
+            div.setAttribute("data-question-type", q.type);
+
+            let optionsHtml = '';
+            switch (q.type) {
+                case 'multiple-choice':
+                    optionsHtml = q.options.map(opt => `
+                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
+                            <input type="radio" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4">
+                            <span class="text-gray-700">${opt}</span>
+                        </label>
+                    `).join('');
+                    break;
+                case 'checkboxes':
+                    optionsHtml = q.options.map(opt => `
+                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
+                            <input type="checkbox" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4 rounded">
+                            <span class="text-gray-700">${opt}</span>
+                        </label>
+                    `).join('');
+                    break;
+                case 'short-answer':
+                    optionsHtml = `<textarea name="q${idx}" class="w-full border p-2 rounded mt-2" placeholder="Your answer..."></textarea>`;
+                    break;
+            }
+
             div.innerHTML = `
-              <p class="font-semibold mb-2">${idx + 1}. ${q.question}</p>
-              <div class="space-y-2">
-                ${q.options.map((opt, i) => `
-                  <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
-                    <input type="radio" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4">
-                    <span class="text-gray-700">${opt}</span>
-                  </label>
-                `).join('')}
-              </div>
-              <p class="hidden text-red-500 text-sm mt-2 warning" data-i18n="answerThisQuestionWarning">⚠️ Please answer this question</p>
-            `;
+              <p class="font-semibold mb-2">${idx + 1}. ${q.question} (${q.points || 1} pts)</p>
+              <div class="space-y-2">${optionsHtml}</div>
+              <p class="hidden text-red-500 text-sm mt-2 warning" data-i18n="answerThisQuestionWarning">⚠️ Please answer this question</p>`;
             questionsContainer.appendChild(div);
         });
         translateElements(questionsContainer);
@@ -250,11 +285,7 @@
 
     const autoSubmitQuiz = async () => {
         submitButton.disabled = true;
-        const answers = {};
-        document.querySelectorAll('[data-question]').forEach((div, idx) => {
-            const selected = quizForm.querySelector(`input[name=q${idx}]:checked`);
-            answers[idx] = selected ? selected.value : null;
-        });
+        const answers = getAnswersFromForm();
 
         try {
             const result = await fetchWithAuth(`/student/quizzes/${quizId}/submit`, {
@@ -268,26 +299,91 @@
         }
     };
 
+    function arraysEqual(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length !== b.length) return false;
+
+        const sortedA = [...a].sort();
+        const sortedB = [...b].sort();
+
+        for (let i = 0; i < sortedA.length; ++i) {
+            if (sortedA[i] !== sortedB[i]) return false;
+        }
+        return true;
+    }
+
+    const showReviewScreen = () => {
+        const answers = getAnswersFromForm();
+        const questions = quiz.questions;
+
+        reviewAnswersContainer.innerHTML = ''; // Clear previous review
+
+        questions.forEach((q, idx) => {
+            const studentAnswer = answers[idx];
+            let studentAnswerDisplay = Array.isArray(studentAnswer) ? studentAnswer.join(', ') : studentAnswer;
+            if (!studentAnswerDisplay || studentAnswerDisplay.length === 0) {
+                studentAnswerDisplay = `<i class="text-gray-500">${getTranslation('noAnswer') || 'Not Answered'}</i>`;
+            }
+
+            const reviewItem = document.createElement('div');
+            reviewItem.className = 'p-3 rounded-lg bg-gray-100 border border-gray-200';
+            reviewItem.innerHTML = `
+                <p class="font-semibold text-gray-800">${idx + 1}. ${q.question}</p>
+                <p class="mt-1 text-blue-600"><span class="font-medium text-gray-600">${getTranslation('yourAnswer') || 'Your Answer'}:</span> ${studentAnswerDisplay}</p>
+            `;
+            reviewAnswersContainer.appendChild(reviewItem);
+        });
+
+        quizForm.classList.add('hidden');
+        reviewSection.classList.remove('hidden');
+    };
+
     const showResults = (quiz, submission) => {
         clearInterval(countdownInterval);
         quizTimer.classList.add('hidden');
         quizForm.classList.add('hidden');
+        reviewSection.classList.add('hidden');
         quizResult.classList.remove('hidden');
         scoreText.textContent = `${getTranslation('youScored')} ${submission.score} / ${quiz.questions.length}`;
 
         breakdownContainer.innerHTML = '';
         quiz.questions.forEach((q, idx) => {
             const studentAnswer = submission.answers[idx] || getTranslation('noAnswer');
-            const isCorrect = q.correct === studentAnswer;
+            let isCorrect = false;
+            let studentAnswerDisplay = Array.isArray(studentAnswer) ? studentAnswer.join(', ') : (studentAnswer || getTranslation('noAnswer'));
+
+            let correctDisplay = Array.isArray(q.correct) ? q.correct.join(', ') : q.correct;
+
+            if (q.type === 'multiple-choice') {
+                isCorrect = Array.isArray(q.correct) ? q.correct[0] === studentAnswer : q.correct === studentAnswer;
+            } else if (q.type === 'checkboxes') {
+                isCorrect = arraysEqual(q.correct, studentAnswer);
+            }
 
             const div = document.createElement('div');
-            div.className = `p-3 rounded-lg transition-colors ${isCorrect ? 'bg-green-100' : 'bg-red-100'}`;
-            div.innerHTML = `
-              <p class="font-semibold">${idx + 1}. ${q.question}</p>
-              <p class="mt-1"><span data-i18n="yourAnswer">Your answer</span>: <span class="${isCorrect ? 'text-green-600' : 'text-red-600'} font-medium">${studentAnswer}</span></p>
-              <p class="mt-1"><span data-i18n="correctAnswer">Correct answer</span>: <span class="font-bold text-green-700">${q.correct}</span></p>
-              ${isCorrect ? '' : `<p class="mt-2 text-red-500 text-sm font-semibold" data-i18n="incorrectAnswerFeedback">Your answer was incorrect.</p>`}
-            `;
+            div.className = `p-4 rounded-lg border ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`;
+
+            const icon = isCorrect 
+                ? '<i class="fas fa-check-circle text-green-600 mr-2"></i>' 
+                : '<i class="fas fa-times-circle text-red-600 mr-2"></i>';
+
+            let resultHtml = `<p class="font-semibold flex items-center">${icon} ${idx + 1}. ${q.question}</p>
+                              <div class="pl-8 mt-2 space-y-1">
+                                <p><strong data-i18n="yourAnswer">Your answer</strong>: <span class="${isCorrect ? 'text-green-700' : 'text-red-700'} font-medium">${studentAnswerDisplay}</span></p>`;
+
+            if (q.type === 'short-answer') {
+                resultHtml += `<p class="mt-2 text-blue-600 text-sm font-semibold" data-i18n="shortAnswerGradingNote">${getTranslation('shortAnswerGradingNote')}</p>`;
+            } else {
+                if (!isCorrect) {
+                    resultHtml += `<p><strong data-i18n="correctAnswer">Correct answer</strong>: <span class="font-bold text-green-800">${correctDisplay}</span></p>`;
+                }
+                resultHtml += `<p class="text-sm font-semibold ${isCorrect ? 'text-green-700' : 'text-red-700'}">${isCorrect ? getTranslation('correctAnswerFeedback') : getTranslation('incorrectAnswerFeedback')}</p>`;
+            }
+            
+            resultHtml += `</div>`;
+
+            div.innerHTML = resultHtml;
             breakdownContainer.appendChild(div);
         });
         translateElements(breakdownContainer);
@@ -295,26 +391,35 @@
 
     quizForm.addEventListener('submit', async(e) => {
         e.preventDefault();
-        clearInterval(countdownInterval);
+        clearInterval(countdownInterval); // Pause timer when going to review
         submitButton.disabled = true;
 
-        const answers = {};
+        const answers = getAnswersFromForm();
         let allAnswered = true;
 
-        document.querySelectorAll('[data-question]').forEach(div => {
+        document.querySelectorAll('[data-question-id]').forEach(div => {
             div.classList.remove('border', 'border-red-500');
             div.querySelector('.warning').classList.add('hidden');
         });
 
-        const totalQuestions = document.querySelectorAll('[data-question]').length;
+        const totalQuestions = document.querySelectorAll('[data-question-id]').length;
 
         for (let i = 0; i < totalQuestions; i++) {
-            const selected = quizForm.querySelector(`input[name=q${i}]:checked`);
-            if (selected) {
-                answers[i] = selected.value;
-            } else {
+            const questionDiv = document.querySelector(`[data-question-id="${quiz.questions[i]._id || i}"]`);
+            const questionType = questionDiv.dataset.questionType;
+            let answered = false;
+
+            if (questionType === 'multiple-choice') {
+                if (quizForm.querySelector(`input[name=q${i}]:checked`)) answered = true;
+            } else if (questionType === 'checkboxes') {
+                if (quizForm.querySelector(`input[name=q${i}]:checked`)) answered = true;
+            } else if (questionType === 'short-answer') {
+                if (quizForm.querySelector(`textarea[name=q${i}]`).value.trim() !== '') answered = true;
+            }
+
+            if (!answered) {
                 allAnswered = false;
-                const div = document.querySelector(`[data-question="${i}"]`);
+                const div = document.querySelector(`[data-question-id="${quiz.questions[i]._id || i}"]`);
                 div.classList.add('border', 'border-red-500');
                 div.querySelector('.warning').classList.remove('hidden');
             }
@@ -326,6 +431,27 @@
             return;
         }
 
+        showReviewScreen();
+        submitButton.disabled = false; // Re-enable for editing
+    });
+
+    editAnswersBtn.addEventListener('click', () => {
+        reviewSection.classList.add('hidden');
+        quizForm.classList.remove('hidden');
+        if (quiz.timeLimitMinutes) {
+            const timeParts = timeRemainingSpan.textContent.split('m ');
+            const minutes = parseInt(timeParts[0], 10);
+            const seconds = parseInt(timeParts[1].replace('s', ''), 10);
+            const remainingSeconds = (minutes * 60) + seconds;
+            startCountdownFrom(remainingSeconds);
+        }
+    });
+
+    confirmSubmitBtn.addEventListener('click', async () => {
+        const answers = getAnswersFromForm();
+        confirmSubmitBtn.disabled = true;
+        confirmSubmitBtn.textContent = getTranslation('submitting');
+
         try {
             const result = await fetchWithAuth(`/student/quizzes/${quizId}/submit`, {
                 method: 'POST',
@@ -335,8 +461,29 @@
         } catch (err) {
             showToast(getTranslation('submittingError') || 'Submit failed', 'error');
             console.error(err);
+            confirmSubmitBtn.disabled = false;
+            confirmSubmitBtn.textContent = getTranslation('confirmSubmit');
         }
     });
+
+    function getAnswersFromForm() {
+        const answers = {};
+        document.querySelectorAll('[data-question-id]').forEach((div, idx) => {
+            const qId = div.getAttribute('data-question-id');
+            const type = div.getAttribute('data-question-type');
+            if (type === 'multiple-choice') {
+                const selected = quizForm.querySelector(`input[name="q${idx}"]:checked`);
+                answers[qId] = selected ? selected.value : null;
+            } else if (type === 'checkboxes') {
+                const selected = Array.from(quizForm.querySelectorAll(`input[name="q${idx}"]:checked`)).map(cb => cb.value);
+                answers[qId] = selected;
+            } else if (type === 'short-answer') {
+                const textarea = quizForm.querySelector(`textarea[name="q${idx}"]`);
+                answers[qId] = textarea ? textarea.value.trim() : null;
+            }
+        });
+        return answers;
+    }
 
     function getTranslation(key) {
         if (typeof translations !== 'undefined' && translations[key] && translations[key][currentLang]) {
@@ -360,7 +507,3 @@
 </script>
 </body>
 </html>
-
-
-
-
