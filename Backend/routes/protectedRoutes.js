@@ -1530,6 +1530,10 @@ protectedRouter.post(
         if (teacher && teacher.school) gradeQuery.school = teacher.school;
         const students = await User.find(gradeQuery).select("_id");
         assigned_to_other_grades = students.map((s) => new mongoose.Types.ObjectId(s._id));
+        // Assign to the grade number directly, so it applies to all students in that grade
+        if (!assigned_to_other_grades.includes(Number(grade))) {
+          assigned_to_other_grades.push(Number(grade));
+        }
       } else {
         // explicit user ids or schools provided
         assigned_to_users = Array.isArray(assigned_to_users)

@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" defer></script>
 
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
@@ -804,6 +805,14 @@
           class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100 md:col-span-2 lg:col-span-3"
         >
           <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">
+            📅 Assignment Calendar
+          </h2>
+          <div id='calendar'></div>
+        </section>
+        <section
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100 md:col-span-2 lg:col-span-3"
+        >
+          <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">
             📅 Academic Calendar
           </h2>
           <input
@@ -904,6 +913,19 @@
       let studentsCache = [];
       let currentUser = {};
 
+      const defaultTranslations = {
+        myClass: { en: "My Class", fr: "Ma Classe" },
+        other_students: { en: "Other Students", fr: "Autres Étudiants" },
+        grade: { en: "Grade", fr: "Niveau" },
+        select_grade: { en: "Select Grade", fr: "Sélectionner le niveau" },
+        select_program: { en: "Select Program", fr: "Sélectionner le programme" },
+        loading: { en: "Loading", fr: "Chargement" },
+        no_assigned_tasks: { en: "No assigned tasks.", fr: "Aucune tâche assignée." },
+        failed_load_tasks: { en: "Failed to load tasks.", fr: "Échec du chargement des tâches." },
+        no_students: { en: "No students found.", fr: "Aucun étudiant trouvé." },
+        due: { en: "Due", fr: "Pour le" }
+      };
+
       async function loadTranslations(lang = "en") {
         try {
           const res = await fetch(`/locales/teachers.json`);
@@ -918,6 +940,7 @@
 
       function translateText(key) {
         return translations[key] || key;
+        return translations[key] || (defaultTranslations[key] ? defaultTranslations[key][currentLang] : key);
       }
 
       function applyTranslations() {
@@ -1315,6 +1338,28 @@
         }
       }
 
+      async function initCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
+
+        const res = await fetchAPI("/teacher/assigned-tasks");
+        let events = [];
+        if (res && res.ok) {
+          const tasks = await res.json();
+          events = tasks.map(t => ({
+            title: t.title,
+            start: t.due_date,
+            url: '#' // or link to assignment details if available
+          }));
+        }
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          events: events
+        });
+        calendar.render();
+      }
+
       async function fetchOverdueTasks() {
         const container = document.getElementById("overdueTasksList");
         if (!container) return;
@@ -1331,6 +1376,10 @@
             )}</div>`;
             return;
           }
+          
+          // Refresh calendar events if calendar is initialized
+          initCalendar();
+
           container.innerHTML = tasks
             .map(
               (t) => `
@@ -2309,6 +2358,7 @@
           await fetchQuizSummaries();
           await fetchFeedback();
           await fetchOverdueTasks();
+          initCalendar();
           wireDashboardForms();
           wireCalendar();
           hideLoadingOverlay();

@@ -175,7 +175,7 @@ async function fetchStudents() {
         const specialConnections = data.specialConnections || [];
         studentsCache = [...myGrade, ...otherGrade, ...specialConnections];
 
-        gradesCache = data.availableGrades || [...new Set(studentsCache.map(s => s.grade).filter(Boolean))];
+        gradesCache = data.availableGrades || [...new Set(studentsCache.map(s => s.grade).filter(g => g !== null && g !== undefined))];
         programsCache = [...new Set(studentsCache.map(s => s.program).filter(Boolean))];
 
         populateStudentSelects(studentsCache, myGrade, otherGrade, specialConnections);
@@ -216,7 +216,7 @@ function populateStudentSelects(allStudents, myGrade=[], otherGrade=[], specialC
 function populateDropdowns() {
     const gradeDropdown = document.getElementById("assignGradeDropdown");
     const programDropdown = document.getElementById("assignProgramDropdown");
-    gradeDropdown.innerHTML = gradesCache.map(g=>`<option value="${g}">${g}</option>`).join("");
+    gradeDropdown.innerHTML = gradesCache.map(g=>`<option value="${g}">Grade ${g}</option>`).join("");
     programDropdown.innerHTML = programsCache.map(p=>`<option value="${p}">${p}</option>`).join("");
 }
 
@@ -321,7 +321,7 @@ document.getElementById("quizForm").addEventListener("submit", async e=>{
     e.preventDefault();
 
     const selectedStudents = Array.from(document.querySelectorAll(".target-checkbox:checked")).map(cb=>cb.value);
-    const selectedGrades = Array.from(document.getElementById("assignGradeDropdown").selectedOptions).map(opt=>opt.value);
+    const selectedGrades = Array.from(document.getElementById("assignGradeDropdown").selectedOptions).map(opt=>Number(opt.value));
     const selectedPrograms = Array.from(document.getElementById("assignProgramDropdown").selectedOptions).map(opt=>opt.value);
 
  
@@ -334,20 +334,46 @@ document.getElementById("quizForm").addEventListener("submit", async e=>{
         assigned_to_users: selectedStudents,
         assigned_to_grades: selectedGrades,
         assigned_to_programs: selectedPrograms,
-        assigned_to_schools: [] 
+        assigned_to_schools: [],
+        assigned_to_other_grades: [] // Backend handles merging logic if needed, or we can split if UI demands
     };
 
+    let formIsValid = true;
     document.querySelectorAll("#questionsContainer > div").forEach(qDiv=>{
-        const qText = qDiv.querySelector('input[name="questionText"]').value;
-        const options = [
-            qDiv.querySelector('input[name="option1"]').value,
-            qDiv.querySelector('input[name="option2"]').value,
-            qDiv.querySelector('input[name="option3"]').value,
-            qDiv.querySelector('input[name="option4"]').value
-        ].filter(Boolean);
-        const correct = qDiv.querySelector('select[name="correctAnswer"]').value;
-        quizData.questions.push({ question:qText, options, correct });
+        const questionText = qDiv.querySelector('input[name="questionText"]').value;
+        const questionType = qDiv.querySelector('select[name="questionType"]').value;
+        const points = qDiv.querySelector('input[name="points"]').value;
+
+        const questionPayload = {
+            question: questionText,
+            type: questionType,
+            points: parseInt(points, 10) || 1,
+            options: [],
+            correct: []
+        };
+
+        if (!questionText) formIsValid = false;
+
+        if (questionType === 'multiple-choice' || questionType === 'checkboxes') {
+            const optionDivs = qDiv.querySelectorAll('.options-list > div');
+            optionDivs.forEach(optDiv => {
+                const optionText = optDiv.querySelector('input[name="optionText"]').value;
+                if (optionText) {
+                    questionPayload.options.push(optionText);
+                    if (optDiv.querySelector('.correct-answer-check').checked) {
+                        questionPayload.correct.push(optionText);
+                    }
+                }
+            });
+            if (questionPayload.options.length < 1 || questionPayload.correct.length === 0) formIsValid = false;
+        }
+        quizData.questions.push(questionPayload);
     });
+
+    if (!formIsValid || quizData.questions.length === 0) {
+        alert(t('incompleteQuizAlert') || "Please complete all questions properly.");
+        return;
+    }
 
     try {
         const res = await authFetch(`/teacher/quizzes`, {
@@ -368,7 +394,7 @@ document.getElementById("quizForm").addEventListener("submit", async e=>{
 
 
 async function fetchQuizzes(){
-    quizList.innerHTML=`<li>${t('loading')}...</li>`;
+    quizList.innerHTML=`<li>${t('loading') || 'Loading...'}</li>`;
     try{
         const res = await authFetch(`/teacher/quizzes`);
         const data = await res.json();
@@ -378,13 +404,13 @@ async function fetchQuizzes(){
                 <div>
                     <h3 class="font-bold">${quiz.title}</h3>
                     <p class="text-gray-600">${quiz.description||''}</p>
-                    <p class="text-sm text-gray-500">${t('due')}: ${quiz.due_date? new Date(quiz.due_date).toLocaleDateString():'N/A'}</p>
+                    <p class="text-sm text-gray-500">${t('due') || 'Due'}: ${quiz.due_date? new Date(quiz.due_date).toLocaleDateString():'N/A'}</p>
                 </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-sm text-green-600">${quiz.questions?.length||0} ${t('questionsCount')}</span>
+                            <span class="text-sm text-green-600">${quiz.questions?.length||0} ${t('questionsCount') || 'Questions'}</span>
                             <button class="view-submissions-btn bg-blue-600 text-white px-3 py-2 rounded ml-2" data-id="${quiz._id}">View Submissions</button>
                         </div>
-            </li>`).join("") : `<li>${t('noQuizzesYet')}</li>`;
+            </li>`).join("") : `<li>${t('noQuizzesYet') || 'No quizzes yet.'}</li>`;
     }catch(err){ quizList.innerHTML=`<li class="text-red-600">Error: ${err.message}</li>`; }
 }
 
@@ -510,7 +536,7 @@ document.getElementById('close-submissions-modal').addEventListener('click', ()=
 
 // ---------------- INIT ----------------
 document.addEventListener("DOMContentLoaded", ()=>{
-    loadTranslations();
+    loadTranslations().catch(() => translatePage()); // Ensure translatePage runs even if load fails
     fetchStudents();
     fetchQuizzes();
 });
