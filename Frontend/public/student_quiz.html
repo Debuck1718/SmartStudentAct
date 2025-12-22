@@ -320,7 +320,7 @@
         reviewAnswersContainer.innerHTML = ''; // Clear previous review
 
         questions.forEach((q, idx) => {
-            const studentAnswer = answers[idx];
+            const studentAnswer = answers[q._id];
             let studentAnswerDisplay = Array.isArray(studentAnswer) ? studentAnswer.join(', ') : studentAnswer;
             if (!studentAnswerDisplay || studentAnswerDisplay.length === 0) {
                 studentAnswerDisplay = `<i class="text-gray-500">${getTranslation('noAnswer') || 'Not Answered'}</i>`;
@@ -465,25 +465,6 @@
             confirmSubmitBtn.textContent = getTranslation('confirmSubmit');
         }
     });
-
-    function getAnswersFromForm() {
-        const answers = {};
-        document.querySelectorAll('[data-question-id]').forEach((div, idx) => {
-            const qId = div.getAttribute('data-question-id');
-            const type = div.getAttribute('data-question-type');
-            if (type === 'multiple-choice') {
-                const selected = quizForm.querySelector(`input[name="q${idx}"]:checked`);
-                answers[qId] = selected ? selected.value : null;
-            } else if (type === 'checkboxes') {
-                const selected = Array.from(quizForm.querySelectorAll(`input[name="q${idx}"]:checked`)).map(cb => cb.value);
-                answers[qId] = selected;
-            } else if (type === 'short-answer') {
-                const textarea = quizForm.querySelector(`textarea[name="q${idx}"]`);
-                answers[qId] = textarea ? textarea.value.trim() : null;
-            }
-        });
-        return answers;
-    }
 
     function getTranslation(key) {
         if (typeof translations !== 'undefined' && translations[key] && translations[key][currentLang]) {
