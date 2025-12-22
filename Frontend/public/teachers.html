@@ -85,10 +85,10 @@
     </style>
   </head>
 
-  <body class="bg-slate-100 min-h-screen antialiased">
+  <body class="bg-slate-100 min-h-screen antialiased flex flex-col">
     <div
       id="loadingOverlay"
-      class="fixed inset-0 flex items-center justify-center bg-slate-200 bg-opacity-75 z-[999]"
+      class="fixed inset-0 flex items-center justify-center bg-slate-200 bg-opacity-75 z-[999] hidden"
     >
       <div class="text-center p-6 bg-white rounded-xl shadow-lg">
         <div class="spinner mx-auto mb-4"></div>
@@ -97,13 +97,13 @@
         </p>
       </div>
     </div>
-
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl">
-      <header
-        class="flex flex-col sm:flex-row justify-between items-center py-6 border-b border-slate-200"
-      >
+    
+    <header class="bg-white text-gray-800 p-4 flex justify-between items-center shadow-lg rounded-b-3xl z-50 relative">
+      <button id="menu-btn" class="p-2 text-2xl text-blue-600 focus:outline-none lg:hidden" aria-label="Open navigation menu"><i class="fas fa-bars"></i></button>
+      
+      <div class="flex items-center gap-4">
         <h1
-          class="text-3xl font-bold text-slate-800 mb-4 sm:mb-0"
+          class="text-xl sm:text-2xl font-bold text-slate-800"
           data-i18n="dashboardTitle"
         >
           📚 Teacher Dashboard
@@ -111,10 +111,10 @@
 
         <div class="flex items-center space-x-6">
           <select
-            id="language-select"
-            class="rounded-full px-4 py-2 bg-white text-slate-700 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            id="language-switcher"
+            class="px-3 py-2 bg-white border border-gray-300 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer text-sm hidden sm:block"
           >
-            <option value="en">EN</option>
+            <option value="en">EN - English</option>
             <option value="fr">FR</option>
             <option value="es">ES</option>
             <option value="tr">TR</option>
@@ -126,7 +126,7 @@
             <button
               id="profile-menu-button"
               type="button" class="flex items-center space-x-2 rounded-full p-1 hover:bg-slate-200/70 transition-all duration-300 focus:outline-none"
-            >
+              >
               <img
                 id="profileAvatar"
                 src="./images/default-avatar.png"
@@ -196,42 +196,53 @@
             </div>
           </div>
         </div>
-      </header>
-      ---
-      <nav
-        class="flex flex-wrap sm:flex-nowrap justify-around items-center bg-white rounded-xl p-3 shadow-md"
-      >
-        <a
-          href="./my-students.html"
-          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300"
-          data-i18n="myClass"
-          >👨‍🎓 My Class</a
-        >
-        <a
-          href="./completed-assignment.html"
-          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300"
-          data-i18n="completedTasks"
-          >✅ Completed Tasks</a
-        >
-        <a
-          href="./quiz_dashboard.html"
-          class="flex-1 text-center py-3 px-4 m-1 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition duration-300"
-          data-i18n="quizDashboard"
-          >📝 Quiz Dashboard</a
-        >
-        <a
-          href="./AI Checker.html"
-          class="flex-1 text-center py-3 px-4 m-1 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-300"
-          data-i18n="aiChecker"
-          >🤖 AI Checker</a
-        >
-        <button id="notification-btn" class="flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-700 rounded-full hover:bg-slate-200/70 transition-colors duration-300"><span id="notification-btn-icon"></span> <span id="notification-btn-text" class="hidden sm:inline"></span></button>
-      </nav>
-      ---
-      <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-12 transition-all duration-500">
+      </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Sidebar (Desktop) -->
+      <aside class="hidden lg:flex flex-col w-64 bg-white shadow-xl z-40 overflow-y-auto">
+        <nav class="flex-1 p-4 space-y-2">
+          <a href="./my-students.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium">
+            <i class="fas fa-user-graduate w-6"></i> <span data-i18n="myClass">My Class</span>
+          </a>
+          <a href="./completed-assignment.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium">
+            <i class="fas fa-check-circle w-6"></i> <span data-i18n="completedTasks">Completed Tasks</span>
+          </a>
+          <a href="./quiz_dashboard.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium">
+            <i class="fas fa-clipboard-list w-6"></i> <span data-i18n="quizDashboard">Quiz Dashboard</span>
+          </a>
+          <a href="./AI Checker.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium">
+            <i class="fas fa-robot w-6"></i> <span data-i18n="aiChecker">AI Checker</span>
+          </a>
+          <a href="./special-link.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium">
+            <i class="fas fa-link w-6"></i> <span>Special Links</span>
+          </a>
+          <a href="./settings.html" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium">
+            <i class="fas fa-cog w-6"></i> <span data-i18n="settings">Settings</span>
+          </a>
+        </nav>
+        <div class="p-4 border-t border-gray-100">
+           <button id="notification-btn" class="w-full flex items-center justify-center gap-2 py-2 px-4 text-sm font-semibold text-white bg-blue-500 rounded-full hover:bg-blue-600 transition-colors shadow-md mb-3">
+            <span id="notification-btn-icon">🔔</span> <span id="notification-btn-text">Subscribe</span>
+          </button>
+          <p class="text-xs text-center text-gray-400">© 2025 SmartStudentAct</p>
+        </div>
+      </aside>
+
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-100">
+        <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- Welcome Section -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 text-white shadow-lg mb-8">
+          <h2 class="text-3xl font-bold mb-2">Welcome back, Teacher! 👋</h2>
+          <p class="text-blue-100">Manage your classroom, assignments, and student progress all in one place.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <section
           id="studentsSection"
-          class="bg-white rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-100 group relative overflow-hidden"
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100"
         >
           <h2
             class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
@@ -244,9 +255,8 @@
             class="divide-y divide-gray-200 text-gray-700"
           ></div>
         </section>
-        ---
         <section
-          class="bg-white rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-100 group relative overflow-hidden"
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100 md:col-span-2 lg:col-span-2"
         >
           <h2
             class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
@@ -455,14 +465,12 @@
             </div>
           </form>
         </section>
-        ---
-        <section class="bg-white rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-slate-200">
+        <section class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100">
           <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">Recent Quiz Results</h2>
           <div id="quizSummaries" class="grid gap-4"></div>
         </section>
-        ---
         <section
-          class="bg-white rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-slate-200"
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100"
         >
           <h2
             class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
@@ -590,8 +598,7 @@
             Add Points
           </button>
         </section>
-        ---
-        <section class="bg-white rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-slate-200">
+        <section class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100">
           <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2" data-i18n="grantRewardsTitle">🎖️ Grant Rewards</h2>
           <div class="mb-4">
             <label class="block text-slate-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
@@ -646,9 +653,8 @@
             Grant Rewards
           </button>
         </section>
-        ---
         <section
-          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100"
         >
           <h2
             class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
@@ -761,9 +767,8 @@
             Send Message
           </button>
         </section>
-        ---
         <section
-          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100"
         >
           <h2
             class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
@@ -773,9 +778,8 @@
           </h2>
           <div id="overdueTasksList" class="divide-y divide-slate-200"></div>
         </section>
-        ---
         <section
-          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100"
         >
           <h2
             class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
@@ -785,9 +789,8 @@
           </h2>
           <div id="assignedTasksList" class="divide-y divide-slate-200"></div>
         </section>
-        ---
         <section
-          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100"
         >
           <h2
             class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
@@ -797,9 +800,8 @@
           </h2>
           <div id="feedbackList" class="divide-y divide-slate-200"></div>
         </section>
-        ---
         <section
-          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100 md:col-span-2 lg:col-span-3"
         >
           <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">
             📅 Academic Calendar
@@ -843,11 +845,40 @@
             class="text-center font-semibold mt-4 text-slate-700"
           ></p>
         </section>
+        </div>
+        </div>
       </main>
+    </div>
 
-      <footer class="text-center text-sm text-slate-500 py-6 mt-4">
-        © <span id="currentYear"></span> SmartStudentAct
-      </footer>
+    <!-- Mobile Menu Overlay -->
+    <div id="menu-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden lg:hidden">
+      <div id="menu-content" class="bg-white h-full w-64 p-6 shadow-2xl transition-transform duration-300 ease-in-out transform -translate-x-full">
+        <button id="close-menu-btn" class="text-gray-500 text-2xl absolute top-4 right-4">&times;</button>
+        <h2 class="text-xl font-bold mb-6 text-blue-600">Menu</h2>
+        <nav class="space-y-4">
+          <a href="./my-students.html" class="block text-gray-700 font-semibold hover:text-blue-600">My Class</a>
+          <a href="./completed-assignment.html" class="block text-gray-700 font-semibold hover:text-blue-600">Completed Tasks</a>
+          <a href="./quiz_dashboard.html" class="block text-gray-700 font-semibold hover:text-blue-600">Quiz Dashboard</a>
+          <a href="./AI Checker.html" class="block text-gray-700 font-semibold hover:text-blue-600">AI Checker</a>
+          <a href="./special-link.html" class="block text-gray-700 font-semibold hover:text-blue-600">Special Links</a>
+          <a href="./settings.html" class="block text-gray-700 font-semibold hover:text-blue-600">Settings</a>
+          <a href="./contact.html" class="block text-gray-700 font-semibold hover:text-blue-600">Contact</a>
+          <button id="mobile-logout-btn" class="text-red-500 font-semibold hover:underline w-full text-left">Logout</button>
+        </nav>
+        <div class="mt-8 pt-4 border-t border-gray-200">
+           <select
+            id="mobile-language-select"
+            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          >
+            <option value="en">EN - English</option>
+            <option value="fr">FR - Français</option>
+            <option value="es">ES - Español</option>
+            <option value="tr">TR - Türkçe</option>
+            <option value="ar">AR - العربية</option>
+            <option value="ru">RU - Русский</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <!-- Cropper Modal -->
@@ -1894,7 +1925,7 @@
             ).map((opt) => opt.value);
           } else if (recipientType === "class") {
             studentIds = studentsCache
-              .filter((s) => s.grade === currentUser.grade)
+              .filter((s) => (currentUser.teacherGrade || []).includes(String(s.grade)))
               .map((s) => s._id);
             message = `You've been awarded ${points} points for ${
               reason || "general good performance"
@@ -1923,8 +1954,8 @@
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                studentIds,
-                grade,
+                assigned_to_users: studentIds,
+                assigned_to_grades: grade ? [grade] : [],
                 points,
                 reason,
                 message,
@@ -1993,7 +2024,7 @@
           if (recipientType === "single" || recipientType === "multiple") {
             studentIds = Array.from(document.getElementById("grant-student-select").selectedOptions).map(o => o.value);
           } else if (recipientType === "class") {
-            studentIds = studentsCache.filter(s => s.grade === currentUser.grade).map(s => s._id || s.id);
+            studentIds = studentsCache.filter(s => (currentUser.teacherGrade || []).includes(String(s.grade))).map(s => s._id || s.id);
           } else if (recipientType === "otherGrade") {
             const grade = document.getElementById("grant-grade-select").value;
             studentIds = studentsCache.filter(s => String(s.grade) === String(grade)).map(s => s._id || s.id);
@@ -2051,7 +2082,7 @@
             ).map((opt) => opt.value);
           } else if (recipientType === "class") {
             studentIds = studentsCache
-              .filter((s) => s.grade === currentUser.grade)
+              .filter((s) => (currentUser.teacherGrade || []).includes(String(s.grade)))
               .map((s) => s._id);
           } else if (recipientType === "otherGrade") {
             grade = document.getElementById("message-grade-select").value;
@@ -2074,8 +2105,8 @@
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                studentIds,
-                grade,
+                assigned_to_users: studentIds,
+                assigned_to_grades: grade ? [grade] : [],
                 message,
                 recipientType,
               }),
@@ -2138,6 +2169,30 @@
           setTimeout(() => menu.classList.add("hidden"), 300);
         }
       });
+      
+      // Mobile Menu Logic
+      const menuBtn = document.getElementById('menu-btn');
+      const menuModal = document.getElementById('menu-modal');
+      const menuContent = document.getElementById('menu-content');
+      const closeMenuBtn = document.getElementById('close-menu-btn');
+      const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+
+      menuBtn?.addEventListener('click', () => {
+        menuModal.classList.remove('hidden');
+        setTimeout(() => menuContent.classList.remove('-translate-x-full'), 10);
+      });
+
+      const closeMenu = () => {
+        menuContent.classList.add('-translate-x-full');
+        setTimeout(() => menuModal.classList.add('hidden'), 300);
+      };
+
+      closeMenuBtn?.addEventListener('click', closeMenu);
+      menuModal?.addEventListener('click', (e) => {
+        if(e.target === menuModal) closeMenu();
+      });
+
+      mobileLogoutBtn?.addEventListener('click', () => document.getElementById('logoutButton').click());
 
       document.getElementById("removeProfilePhotoBtn")?.addEventListener("click", async () => {
         try {
@@ -2153,11 +2208,14 @@
         }
       });
 
-      document.getElementById("currentYear").textContent =
-        new Date().getFullYear();
-
-      document
-        .getElementById("language-select")
+      const langSelect = document.getElementById("language-switcher");
+      const mobileLangSelect = document.getElementById("mobile-language-select");
+      
+      if(mobileLangSelect) {
+          mobileLangSelect.addEventListener("change", (e) => langSelect.value = e.target.value); // Sync
+      }
+      
+      langSelect
         .addEventListener("change", async (e) => {
           currentLang = e.target.value;
           await loadTranslations(currentLang);
