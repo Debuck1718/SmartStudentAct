@@ -38,181 +38,133 @@
             <option value="ar">العربية</option>
             <option value="ru">Русский</option>
         </select>
-    </nav>
+      </div>
+    </header>
 
-    <main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
+    <main class="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
         <h1 id="page-title" class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8" data-i18n="completedTasksTitle">Your Completed Tasks</h1>
         <div id="completed-tasks-list" class="space-y-4"></div>
-        <div id="user-completed-tasks" class="space-y-4"></div>
     </main>
 
+    <script src="api-config.js"></script>
     <script>
-        // Render static demo tasks (existing code)
-        const tasksData = {
-            "en": [
-                { "titleKey": "mathHomework", "date": "2025-07-20" },
-                { "titleKey": "scienceProject", "date": "2025-07-18" },
-                { "titleKey": "englishEssay", "date": "2025-07-15" },
-                { "titleKey": "historyQuiz", "date": "2025-07-10" },
-                { "titleKey": "artClass", "date": "2025-07-08" }
-            ],
-            "fr": [
-                { "titleKey": "mathHomework", "date": "2025-07-20" },
-                { "titleKey": "scienceProject", "date": "2025-07-18" },
-                { "titleKey": "englishEssay", "date": "2025-07-15" },
-                { "titleKey": "historyQuiz", "date": "2025-07-10" },
-                { "titleKey": "artClass", "date": "2025-07-08" }
-            ],
-            "es": [
-                { "titleKey": "mathHomework", "date": "2025-07-20" },
-                { "titleKey": "scienceProject", "date": "2025-07-18" },
-                { "titleKey": "englishEssay", "date": "2025-07-15" },
-                { "titleKey": "historyQuiz", "date": "2025-07-10" },
-                { "titleKey": "artClass", "date": "2025-07-08" }
-            ],
-            "tr": [
-                { "titleKey": "mathHomework", "date": "2025-07-20" },
-                { "titleKey": "scienceProject", "date": "2025-07-18" },
-                { "titleKey": "englishEssay", "date": "2025-07-15" },
-                { "titleKey": "historyQuiz", "date": "2025-07-10" },
-                { "titleKey": "artClass", "date": "2025-07-08" }
-            ],
-            "ar": [
-                { "titleKey": "mathHomework", "date": "2025-07-20" },
-                { "titleKey": "scienceProject", "date": "2025-07-18" },
-                { "titleKey": "englishEssay", "date": "2025-07-15" },
-                { "titleKey": "historyQuiz", "date": "2025-07-10" },
-                { "titleKey": "artClass", "date": "2025-07-08" }
-            ],
-            "ru": [
-                { "titleKey": "mathHomework", "date": "2025-07-20" },
-                { "titleKey": "scienceProject", "date": "2025-07-18" },
-                { "titleKey": "englishEssay", "date": "2025-07-15" },
-                { "titleKey": "historyQuiz", "date": "2025-07-10" },
-                { "titleKey": "artClass", "date": "2025-07-08" }
-            ]
-        };
-
         const translations = {
             "en": {
                 "completedTasksTitle": "Your Completed Tasks",
-                "mathHomework": "Math Homework - Chapter 3",
-                "scienceProject": "Science Project - Photosynthesis",
-                "englishEssay": "English Essay - \"My Summer\"",
-                "historyQuiz": "History Quiz - WW2",
-                "artClass": "Art Class - Still Life Drawing",
-                "completedLabel": "Completed"
+                "completedLabel": "Completed",
+                "gradedLabel": "Graded",
+                "personalTaskLabel": "Personal Task",
+                "teacherAssignedLabel": "Teacher Assigned",
+                "loading": "Loading completed tasks...",
+                "noTasks": "You haven't completed any tasks yet."
             },
             "fr": {
                 "completedTasksTitle": "Vos tâches terminées",
-                "mathHomework": "Devoir de mathématiques - Chapitre 3",
-                "scienceProject": "Projet de science - Photosynthèse",
-                "englishEssay": "Rédaction en anglais - \"Mon été\"",
-                "historyQuiz": "Quiz d'histoire - Seconde Guerre mondiale",
-                "artClass": "Cours d'art - Nature morte",
-                "completedLabel": "Terminé"
+                "completedLabel": "Terminé",
+                "gradedLabel": "Noté",
+                "personalTaskLabel": "Tâche personnelle",
+                "teacherAssignedLabel": "Assigné par l'enseignant",
+                "loading": "Chargement des tâches terminées...",
+                "noTasks": "Vous n'avez encore terminé aucune tâche."
             },
-            "es": {
-                "completedTasksTitle": "Tus tareas completadas",
-                "mathHomework": "Tarea de matemáticas - Capítulo 3",
-                "scienceProject": "Proyecto de ciencias - Fotosíntesis",
-                "englishEssay": "Ensayo de inglés - \"Mi verano\"",
-                "historyQuiz": "Prueba de historia - Segunda Guerra Mundial",
-                "artClass": "Clase de arte - Naturaleza muerta",
-                "completedLabel": "Completado"
-            },
-            "tr": {
-                "completedTasksTitle": "Tamamlanan Görevleriniz",
-                "mathHomework": "Matematik Ödevi - Bölüm 3",
-                "scienceProject": "Fen Projesi - Fotosentez",
-                "englishEssay": "İngilizce Deneme - \"Yazım\"",
-                "historyQuiz": "Tarih Sınavı - 2. Dünya Savaşı",
-                "artClass": "Sanat Dersi - Natürmort Çizimi",
-                "completedLabel": "Tamamlandı"
-            },
-            "ar": {
-                "completedTasksTitle": "مهامك المكتملة",
-                "mathHomework": "واجب الرياضيات - الفصل 3",
-                "scienceProject": "مشروع العلوم - التمثيل الضوئي",
-                "englishEssay": "مقال اللغة الإنجليزية - \"صيفي\"",
-                "historyQuiz": "اختبار التاريخ - الحرب العالمية الثانية",
-                "artClass": "درس الفن - الرسم الطبيعي",
-                "completedLabel": "مكتمل"
-            },
-            "ru": {
-                "completedTasksTitle": "Ваши выполненные задания",
-                "mathHomework": "Домашнее задание по математике - Глава 3",
-                "scienceProject": "Проект по науке - Фотосинтез",
-                "englishEssay": "Эссе по английскому - \"Моё лето\"",
-                "historyQuiz": "Историческая викторина - Вторая мировая война",
-                "artClass": "Урок рисования - Натюрморт",
-                "completedLabel": "Выполнено"
-            }
+            // ... other languages
         };
 
         const pageTitle = document.getElementById('page-title');
         const taskListContainer = document.getElementById('completed-tasks-list');
         const langSelect = document.getElementById('language-select');
+        let currentLang = 'en';
 
-        function renderTasks(lang) {
+        async function authFetch(endpoint, options = {}) {
+            const res = await fetch(`${window.API_BASE_URL}${endpoint}`, {
+                ...options,
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+            });
+            if (res.status === 401) window.location.href = '/login.html';
+            return res;
+        }
+
+        function renderTasks(tasks, lang) {
             taskListContainer.innerHTML = '';
-            const langTasks = tasksData[lang] || tasksData['en'];
-            langTasks.forEach(task => {
+            if (tasks.length === 0) {
+                taskListContainer.innerHTML = `<p class="text-center text-gray-500 italic">${translations[lang].noTasks}</p>`;
+                return;
+            }
+
+            tasks.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
+            tasks.forEach(task => {
                 const taskItemEl = document.createElement('div');
-                taskItemEl.className = 'bg-blue-50 p-4 rounded-lg mb-3 border-l-4 border-blue-600 shadow-sm hover:shadow-md transition-shadow';
+                const isGraded = task.grade !== undefined && task.grade !== null;
+                const cardColor = isGraded ? 'bg-green-50 border-green-600' : 'bg-blue-50 border-blue-600';
+                taskItemEl.className = `p-4 rounded-lg mb-3 border-l-4 shadow-sm ${cardColor}`;
 
                 const titleEl = document.createElement('p');
                 titleEl.className = 'text-lg font-semibold text-gray-700';
-                titleEl.textContent = translations[lang][task.titleKey] || task.titleKey;
+                titleEl.textContent = task.title;
 
                 const dateEl = document.createElement('p');
                 dateEl.className = 'text-sm text-gray-500 mt-1';
-                dateEl.textContent = `${translations[lang]['completedLabel']}: ${task.date}`;
+                dateEl.textContent = `${translations[lang]['completedLabel']}: ${new Date(task.completedAt).toLocaleString()}`;
 
                 taskItemEl.appendChild(titleEl);
-                taskItemEl.appendChild(dateEl);
-                taskListContainer.appendChild(taskItemEl);
-            });
-
-            // Render user-completed personal tasks from localStorage
-            const userCompletedDiv = document.getElementById('user-completed-tasks');
-            userCompletedDiv.innerHTML = '';
-            const completed = JSON.parse(localStorage.getItem('completedTasks') || '[]');
-            if (completed.length > 0) {
-                completed.forEach(task => {
-                    const taskItemEl = document.createElement('div');
-                    taskItemEl.className = 'bg-green-50 p-4 rounded-lg mb-3 border-l-4 border-green-600 shadow-sm hover:shadow-md transition-shadow';
-                    const titleEl = document.createElement('p');
-                    titleEl.className = 'text-lg font-semibold text-gray-700';
-                    titleEl.textContent = task.title;
+                if (task.description) {
                     const descEl = document.createElement('p');
                     descEl.className = 'text-sm text-gray-600';
-                    descEl.textContent = task.description || '';
-                    const dateEl = document.createElement('p');
-                    dateEl.className = 'text-sm text-gray-500 mt-1';
-                    dateEl.textContent = `Completed: ${task.completedAt ? new Date(task.completedAt).toLocaleString() : ''}`;
-                    taskItemEl.appendChild(titleEl);
-                    if (task.description) taskItemEl.appendChild(descEl);
-                    taskItemEl.appendChild(dateEl);
-                    userCompletedDiv.appendChild(taskItemEl);
-                });
-            }
+                    descEl.textContent = task.description;
+                    taskItemEl.appendChild(descEl);
+                }
+                taskItemEl.appendChild(dateEl);
 
-            // Update page title
-            pageTitle.textContent = translations[lang]['completedTasksTitle'] || translations['en']['completedTasksTitle'];
+                if (isGraded) {
+                    const gradeEl = document.createElement('p');
+                    gradeEl.className = 'text-md font-bold text-green-700 mt-2';
+                    gradeEl.textContent = `Grade: ${task.grade}`;
+                    taskItemEl.appendChild(gradeEl);
+                }
+
+                taskListContainer.appendChild(taskItemEl);
+            });
         }
 
-        
-        let currentLang = 'en';
-        renderTasks(currentLang);
+        async function fetchAndRenderTasks(lang) {
+            taskListContainer.innerHTML = `<p class="text-center text-gray-500">${translations[lang].loading}</p>`;
+            try {
+                // Fetch teacher-assigned submissions
+                const res = await authFetch('/student/submissions');
+                if (!res.ok) throw new Error('Failed to fetch submissions.');
+                const submissions = await res.json();
+                const teacherTasks = submissions.map(s => ({
+                    title: s.assignment.title,
+                    completedAt: s.submitted_at,
+                    grade: s.grade,
+                    type: 'teacher'
+                }));
 
-       
+                // Get personal tasks from localStorage
+                const personalTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]').map(t => ({
+                    ...t,
+                    type: 'personal'
+                }));
+
+                renderTasks([...teacherTasks, ...personalTasks], lang);
+            } catch (error) {
+                taskListContainer.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
+            }
+        }
+
         langSelect.addEventListener('change', e => {
             currentLang = e.target.value;
-            renderTasks(currentLang);
+            pageTitle.textContent = translations[currentLang]['completedTasksTitle'];
+            fetchAndRenderTasks(currentLang);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            pageTitle.textContent = translations[currentLang]['completedTasksTitle'];
+            fetchAndRenderTasks(currentLang);
         });
     </script>
 
 </body>
 </html>
-

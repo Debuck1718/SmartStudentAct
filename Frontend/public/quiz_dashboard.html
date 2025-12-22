@@ -9,6 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
+  <script src="api-config.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
@@ -89,7 +90,7 @@
 
 <script src="api-config.js"></script>
 <script>
-const API_BASE_URL = window.API_BASE_URL;
+const API_BASE_URL = window.API_BASE_URL || '/api';
 let translations = {};
 let currentLang = "en";
 let studentsCache = [];
@@ -101,6 +102,15 @@ const questionsContainer = document.getElementById("questionsContainer");
 const addQuestionBtn = document.getElementById("addQuestionBtn");
 const quizList = document.getElementById("quizList");
 
+async function authFetch(endpoint, options = {}) {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    });
+    if (res.status === 401) window.location.href = '/login.html';
+    return res;
+}
 
 async function loadTranslations() {
     try {
@@ -132,7 +142,7 @@ document.getElementById("languageSelector").addEventListener("change", e=>{
 
 async function fetchStudents() {
     try {
-        const res = await fetch(`${API_BASE_URL}/teacher/assignable-students`, { credentials: "include" });
+        const res = await authFetch(`/teacher/assignable-students`);
         if (!res.ok) throw new Error("Failed to fetch assignable students");
         const data = await res.json();
         const myGrade = data.myGradeStudents || [];
@@ -244,10 +254,8 @@ document.getElementById("quizForm").addEventListener("submit", async e=>{
     });
 
     try {
-        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {
+        const res = await authFetch(`/teacher/quizzes`, {
             method:"POST",
-            headers:{"Content-Type":"application/json"},
-            credentials:"include",
             body:JSON.stringify(quizData)
         });
         const data = await res.json();
@@ -266,7 +274,7 @@ document.getElementById("quizForm").addEventListener("submit", async e=>{
 async function fetchQuizzes(){
     quizList.innerHTML=`<li>${t('loading')}...</li>`;
     try{
-        const res = await fetch(`${API_BASE_URL}/teacher/quizzes`, {credentials:"include"});
+        const res = await authFetch(`/teacher/quizzes`);
         const data = await res.json();
         if(!res.ok) throw new Error(data.message || t('quizLoadErrorAlert'));
         quizList.innerHTML=data.length ? data.map(quiz=>`
@@ -290,7 +298,7 @@ async function fetchQuizSubmissions(quizId) {
     const title = document.getElementById('submissions-modal-title');
     list.innerHTML = '<p class="text-gray-500">Loading...</p>';
     try {
-        const res = await fetch(`${API_BASE_URL}/teacher/quizzes/${quizId}/submissions`, { credentials: 'include' });
+        const res = await authFetch(`/teacher/quizzes/${quizId}/submissions`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Failed to load submissions');
         title.textContent = `${data.quizTitle} - Submissions`;
@@ -347,5 +355,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
-

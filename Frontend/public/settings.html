@@ -10,10 +10,13 @@
         darkMode: "class",
       };
     </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" defer></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
+    <script src="api-config.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
@@ -29,6 +32,13 @@
 
       .sidebar-menu {
         transition: transform 0.3s ease-in-out;
+      }
+      .cropper-container {
+        max-height: 60vh;
+      }
+      .cropper-view-box,
+      .cropper-face {
+        border-radius: 50%;
       }
     </style>
   </head>
@@ -325,18 +335,23 @@
                       data-i18n="profilePhotoLabel"
                       >Profile Picture</label
                     >
-                    <input
-                      type="file"
-                      id="profilePhoto"
-                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
-                      accept="image/*"
-                    />
-                    <img
-                      id="profilePhotoPreview"
-                      src=""
-                      alt="Profile Preview"
-                      class="mt-4 w-24 h-24 rounded-full object-cover hidden"
-                    />
+                    <div class="flex items-center gap-4 mt-2">
+                      <img
+                        id="profilePhotoPreview"
+                        src="./images/default-avatar.png"
+                        alt="Profile Preview"
+                        class="w-24 h-24 rounded-full object-cover"
+                      />
+                      <div class="flex-1">
+                        <input
+                          type="file"
+                          id="profilePhoto"
+                          class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                          accept="image/*"
+                        />
+                        <button type="button" id="removeProfilePhotoBtn" class="mt-2 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors hidden">Remove Picture</button>
+                      </div>
+                    </div>
                   </div>
 
                   <button
@@ -488,6 +503,21 @@
         © 2025 SmartStudentAct
       </p>
     </footer>
+
+    <!-- Cropper Modal -->
+    <div id="cropper-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] hidden">
+      <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl max-w-md w-full">
+        <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Crop Your Photo</h2>
+        <div class="img-container">
+          <img id="cropper-image" src="" class="max-w-full">
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button id="cancel-crop-btn" type="button" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg">Cancel</button>
+          <button id="crop-and-save-btn" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Crop & Save</button>
+        </div>
+      </div>
+    </div>
+
 
     <div
       id="toast-container"
@@ -672,11 +702,11 @@
     }
 
     if (profile.profile_picture_url) {
-      document.getElementById("profilePhotoPreview").src =
-        profile.profile_picture_url;
-      document
-        .getElementById("profilePhotoPreview")
-        .classList.remove("hidden");
+      document.getElementById("profilePhotoPreview").src = profile.profile_picture_url;
+      document.getElementById("removeProfilePhotoBtn").classList.remove("hidden");
+    } else {
+      document.getElementById("profilePhotoPreview").src = "./images/default-avatar.png";
+      document.getElementById("removeProfilePhotoBtn").classList.add("hidden");
     }
 
     updateOccupationFields();
@@ -782,32 +812,84 @@ if (occupation === "student") {
           }
         });
 
-      document
-        .getElementById("profilePhoto")
-        .addEventListener("change", async (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
+      let cropper;
+      const cropperModal = document.getElementById("cropper-modal");
+      const cropperImage = document.getElementById("cropper-image");
+      const cropAndSaveBtn = document.getElementById("crop-and-save-btn");
+      const cancelCropBtn = document.getElementById("cancel-crop-btn");
+      const profilePhotoInput = document.getElementById("profilePhoto");
 
-          const formData = new FormData();
-          formData.append("profilePhoto", file);
+      profilePhotoInput?.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          cropperImage.src = event.target.result;
+          cropperModal.classList.remove("hidden");
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(cropperImage, {
+            aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 0.8,
+            restore: false, guides: false, center: false, highlight: false,
+            cropBoxMovable: false, cropBoxResizable: false, toggleDragModeOnDblclick: false,
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+
+      function closeCropperModal() {
+        cropperModal.classList.add("hidden");
+        if (cropper) cropper.destroy();
+        if (profilePhotoInput) profilePhotoInput.value = "";
+      }
+
+      cancelCropBtn?.addEventListener("click", closeCropperModal);
+
+      cropAndSaveBtn?.addEventListener("click", () => {
+        if (!cropper) return;
+        cropAndSaveBtn.disabled = true;
+        cropAndSaveBtn.textContent = "Saving...";
+
+        cropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' })
+          .toBlob(async (blob) => {
+            const formData = new FormData();
+            formData.append("profilePhoto", blob, "profile.jpg");
+
+            try {
+              const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
+                method: "POST", credentials: "include", body: formData,
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.message || "Failed to upload photo");
+
+              document.getElementById("profilePhotoPreview").src = data.photoUrl;
+              document.getElementById("removeProfilePhotoBtn").classList.remove("hidden");
+              showToast("📸 Profile picture updated", "success");
+            } catch (err) {
+              showToast(err.message, "error");
+            } finally {
+              closeCropperModal();
+              cropAndSaveBtn.disabled = false;
+              cropAndSaveBtn.textContent = "Crop & Save";
+            }
+          }, 'image/jpeg');
+      });
+
+      document.getElementById("removeProfilePhotoBtn")?.addEventListener("click", async () => {
           try {
-            const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-              method: "POST",
-              credentials: "include",
-              body: formData,
-            });
-            const data = await res.json();
-            if (!res.ok)
-              throw new Error(data.message || "Failed to upload photo");
+              const res = await fetch(`${API_BASE_URL}/profile/photo`, {
+                  method: "DELETE",
+                  credentials: "include",
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.message || "Failed to remove photo");
 
-            document.getElementById("profilePhotoPreview").src = data.photoUrl;
-            document
-              .getElementById("profilePhotoPreview")
-              .classList.remove("hidden");
-            showToast("📸 Profile picture updated", "success");
+              showToast("📸 Profile picture removed", "success");
+              document.getElementById("profilePhotoPreview").src = "./images/default-avatar.png";
+              document.getElementById("removeProfilePhotoBtn").classList.add("hidden");
+              document.getElementById("profilePhoto").value = "";
           } catch (err) {
-            showToast(err.message, "error");
+              showToast(err.message, "error");
           }
         });
 
@@ -819,6 +901,7 @@ if (occupation === "student") {
       const universityFields = document.getElementById("university-fields");
 
       function updateOccupationFields() {
+        if (!occupationSelect) return;
         const occupation = occupationSelect.value;
         studentFields.classList.add("hidden");
         teacherFields.classList.add("hidden");

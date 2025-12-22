@@ -352,590 +352,113 @@ async function unsubscribeUserFromPush() {
 
 
   document.addEventListener("DOMContentLoaded", async () => {
-    let currentLang = "en";
-    const dashboardName = "students";
-
-    // Notification button logic
-    const notificationBtn = document.getElementById('notification-btn');
-    if (notificationBtn) {
-      // Set initial state
-      isUserSubscribedToPush().then(updateNotificationBtn);
-      notificationBtn.addEventListener('click', async () => {
-        const isSubscribed = await isUserSubscribedToPush();
-        if (isSubscribed) {
-          await unsubscribeUserFromPush();
-        } else {
-          await subscribeUserToPush();
-        }
-      });
-    }
-
-
-    if (typeof translatePage === "function") {
-      translatePage(dashboardName, currentLang);
-      const langSelect = document.getElementById("lang-select");
-      if (langSelect) {
-        langSelect.addEventListener("change", (e) => {
-          currentLang = e.target.value;
-          translatePage(dashboardName, currentLang);
-        });
-      }
-    }
-
-
-    const DOM = {
-      logoutBtn: document.getElementById("logout-btn"),
-      menuLogoutBtn: document.getElementById("menu-logout-btn"),
-      menuBtn: document.getElementById("menu-btn"),
-      closeMenuBtn: document.getElementById("close-menu-btn"),
-      menuContent: document.getElementById("menu-content"),
-      addAssignmentBtn: document.getElementById("add-assignment-btn"),
-      addBudgetBtn: document.getElementById("add-budget-btn"),
-      saveAssignmentBtn: document.getElementById("save-assignment-btn"),
-      saveBudgetBtn: document.getElementById("save-budget-btn"),
-      saveGoalBtn: document.getElementById("save-goal-btn"),
-      goalInput: document.getElementById("goal-input"),
-      savedGoalsList: document.getElementById("saved-goals-list"),
-      assignmentsList: document.getElementById("assignments-list"),
-      budgetList: document.getElementById("budget-list"),
-      insightsContent: document.getElementById("insights-content"),
-      insightsPlaceholder: document.getElementById("insights-placeholder"),
-      generateInsightsBtn: document.getElementById("generate-insights-btn"),
-      profileForm: document.getElementById("profile-form"),
-      profilePhotoInput: document.getElementById("profile-photo"),
-      profilePreview: document.getElementById("profile-preview"),
-      addAssignmentModal: document.getElementById("add-assignment-modal"),
-      budgetModal: document.getElementById("budget-modal"),
-      menuModal: document.getElementById("menu-modal"),
-      chartCanvas: document.getElementById("analytics-chart"),
-    };
-
-
-    function showToast(message, type = "info") {
-      const container = document.getElementById("toast-container");
-      if (!container) return;
-      const toast = document.createElement("div");
-      const colors = {
-        success: "bg-green-500",
-        error: "bg-red-500",
-        info: "bg-blue-500",
-        warning: "bg-yellow-500",
-      };
-      toast.className = `toast ${colors[type] || colors.info} text-white px-4 py-2 rounded-full shadow-lg`;
-      toast.innerText = message;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 4000);
-    }
-
-    async function fetchWithAuth(endpoint, options = {}) {
-  const headers = {
-    "Content-Type": "application/json",
-    ...options.headers,
-  };
-
-  // Add cache-busting param
-  const url = `${API_BASE_URL}${endpoint}${
-    endpoint.includes("?") ? "&" : "?"
-  }_=${Date.now()}`;
-
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    credentials: "include", // 👈 important for HttpOnly cookie
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error("Unauthorized. Please log in again.");
-    }
-    // try to parse useful error message from body
-    let errMsg = `HTTP error ${response.status}`;
-    try {
-      const body = await response.json();
-      if (body && (body.message || body.error)) errMsg = body.message || body.error;
-    } catch (e) {}
-    // Provide more friendly message for 403 (subscription/permission)
-    if (response.status === 403 && !errMsg) errMsg = "You do not have permission to perform this action.";
-    throw new Error(errMsg);
-  }
-
-  return response.json();
-}
-
-    async function checkAuthentication() {
-      try {
-        await fetchWithAuth("/auth/check");
-        return true;
-      } catch {
-        showToast("Please login first.", "error");
-        setTimeout(() => (window.location.href = "/login.html"), 1500);
-        return false;
-      }
-    }
-
-
-    async function handleSaveAssignment() {
-      const title = document.getElementById("assignment-name").value.trim();
-      const description = document.getElementById("assignment-desc").value.trim();
-      const dueDate = document.getElementById("assignment-due-date").value;
-      const dueTime = document.getElementById("assignment-due-time").value;
-
-      if (!title || !dueDate || !dueTime) {
-        return showToast("Enter all task fields", "warning");
-      }
-
-      try {
-        const due_date = new Date(`${dueDate}T${dueTime}`).toISOString();
-
-        await fetchWithAuth("/student/tasks", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            title,
-            description,
-            due_date
-          }),
-        });
-
-        showToast("Task added!", "success");
-        closeModal("add-assignment-modal");
-        fetchAssignments();
-        scheduleReminders(title, due_date);
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-    async function fetchStudentMessages() {
-  try {
-    const messages = await fetchWithAuth("/student/messages");
-    const list = document.getElementById("messages-list");
-
-    if (!messages || messages.length === 0) {
-      list.innerHTML = `<p class="italic text-gray-500 text-center">No messages yet.</p>`;
-      return;
-    }
-
-    list.innerHTML = messages.map(m => {
-      const date = new Date(m.createdAt).toLocaleString();
-      return `
-        <li class="p-3 border rounded-lg bg-green-50 shadow-sm">
-          <p class="font-semibold">${m.teacherName}</p>
-          <p class="text-gray-700">${m.text}</p>
-          <span class="text-xs text-gray-500">${date}</span>
-        </li>
-      `;
-    }).join("");
-  } catch (err) {
-    console.error("Error fetching messages:", err);
-  }
-}
-fetchStudentMessages();
-
-
-    async function handleSubmission(assignmentId) {
-
-      const submissionText = prompt("Enter your submission text:");
-      if (submissionText === null) return;
-
-      const formData = new FormData();
-      formData.append("assignmentId", assignmentId);
-      formData.append("submissionText", submissionText);
-
-
-      try {
-        await fetchWithAuth("/student/submissions", {
-          method: "POST",
-          body: formData,
-        });
-        showToast("Assignment submitted successfully!", "success");
-        fetchAssignments();
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-
-    async function fetchAssignments() {
-  try {
-    const [teacherAssignments, studentTasks] = await Promise.all([
-      fetchWithAuth("/student/assignments"),
-      fetchWithAuth("/student/tasks"),
-    ]);
-
-    let assignmentsHtml = "";
-
-  
-    if (teacherAssignments.length > 0) {
-      assignmentsHtml += `<h3 class="font-bold text-lg mb-2 text-blue-600">Teacher-Assigned Assignments</h3>`;
-      assignmentsHtml += teacherAssignments.map((a) => {
-        const due = a.due_date ? new Date(a.due_date).toLocaleString() : "N/A";
-        return `
-          <li class="p-4 border-b rounded-lg shadow-sm mb-2 bg-gray-100 flex justify-between items-center">
-            <div>
-              <h4 class="font-semibold">${a.title || "Untitled"}</h4>
-              <p class="text-sm text-gray-600">${a.description || ""}</p>
-              <span class="text-xs text-gray-500 block mt-1">Due: ${due}</span>
-            </div>
-            <button onclick="handleSubmission('${a._id}')" class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm hover:bg-blue-600 transition-colors duration-200">Submit</button>
-          </li>
-        `;
-      }).join("");
-    } else {
-      assignmentsHtml += `<p data-i18n="no_assignments" class="italic text-gray-500 text-center">No teacher-assigned assignments.</p>`;
-    }
-
-    assignmentsHtml += `<hr class="my-4 border-gray-300">`;
-
-  
-    if (studentTasks.length > 0) {
-      assignmentsHtml += `<h3 class="font-bold text-lg mb-2 text-purple-600">My Personal Tasks</h3>`;
-      assignmentsHtml += studentTasks.map((t) => {
-        const due = t.due_date ? new Date(t.due_date).toLocaleString() : "N/A";
-        const completedClass = t.is_completed ? "line-through text-gray-400" : "";
-        const completedText = t.is_completed ? "Completed" : "Mark as Done";
-        const buttonAction = t.is_completed ? "" : `onclick="markTaskComplete('${t._id}')"`; 
-        const buttonClass = t.is_completed ? "bg-green-500 cursor-not-allowed" : "bg-purple-500 hover:bg-purple-600";
-        return `
-          <li class="p-4 border-b rounded-lg shadow-sm mb-2 bg-gray-100 flex justify-between items-center ${completedClass}">
-            <div>
-              <h4 class="font-semibold">${t.title}</h4>
-              <p class="text-sm text-gray-600">${t.description || ""}</p>
-              <span class="text-xs text-gray-500 block mt-1">Due: ${due}</span>
-            </div>
-            <button ${buttonAction} class="${buttonClass} text-white px-3 py-1 rounded-full text-sm transition-colors duration-200">${completedText}</button>
-          </li>
-        `;
-      }).join("");
-    } else {
-      assignmentsHtml += `<p data-i18n="no_tasks" class="italic text-gray-500 text-center">No personal tasks added yet.</p>`;
-    }
-
-    DOM.assignmentsList.innerHTML = assignmentsHtml;
-  } catch (e) {
-    showToast(e.message, "error");
-  }
-}
-
-    window.markTaskComplete = async (taskId) => {
-      try {
-        await fetchWithAuth(`/student/tasks/${taskId}/complete`, {
-          method: "PATCH"
-        });
-        showToast("Task marked as completed!", "success");
-        // Move the completed task to localStorage for completed page
-        const [_, studentTasks] = await Promise.all([
-          fetchWithAuth("/student/assignments"),
-          fetchWithAuth("/student/tasks"),
-        ]);
-        const completedTask = studentTasks.find(t => t._id === taskId);
-        if (completedTask) {
-          let completed = JSON.parse(localStorage.getItem("completedTasks") || "[]");
-          completed.push({
-            title: completedTask.title,
-            description: completedTask.description,
-            date: completedTask.due_date,
-            completedAt: new Date().toISOString()
-          });
-          localStorage.setItem("completedTasks", JSON.stringify(completed));
-        }
-        fetchAssignments(); 
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-
-    function scheduleReminders(title, due_at) {
-      const due = new Date(due_at).getTime();
-      const now = Date.now();
-      const reminders = [24, 6, 2];
-
-      reminders.forEach((h) => {
-        const msBefore = h * 60 * 60 * 1000;
-        const reminderTime = due - msBefore;
-        if (reminderTime > now) {
-          const delay = reminderTime - now;
-          // Show a local toast when reminder time hits (best-effort, only while tab is open)
-          setTimeout(() => {
-            showToast(`Reminder: "${title}" is due in ${h}h!`, "info");
-          }, delay);
-        }
-      });
-    }
-
-
-    async function handleSaveBudget() {
-      const description = document.getElementById("expense-name").value.trim();
-      const amount = parseFloat(document.getElementById("expense-amount").value.trim());
-      const date = document.getElementById("expense-date").value;
-      const category = document.getElementById("expense-category").value;
-
-      if (!description || isNaN(amount) || !date) {
-        return showToast("Enter all budget fields", "warning");
-      }
-
-      try {
-        await fetchWithAuth("/budget/add-entry", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            description,
-            amount,
-            date,
-            category,
-            type: "expense",
-          }),
-        });
-        showToast("Budget entry saved!", "success");
-        closeModal("budget-modal");
-        fetchBudget();
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-
-    async function fetchBudget() {
-      try {
-        const entries = await fetchWithAuth("/budget/entries");
-        DOM.budgetList.innerHTML = entries.length ?
-          entries.map(
-            (e) =>
-            `<li class="p-2 border-b">${e.description}: $${e.amount} (${e.category || "N/A"}, ${new Date(e.date).toLocaleDateString()})</li>`
-          ).join("") :
-          "<li>No budget entries</li>";
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-
-
-    async function handleSaveGoal() {
-      const description = DOM.goalInput.value.trim();
-      const target_date = document.getElementById("goal-target-date").value;
-      const type = document.getElementById("goal-type").value;
-
-      if (!description || !target_date) {
-        return showToast("Enter all goal fields", "warning");
-      }
-
-      try {
-        await fetchWithAuth("/advanced-goals/goals", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            description,
-            target_date,
-            type,
-            progress: 0
-          }),
-        });
-        showToast("Goal saved 🎯", "success");
-        DOM.goalInput.value = "";
-        document.getElementById("goal-target-date").value = "";
-        fetchGoal();
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-
-    async function fetchGoal() {
-      try {
-        const data = await fetchWithAuth("/advanced-goals/goals");
-        const goals = (data && data.goals) || [];
-        DOM.savedGoalsList.innerHTML = goals.length ?
-          goals.map(
-            (g) =>
-            `<li>${g.description} (${g.type}) - ${g.progress}% complete, due ${new Date(g.target_date).toLocaleDateString()}</li>`
-          ).join("") :
-          "<li>No goals yet.</li>";
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-
-
-    async function fetchQuizzes() {
-      try {
-        const data = await fetchWithAuth("/student/quizzes");
-        const quizzes = (data && data.quizzes) || [];
-        const quizzesList = document.getElementById("quizzes-list");
-        quizzesList.innerHTML = quizzes.length ?
-          quizzes.map(
-            (q) =>
-            `<li class="p-2 border-b">${q.title || "Untitled"} - Due: ${q.dueDate ? new Date(q.dueDate).toLocaleDateString() : "N/A"}</li>`
-          ).join("") :
-          `<p data-i18n="no_quizzes" class="italic text-gray-500 text-center">No quizzes assigned yet.</p>`;
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    }
-
-
-    async function handleProfileUpload(e) {
-      e.preventDefault();
-      const formData = new FormData(DOM.profileForm);
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Upload failed");
-
-          DOM.profilePreview.src = data.photoUrl || data.imageUrl || data.profile_picture_url || "./images/default-avatar.png";
-        showToast("Profile updated!", "success");
-      } catch (e) {
-        DOM.profilePreview.src = "./images/default-avatar.png";
-        showToast(e.message, "error");
-      }
-    }
-
-
-    async function renderChart() {
-      if (!DOM.chartCanvas) return;
-      const ctx = DOM.chartCanvas.getContext("2d");
-
-      try {
-        const res = await fetchWithAuth("/budget/entries");
-        const entries = (res && res.entries) || [];
-
-        // Update budget list UI
-        DOM.budgetList.innerHTML = entries.length ?
-          entries.map(
-            (e) =>
-              `<li class="p-2 border-b">${e.description}: $${e.amount} (${e.category || "N/A"}, ${new Date(e.date).toLocaleDateString()})</li>`
-          ).join("") :
-          "<li>No budget entries</li>";
-
-        // Aggregate totals by category for chart
-        const totals = {};
-        entries.forEach((e) => {
-          const cat = e.category || "Uncategorized";
-          totals[cat] = (totals[cat] || 0) + (Number(e.amount) || 0);
-        });
-
-        const labels = Object.keys(totals);
-        const data = labels.map((l) => totals[l]);
-
-        // Destroy previous chart if present
-        if (window._studentsAnalyticsChart) {
-          try { window._studentsAnalyticsChart.destroy(); } catch (err) {}
-        }
-
-        window._studentsAnalyticsChart = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels,
-            datasets: [
-              {
-                label: "Spending",
-                data,
-                backgroundColor: labels.map((_, i) => ["#3b82f6", "#8b5cf6", "#ef4444", "#f59e0b"][i % 4]),
-                borderRadius: 8,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: { beginAtZero: true },
-            },
-            plugins: { legend: { display: false } },
-          },
-        });
-      } catch (err) {
-        console.error("renderChart error:", err);
-      }
-    }
-
-
-    async function handleLogout() {
-      try {
-        await fetch(`${API_BASE_URL}/users/logout`, {
-          method: "POST",
-          credentials: "include",
-        });
-        showToast("Logged out", "info");
-        setTimeout(() => (window.location.href = "/login.html"), 1000);
-      } catch {
-        showToast("Logout failed", "error");
-      }
-    }
-
-    function openModal(id) {
-      const modal = document.getElementById(id);
-      if (modal) modal.classList.add("active");
-    }
-
-    function closeModal(id) {
-      const modal = document.getElementById(id);
-      if (modal) modal.classList.remove("active");
-    }
-
-    window.openModal = openModal;
-    window.closeModal = closeModal;
-    window.handleSubmission = handleSubmission;
-
-
     if (await checkAuthentication()) {
       await Promise.all([fetchAssignments(), fetchBudget(), fetchGoal(), fetchQuizzes()]);
       await renderChart();
-+      // Attempt to (re)subscribe the user to push notifications when they visit while authenticated
-+      // This will request permission if not yet granted and store the subscription on the server.
-+      subscribeUserToPush().catch((e) => console.warn('subscribeUserToPush failed:', e));
-    }
+      subscribeUserToPush().catch(e => console.warn('Push subscription failed on load:', e));
 
-    // 🎛 Event Listeners
-    if (DOM.menuBtn) {
-      DOM.menuBtn.addEventListener("click", () => {
-        DOM.menuModal.classList.add("active");
-        DOM.menuContent.style.transform = "translateX(0)";
-      });
-    }
-    if (DOM.closeMenuBtn) {
-      DOM.closeMenuBtn.addEventListener("click", () => {
-        DOM.menuContent.style.transform = "translateX(-100%)";
-        setTimeout(() => DOM.menuModal.classList.remove("active"), 300);
-      });
-    }
-    if (DOM.addAssignmentBtn) DOM.addAssignmentBtn.addEventListener("click", () => openModal("add-assignment-modal"));
-    if (DOM.addBudgetBtn) DOM.addBudgetBtn.addEventListener("click", () => openModal("budget-modal"));
-    if (DOM.saveAssignmentBtn) DOM.saveAssignmentBtn.addEventListener("click", handleSaveAssignment);
-    if (DOM.saveBudgetBtn) DOM.saveBudgetBtn.addEventListener("click", handleSaveBudget);
-    if (DOM.saveGoalBtn) DOM.saveGoalBtn.addEventListener("click", handleSaveGoal);
-    if (DOM.generateInsightsBtn) DOM.generateInsightsBtn.addEventListener("click", async () => {
-      try {
-        const res = await fetchWithAuth("/advanced-goals/advice");
-        const advice = res && res.advice ? res.advice : null;
-        DOM.insightsPlaceholder.classList.add("hidden");
-        DOM.insightsContent.classList.remove("hidden");
-        if (advice) DOM.insightsContent.innerText = `${advice.studyAdvice || ''}\n\n${advice.spendingAdvice || ''}`.trim();
-        else DOM.insightsContent.innerText = "No advice received.";
-      } catch (e) {
-        showToast(e.message, "error");
+      let currentLang = "en";
+      const dashboardName = "students";
+
+      const notificationBtn = document.getElementById('notification-btn');
+      if (notificationBtn) {
+        isUserSubscribedToPush().then(updateNotificationBtn);
+        notificationBtn.addEventListener('click', async () => {
+          const isSubscribed = await isUserSubscribedToPush();
+          if (isSubscribed) {
+            await unsubscribeUserFromPush();
+          } else {
+            await subscribeUserToPush();
+          }
+        });
       }
-    });
-    if (DOM.logoutBtn) DOM.logoutBtn.addEventListener("click", handleLogout);
-    if (DOM.menuLogoutBtn) DOM.menuLogoutBtn.addEventListener("click", handleLogout);
-    if (DOM.profilePhotoInput) DOM.profilePhotoInput.addEventListener("change", handleProfileUpload);
-  });
 
-  // 👤 Live profile preview
-  document.getElementById("profile-photo")?.addEventListener("change", function(event) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        document.getElementById("profile-preview").src = e.target.result;
+      if (typeof translatePage === "function") {
+        translatePage(dashboardName, currentLang);
+        const langSelect = document.getElementById("lang-select");
+        if (langSelect) {
+          langSelect.addEventListener("change", (e) => {
+            currentLang = e.target.value;
+            translatePage(dashboardName, currentLang);
+          });
+        }
+      }
+
+      const DOM = {
+        logoutBtn: document.getElementById("logout-btn"),
+        menuLogoutBtn: document.getElementById("menu-logout-btn"),
+        menuBtn: document.getElementById("menu-btn"),
+        closeMenuBtn: document.getElementById("close-menu-btn"),
+        menuContent: document.getElementById("menu-content"),
+        addAssignmentBtn: document.getElementById("add-assignment-btn"),
+        addBudgetBtn: document.getElementById("add-budget-btn"),
+        saveAssignmentBtn: document.getElementById("save-assignment-btn"),
+        saveBudgetBtn: document.getElementById("save-budget-btn"),
+        saveGoalBtn: document.getElementById("save-goal-btn"),
+        goalInput: document.getElementById("goal-input"),
+        savedGoalsList: document.getElementById("saved-goals-list"),
+        assignmentsList: document.getElementById("assignments-list"),
+        budgetList: document.getElementById("budget-list"),
+        insightsContent: document.getElementById("insights-content"),
+        insightsPlaceholder: document.getElementById("insights-placeholder"),
+        generateInsightsBtn: document.getElementById("generate-insights-btn"),
+        profileForm: document.getElementById("profile-form"),
+        profilePhotoInput: document.getElementById("profile-photo"),
+        profilePreview: document.getElementById("profile-preview"),
+        addAssignmentModal: document.getElementById("add-assignment-modal"),
+        budgetModal: document.getElementById("budget-modal"),
+        submissionForm: document.getElementById("submission-form"),
+        menuModal: document.getElementById("menu-modal"),
+        chartCanvas: document.getElementById("analytics-chart"),
       };
-      reader.readAsDataURL(file);
+
+      if (DOM.menuBtn) {
+        DOM.menuBtn.addEventListener("click", () => {
+          DOM.menuModal.classList.add("active");
+          DOM.menuContent.style.transform = "translateX(0)";
+        });
+      }
+      if (DOM.closeMenuBtn) {
+        DOM.closeMenuBtn.addEventListener("click", () => {
+          DOM.menuContent.style.transform = "translateX(-100%)";
+          setTimeout(() => DOM.menuModal.classList.remove("active"), 300);
+        });
+      }
+      if (DOM.addAssignmentBtn) DOM.addAssignmentBtn.addEventListener("click", () => openModal("add-assignment-modal"));
+      if (DOM.addBudgetBtn) DOM.addBudgetBtn.addEventListener("click", () => openModal("budget-modal"));
+      if (DOM.saveAssignmentBtn) DOM.saveAssignmentBtn.addEventListener("click", handleSaveAssignment);
+      if (DOM.saveBudgetBtn) DOM.saveBudgetBtn.addEventListener("click", handleSaveBudget);
+      if (DOM.saveGoalBtn) DOM.saveGoalBtn.addEventListener("click", handleSaveGoal);
+      if (DOM.generateInsightsBtn) DOM.generateInsightsBtn.addEventListener("click", async () => {
+        try {
+          const res = await fetchWithAuth("/advanced-goals/advice");
+          const advice = res && res.advice ? res.advice : null;
+          DOM.insightsPlaceholder.classList.add("hidden");
+          DOM.insightsContent.classList.remove("hidden");
+          if (advice) DOM.insightsContent.innerText = `${advice.studyAdvice || ''}\n\n${advice.spendingAdvice || ''}`.trim();
+          else DOM.insightsContent.innerText = "No advice received.";
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      });
+      if (DOM.logoutBtn) DOM.logoutBtn.addEventListener("click", handleLogout);
+      if (DOM.menuLogoutBtn) DOM.menuLogoutBtn.addEventListener("click", handleLogout);
+      if (DOM.profilePhotoInput) DOM.profilePhotoInput.addEventListener("change", handleProfileUpload);
+      if (DOM.submissionForm) {
+        DOM.submissionForm.addEventListener("submit", handleSaveSubmission);
+        document.getElementById('submission-file').addEventListener('change', handleFileSelection);
+      }
+
+      document.getElementById("profile-photo")?.addEventListener("change", function(event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            document.getElementById("profile-preview").src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
     }
   });
 </script>

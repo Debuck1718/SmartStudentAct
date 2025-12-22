@@ -37,6 +37,10 @@
     </style>
   </head>
   <body class="bg-gray-100 min-h-screen flex flex-col items-center">
+    <!-- Back Button -->
+    <div class="w-full max-w-2xl p-4 flex justify-start">
+        <a href="javascript:history.back()" class="text-blue-600 hover:underline">&larr; Back to Dashboard</a>
+    </div>
     <main class="w-full max-w-2xl p-4 sm:p-6 lg:p-8">
       <div class="mb-4 text-right">
         <select
@@ -98,6 +102,16 @@
 
         let currentLang = "en";
         let translations = {};
+
+        async function authFetch(endpoint, options = {}) {
+            const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+            });
+            if (res.status === 401) window.location.href = '/login.html';
+            return res;
+        }
 
         function t(key, fallback) {
           return translations?.[key]?.[currentLang] || fallback;
@@ -187,11 +201,7 @@
           loadingSkeleton.classList.remove("hidden");
 
           try {
-            const res = await fetch(`${API_BASE_URL}/student/teachers`, {
-              method: "GET",
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-            });
+            const res = await authFetch(`/student/teachers`);
 
             if (!res.ok) {
               if (res.status === 401)

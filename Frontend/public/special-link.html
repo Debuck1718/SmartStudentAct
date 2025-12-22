@@ -18,6 +18,7 @@
     }
     @keyframes spin { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
   </style>
+  <script src="api-config.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col items-center p-4">
 
@@ -249,6 +250,18 @@
     const connectionsList = document.getElementById("connectionsList");
     const alertBox = document.getElementById("alertBox");
 
+    const API_BASE_URL = window.API_BASE_URL;
+
+    async function authFetch(endpoint, options = {}) {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        });
+        if (res.status === 401) window.location.href = '/login.html';
+        return res;
+    }
+
     const requestsSection = document.getElementById("requestsSection");
     const connectionsSection = document.getElementById("connectionsSection");
     const tabRequests = document.getElementById("tabRequests");
@@ -257,8 +270,6 @@
     const API_REQUEST = "/api/special-links/request";
     const API_RESPOND = "/api/special-links/respond";
     const API_LIST = "/api/special-links/list";
-
-    const headers = { "Content-Type": "application/json" };
 
     function showAlert(msg, type="success") {
       alertBox.textContent = msg;
@@ -300,16 +311,15 @@
 
       try {
         // find user by email
-        const findRes = await fetch(`/api/users/find?email=${encodeURIComponent(email)}`);
+        const findRes = await authFetch(`/users/find-by-email?email=${encodeURIComponent(email)}`);
         const findData = await findRes.json();
 
         if (!findRes.ok || !findData.userId) {
           throw new Error(findData.message || "User not found.");
         }
 
-        const res = await fetch(API_REQUEST, {
+        const res = await authFetch(API_REQUEST, {
           method: "POST",
-          headers,
           body: JSON.stringify({
             receiverId: findData.userId,
             requestType: type,
@@ -335,7 +345,7 @@
     async function loadRequests(kind) {
       requestList.innerHTML = '<div class="text-center text-gray-500 py-3">Loading...</div>';
       try {
-        const res = await fetch(`${API_REQUEST}?type=${kind}`);
+        const res = await authFetch(`${API_REQUEST}?type=${kind}`);
         const data = await res.json();
         if (res.ok && data.requests.length > 0) {
           requestList.innerHTML = data.requests
@@ -362,9 +372,8 @@
     // Respond approve/reject
     window.respond = async (id, action) => {
       try {
-        const res = await fetch(API_RESPOND, {
+        const res = await authFetch(API_RESPOND, {
           method: "POST",
-          headers,
           body: JSON.stringify({ requestId: id, action }),
         });
         const data = await res.json();
@@ -383,7 +392,7 @@
     async function loadConnections() {
       connectionsList.innerHTML = '<div class="text-center text-gray-500 py-3">Loading...</div>';
       try {
-        const res = await fetch(API_LIST);
+        const res = await authFetch(API_LIST);
         const data = await res.json();
         if (res.ok && data.links.length > 0) {
           connectionsList.innerHTML = data.links.map(l => `

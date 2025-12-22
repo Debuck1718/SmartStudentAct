@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,24 +45,27 @@
     }
   </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
+<body class="bg-gray-100 min-h-screen">
 
   <!-- Header -->
-  <header class="w-full max-w-2xl flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold text-blue-600">SmartStudentAct</h1>
+  <header class="w-full max-w-4xl mx-auto p-4">
+    <div class="flex justify-between items-center">
+      <a href="javascript:history.back()" class="cute-back-btn">
+        <span style="font-size:1.3em;">🐾</span> <span data-i18n="back_button">Back</span>
+      </a>
 
-    <!-- Language Dropdown -->
-    <select id="language-dropdown" onchange="setLanguage(this.value)" class="p-2 border rounded-md bg-white shadow">
-      <option value="en">English</option>
-      <option value="fr">Français</option>
-      <option value="es">Español</option>
-      <option value="tr">Türkçe</option>
-      <option value="ar">العربية</option>
-      <option value="ru">Русский</option>
-    </select>
+      <!-- Language Dropdown -->
+      <select id="language-dropdown" class="p-2 border rounded-md bg-white shadow">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="tr">Türkçe</option>
+        <option value="ar">العربية</option>
+        <option value="ru">Русский</option>
+      </select>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-800 text-center mb-6" data-i18n="page_title">Completed Student Submissions</h1>
   </header>
-
-
 
   <!-- Cute Back Button -->
   <div class="w-full flex justify-start max-w-2xl mx-auto mt-4">
@@ -71,83 +75,195 @@
   </div>
 
   <!-- Main container -->
-  <div class="container bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full">
-    <h1 class="text-3xl font-bold text-gray-800 text-center mb-6" data-i18n="page_title">Completed Assigned Tasks</h1>
+  <div class="container bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full mx-auto">
     <div id="tasks-list" class="space-y-4"></div>
   </div>
 
+  <script src="api-config.js"></script>
   <script>
     const translations = {
-      en: { page_title: "Completed Assigned Tasks", student: "Student", status: "Status", date: "Date", statuses: { Completed: "Completed", Graded: "Graded" } },
-      fr: { page_title: "Tâches Assignées Complétées", student: "Étudiant", status: "Statut", date: "Date", statuses: { Completed: "Terminé", Graded: "Noté" } },
-      es: { page_title: "Tareas Asignadas Completadas", student: "Estudiante", status: "Estado", date: "Fecha", statuses: { Completed: "Completado", Graded: "Calificado" } },
-      tr: { page_title: "Tamamlanan Atanan Görevler", student: "Öğrenci", status: "Durum", date: "Tarih", statuses: { Completed: "Tamamlandı", Graded: "Değerlendirildi" } },
-      ar: { page_title: "المهام المعينة المكتملة", student: "الطالب", status: "الحالة", date: "التاريخ", statuses: { Completed: "مكتمل", Graded: "تم التقييم" } },
-      ru: { page_title: "Завершенные Назначенные Задания", student: "Студент", status: "Статус", date: "Дата", statuses: { Completed: "Завершено", Graded: "Оценено" } }
+      en: { page_title: "Completed Student Submissions", student: "Student", status: "Status", date: "Date", loading: "Loading submissions...", no_submissions: "No completed assignments found.", back_button: "Back", grade: "Grade", feedback: "Feedback", gradeAction: "Grade Submission", score: "Score", submitGrade: "Submit Grade", gradeSuccess: "Graded successfully!", statuses: { Completed: "Completed", Graded: "Graded" }, unsubmit: "Unsubmit", confirmUnsubmit: "Are you sure you want to unsubmit this assignment? You will need to submit it again before the deadline.", unsubmitSuccess: "Assignment unsubmitted successfully.", unsubmitError: "Failed to unsubmit assignment.", unsubmitDisabledPastDue: "Unsubmit disabled (past due date)" },
+      fr: { page_title: "Soumissions des Étudiants Terminées", student: "Étudiant", status: "Statut", date: "Date", loading: "Chargement des soumissions...", no_submissions: "Aucune devoir terminé trouvé.", back_button: "Retour", grade: "Note", feedback: "Commentaire", gradeAction: "Noter la soumission", score: "Score", submitGrade: "Soumettre la note", gradeSuccess: "Noté avec succès !", statuses: { Completed: "Terminé", Graded: "Noté" }, unsubmit: "Annuler la soumission", confirmUnsubmit: "Êtes-vous sûr de vouloir annuler la soumission de ce devoir ? Vous devrez le soumettre à nouveau avant la date limite.", unsubmitSuccess: "Devoir désoumis avec succès.", unsubmitError: "Échec de l'annulation de la soumission du devoir.", unsubmitDisabledPastDue: "Annuler la soumission désactivé (date limite dépassée)" },
+      es: { page_title: "Envíos de Estudiantes Completados", student: "Estudiante", status: "Estado", date: "Fecha", loading: "Cargando envíos...", no_submissions: "No se encontraron tareas completadas.", back_button: "Volver", grade: "Calificación", feedback: "Comentarios", gradeAction: "Calificar envío", score: "Puntuación", submitGrade: "Enviar calificación", gradeSuccess: "¡Calificado con éxito!", statuses: { Completed: "Completado", Graded: "Calificado" }, unsubmit: "Deshacer envío", confirmUnsubmit: "¿Estás seguro de que quieres deshacer el envío de esta tarea? Deberás enviarla de nuevo antes de la fecha límite.", unsubmitSuccess: "Envío de tarea deshecho con éxito.", unsubmitError: "Error al deshacer el envío de la tarea.", unsubmitDisabledPastDue: "Deshacer envío deshabilitado (fecha límite pasada)" },
+      tr: { page_title: "Tamamlanan Öğrenci Gönderimleri", student: "Öğrenci", status: "Durum", date: "Tarih", loading: "Gönderimler yükleniyor...", no_submissions: "Tamamlanmış ödev bulunamadı.", back_button: "Geri", grade: "Not", feedback: "Geri bildirim", gradeAction: "Gönderimi Notlandır", score: "Puan", submitGrade: "Notu Gönder", gradeSuccess: "Başarıyla notlandırıldı!", statuses: { Completed: "Tamamlandı", Graded: "Değerlendirildi" }, unsubmit: "Gönderimi Geri Al", confirmUnsubmit: "Bu ödevi geri almak istediğinizden emin misiniz? Son teslim tarihinden önce tekrar göndermeniz gerekecek.", unsubmitSuccess: "Ödev başarıyla geri alındı.", unsubmitError: "Ödev geri alınamadı.", unsubmitDisabledPastDue: "Gönderimi geri al devre dışı (son teslim tarihi geçti)" },
+      ar: { page_title: "تقديمات الطلاب المكتملة", student: "الطالب", status: "الحالة", date: "التاريخ", loading: "جارٍ تحميل التقديمات...", no_submissions: "لم يتم العثور على واجبات مكتملة.", back_button: "رجوع", grade: "الدرجة", feedback: "ملاحظات", gradeAction: "تقييم التقديم", score: "النتيجة", submitGrade: "إرسال الدرجة", gradeSuccess: "تم التقييم بنجاح!", statuses: { Completed: "مكتمل", Graded: "تم التقييم" }, unsubmit: "إلغاء الإرسال", confirmUnsubmit: "هل أنت متأكد أنك تريد إلغاء إرسال هذا الواجب؟ ستحتاج إلى إرساله مرة أخرى قبل الموعد النهائي.", unsubmitSuccess: "تم إلغاء إرسال الواجب بنجاح.", unsubmitError: "فشل إلغاء إرسال الواجب.", unsubmitDisabledPastDue: "إلغاء الإرسال معطل (تجاوز تاريخ الاستحقاق)" },
+      ru: { page_title: "Завершенные Студенческие Работы", student: "Студент", status: "Статус", date: "Дата", loading: "Загрузка работ...", no_submissions: "Выполненные задания не найдены.", back_button: "Назад", grade: "Оценка", feedback: "Отзыв", gradeAction: "Оценить работу", score: "Баллы", submitGrade: "Отправить оценку", gradeSuccess: "Успешно оценено!", statuses: { Completed: "Завершено", Graded: "Оценено" }, unsubmit: "Отменить отправку", confirmUnsubmit: "Вы уверены, что хотите отменить отправку этого задания? Вам нужно будет отправить его снова до крайнего срока.", unsubmitSuccess: "Отправка задания успешно отменена.", unsubmitError: "Не удалось отменить отправку задания.", unsubmitDisabledPastDue: "Отмена отправки отключена (срок сдачи истёк)" }
     };
 
     let currentLang = "en";
-
-    const assignedTasks = [
-      { id: "a1", student: "Alice Johnson", task: "Algebra Worksheet", status: "Completed", date: "2025-07-25" },
-      { id: "a2", student: "Bob Williams", task: "History Report", status: "Completed", date: "2025-07-22" },
-      { id: "a3", student: "Charlie Brown", task: "Science Lab Report", status: "Graded", date: "2025-07-20" },
-      { id: "a4", student: "Diana Prince", task: "Geometry Test", status: "Completed", date: "2025-07-19" }
-    ];
-
     const tasksListContainer = document.getElementById("tasks-list");
 
-    function createTaskItem(item) {
-      const labels = translations[currentLang];
-      const taskItemDiv = document.createElement("div");
-      taskItemDiv.className = "bg-green-100 p-4 rounded-lg mb-2 border-l-4 border-green-500 shadow-sm";
-
-      const taskTitle = document.createElement("p");
-      taskTitle.className = "text-lg font-semibold text-gray-700";
-      taskTitle.textContent = item.task;
-      taskItemDiv.appendChild(taskTitle);
-
-      const studentDetails = document.createElement("p");
-      studentDetails.className = "text-sm text-gray-600 mt-1";
-      studentDetails.textContent = `${labels.student}: ${item.student}`;
-      taskItemDiv.appendChild(studentDetails);
-
-      const statusDetails = document.createElement("p");
-      statusDetails.className = "text-sm text-gray-600 mt-1";
-      statusDetails.textContent = `${labels.status}: ${labels.statuses[item.status] || item.status}`;
-      taskItemDiv.appendChild(statusDetails);
-
-      const dateDetails = document.createElement("p");
-      dateDetails.className = "text-sm text-gray-600 mt-1";
-      dateDetails.textContent = `${labels.date}: ${item.date}`;
-      taskItemDiv.appendChild(dateDetails);
-
-      return taskItemDiv;
-    }
-
-    function renderTasks() {
-      tasksListContainer.innerHTML = "";
-      assignedTasks.forEach(task => {
-        tasksListContainer.appendChild(createTaskItem(task));
-      });
-    }
-
     function setLanguage(lang) {
-      currentLang = lang;
-      document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        if (translations[lang][key]) el.textContent = translations[lang][key];
-      });
-      renderTasks();
-      document.body.dir = lang === "ar" ? "rtl" : "ltr";
+        currentLang = lang;
+        document.querySelectorAll("[data-i18n]").forEach(el => {
+            const key = el.getAttribute("data-i18n");
+            if (translations[lang][key]) el.textContent = translations[lang][key];
+        });
+        document.body.dir = lang === "ar" ? "rtl" : "ltr";
+        fetchCompletedAssignments();
+    }
+
+    async function authFetch(endpoint, options = {}) {
+        const res = await fetch(`${window.API_BASE_URL}${endpoint}`, {
+            ...options,
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        });
+        if (res.status === 401) window.location.href = '/login.html';
+        return res;
+    }
+
+    function renderTasks(submissions) {
+        tasksListContainer.innerHTML = "";
+        if (!submissions || submissions.length === 0) {
+            tasksListContainer.innerHTML = `<p class="text-center text-gray-500 italic">${translations[currentLang].no_submissions}</p>`;
+            return;
+        }
+
+        submissions.forEach(item => {
+            const labels = translations[currentLang];
+      const taskItemDiv = document.createElement("div");
+            taskItemDiv.className = "bg-green-50 p-4 rounded-lg border-l-4 border-green-500 shadow-sm";
+            
+            const studentName = item.student ? `${item.student.firstname} ${item.student.lastname}` : 'Unknown Student';
+            const submissionDate = item.submitted_at ? new Date(item.submitted_at).toLocaleString() : 'N/A';
+            const isGraded = item.status === 'Graded' || (item.grade !== undefined && item.grade !== null);
+
+            let gradingSection = '';
+            if (isGraded) {
+                 gradingSection = `
+                    <div class="mt-4 p-3 bg-blue-50 rounded border border-blue-100">
+                        <p class="font-bold text-blue-800">${labels.grade}: ${item.grade}</p>
+                        ${item.feedback ? `<p class="text-sm text-blue-700 mt-1"><strong>${labels.feedback}:</strong> ${item.feedback}</p>` : ''}
+                    </div>
+                `;
+            } else {
+                gradingSection = `
+                    <div class="mt-4 pt-3 border-t border-gray-200">
+                        <button class="text-blue-600 text-sm font-semibold hover:underline flex items-center gap-1" onclick="toggleGradeForm('${item._id}')">
+                            <span>✏️</span> ${labels.gradeAction}
+                        </button>
+                        <form id="grade-form-${item._id}" class="hidden mt-3 space-y-3 bg-white p-3 rounded border border-gray-200" onsubmit="handleGrade(event, '${item._id}')">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">${labels.score}</label>
+                                <input type="number" name="score" class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none" required min="0" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">${labels.feedback}</label>
+                                <textarea name="feedback" class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none" rows="2" placeholder="Optional feedback..."></textarea>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 transition-colors">
+                                    ${labels.submitGrade}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+            }
+
+            taskItemDiv.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-lg font-semibold text-gray-800">${item.assignment ? item.assignment.title : 'Untitled Assignment'}</p>
+                        <p class="text-sm text-gray-600 mt-1"><span class="font-medium">${labels.student}:</span> ${studentName}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${isGraded ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">
+                        ${isGraded ? (labels.statuses?.Graded || 'Graded') : (labels.statuses?.Completed || item.status)}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">${labels.date}: ${submissionDate}</p>
+                
+                ${item.submission_text ? `<div class="mt-3 p-3 bg-white rounded border border-gray-200 text-sm text-gray-700 whitespace-pre-wrap">${item.submission_text}</div>` : ''}
+                
+                ${(item.submission_files && item.submission_files.length > 0) || item.submission_file ? `
+                    <div class="mt-3">
+                        <p class="text-sm font-medium text-gray-700 mb-1">Submitted Files:</p>
+                        <div class="space-y-1">
+                            ${(item.submission_files || (item.submission_file ? [item.submission_file] : [])).map(file => `
+                                <a href="${file.url}" target="_blank" class="inline-flex items-center gap-2 text-blue-600 text-sm hover:underline">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                    <span>${file.name || 'View File'}</span>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${gradingSection}
+            `;
+            tasksListContainer.appendChild(taskItemDiv);
+        });
+    }
+
+    window.handleUnsubmit = async function(submissionId) {
+        const lang = currentLang;
+        if (confirm(translations[lang].confirmUnsubmit)) {
+            try {
+                const res = await authFetch(`/student/submissions/${submissionId}`, {
+                    method: 'DELETE'
+                });
+                if (!res.ok) throw new Error('Failed to unsubmit');
+                alert(translations[lang].unsubmitSuccess);
+                fetchCompletedAssignments();
+            } catch (error) {
+                alert(translations[lang].unsubmitError);
+                console.error(error);
+            }
+        }
+    }
+    async function handleGrade(event, submissionId) {
+        event.preventDefault();
+        const form = event.target;
+        const score = form.score.value;
+        const feedback = form.feedback.value;
+        const btn = form.querySelector('button[type="submit"]');
+        
+        btn.disabled = true;
+        btn.textContent = '...';
+
+        try {
+            const res = await authFetch(`/teacher/submissions/${submissionId}/grade`, {
+                method: 'POST',
+                body: JSON.stringify({ score, feedback })
+            });
+            
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || 'Failed to grade');
+            }
+            
+            alert(translations[currentLang].gradeSuccess || 'Graded successfully!');
+            fetchCompletedAssignments(); // Refresh list
+        } catch (err) {
+            alert(err.message);
+            btn.disabled = false;
+            btn.textContent = translations[currentLang].submitGrade || 'Submit Grade';
+        }
+    }
+
+    window.toggleGradeForm = function(id) {
+        const form = document.getElementById(`grade-form-${id}`);
+        if (form) form.classList.toggle('hidden');
+    }
+
+    async function fetchCompletedAssignments() {
+        tasksListContainer.innerHTML = `<p class="text-center text-gray-500">${translations[currentLang].loading}</p>`;
+        try {
+            const res = await authFetch('/teacher/submissions');
+            if (!res.ok) throw new Error('Failed to fetch submissions.');
+            const submissions = await res.json();
+            renderTasks(submissions);
+        } catch (error) {
+            tasksListContainer.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
+        }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("language-dropdown").addEventListener("change", (e) => setLanguage(e.target.value));
       setLanguage("en");
-      document.getElementById("language-dropdown").value = "en";
     });
   </script>
 
 </body>
 </html>
-

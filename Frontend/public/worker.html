@@ -9,6 +9,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="api-config.js"></script>
 </head>
@@ -16,17 +18,21 @@
 <body class="bg-gray-50 text-gray-800">
   <!-- Header -->
   <header class="bg-blue-600 text-white py-4 shadow">
-  <div class="max-w-6xl mx-auto flex justify-between items-center px-4">
-    <div class="flex items-center gap-3">
-      <img
-        id="profilePhoto"
-        src="./images/default-avatar.png"
-        alt="Profile"
-        class="w-10 h-10 rounded-full border-2 border-white object-cover cursor-pointer"
-        title="Click to update photo"
-      />
-      <h1 id="title" class="text-xl font-semibold">👷 Worker Dashboard</h1>
-    </div>
+    <div class="max-w-6xl mx-auto flex justify-between items-center px-4">
+      <div class="flex items-center gap-3 relative group">
+        <img
+          id="profilePhoto"
+          src="./images/default-avatar.png"
+          alt="Profile"
+          class="w-10 h-10 rounded-full border-2 border-white object-cover cursor-pointer"
+        />
+        <h1 id="title" class="text-xl font-semibold">👷 Worker Dashboard</h1>
+        <!-- Dropdown menu -->
+        <div class="absolute top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 hidden group-hover:block">
+          <a href="#" id="change-photo-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Photo</a>
+          <a href="#" id="remove-photo-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Remove Photo</a>
+        </div>
+      </div>
 
     <div class="flex gap-2 items-center">
       <select id="langSelect" class="text-black rounded p-1">
@@ -123,6 +129,20 @@
   <footer class="bg-gray-100 text-center text-gray-500 py-4">
     <p>© 2025 SmartStudentAct. All rights reserved.</p>
   </footer>
+
+  <!-- Cropper Modal -->
+  <div id="cropper-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-4 rounded-lg shadow-xl max-w-md w-full">
+      <h2 class="text-xl font-bold mb-4">Crop Your Photo</h2>
+      <div class="img-container">
+        <img id="cropper-image" src="" class="max-w-full">
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button id="cancel-crop-btn" type="button" class="px-4 py-2 bg-gray-300 rounded-lg">Cancel</button>
+        <button id="crop-and-save-btn" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Crop & Save</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const API_BASE_URL = window.API_BASE_URL;
@@ -309,45 +329,87 @@
     // Profile photo upload logic
 const photoInput = document.getElementById("photoInput");
 const profilePhoto = document.getElementById("profilePhoto");
+const changePhotoBtn = document.getElementById("change-photo-btn");
+const removePhotoBtn = document.getElementById("remove-photo-btn");
 
   async function loadProfilePhoto() {
     try {
       const res = await authFetch(`/profile`);
       if (!res) return;
       const body = await res.json();
-      const url = body?.user?.photoUrl || body?.user?.profile_picture_url || body?.user?.imageUrl || "/images/default-avatar.png";
+      const url = body?.user?.profile_picture_url || "/images/default-avatar.png";
       profilePhoto.src = url;
+      removePhotoBtn.classList.toggle('hidden', !body?.user?.profile_picture_url);
     } catch (err) {
       console.warn("Could not load profile photo:", err);
       profilePhoto.src = "/images/default-avatar.png";
     }
   }
 
-profilePhoto.addEventListener("click", () => {
+changePhotoBtn.addEventListener("click", (e) => {
+  e.preventDefault();
   photoInput.click();
 });
 
-photoInput.addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+removePhotoBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!confirm("Are you sure you want to remove your profile photo?")) return;
+    try {
+        const res = await authFetch(`/profile/photo`, { method: "DELETE" });
+        if (!res) throw new Error("Request failed");
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.message || "Failed to remove photo");
+        showToast("Profile photo removed!", "success");
+        loadProfilePhoto();
+    } catch (err) {
+        showToast(err.message, "error");
+    }
+});
 
-  const formData = new FormData();
-  formData.append("profilePhoto", file);
+let cropper;
+const cropperModal = document.getElementById("cropper-modal");
+const cropperImage = document.getElementById("cropper-image");
+const cropAndSaveBtn = document.getElementById("crop-and-save-btn");
+const cancelCropBtn = document.getElementById("cancel-crop-btn");
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-      method: "POST",
-      credentials: "include",
-      body: formData,
-    });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.message || "Upload failed");
-    showToast("Profile photo updated successfully!", "success");
-    profilePhoto.src = body.photoUrl || body.profile_picture_url || body.photoUrl;
-  } catch (err) {
-    console.error("Photo upload failed:", err);
-    showToast(err.message || "Error uploading photo", "error");
-  }
+photoInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        cropperImage.src = event.target.result;
+        cropperModal.classList.remove("hidden");
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(cropperImage, { aspectRatio: 1, viewMode: 1 });
+    };
+    reader.readAsDataURL(file);
+});
+
+function closeCropperModal() {
+    cropperModal.classList.add("hidden");
+    if (cropper) cropper.destroy();
+    photoInput.value = "";
+}
+
+cancelCropBtn.addEventListener("click", closeCropperModal);
+
+cropAndSaveBtn.addEventListener("click", () => {
+    if (!cropper) return;
+    cropper.getCroppedCanvas({ width: 512, height: 512 }).toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append("profilePhoto", blob, "profile.jpg");
+        try {
+            const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, { method: "POST", credentials: "include", body: formData });
+            const body = await res.json();
+            if (!res.ok) throw new Error(body.message || "Upload failed");
+            showToast("Profile photo updated!", "success");
+            loadProfilePhoto();
+        } catch (err) {
+            showToast(err.message, "error");
+        } finally {
+            closeCropperModal();
+        }
+    }, 'image/jpeg');
 });
 
 

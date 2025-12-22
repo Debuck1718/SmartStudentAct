@@ -32,6 +32,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
+  <script src="api-config.js"></script>
     <style>
       .cute-back-btn {
         display: inline-flex;
@@ -330,6 +331,18 @@
         document.body.dir = lang === "ar" ? "rtl" : "ltr";
       }
 
+      const API_BASE_URL = window.API_BASE_URL;
+
+      async function authFetch(endpoint, options = {}) {
+          const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+              ...options,
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+          });
+          if (res.status === 401) window.location.href = '/login.html';
+          return res;
+      }
+
       const essayForm = document.getElementById("essay-form");
       const essayTextarea = document.getElementById("essay-text");
       const submitButton = document.getElementById("submit-button");
@@ -478,11 +491,9 @@ async function getEssayFeedback(essayText, citationData) {
   const payload = { essayText, citationData };
 
   try {
-    const response = await fetch(apiUrl, {
+    const response = await authFetch(apiRoutes[activeTab], {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      credentials: "include",
     });
 
     if (!response.ok) {
@@ -491,7 +502,7 @@ async function getEssayFeedback(essayText, citationData) {
     }
 
     const result = await response.json();
-    return result.feedback;
+    return result;
   } catch (error) {
     console.error("API call failed:", error);
     throw new Error(`API call failed: ${error.message}`);
@@ -515,10 +526,19 @@ async function getEssayFeedback(essayText, citationData) {
 
         try {
           const citationData = getAICitationData();
-          const feedback = await getEssayFeedback(essayText, citationData);
-          feedbackData = feedback;
-          renderFeedback(feedback);
-          showStatus(translations[currentLang].submit_btn, "success");
+          const result = await getEssayFeedback(essayText, citationData);
+          
+          if (activeTab === 'check') {
+            feedbackData = result.feedback;
+            renderFeedback(result.feedback);
+          } else {
+            resultDiv.innerHTML = `
+              <strong>🧠 AI Detection Result:</strong>
+              <p><strong>Verdict:</strong> ${result.result.verdict}</p>
+              <p><strong>Confidence:</strong> ${result.result.confidence}</p>
+            `;
+          }
+          showStatus(translations[currentLang].submit_btn, "success"); // Reset button
         } catch (error) {
           console.error("An error occurred:", error);
           showStatus(error.message, "error");

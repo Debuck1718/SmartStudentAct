@@ -15,6 +15,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
+    <script src="api-config.js"></script>
     <style>
       body {
         font-family: "Inter", sans-serif;
@@ -41,7 +42,7 @@
         <div class="flex items-center space-x-2 mb-4 sm:mb-0">
           
 <button
-  onclick="window.location.href='teachers.html'"
+  onclick="history.back()"
   class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium shadow-md hover:bg-gray-300 transition duration-300 flex items-center space-x-2"
   data-i18n="backBtn"
 >
@@ -203,6 +204,7 @@
       };
 
       let currentLang = "en";
+      const API_BASE_URL = window.API_BASE_URL;
 
       function applyTranslations() {
         document.querySelectorAll("[data-i18n]").forEach((el) => {
@@ -222,30 +224,9 @@
         document.body.dir = currentLang === "ar" ? "rtl" : "ltr";
       }
 
-      document.addEventListener("DOMContentLoaded", () => {
-        let API_BASE_URL = window.API_BASE_URL;
-        if (!API_BASE_URL) {
-          // Try to set a fallback or warn
-          API_BASE_URL = '/api'; // fallback for local dev, adjust as needed
-          console.warn('API_BASE_URL was not set. Using fallback:', API_BASE_URL);
-        }
-        const contentArea = document.getElementById("content-area");
-        const myClassBtn = document.getElementById("my-class-btn");
-        const otherStudentsBtn = document.getElementById("other-students-btn");
-        const searchInput = document.getElementById("search-input");
-        const langSelect = document.getElementById("language-select");
-
-        const API_ENDPOINTS = {
-          "my-class": "/teacher/students",
-          "other-students": "/teacher/students/other",
-        };
-
-        let currentView = "my-class";
-        let searchTimeout;
-
-        // Use the same fetch logic as other working pages
-        const authFetch = async (url, options = {}) => {
-          return fetch(url, {
+      async function authFetch(endpoint, options = {}) {
+        try {
+          const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             credentials: "include",
             headers: {
@@ -253,7 +234,31 @@
               ...(options.headers || {}),
             },
           });
+          if (response.status === 401 || response.status === 403) {
+            window.location.href = "/login.html";
+            return null;
+          }
+          return response;
+        } catch (error) {
+          console.error("Fetch API error:", error);
+          return null;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const contentArea = document.getElementById("content-area");
+        const myClassBtn = document.getElementById("my-class-btn");
+        const otherStudentsBtn = document.getElementById("other-students-btn");
+        const searchInput = document.getElementById("search-input");
+        const langSelect = document.getElementById("language-select");
+
+        const API_ENDPOINTS = {
+          "my-class": "/teacher/assignable-students",
+          "other-students": "/teacher/assignable-students",
         };
+
+        let currentView = "my-class";
+        let searchTimeout;
 
         function showLoading(viewName) {
           const title =
@@ -313,19 +318,36 @@
 
         async function fetchStudentsAndRender(view, searchTerm = "") {
           showLoading(view);
-          const endpoint =
-            API_ENDPOINTS[view] +
-            (searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : "");
+          const endpoint = API_ENDPOINTS[view];
           try {
-            const response = await authFetch(`${API_BASE_URL}${endpoint}`);
+            const response = await authFetch(endpoint);
+            if (!response) {
+              throw new Error("Network or authentication error.");
+            }
             if (!response.ok) {
-              if (response.status === 401 || response.status === 403) {
-                window.location.href = "/login.html";
-                return;
-              }
               throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const students = await response.json();
+            const data = await response.json();
+
+            let students;
+            if (view === "my-class") {
+              students = data.myGradeStudents || [];
+            } else {
+              students = data.otherStudents || [];
+            }
+
+            // Perform client-side search
+            if (searchTerm) {
+              const lowercasedTerm = searchTerm.toLowerCase();
+              students = students.filter(
+                (s) =>
+                  (s.firstname &&
+                    s.firstname.toLowerCase().includes(lowercasedTerm)) ||
+                  (s.lastname &&
+                    s.lastname.toLowerCase().includes(lowercasedTerm))
+              );
+            }
+
             if (students.length === 0) {
               const message =
                 view === "my-class"

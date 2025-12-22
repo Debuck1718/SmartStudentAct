@@ -28,6 +28,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" defer></script>
 
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
@@ -73,17 +75,24 @@
       .custom-file-input:hover::before {
         background-color: #1d4ed8;
       }
+      .cropper-container {
+        max-height: 60vh;
+      }
+      .cropper-view-box,
+      .cropper-face {
+        border-radius: 50%;
+      }
     </style>
   </head>
 
-  <body class="bg-gray-100 min-h-screen antialiased">
+  <body class="bg-slate-100 min-h-screen antialiased">
     <div
       id="loadingOverlay"
-      class="fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-75 z-[999]"
+      class="fixed inset-0 flex items-center justify-center bg-slate-200 bg-opacity-75 z-[999]"
     >
       <div class="text-center p-6 bg-white rounded-xl shadow-lg">
         <div class="spinner mx-auto mb-4"></div>
-        <p class="text-lg text-gray-700 font-medium" data-i18n="loadingMessage">
+        <p class="text-lg text-slate-700 font-medium" data-i18n="loadingMessage">
           Loading teacher dashboard...
         </p>
       </div>
@@ -91,10 +100,10 @@
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl">
       <header
-        class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-200"
+        class="flex flex-col sm:flex-row justify-between items-center py-6 border-b border-slate-200"
       >
         <h1
-          class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0"
+          class="text-3xl font-bold text-slate-800 mb-4 sm:mb-0"
           data-i18n="dashboardTitle"
         >
           📚 Teacher Dashboard
@@ -103,7 +112,7 @@
         <div class="flex items-center space-x-6">
           <select
             id="language-select"
-            class="rounded-full px-4 py-2 bg-white text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="rounded-full px-4 py-2 bg-white text-slate-700 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="en">EN</option>
             <option value="fr">FR</option>
@@ -116,21 +125,20 @@
           <div class="relative inline-block text-left">
             <button
               id="profile-menu-button"
-              type="button"
-              class="flex items-center space-x-2 rounded-full px-4 py-2 hover:bg-gray-200 transition-all duration-300 focus:outline-none"
+              type="button" class="flex items-center space-x-2 rounded-full p-1 hover:bg-slate-200/70 transition-all duration-300 focus:outline-none"
             >
               <img
                 id="profileAvatar"
                 src="./images/default-avatar.png"
                 alt="Profile Avatar"
-                class="h-10 w-10 rounded-full object-cover border border-gray-300"
+                class="h-10 w-10 rounded-full object-cover border border-slate-300"
               />
               <span
                 id="profilePreviewName"
-                class="hidden sm:inline font-medium text-gray-700"
+                class="hidden sm:inline font-medium text-slate-700"
                 >Teacher</span
               >
-              <i class="fas fa-chevron-down text-gray-400"></i>
+              <i class="fas fa-chevron-down text-slate-400"></i>
             </button>
             <input
               type="file"
@@ -141,7 +149,7 @@
 
             <div
               id="profile-dropdown-menu"
-              class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden transition-all duration-300 origin-top-right transform scale-95 opacity-0"
+              class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-slate-900/5 overflow-hidden transition-all duration-300 origin-top-right transform scale-95 opacity-0"
             >
               <a
                 href="./special-link.html"
@@ -172,6 +180,12 @@
                 data-i18n="contact"
                 >📩 Contact</a
               >
+              <button
+                id="removeProfilePhotoBtn"
+                class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition"
+              >
+                🗑️ Remove Photo
+              </button>
               <button
                 id="logoutButton"
                 class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition"
@@ -211,15 +225,14 @@
           data-i18n="aiChecker"
           >🤖 AI Checker</a
         >
-        <button id="subscribeBtn" class="flex-1 text-center py-3 px-4 m-1 bg-gray-100 text-blue-600 font-semibold rounded-lg hover:bg-gray-200 transition duration-300">🔔 Subscribe</button>
+        <button id="notification-btn" class="flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-700 rounded-full hover:bg-slate-200/70 transition-colors duration-300"><span id="notification-btn-icon"></span> <span id="notification-btn-text" class="hidden sm:inline"></span></button>
       </nav>
       ---
       <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-12 transition-all duration-500">
         <section
           id="studentsSection"
-          class="bg-white rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] border border-gray-100 group relative overflow-hidden"
+          class="bg-white rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-100 group relative overflow-hidden"
         >
-          <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none"></div>
           <h2
             class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
             data-i18n="studentsInClass"
@@ -233,9 +246,8 @@
         </section>
         ---
         <section
-          class="bg-white rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] border border-gray-100 group relative overflow-hidden"
+          class="bg-white rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-gray-100 group relative overflow-hidden"
         >
-          <div class="absolute inset-0 bg-gradient-to-br from-green-50 to-transparent opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none"></div>
           <h2
             class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
             data-i18n="createAssignment"
@@ -420,7 +432,7 @@
                 />
               </label>
               <div id="fileStatus" class="flex items-center gap-2">
-                <span id="fileName" class="text-gray-700 text-sm italic"
+                <span id="fileName" class="text-slate-700 text-sm italic"
                   >No file selected.</span
                 >
                 <button
@@ -444,25 +456,23 @@
           </form>
         </section>
         ---
-        <section class="bg-white rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] border border-gray-100 group relative overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none"></div>
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">Recent Quiz Results</h2>
+        <section class="bg-white rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-slate-200">
+          <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">Recent Quiz Results</h2>
           <div id="quizSummaries" class="grid gap-4"></div>
         </section>
         ---
         <section
-          class="bg-white rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] border border-gray-100 group relative overflow-hidden"
+          class="bg-white rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-slate-200"
         >
-          <div class="absolute inset-0 bg-gradient-to-br from-yellow-50 to-transparent opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none"></div>
           <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
             data-i18n="addPointsTitle"
           >
             ➕ Add Student Points
           </h2>
           <div class="mb-4">
             <label
-              class="block text-gray-700 font-bold mb-2"
+              class="block text-slate-700 font-bold mb-2"
               data-i18n="selectRecipient"
               >Select Recipient:</label
             >
@@ -475,7 +485,7 @@
                   class="form-radio text-green-600"
                   checked
                 />
-                <span class="ml-2 text-gray-700" data-i18n="singleStudent"
+                <span class="ml-2 text-slate-700" data-i18n="singleStudent"
                   >Single Student</span
                 >
               </label>
@@ -486,7 +496,7 @@
                   value="multiple"
                   class="form-radio text-green-600"
                 />
-                <span class="ml-2 text-gray-700" data-i18n="multipleStudents"
+                <span class="ml-2 text-slate-700" data-i18n="multipleStudents"
                   >Multiple Students</span
                 >
               </label>
@@ -497,7 +507,7 @@
                   value="class"
                   class="form-radio text-green-600"
                 />
-                <span class="ml-2 text-gray-700" data-i18n="entireClass"
+                <span class="ml-2 text-slate-700" data-i18n="entireClass"
                   >Entire Class</span
                 >
               </label>
@@ -508,7 +518,7 @@
                   value="otherGrade"
                   class="form-radio text-green-600"
                 />
-                <span class="ml-2 text-gray-700" data-i18n="otherGrade"
+                <span class="ml-2 text-slate-700" data-i18n="otherGrade"
                   >Another Grade</span
                 >
               </label>
@@ -518,14 +528,14 @@
           <div id="points-select-group">
             <label
               for="points-student-select"
-              class="block text-gray-700 font-bold mb-2"
+              class="block text-slate-700 font-bold mb-2"
               data-i18n="selectStudent"
               >Select Student(s):</label
             >
-            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+            <div class="border border-slate-300 rounded-lg overflow-hidden mb-4">
               <select
                 id="points-student-select"
-                class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+                class="w-full p-3 bg-white text-slate-800 focus:outline-none"
               ></select>
             </div>
           </div>
@@ -533,21 +543,21 @@
           <div id="points-grade-select-group" class="hidden">
             <label
               for="points-grade-select"
-              class="block text-gray-700 font-bold mb-2"
+              class="block text-slate-700 font-bold mb-2"
               data-i18n="selectGrade"
               >Select Grade:</label
             >
-            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+            <div class="border border-slate-300 rounded-lg overflow-hidden mb-4">
               <select
                 id="points-grade-select"
-                class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+                class="w-full p-3 bg-white text-slate-800 focus:outline-none"
               ></select>
             </div>
           </div>
 
           <label
             for="pointsInput"
-            class="block text-gray-700 font-bold mb-2"
+            class="block text-slate-700 font-bold mb-2"
             data-i18n="pointsToAdd"
             >Points to Add:</label
           >
@@ -555,19 +565,19 @@
             type="number"
             id="pointsInput"
             min="1"
-            class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            class="w-full p-3 mb-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             placeholder="e.g., 10"
           />
 
           <label
             for="reasonText"
-            class="block text-gray-700 font-bold mb-2"
+            class="block text-slate-700 font-bold mb-2"
             data-i18n="reasonOptional"
             >Reason (Optional):</label
           >
           <textarea
             id="reasonText"
-            class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y"
+            class="w-full min-h-[80px] p-3 mb-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y"
             placeholder="e.g., Great participation in class discussion."
           ></textarea>
 
@@ -581,57 +591,56 @@
           </button>
         </section>
         ---
-        <section class="bg-white rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] border border-gray-100 group relative overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none"></div>
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2" data-i18n="grantRewardsTitle">🎖️ Grant Rewards</h2>
+        <section class="bg-white rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl border border-slate-200">
+          <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2" data-i18n="grantRewardsTitle">🎖️ Grant Rewards</h2>
           <div class="mb-4">
-            <label class="block text-gray-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
+            <label class="block text-slate-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
             <div class="flex flex-col sm:flex-row gap-2">
               <label class="inline-flex items-center">
                 <input type="radio" name="grantRecipient" value="single" class="form-radio text-indigo-600" checked />
-                <span class="ml-2 text-gray-700" data-i18n="singleStudent">Single Student</span>
+                <span class="ml-2 text-slate-700" data-i18n="singleStudent">Single Student</span>
               </label>
               <label class="inline-flex items-center">
                 <input type="radio" name="grantRecipient" value="multiple" class="form-radio text-indigo-600" />
-                <span class="ml-2 text-gray-700" data-i18n="multipleStudents">Multiple Students</span>
+                <span class="ml-2 text-slate-700" data-i18n="multipleStudents">Multiple Students</span>
               </label>
               <label class="inline-flex items-center">
                 <input type="radio" name="grantRecipient" value="class" class="form-radio text-indigo-600" />
-                <span class="ml-2 text-gray-700" data-i18n="entireClass">Entire Class</span>
+                <span class="ml-2 text-slate-700" data-i18n="entireClass">Entire Class</span>
               </label>
               <label class="inline-flex items-center">
                 <input type="radio" name="grantRecipient" value="otherGrade" class="form-radio text-indigo-600" />
-                <span class="ml-2 text-gray-700" data-i18n="otherGrade">Another Grade</span>
+                <span class="ml-2 text-slate-700" data-i18n="otherGrade">Another Grade</span>
               </label>
             </div>
           </div>
 
           <div id="grant-select-group">
-            <label for="grant-student-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectStudent">Select Student(s):</label>
-            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-              <select id="grant-student-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none" multiple></select>
+            <label for="grant-student-select" class="block text-slate-700 font-bold mb-2" data-i18n="selectStudent">Select Student(s):</label>
+            <div class="border border-slate-300 rounded-lg overflow-hidden mb-4">
+              <select id="grant-student-select" class="w-full p-3 bg-white text-slate-800 focus:outline-none" multiple></select>
             </div>
           </div>
 
           <div id="grant-grade-select-group" class="hidden">
-            <label for="grant-grade-select" class="block text-gray-700 font-bold mb-2" data-i18n="selectGrade">Select Grade:</label>
-            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-              <select id="grant-grade-select" class="w-full p-3 bg-white text-gray-800 focus:outline-none"></select>
+            <label for="grant-grade-select" class="block text-slate-700 font-bold mb-2" data-i18n="selectGrade">Select Grade:</label>
+            <div class="border border-slate-300 rounded-lg overflow-hidden mb-4">
+              <select id="grant-grade-select" class="w-full p-3 bg-white text-slate-800 focus:outline-none"></select>
             </div>
           </div>
 
-          <label for="grantType" class="block text-gray-700 font-bold mb-2" data-i18n="grantTypeLabel">Reward Type:</label>
-          <select id="grantType" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none">
+          <label for="grantType" class="block text-slate-700 font-bold mb-2" data-i18n="grantTypeLabel">Reward Type:</label>
+          <select id="grantType" class="w-full p-3 mb-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="badge">Badge</option>
             <option value="bonus">Bonus</option>
             <option value="custom">Custom</option>
           </select>
 
-          <label for="grantPoints" class="block text-gray-700 font-bold mb-2" data-i18n="grantPointsLabel">Points (optional):</label>
-          <input type="number" id="grantPoints" min="0" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none" placeholder="e.g., 10" />
+          <label for="grantPoints" class="block text-slate-700 font-bold mb-2" data-i18n="grantPointsLabel">Points (optional):</label>
+          <input type="number" id="grantPoints" min="0" class="w-full p-3 mb-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 10" />
 
-          <label for="grantDescription" class="block text-gray-700 font-bold mb-2" data-i18n="grantDescriptionLabel">Description (optional):</label>
-          <textarea id="grantDescription" class="w-full min-h-[80px] p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none resize-y" placeholder="e.g., Excellent participation"></textarea>
+          <label for="grantDescription" class="block text-slate-700 font-bold mb-2" data-i18n="grantDescriptionLabel">Description (optional):</label>
+          <textarea id="grantDescription" class="w-full min-h-[80px] p-3 mb-4 border border-slate-300 rounded-lg focus:outline-none resize-y focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Excellent participation"></textarea>
 
           <button id="grantRewardsButton" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="grantRewardsButton" disabled>
             Grant Rewards
@@ -639,17 +648,17 @@
         </section>
         ---
         <section
-          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
         >
           <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
             data-i18n="sendMessageTitle"
           >
             💌 Send Message to Student
           </h2>
           <div class="mb-4">
             <label
-              class="block text-gray-700 font-bold mb-2"
+              class="block text-slate-700 font-bold mb-2"
               data-i18n="selectRecipient"
               >Select Recipient:</label
             >
@@ -662,7 +671,7 @@
                   class="form-radio text-purple-600"
                   checked
                 />
-                <span class="ml-2 text-gray-700" data-i18n="singleStudent"
+                <span class="ml-2 text-slate-700" data-i18n="singleStudent"
                   >Single Student</span
                 >
               </label>
@@ -673,7 +682,7 @@
                   value="multiple"
                   class="form-radio text-purple-600"
                 />
-                <span class="ml-2 text-gray-700" data-i18n="multipleStudents"
+                <span class="ml-2 text-slate-700" data-i18n="multipleStudents"
                   >Multiple Students</span
                 >
               </label>
@@ -684,7 +693,7 @@
                   value="class"
                   class="form-radio text-purple-600"
                 />
-                <span class="ml-2 text-gray-700" data-i18n="entireClass"
+                <span class="ml-2 text-slate-700" data-i18n="entireClass"
                   >Entire Class</span
                 >
               </label>
@@ -695,7 +704,7 @@
                   value="otherGrade"
                   class="form-radio text-purple-600"
                 />
-                <span class="ml-2 text-gray-700" data-i18n="otherGrade"
+                <span class="ml-2 text-slate-700" data-i18n="otherGrade"
                   >Another Grade</span
                 >
               </label>
@@ -704,34 +713,34 @@
           <div id="message-select-group">
             <label
               for="message-student-select"
-              class="block text-gray-700 font-bold mb-2"
+              class="block text-slate-700 font-bold mb-2"
               data-i18n="selectStudent"
               >Select Student(s):</label
             >
-            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+            <div class="border border-slate-300 rounded-lg overflow-hidden mb-4">
               <select
                 id="message-student-select"
-                class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+                class="w-full p-3 bg-white text-slate-800 focus:outline-none"
               ></select>
             </div>
           </div>
           <div id="message-grade-select-group" class="hidden">
             <label
               for="message-grade-select"
-              class="block text-gray-700 font-bold mb-2"
+              class="block text-slate-700 font-bold mb-2"
               data-i18n="selectGrade"
               >Select Grade:</label
             >
-            <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
+            <div class="border border-slate-300 rounded-lg overflow-hidden mb-4">
               <select
                 id="message-grade-select"
-                class="w-full p-3 bg-white text-gray-800 focus:outline-none"
+                class="w-full p-3 bg-white text-slate-800 focus:outline-none"
               ></select>
             </div>
           </div>
           <label
             for="messageText"
-            class="block text-gray-700 font-bold mb-2"
+            class="block text-slate-700 font-bold mb-2"
             data-i18n="messageText"
           >
             Message:
@@ -739,7 +748,7 @@
           <textarea
             id="messageText"
             rows="4"
-            class="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+            class="w-full p-4 mb-4 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
             placeholder="Type your message here..."
           ></textarea>
 
@@ -754,51 +763,51 @@
         </section>
         ---
         <section
-          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
         >
           <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
             data-i18n="overdueTasks"
           >
             📌 Overdue Tasks
           </h2>
-          <div id="overdueTasksList" class="divide-y divide-gray-200"></div>
+          <div id="overdueTasksList" class="divide-y divide-slate-200"></div>
         </section>
         ---
         <section
-          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
         >
           <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
             data-i18n="assignedTasks"
           >
             📝 Assigned Tasks & Feedback
           </h2>
-          <div id="assignedTasksList" class="divide-y divide-gray-200"></div>
+          <div id="assignedTasksList" class="divide-y divide-slate-200"></div>
         </section>
         ---
         <section
-          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
         >
           <h2
-            class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2"
+            class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2"
             data-i18n="studentFeedback"
           >
             💬 Student Feedback Overview
           </h2>
-          <div id="feedbackList" class="divide-y divide-gray-200"></div>
+          <div id="feedbackList" class="divide-y divide-slate-200"></div>
         </section>
         ---
         <section
-          class="bg-white rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105"
+          class="bg-white rounded-xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-2xl"
         >
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
+          <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">
             📅 Academic Calendar
           </h2>
           <input
             type="text"
             id="academicYear"
-            class="w-full p-3 mb-4 border border-gray-300 rounded-lg"
+            class="w-full p-3 mb-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             placeholder="Academic Year (e.g. 2025/2026)"
           />
 
@@ -817,11 +826,11 @@
             Save Calendar
           </button>
 
-          <div class="mt-4 p-4 border border-gray-200 rounded-lg">
+          <div class="mt-4 p-4 border border-slate-200 rounded-lg">
             <h3 class="font-semibold mb-2" data-i18n="resultsTitle">Term Results</h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-              <input type="text" id="resultsAcademicYear" class="p-2 border border-gray-300 rounded" placeholder="Academic Year (e.g. 2025/2026)" />
-              <select id="termSelect" class="p-2 border border-gray-300 rounded">
+              <input type="text" id="resultsAcademicYear" class="p-2 border border-slate-300 rounded" placeholder="Academic Year (e.g. 2025/2026)" />
+              <select id="termSelect" class="p-2 border border-slate-300 rounded">
                 <option value="">Select Term</option>
               </select>
               <button id="loadResultsButton" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Load Results</button>
@@ -831,14 +840,28 @@
 
           <p
             id="calendarMsg"
-            class="text-center font-semibold mt-4 text-gray-700"
+            class="text-center font-semibold mt-4 text-slate-700"
           ></p>
         </section>
       </main>
 
-      <footer class="text-center text-sm text-gray-500 py-6 mt-4">
+      <footer class="text-center text-sm text-slate-500 py-6 mt-4">
         © <span id="currentYear"></span> SmartStudentAct
       </footer>
+    </div>
+
+    <!-- Cropper Modal -->
+    <div id="cropper-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1000] hidden">
+      <div class="bg-white p-4 rounded-lg shadow-xl max-w-md w-full">
+        <h2 class="text-xl font-bold mb-4">Crop Your Photo</h2>
+        <div class="img-container">
+          <img id="cropper-image" src="" class="max-w-full">
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button id="cancel-crop-btn" type="button" class="px-4 py-2 bg-gray-300 rounded-lg">Cancel</button>
+          <button id="crop-and-save-btn" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Crop & Save</button>
+        </div>
+      </div>
     </div>
 
     <script src="api-config.js"></script>
@@ -953,30 +976,65 @@
         const avatarImg = document.getElementById("profileAvatar");
         const uploadInput = document.getElementById("profilePhotoInput");
         if (!avatarImg || !uploadInput) return;
-
+        
+        let cropper;
+        const cropperModal = document.getElementById("cropper-modal");
+        const cropperImage = document.getElementById("cropper-image");
+        const cropAndSaveBtn = document.getElementById("crop-and-save-btn");
+        const cancelCropBtn = document.getElementById("cancel-crop-btn");
+        
         avatarImg.addEventListener("click", () => uploadInput.click());
 
-        uploadInput.addEventListener("change", async () => {
+        uploadInput.addEventListener("change", (e) => {
           const file = uploadInput.files[0];
           if (!file) return;
 
-          const formData = new FormData();
-          formData.append("profilePhoto", file);
-
-          try {
-            const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-              method: "POST",
-              credentials: "include",
-              body: formData,
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            cropperImage.src = event.target.result;
+            cropperModal.classList.remove("hidden");
+            if(cropper) cropper.destroy();
+            cropper = new Cropper(cropperImage, {
+              aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 0.8,
+              restore: false, guides: false, center: false, highlight: false,
+              cropBoxMovable: false, cropBoxResizable: false, toggleDragModeOnDblclick: false,
             });
-            if (!res.ok) throw new Error("Upload failed");
-            const data = await res.json();
-            avatarImg.src = data.photoUrl;
-            showToast("Profile photo updated!", "success");
-          } catch (err) {
-            console.error("Photo upload error:", err);
-            showToast("Error uploading picture", "error");
-          }
+          };
+          reader.readAsDataURL(file);
+        });
+
+        function closeCropperModal() {
+          cropperModal.classList.add("hidden");
+          if (cropper) cropper.destroy();
+          uploadInput.value = "";
+        }
+
+        cancelCropBtn.addEventListener("click", closeCropperModal);
+
+        cropAndSaveBtn.addEventListener("click", () => {
+          if (!cropper) return;
+          cropAndSaveBtn.disabled = true;
+          cropAndSaveBtn.textContent = "Saving...";
+
+          cropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' })
+            .toBlob(async (blob) => {
+              const formData = new FormData();
+              formData.append("profilePhoto", blob, "profile.jpg");
+
+              try {
+                const res = await fetchAPI("/profile/upload-photo", { method: "POST", body: formData });
+                if (!res || !res.ok) throw new Error("Upload failed");
+                const data = await res.json();
+                avatarImg.src = data.photoUrl || data.imageUrl;
+                showToast("Profile photo updated!", "success");
+              } catch (err) {
+                showToast(err.message || "Error uploading picture", "error");
+              } finally {
+                closeCropperModal();
+                cropAndSaveBtn.disabled = false;
+                cropAndSaveBtn.textContent = "Crop & Save";
+              }
+            }, 'image/jpeg');
         });
       }
 
@@ -1120,19 +1178,31 @@
             .map(
               (a) => `
                   <div class="p-4 border-b last:border-b-0">
-                      <p class="font-semibold">${a.title}</p>
-                      <p class="text-gray-600 text-sm">${
-                        a.description || ""
+                      <div class="flex justify-between items-start">
+                          <div>
+                              <p class="font-semibold">${a.title}</p>
+                              <p class="text-gray-600 text-sm">${
+                                a.description || ""
+                              }</p>
+                              <p class="text-gray-500 text-xs">${translateText(
+                                "due"
+                              )}: ${
+                        a.due_date ? new Date(a.due_date).toLocaleString() : "N/A"
                       }</p>
-                      <p class="text-gray-500 text-xs">${translateText(
-                        "due"
-                      )}: ${
-                a.due_date ? new Date(a.due_date).toLocaleString() : "N/A"
-              }</p>
+                          </div>
+                          <button class="edit-assignment-btn text-sm text-blue-600 hover:underline" data-assignment-id="${a._id}">Edit</button>
+                      </div>
                   </div>
               `
             )
             .join("");
+
+          container.querySelectorAll('.edit-assignment-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const assignment = tasks.find(t => t._id === btn.dataset.assignmentId);
+              if (assignment) populateAssignmentFormForEdit(assignment);
+            });
+          });
         } else {
           container.innerHTML = `<div class="p-4 text-red-600">${translateText(
             "failed_load_tasks"
@@ -1707,6 +1777,8 @@
 
         assignmentForm?.addEventListener("submit", async (e) => {
           e.preventDefault();
+          const assignmentId = assignmentForm.querySelector('input[name="assignmentId"]')?.value;
+          const isEditing = !!assignmentId;
           const recipients = Array.from(assignmentRecipients)
             .filter((r) => r.checked)
             .map((r) => r.value);
@@ -1760,20 +1832,22 @@
             }
           });
 
-          if (file) formData.append("file", file);
+          // Don't append file if not changed during edit
+          if (file) {
+            formData.append("file", file);
+          }
+
+          const endpoint = isEditing ? `/teacher/assignments/${assignmentId}` : "/teacher/assignments";
+          const method = isEditing ? "PATCH" : "POST";
 
           try {
-            const res = await fetch("/api/teacher/assignments", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-              },
+            const res = await fetchAPI(endpoint, {
+              method: method,
               body: formData,
             });
 
-            const result = await res.json();
-            if (res.ok) {
-              showToast("Assignment sent successfully!", "success");
+            if (res && res.ok) {
+              showToast(isEditing ? "Assignment updated successfully!" : "Assignment sent successfully!", "success");
               assignmentForm.reset();
               sendAssignmentButton.disabled = true;
               document.getElementById("fileName").textContent =
@@ -1781,7 +1855,13 @@
               document
                 .getElementById("clearFileButton")
                 .classList.add("hidden");
+              if (isEditing) {
+                assignmentForm.querySelector('input[name="assignmentId"]').remove();
+                document.getElementById('sendAssignmentButton').textContent = 'Send Assignment';
+              }
+              fetchAssignedTasks();
             } else {
+              const result = res ? await res.json() : { message: "Network error" };
               showToast(
                 result.message || "Failed to send assignment.",
                 "error"
@@ -2059,6 +2139,20 @@
         }
       });
 
+      document.getElementById("removeProfilePhotoBtn")?.addEventListener("click", async () => {
+        try {
+          const res = await fetchAPI("/profile/photo", { method: "DELETE" });
+          if (!res || !res.ok) {
+            const errData = await res.json().catch(() => ({ message: "Failed to remove photo" }));
+            throw new Error(errData.message);
+          }
+          showToast("Photo removed successfully!", "success");
+          fetchTeacherProfile(); // Reload to show default avatar
+        } catch (err) {
+          showToast(err.message || "Error removing photo", "error");
+        }
+      });
+
       document.getElementById("currentYear").textContent =
         new Date().getFullYear();
 
@@ -2074,55 +2168,107 @@
           fetchOverdueTasks();
         });
 
+      // --- Push Notification Logic ---
       function urlBase64ToUint8Array(base64String) {
-        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-          outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
+          const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+          const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+          const rawData = window.atob(base64);
+          const outputArray = new Uint8Array(rawData.length);
+          for (let i = 0; i < rawData.length; ++i) {
+              outputArray[i] = rawData.charCodeAt(i);
+          }
+          return outputArray;
       }
 
-      window.addEventListener("load", async () => {
-        await checkAuth();
-        await fetchTeacherProfile();
-        await fetchStudents();
-        await fetchAssignedTasks();
-        await fetchQuizSummaries();
-        await fetchFeedback();
-        await fetchOverdueTasks();
-        wireDashboardForms();
-        wireCalendar();
-        hideLoadingOverlay();
-        wireProfilePhotoUpload();
-        applyTranslations();
-        // Push notification subscription behavior
-        const subscribeBtn = document.getElementById('subscribeBtn');
-        if (subscribeBtn) {
-          subscribeBtn.addEventListener('click', async () => {
-            try {
-              if (!('serviceWorker' in navigator)) throw new Error('Service Worker not supported');
+      async function isUserSubscribedToPush() {
+          if (!('serviceWorker' in navigator)) return false;
+          const reg = await navigator.serviceWorker.ready;
+          const subscription = await reg.pushManager.getSubscription();
+          return !!subscription;
+      }
+
+      function updateNotificationBtn(isSubscribed) {
+          const btn = document.getElementById('notification-btn');
+          const icon = document.getElementById('notification-btn-icon');
+          const text = document.getElementById('notification-btn-text');
+          if (!btn || !icon || !text) return;
+          if (isSubscribed) {
+              btn.classList.add('bg-green-200/70');
+              icon.textContent = '🔔';
+              text.textContent = 'Subscribed';
+          } else {
+              btn.classList.remove('bg-green-200/70');
+              icon.textContent = '🔕';
+              text.textContent = 'Subscribe';
+          }
+      }
+
+      async function subscribeUserToPush() {
+          if (!('serviceWorker' in navigator)) return;
+          try {
               await navigator.serviceWorker.register('/sw.js');
               const reg = await navigator.serviceWorker.ready;
+              if (Notification.permission === 'default') {
+                  await Notification.requestPermission();
+              }
+              if (Notification.permission !== 'granted') {
+                  showToast('Push notification permission denied.', 'warning');
+                  return;
+              }
               const subscription = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array('BIiReZmmNOxbUaqVrIob40QBGzO_CN5FcDvUlyx8_13PRxIC0Ru46KDW3VYRjJUQquvud5FSvIhWgvtgbjuP0fA'),
+                  userVisibleOnly: true,
+                  applicationServerKey: urlBase64ToUint8Array('BIiReZmmNOxbUaqVrIob40QBGzO_CN5FcDvUlyx8_13PRxIC0Ru46KDW3VYRjJUQquvud5FSvIhWgvtgbjuP0fA'),
               });
-              const res = await fetch('/api/push/subscribe', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(subscription),
+              await fetchAPI('/push/subscribe', { method: 'POST', body: JSON.stringify(subscription) });
+              showToast('Subscribed to notifications!', 'success');
+              updateNotificationBtn(true);
+          } catch (err) {
+              showToast('Failed to subscribe to notifications.', 'error');
+              console.error('Push subscription failed:', err);
+              updateNotificationBtn(false);
+          }
+      }
+
+      async function unsubscribeUserFromPush() {
+          if (!('serviceWorker'in navigator)) return;
+          const reg = await navigator.serviceWorker.ready;
+          const subscription = await reg.pushManager.getSubscription();
+          if (subscription) {
+              await subscription.unsubscribe();
+              // Also notify backend if you have an endpoint for it
+              // await fetchAPI('/push/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint: subscription.endpoint }) });
+              showToast('Unsubscribed from notifications.', 'info');
+              updateNotificationBtn(false);
+          }
+      }
+
+      // --- Init ---
+      window.addEventListener("load", async () => {
+          await checkAuth();
+          await fetchTeacherProfile();
+          await fetchStudents();
+          await fetchAssignedTasks();
+          await fetchQuizSummaries();
+          await fetchFeedback();
+          await fetchOverdueTasks();
+          wireDashboardForms();
+          wireCalendar();
+          hideLoadingOverlay();
+          wireProfilePhotoUpload();
+          applyTranslations();
+
+          const notificationBtn = document.getElementById('notification-btn');
+          if (notificationBtn) {
+              isUserSubscribedToPush().then(updateNotificationBtn);
+              notificationBtn.addEventListener('click', async () => {
+                  const isSubscribed = await isUserSubscribedToPush();
+                  if (isSubscribed) {
+                      await unsubscribeUserFromPush();
+                  } else {
+                      await subscribeUserToPush();
+                  }
               });
-              if (!res.ok) throw new Error('Failed to subscribe');
-              alert('Subscribed to notifications');
-            } catch (err) {
-              alert('Subscription failed: ' + err.message);
-            }
-          });
-        }
+          }
       });
     </script>
   </body>

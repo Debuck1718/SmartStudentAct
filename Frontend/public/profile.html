@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" defer></script>
     <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
   <script src="api-config.js"></script>
@@ -18,6 +20,13 @@
     .message-box.success { background:#16a34a; }
     .message-box.error { background:#dc2626; }
     .input:disabled { background:#f9fafb; color:#6b7280; cursor:not-allowed; }
+    .cropper-container {
+      max-height: 60vh;
+    }
+    .cropper-view-box,
+    .cropper-face {
+      border-radius: 50%;
+    }
     .input-error { border-color:#dc2626 !important; }
   </style>
 </head>
@@ -64,9 +73,13 @@
           <img id="avatar" src="https://placehold.co/128x128/e5e7eb/111?text=👤" alt="Profile Picture"
             class="w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white shadow-md object-cover"/>
           <input id="avatar-input" type="file" accept="image/*" class="hidden"/>
-          <button type="button" id="change-pic"
-            class="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 shadow"
-            data-i18n="changePicture">Change</button>
+          <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center space-x-2">
+            <button type="button" id="change-pic"
+              class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 shadow"
+              data-i18n="changePicture">Change</button>
+            <button type="button" id="remove-pic"
+              class="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 shadow hidden">Remove</button>
+          </div>
         </div>
 
         <div class="text-center md:text-left">
@@ -192,6 +205,21 @@
 
   <div id="toast" class="message-box"></div>
 
+  <!-- Cropper Modal -->
+  <div id="cropper-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-4 rounded-lg shadow-xl max-w-md w-full">
+      <h2 class="text-xl font-bold mb-4">Crop Your Photo</h2>
+      <div class="img-container">
+        <img id="cropper-image" src="" class="max-w-full">
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button id="cancel-crop-btn" type="button" class="px-4 py-2 bg-gray-300 rounded-lg">Cancel</button>
+        <button id="crop-and-save-btn" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Crop & Save</button>
+      </div>
+    </div>
+  </div>
+
+
 <script>
   const API_BASE_URL = window.API_BASE_URL;
   let currentLang = localStorage.getItem("lang") || "en";
@@ -218,6 +246,15 @@
         "https://placehold.co/128x128/e5e7eb/111?text=👤";
       $("profile-name").textContent = `${userData.firstname || ""} ${userData.lastname || ""}`;
       $("profile-role").textContent = userData.occupation || "";
+
+      // Show/hide remove button
+      if (userData.profile_picture_url) {
+        const removeBtn = $("remove-pic");
+        if(removeBtn) removeBtn.classList.remove("hidden");
+      } else {
+        const removeBtn = $("remove-pic");
+        if(removeBtn) removeBtn.classList.add("hidden");
+      }
 
       // Basic fields
       ["firstname", "lastname", "email", "phone", "occupation"].forEach((k) => {
@@ -320,34 +357,102 @@
 
   $("change-pic").addEventListener("click", () => $("avatar-input").click());
 
-$("avatar-input").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  let cropper;
+  const cropperModal = $("cropper-modal");
+  const cropperImage = $("cropper-image");
+  const cropAndSaveBtn = $("crop-and-save-btn");
+  const cancelCropBtn = $("cancel-crop-btn");
 
-  const formData = new FormData();
-  formData.append("profilePhoto", file); 
+  $("avatar-input").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, {
-      method: "POST",
-      credentials: "include",
-      body: formData,
-    });
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      cropperImage.src = event.target.result;
+      cropperModal.classList.remove("hidden");
+      if (cropper) {
+        cropper.destroy();
+      }
+      cropper = new Cropper(cropperImage, {
+        aspectRatio: 1,
+        viewMode: 1,
+        dragMode: 'move',
+        autoCropArea: 0.8,
+        restore: false,
+        guides: false,
+        center: false,
+        highlight: false,
+        cropBoxMovable: false,
+        cropBoxResizable: false,
+        toggleDragModeOnDblclick: false,
+      });
+    };
+    reader.readAsDataURL(file);
+  });
 
-    if (!res.ok) throw new Error("Upload failed");
-
-    const data = await res.json();
-    toast("Profile picture updated!", "success");
-
-    const avatarImg = $("profileAvatar");
-    if (avatarImg) avatarImg.src = data.photoUrl;
-
-    loadProfile(); 
-  } catch (err) {
-    console.error(err);
-    toast("Error uploading picture", "error");
+  function closeCropperModal() {
+      cropperModal.classList.add("hidden");
+      if (cropper) {
+          cropper.destroy();
+      }
+      $("avatar-input").value = ""; // Reset file input
   }
-});
+
+  cancelCropBtn.addEventListener("click", closeCropperModal);
+
+  cropAndSaveBtn.addEventListener("click", () => {
+    if (!cropper) return;
+
+    cropAndSaveBtn.disabled = true;
+    cropAndSaveBtn.textContent = "Saving...";
+
+    cropper.getCroppedCanvas({
+      width: 512,
+      height: 512,
+      imageSmoothingQuality: 'high',
+    }).toBlob(async (blob) => {
+      const formData = new FormData();
+      formData.append("profilePhoto", blob, "profile.jpg");
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile/upload-photo`, { method: "POST", credentials: "include", body: formData });
+        if (!res.ok) throw new Error("Upload failed");
+        const data = await res.json();
+        toast("Profile picture updated!", "success");
+        loadProfile();
+      } catch (err) {
+        console.error(err);
+        toast("Error uploading picture", "error");
+      } finally {
+          closeCropperModal();
+          cropAndSaveBtn.disabled = false;
+          cropAndSaveBtn.textContent = "Crop & Save";
+      }
+    }, 'image/jpeg');
+  });
+
+  $("remove-pic").addEventListener("click", async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile/photo`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: "Failed to remove picture" }));
+          throw new Error(errorData.message);
+      }
+      
+      const data = await res.json();
+      toast(data.message || "Profile picture removed!", "success");
+
+      loadProfile(); // Reload profile to show default avatar and hide remove button
+    } catch (err) {
+      console.error(err);
+      toast(err.message || "Error removing picture", "error");
+    }
+  });
 
 
   function toggleSections(role) {
@@ -397,5 +502,3 @@ $("avatar-input").addEventListener("change", async (e) => {
 </script>
 </body>
 </html>
-
-
