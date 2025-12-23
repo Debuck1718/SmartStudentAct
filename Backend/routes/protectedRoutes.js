@@ -1497,6 +1497,12 @@ protectedRouter.post(
   localUpload.single("file"),
   async (req, res) => {
     try {
+      // Helper to ensure value is an array
+      const toArray = (val) => {
+        if (val === undefined || val === null) return [];
+        return Array.isArray(val) ? val : [val];
+      };
+
       const teacherId = new mongoose.Types.ObjectId(req.userId);
       let {
         title,
@@ -1511,6 +1517,13 @@ protectedRouter.post(
         grade,
       } = req.body;
 
+      // Normalize arrays to prevent crashes
+      assigned_to_users = toArray(assigned_to_users);
+      assigned_to_grades = toArray(assigned_to_grades);
+      assigned_to_programs = toArray(assigned_to_programs);
+      assigned_to_schools = toArray(assigned_to_schools);
+      assigned_to_other_grades = toArray(assigned_to_other_grades).map(Number);
+
       
       if (recipientType === "class") {
         // assign to teacher's grades in their school
@@ -1523,15 +1536,13 @@ protectedRouter.post(
         }
       } else if (recipientType === "otherGrade" && grade) {
         // Assign to the grade number directly, so it applies to all students in that grade
-        if (!assigned_to_other_grades.includes(Number(grade))) {
-          assigned_to_other_grades.push(Number(grade));
+        const g = Number(grade);
+        if (!assigned_to_other_grades.includes(g)) {
+          assigned_to_other_grades.push(g);
         }
       } else {
         // explicit user ids or schools provided
-        assigned_to_users = Array.isArray(assigned_to_users)
-          ? assigned_to_users.map((id) => new mongoose.Types.ObjectId(id))
-          : [];
-        assigned_to_schools = Array.isArray(assigned_to_schools)
+        assigned_to_users = assigned_to_users
           ? assigned_to_schools.map((id) => new mongoose.Types.ObjectId(id))
           : [];
       }
@@ -1624,17 +1635,18 @@ protectedRouter.patch(
   }
 );
 
+protectedRouter.post("/auth/logout", (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Logged out successfully" });
+});
+
 protectedRouter.get(
   "/teacher/assignments",
   authenticateJWT,
   hasRole("teacher"),
   async (req, res) => {
     try {
-      if (!mongoose.Types.ObjectId.isValid(req.userId)) {
-        return res.status(400).json({ message: "Invalid teacher ID." });
-      }
-
-      const teacherId = new mongoose.Types.ObjectId(req.userId);
+      const teacherId = req.userId;
       const assignments = await Assignment.find({ teacher_id: teacherId }).sort({ createdAt: -1 });
       res.status(200).json(assignments);
     } catch (error) {
@@ -1650,7 +1662,7 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacherId = new mongoose.Types.ObjectId(req.userId);
+      const teacherId = req.userId;
       const assignments = await Assignment.find({ teacher_id: teacherId }).select('_id');
       const assignmentIds = assignments.map(a => a._id);
 
@@ -1995,12 +2007,8 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      if (!mongoose.Types.ObjectId.isValid(req.userId)) {
-        return res.status(400).json({ message: "Invalid teacher ID." });
-      }
-      
       const now = new Date();
-      const teacherId = new mongoose.Types.ObjectId(req.userId);
+      const teacherId = req.userId;
       const overdueAssignments = await Assignment.find({
         teacher_id: teacherId,
         due_date: { $lt: now },
@@ -2058,11 +2066,7 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      if (!mongoose.Types.ObjectId.isValid(req.userId)) {
-        return res.status(400).json({ message: "Invalid teacher ID." });
-      }
-
-      const teacherId = new mongoose.Types.ObjectId(req.userId);
+      const teacherId = req.userId;
       const teacherAssignments = await Assignment.find({ teacher_id: teacherId }).select("_id");
       const assignmentIds = teacherAssignments.map((a) => a._id);
 
@@ -2090,7 +2094,11 @@ protectedRouter.post(
   authenticateJWT,
   hasRole(["teacher"]),
   async (req, res) => {
-    const { assigned_to_users = [], assigned_to_grades = [], message } = req.body;
+    let { assigned_to_users = [], assigned_to_grades = [], message } = req.body;
+
+    const toArray = (val) => (Array.isArray(val) ? val : [val].filter(Boolean));
+    assigned_to_users = toArray(assigned_to_users);
+    assigned_to_grades = toArray(assigned_to_grades);
 
     try {
       let studentIds = [];

@@ -338,6 +338,7 @@
                 data-i18n="selectStudentsLabel"
                 >Select Student(s):</label
               >
+              <input type="text" id="assignment-student-search" placeholder="Search students..." class="w-full p-2 mb-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
               <div
                 class="border border-gray-300 rounded-lg overflow-hidden mb-4"
               >
@@ -541,6 +542,7 @@
               data-i18n="selectStudent"
               >Select Student(s):</label
             >
+            <input type="text" id="points-student-search" placeholder="Search students..." class="w-full p-2 mb-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500" />
             <div class="border border-slate-300 rounded-lg overflow-hidden mb-4">
               <select
                 id="points-student-select"
@@ -632,6 +634,7 @@
 
           <div id="grant-select-group">
             <label for="grant-student-select" class="block text-slate-700 font-bold mb-2" data-i18n="selectStudent">Select Student(s):</label>
+            <input type="text" id="grant-student-search" placeholder="Search students..." class="w-full p-2 mb-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             <div class="border border-slate-300 rounded-lg overflow-hidden mb-4">
               <select id="grant-student-select" class="w-full p-3 bg-white text-slate-800 focus:outline-none" multiple></select>
             </div>
@@ -731,6 +734,7 @@
               data-i18n="selectStudent"
               >Select Student(s):</label
             >
+            <input type="text" id="message-student-search" placeholder="Search students..." class="w-full p-2 mb-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-purple-500" />
             <div class="border border-slate-300 rounded-lg overflow-hidden mb-4">
               <select
                 id="message-student-select"
@@ -1147,6 +1151,22 @@
         }
       }
 
+      function setupSearchFilter(searchInputId, selectId) {
+        const searchInput = document.getElementById(searchInputId);
+        const select = document.getElementById(selectId);
+        if (!searchInput || !select) return;
+
+        searchInput.addEventListener("input", (e) => {
+          const term = e.target.value.toLowerCase();
+          Array.from(select.options).forEach((option) => {
+            // Skip optgroup labels if possible, but usually we hide options
+            const text = option.text.toLowerCase();
+            const match = text.includes(term);
+            option.style.display = match ? "" : "none";
+          });
+        });
+      }
+
       function populateSelects(allStudents, myGrade = [], otherGrade = [], specialConnections = []) {
         const studentSelects = [
           document.getElementById("assignment-student-select"),
@@ -1192,6 +1212,12 @@
                   )}">${toOptions(otherGrade)}</optgroup>
               `;
         });
+
+        // Initialize search filters
+        setupSearchFilter("assignment-student-search", "assignment-student-select");
+        setupSearchFilter("points-student-search", "points-student-select");
+        setupSearchFilter("message-student-search", "message-student-select");
+        setupSearchFilter("grant-student-search", "grant-student-select");
 
         // special connections select
         const specialSelect = document.getElementById("assignment-special-student-select");
@@ -2040,17 +2066,18 @@
           }
 
           try {
-            const res = await fetchAPI("/advanced-goals/teacher/add-points", {
+            // Use the grant endpoint which handles rewards/points
+            const grants = studentIds.map(id => ({
+                userId: id,
+                type: 'bonus', // Default type for simple points
+                points: Number(points),
+                description: reason || message || "Teacher awarded points"
+            }));
+
+            const res = await fetchAPI("/teacher/calendar/grant", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                assigned_to_users: studentIds,
-                assigned_to_grades: grade ? [grade] : [],
-                points,
-                reason,
-                message,
-                recipientType,
-              }),
+              body: JSON.stringify({ grants }),
             });
             if (res && res.ok) {
               showToast("Points added successfully!", "success");
