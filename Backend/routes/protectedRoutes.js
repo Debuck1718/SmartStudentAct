@@ -24,7 +24,7 @@ import School from "../models/School.js";
 import Quiz from "../models/Quiz.js";
 import StudentTask from "../models/StudentTask.js";
 import SchoolCalendar from "../models/SchoolCalendar.js";
-import Message from "../models/Message.js";
+import { Message } from "../models/index.js";
 import SpecialLink from "../models/SpecialLink.js";
 import Reward from "../models/Reward.js";
 
@@ -39,8 +39,6 @@ import specialLinksHandler from "../special-links/index.js";
 import { toIsoCountryCode, fromIsoCountryCode } from "../utils/countryHelper.js";
 import * as paymentController from "../controllers/paymentController.js";
 import { getUserPrice } from "../services/pricingService.js";
-
-import mongoose from "mongoose";
 
 const smsApi = {};
 
@@ -1524,12 +1522,6 @@ protectedRouter.post(
           assigned_to_users = students.map((s) => new mongoose.Types.ObjectId(s._id));
         }
       } else if (recipientType === "otherGrade" && grade) {
-        // assign to a specific other grade within teacher's school
-        const teacher = await User.findById(req.userId);
-        const gradeQuery = { role: "student", grade: Number(grade) };
-        if (teacher && teacher.school) gradeQuery.school = teacher.school;
-        const students = await User.find(gradeQuery).select("_id");
-        assigned_to_other_grades = students.map((s) => new mongoose.Types.ObjectId(s._id));
         // Assign to the grade number directly, so it applies to all students in that grade
         if (!assigned_to_other_grades.includes(Number(grade))) {
           assigned_to_other_grades.push(Number(grade));
@@ -2129,9 +2121,9 @@ protectedRouter.post(
       const savedMessages = [];
       for (const id of studentIds) {
         const msg = new Message({
-          teacherName: req.user.firstname,
-          studentId: id,
-          text: message,
+          sender: req.userId,
+          recipient: id,
+          content: message,
         });
         await msg.save();
         savedMessages.push(msg);
@@ -2849,16 +2841,42 @@ protectedRouter.get(
   }
 );
 
-protectedRouter.get(
-  "/student/messages",
+protectedRouter.post(
+  "/messages",
   authenticateJWT,
-  hasRole("student"),
   async (req, res) => {
     try {
-      const messages = await Message.find({ studentId: req.userId }).sort({ createdAt: -1 });
+      const { recipientId, content } = req.body;
+      if (!recipientId || !content) return res.status(400).json({ message: "Recipient and content required" });
+
+      const msg = new Message({
+        sender: req.userId,
+        recipient: recipientId,
+        content
+      });
+      await msg.save();
+      res.status(201).json(msg);
+    } catch (err) {
+      logger.error("Error sending message:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.get(
+  "/messages",
+  authenticateJWT,
+  async (req, res) => {
+    try {
+      const messages = await Message.find({
+        $or: [{ recipient: req.userId }, { sender: req.userId }]
+      })
+      .populate('sender', 'firstname lastname email role')
+      .populate('recipient', 'firstname lastname email role')
+      .sort({ createdAt: -1 });
       res.status(200).json(messages);
     } catch (err) {
-      logger.error("Error fetching student messages:", err);
+      logger.error("Error fetching messages:", err);
       res.status(500).json({ message: "Server error" });
     }
   }

@@ -136,7 +136,13 @@ async function loadTranslations() {
             optionPlaceholder: { en: "Option", fr: "Option" },
             shortAnswerGradingNote: { en: "Short answers require manual grading.", fr: "Les réponses courtes nécessitent une correction manuelle." },
             removeQuestion: { en: "Remove", fr: "Supprimer" },
-            incompleteQuizAlert: { en: "Please ensure all questions have text, at least one option, and a correct answer selected.", fr: "Veuillez vous assurer que toutes les questions ont un texte, au moins une option et une réponse correcte sélectionnée." }
+            incompleteQuizAlert: { en: "Please ensure all questions have text, at least one option, and a correct answer selected.", fr: "Veuillez vous assurer que toutes les questions ont un texte, au moins une option et une réponse correcte sélectionnée." },
+            myClass: { en: "My Class", fr: "Ma Classe" },
+            other_students: { en: "Other Students", fr: "Autres Étudiants" },
+            grade: { en: "Grade", fr: "Niveau" },
+            loading: { en: "Loading...", fr: "Chargement..." },
+            due: { en: "Due", fr: "Pour le" },
+            noQuizzesYet: { en: "No quizzes yet.", fr: "Aucun quiz pour le moment." }
         };
         for (const key in defaultNew) {
             if (!translations[key]) translations[key] = defaultNew[key];

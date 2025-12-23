@@ -51,6 +51,10 @@
       <div class="flex flex-col sm:flex-row items-center justify-between mb-8">
         <div class="flex flex-col items-center sm:items-start mb-4 sm:mb-0">
           <img id="profile-preview" src="./images/default-avatar.png" class="w-24 h-24 rounded-full shadow-lg mb-2 transform transition-transform duration-300 hover:scale-110" />
+          <div class="text-center sm:text-left mb-2">
+            <h2 id="profile-name" class="text-xl font-bold text-gray-800"></h2>
+            <p id="profile-school" class="text-sm text-gray-600 font-medium"></p>
+          </div>
           <form id="profile-form" class="flex items-center space-x-2">
             <label for="profile-photo" class="bg-blue-500 text-white text-sm py-1 px-3 rounded-full cursor-pointer hover:bg-blue-600 transition-colors">
               <i class="fas fa-camera"></i> <span data-i18n="change_photo">Change Photo</span>
@@ -254,13 +258,24 @@
   
 
 <script>
-  const API_BASE_URL = window.API_BASE_URL;
+  const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000/api';
 
   async function isUserSubscribedToPush() {
     if (!('serviceWorker' in navigator)) return false;
     const reg = await navigator.serviceWorker.ready;
     const subscription = await reg.pushManager.getSubscription();
     return !!subscription;
+  }
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
   }
 
   async function subscribeUserToPush() {
@@ -350,14 +365,357 @@ async function unsubscribeUserFromPush() {
   }
 }
 
+  // --- Utility Functions ---
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast px-4 py-2 rounded shadow-lg text-white ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
+    toast.innerText = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
+
+  window.openModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.add('active');
+  };
+
+  window.closeModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('active');
+  };
+
+  // --- Auth & API ---
+  async function checkAuthentication() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login.html'; 
+      return false;
+    }
+    return true;
+  }
+
+  async function fetchWithAuth(endpoint, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...options.headers
+    };
+    
+    // Handle FormData (remove Content-Type to let browser set boundary)
+    if (options.body instanceof FormData) {
+      delete headers['Content-Type'];
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    if (response.status === 401) {
+      handleLogout();
+      throw new Error('Unauthorized');
+    }
+    return response.json();
+  }
+
+  // --- Handlers ---
+  async function handleLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/index.html';
+  }
+
+  async function handleProfileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+    
+    try {
+      await fetchWithAuth('/profile/upload', {
+        method: 'POST',
+        body: formData
+      });
+      showToast('Profile photo updated!', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('Failed to upload photo', 'error');
+    }
+  }
+
+  async function handleSaveAssignment() {
+    const name = document.getElementById('assignment-name').value;
+    const desc = document.getElementById('assignment-desc').value;
+    const date = document.getElementById('assignment-due-date').value;
+    
+    if(!name || !date) return showToast('Please fill required fields', 'error');
+
+    try {
+      await fetchWithAuth('/assignments', {
+        method: 'POST',
+        body: JSON.stringify({ title: name, description: desc, dueDate: date })
+      });
+      showToast('Assignment added', 'success');
+      closeModal('add-assignment-modal');
+      fetchAssignments();
+    } catch (e) {
+      showToast(e.message || 'Failed to save assignment', 'error');
+    }
+  }
+
+  async function handleReply(recipientId, recipientName) {
+    const content = prompt(`Reply to ${recipientName}:`);
+    if (!content) return;
+
+    try {
+      await fetchWithAuth('/messages', {
+        method: 'POST',
+        body: JSON.stringify({ recipientId, content })
+      });
+      showToast('Reply sent!', 'success');
+      fetchMessages(); // Refresh list
+    } catch (e) {
+      showToast('Failed to send reply', 'error');
+    }
+  }
+
+  async function handleCompleteAssignment(id, title, description) {
+    if(!confirm('Mark this assignment as complete?')) return;
+
+    try {
+        await fetchWithAuth(`/assignments/${id}`, { method: 'DELETE' });
+
+        const completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+        completedTasks.push({
+            title: title,
+            description: description,
+            completedAt: new Date().toISOString()
+        });
+        localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+
+        showToast('Assignment completed!', 'success');
+        fetchAssignments();
+    } catch (e) {
+        console.error(e);
+        showToast('Failed to complete assignment', 'error');
+    }
+  }
+
+  async function handleSaveBudget() {
+    const name = document.getElementById('expense-name').value;
+    const amount = document.getElementById('expense-amount').value;
+    const category = document.getElementById('expense-category').value;
+    
+    if(!name || !amount) return showToast('Please fill required fields', 'error');
+
+    try {
+      await fetchWithAuth('/budget', {
+        method: 'POST',
+        body: JSON.stringify({ name, amount, category, date: new Date().toISOString() })
+      });
+      showToast('Expense added', 'success');
+      closeModal('budget-modal');
+      fetchBudget();
+    } catch (e) {
+      showToast(e.message || 'Failed to save expense', 'error');
+    }
+  }
+
+  async function handleSaveGoal() {
+    const goal = document.getElementById('goal-input').value;
+    const date = document.getElementById('goal-target-date').value;
+    const type = document.getElementById('goal-type').value;
+    
+    if(!goal) return showToast('Please enter a goal', 'error');
+
+    try {
+      await fetchWithAuth('/goals', {
+        method: 'POST',
+        body: JSON.stringify({ text: goal, targetDate: date, type })
+      });
+      showToast('Goal saved', 'success');
+      fetchGoal();
+    } catch (e) {
+      showToast(e.message || 'Failed to save goal', 'error');
+    }
+  }
+
+  async function loadUserProfile() {
+    try {
+      const data = await fetchWithAuth('/profile');
+      const user = data.user;
+      
+      if (user) {
+        const nameEl = document.getElementById('profile-name');
+        if (nameEl) nameEl.textContent = `${user.firstname || ''} ${user.lastname || ''}`.trim();
+
+        const schoolEl = document.getElementById('profile-school');
+        if (schoolEl && user.school && user.school.schoolName) {
+            schoolEl.textContent = `🏫 ${user.school.schoolName}`;
+        }
+
+        if (user.profile_picture_url) {
+            document.getElementById('profile-preview').src = user.profile_picture_url;
+        }
+      }
+    } catch (e) { console.error('Error loading profile:', e); }
+  }
+
+  // --- Fetchers ---
+  async function fetchAssignments() {
+    const list = document.getElementById('assignments-list');
+    const loader = document.getElementById('assignments-loading');
+    if(loader) loader.style.display = 'block';
+    try {
+      const data = await fetchWithAuth('/assignments');
+      list.innerHTML = '';
+      if (!data || data.length === 0) {
+        list.innerHTML = '<p class="italic text-gray-500 text-center">No assignments added yet.</p>';
+      } else {
+        data.forEach(a => {
+          const div = document.createElement('div');
+          div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center';
+          
+          const infoDiv = document.createElement('div');
+          infoDiv.innerHTML = `<h4 class="font-bold">${a.title}</h4><p class="text-sm text-gray-500">${new Date(a.dueDate).toLocaleDateString()}</p>`;
+          
+          const btn = document.createElement('button');
+          btn.className = 'text-green-500 hover:text-green-700 transition-colors ml-4';
+          btn.innerHTML = '<i class="fas fa-check-circle text-2xl"></i>';
+          btn.onclick = () => handleCompleteAssignment(a._id, a.title, a.description);
+          
+          div.appendChild(infoDiv);
+          div.appendChild(btn);
+          list.appendChild(div);
+        });
+      }
+    } catch (e) { console.error(e); }
+    finally { if(loader) loader.style.display = 'none'; }
+  }
+
+  async function fetchBudget() {
+    const list = document.getElementById('budget-list');
+    const loader = document.getElementById('budget-loading');
+    if(loader) loader.style.display = 'block';
+    try {
+      const data = await fetchWithAuth('/budget');
+      list.innerHTML = '';
+      if (!data || data.length === 0) {
+        list.innerHTML = '<p class="italic text-gray-500 text-center">No budget entries yet.</p>';
+      } else {
+        data.forEach(b => {
+          const div = document.createElement('div');
+          div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center';
+          div.innerHTML = `<div><h4 class="font-bold">${b.name}</h4><p class="text-sm text-gray-500">${b.category}</p></div><span class="font-bold text-red-500">-$${b.amount}</span>`;
+          list.appendChild(div);
+        });
+      }
+    } catch (e) { console.error(e); }
+    finally { if(loader) loader.style.display = 'none'; }
+  }
+
+  async function fetchMessages() {
+    const list = document.getElementById('messages-list');
+    if (!list) return;
+    try {
+      const data = await fetchWithAuth('/messages');
+      list.innerHTML = '';
+      if (!data || data.length === 0) {
+        list.innerHTML = '<p class="italic text-gray-500 text-center">No messages yet.</p>';
+      } else {
+        data.forEach(msg => {
+          const isMe = msg.sender._id === (JSON.parse(localStorage.getItem('user') || '{}').id);
+          const other = isMe ? msg.recipient : msg.sender;
+          const div = document.createElement('li');
+          div.className = `p-3 rounded-lg shadow-sm ${isMe ? 'bg-blue-50 ml-8' : 'bg-white mr-8 border border-gray-200'}`;
+          
+          let actionBtn = '';
+          if (!isMe) {
+            actionBtn = `<button onclick="handleReply('${other._id}', '${other.firstname}')" class="text-xs text-blue-600 hover:underline mt-1 block">Reply</button>`;
+          }
+
+          div.innerHTML = `
+            <div class="flex justify-between text-xs text-gray-500 mb-1">
+              <span class="font-bold">${isMe ? 'You' : (other.firstname + ' ' + other.lastname + ' (' + other.role + ')')}</span>
+              <span>${new Date(msg.createdAt).toLocaleString()}</span>
+            </div>
+            <p class="text-gray-800">${msg.content}</p>
+            ${actionBtn}
+          `;
+          list.appendChild(div);
+        });
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  async function fetchGoal() {
+    try {
+      const goals = await fetchWithAuth('/goals');
+      const list = document.getElementById('saved-goals-list');
+      list.innerHTML = '';
+      if(goals && goals.length > 0) {
+        goals.forEach(g => {
+          const li = document.createElement('li');
+          li.textContent = `🎯 ${g.text}`;
+          list.appendChild(li);
+        });
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  async function fetchQuizzes() {
+    const list = document.getElementById('quizzes-list');
+    const loader = document.getElementById('quizzes-loading');
+    if(loader) loader.style.display = 'block';
+    try {
+      const data = await fetchWithAuth('/quizzes');
+      list.innerHTML = '';
+      if (!data || data.length === 0) {
+        list.innerHTML = '<p class="italic text-gray-500 text-center">No quizzes assigned yet.</p>';
+      } else {
+        data.forEach(q => {
+          const div = document.createElement('div');
+          div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm';
+          div.innerHTML = `<h4 class="font-bold">${q.title}</h4>`;
+          list.appendChild(div);
+        });
+      }
+    } catch (e) { console.error(e); }
+    finally { if(loader) loader.style.display = 'none'; }
+  }
+
+  async function renderChart() {
+    const ctx = document.getElementById('analytics-chart');
+    if(!ctx) return;
+    
+    // Mock data or fetch real analytics
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+          label: 'Study Hours',
+          data: [2, 4, 3, 5, 4, 6, 3],
+          borderColor: '#3b82f6',
+          tension: 0.4
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
 
   document.addEventListener("DOMContentLoaded", async () => {
     if (await checkAuthentication()) {
-      await Promise.all([fetchAssignments(), fetchBudget(), fetchGoal(), fetchQuizzes()]);
+      // Load initial data
+      fetchAssignments();
+      fetchBudget();
+      fetchGoal();
+      fetchQuizzes();
+      fetchMessages();
+      loadUserProfile();
       await renderChart();
       subscribeUserToPush().catch(e => console.warn('Push subscription failed on load:', e));
 
-      let currentLang = "en";
+      let currentLang = localStorage.getItem("lang") || "en";
       const dashboardName = "students";
 
       const notificationBtn = document.getElementById('notification-btn');
@@ -377,8 +735,10 @@ async function unsubscribeUserFromPush() {
         translatePage(dashboardName, currentLang);
         const langSelect = document.getElementById("lang-select");
         if (langSelect) {
+          langSelect.value = currentLang;
           langSelect.addEventListener("change", (e) => {
             currentLang = e.target.value;
+            localStorage.setItem("lang", currentLang);
             translatePage(dashboardName, currentLang);
           });
         }
@@ -444,10 +804,6 @@ async function unsubscribeUserFromPush() {
       if (DOM.logoutBtn) DOM.logoutBtn.addEventListener("click", handleLogout);
       if (DOM.menuLogoutBtn) DOM.menuLogoutBtn.addEventListener("click", handleLogout);
       if (DOM.profilePhotoInput) DOM.profilePhotoInput.addEventListener("change", handleProfileUpload);
-      if (DOM.submissionForm) {
-        DOM.submissionForm.addEventListener("submit", handleSaveSubmission);
-        document.getElementById('submission-file').addEventListener('change', handleFileSelection);
-      }
 
       document.getElementById("profile-photo")?.addEventListener("change", function(event) {
         const file = event.target.files[0];

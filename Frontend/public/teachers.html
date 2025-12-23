@@ -600,6 +600,13 @@
           </button>
         </section>
         <section class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100">
+          <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">
+            📢 Messages & Announcements
+          </h2>
+          <div id="messagesList" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
+        </section>
+
+        <section class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100">
           <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2" data-i18n="grantRewardsTitle">🎖️ Grant Rewards</h2>
           <div class="mb-4">
             <label class="block text-slate-700 font-bold mb-2" data-i18n="selectRecipient">Select Recipient:</label>
@@ -909,7 +916,7 @@
     <script>
       const API_BASE_URL = window.API_BASE_URL;
       let translations = {};
-      let currentLang = "en";
+      let currentLang = localStorage.getItem("lang") || "en";
       let studentsCache = [];
       let currentUser = {};
 
@@ -939,7 +946,6 @@
       }
 
       function translateText(key) {
-        return translations[key] || key;
         return translations[key] || (defaultTranslations[key] ? defaultTranslations[key][currentLang] : key);
       }
 
@@ -1297,6 +1303,41 @@
           `).join('');
         } catch (err) {
           container.innerHTML = `<div class="p-4 text-red-600">Error: ${err.message}</div>`;
+        }
+      }
+
+      async function fetchMessages() {
+        const container = document.getElementById("messagesList");
+        if (!container) return;
+        container.innerHTML = `<div class="p-4 text-gray-500">${translateText("loading")}...</div>`;
+
+        const res = await fetchAPI("/messages");
+        if (res && res.ok) {
+          const messages = await res.json();
+          if (!messages.length) {
+            container.innerHTML = `<div class="p-4 text-gray-500">No messages found.</div>`;
+            return;
+          }
+          container.innerHTML = messages.map(msg => {
+            const isMe = msg.sender._id === currentUser._id;
+            const other = isMe ? msg.recipient : msg.sender;
+            const roleBadge = other.role === 'admin' ? '<span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full ml-2">Admin</span>' : '';
+            
+            return `
+              <div class="p-3 rounded-lg border ${isMe ? 'bg-blue-50 border-blue-100 ml-8' : 'bg-white border-gray-200 mr-8'}">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="font-bold text-sm text-gray-700 flex items-center">
+                    ${isMe ? 'You' : (other.firstname + ' ' + other.lastname)} ${!isMe ? roleBadge : ''}
+                  </span>
+                  <span class="text-xs text-gray-400">${new Date(msg.createdAt).toLocaleString()}</span>
+                </div>
+                <p class="text-gray-800 text-sm">${msg.content}</p>
+                ${!isMe ? `<button onclick="handleReply('${other._id}', '${other.firstname}')" class="text-xs text-blue-600 hover:underline mt-2">Reply</button>` : ''}
+              </div>
+            `;
+          }).join("");
+        } else {
+          container.innerHTML = `<div class="p-4 text-red-600">Failed to load messages.</div>`;
         }
       }
 
@@ -2260,13 +2301,21 @@
       const langSelect = document.getElementById("language-switcher");
       const mobileLangSelect = document.getElementById("mobile-language-select");
       
+      // Set initial values
+      if (langSelect) langSelect.value = currentLang;
+      if (mobileLangSelect) mobileLangSelect.value = currentLang;
+
       if(mobileLangSelect) {
-          mobileLangSelect.addEventListener("change", (e) => langSelect.value = e.target.value); // Sync
+          mobileLangSelect.addEventListener("change", (e) => {
+              langSelect.value = e.target.value;
+              langSelect.dispatchEvent(new Event('change'));
+          });
       }
       
       langSelect
         .addEventListener("change", async (e) => {
           currentLang = e.target.value;
+          localStorage.setItem("lang", currentLang);
           await loadTranslations(currentLang);
           applyTranslations();
           fetchStudents();
@@ -2358,6 +2407,7 @@
           await fetchQuizSummaries();
           await fetchFeedback();
           await fetchOverdueTasks();
+          await fetchMessages();
           initCalendar();
           wireDashboardForms();
           wireCalendar();

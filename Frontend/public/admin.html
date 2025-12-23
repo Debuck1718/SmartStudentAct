@@ -138,6 +138,9 @@
             <button onclick="changeTab('files')" id="nav-files" class="flex items-center w-full px-4 py-2 text-gray-600 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
                 <i class="fas fa-folder-open mr-3"></i> Manage Files
             </button>
+            <button onclick="changeTab('announcements')" id="nav-announcements" class="flex items-center w-full px-4 py-2 text-gray-600 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <i class="fas fa-bullhorn mr-3"></i> Announcements
+            </button>
         </nav>
         <div class="p-4 border-t border-gray-200">
             <button id="logout-button" class="flex items-center w-full px-4 py-2 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
@@ -593,7 +596,7 @@
     }
       };
 
-      let currentLang = "en";
+      let currentLang = localStorage.getItem("lang") || "en";
       const t = (key, ...args) => {
         const value = translations[currentLang][key];
         return typeof value === 'function' ? value(...args) : value;
@@ -601,6 +604,7 @@
       
       const updateLang = (lang) => {
         currentLang = lang;
+        localStorage.setItem("lang", lang);
         document.documentElement.lang = lang;
         render(); 
         
@@ -709,6 +713,19 @@ const renderHeader = () => {
       langSelect.onchange = (e) => updateLang(e.target.value);
   }
 };
+
+      const render = () => {
+        renderHeader();
+        if (state.activeTab === 'users') {
+          renderUserManagement();
+        } else if (state.activeTab === 'files') {
+          renderFileManagement();
+        } else if (state.activeTab === 'announcements') {
+           // announcements handles its own rendering via changeTab
+        } else {
+          renderDashboard();
+        }
+      };
 
       const renderDashboard = () => {
           const container = document.getElementById("main-content");
@@ -897,6 +914,102 @@ const renderHeader = () => {
         container.appendChild(filesSection);
       };
 
+      const renderAnnouncements = () => {
+        const container = document.getElementById("main-content");
+        container.innerHTML = `
+            <div class="bg-white rounded-xl shadow-md p-6 max-w-2xl mx-auto mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">📢 Send Announcement</h2>
+                <p class="text-gray-600 mb-6">Send a message to all teachers and students in your school.</p>
+                <form id="announcement-form" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Subject</label>
+                        <input type="text" id="announcement-subject" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Announcement Subject">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Message</label>
+                        <textarea id="announcement-message" rows="5" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Type your message here..." required></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300">
+                        Send Announcement
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 max-w-4xl mx-auto">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">📜 Announcement History</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left">Date</th>
+                                <th class="py-3 px-6 text-left">Message</th>
+                                <th class="py-3 px-6 text-center">Recipients</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcement-history-body" class="text-gray-600 text-sm font-light">
+                            <tr><td colspan="3" class="text-center py-4">Loading history...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        const loadAnnouncementHistory = async () => {
+            const tbody = document.getElementById('announcement-history-body');
+            try {
+                const res = await fetchAPI('/admin/announcements');
+                const data = await res.json();
+                
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4">No announcements sent yet.</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.map(item => `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">${new Date(item.sentAt).toLocaleString()}</td>
+                        <td class="py-3 px-6 text-left">${item.content}</td>
+                        <td class="py-3 px-6 text-center">${item.recipientCount}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-red-500">Failed to load history.</td></tr>';
+            }
+        };
+
+        document.getElementById("announcement-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const subject = document.getElementById("announcement-subject").value;
+            const message = document.getElementById("announcement-message").value;
+            const btn = e.target.querySelector("button");
+            
+            if(!message.trim()) return showCustomAlert("Error", "Message content is required.");
+
+            btn.disabled = true;
+            btn.textContent = "Sending...";
+
+            try {
+                const res = await fetchAPI("/admin/announcement", {
+                    method: "POST",
+                    body: JSON.stringify({ subject, message })
+                });
+                const data = await res.json();
+                showCustomAlert("Success", data.message || "Announcement sent successfully!");
+                document.getElementById("announcement-form").reset();
+                loadAnnouncementHistory(); // Refresh history
+            } catch (err) {
+                console.error(err);
+                showCustomAlert("Error", err.message || "Failed to send announcement.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Send Announcement";
+            }
+        });
+
+        loadAnnouncementHistory();
+      };
+
       const changeTab = (tab) => {
         // Update active state in sidebar
         document.querySelectorAll('aside nav button').forEach(btn => {
@@ -925,6 +1038,8 @@ const renderHeader = () => {
           loadUsers();
         } else if (tab === "files") {
           loadFiles();
+        } else if (tab === "announcements") {
+          renderAnnouncements();
         } else {
             // Dashboard
             renderDashboard();
@@ -1054,6 +1169,7 @@ const renderHeader = () => {
       };
 
       window.onload = () => {
+        updateLang(currentLang);
         loadUsers();
       };
     </script>

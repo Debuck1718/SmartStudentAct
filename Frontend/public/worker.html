@@ -191,7 +191,9 @@
       });
     }
 
-    document.getElementById("langSelect").addEventListener("change", e => {
+    const langSelect = document.getElementById("langSelect");
+    langSelect.addEventListener("change", e => {
+      localStorage.setItem("lang", e.target.value);
       loadTranslations(e.target.value);
     });
 
@@ -413,7 +415,9 @@ cropAndSaveBtn.addEventListener("click", () => {
 });
 
 
-    loadTranslations("en");
+    const savedLang = localStorage.getItem("lang") || "en";
+    langSelect.value = savedLang;
+    loadTranslations(savedLang);
     loadOverview();
     loadInsights();
     loadRewards();
