@@ -239,6 +239,23 @@
         quotes: [
           { text: "Не копите то, что осталось после расходов, а тратьте то, что осталось после сбережений.", author: "Warren Buffett" }
         ]
+      },
+      pt: {
+        pageTitle: "Dicas Financeiras",
+        backLink: "← Voltar ao Painel",
+        mainTitle: "💡 Dicas Financeiras",
+        weeklyQuote: "📌 Citação da Semana",
+        loadingMessage: "Carregando dicas financeiras...",
+        reminder_no_goal: "🧾 Você não definiu uma nova meta de economia esta semana.",
+        reminder_goal_set: (amount) => `✅ Ótimo trabalho! Você definiu uma meta de economia de $${(amount * 0.082).toFixed(2)}.`,
+        reminder_high_expense: (amount) => `⚠️ Você gastou $${(amount * 0.082).toFixed(2)}. Equilibre seu orçamento.`,
+        reminder_error: "Erro ao carregar lembretes financeiros.",
+        tips: [
+          "Acompanhe seus gastos.", "Crie um orçamento semanal.", "Siga a regra 50/30/20.", "Comece a economizar cedo.", "Evite dívidas desnecessárias.", "Tome decisões informadas.", "Compare preços.", "Crie um fundo de emergência.", "Pratique a gratificação tardia.", "Revise semanalmente."
+        ],
+        quotes: [
+          { text: "Não economize o que sobra depois de gastar, mas gaste o que sobra depois de economizar.", author: "Warren Buffett" }
+        ]
       }
     };
 
@@ -315,4 +332,3 @@
   </script>
 </body>
 </html>
-

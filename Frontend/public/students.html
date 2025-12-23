@@ -12,6 +12,17 @@
     gtag('config', 'G-EWMR745QHX');
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: "class" };
+    if (
+      localStorage.getItem("theme") === "dark" ||
+      (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  </script>
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png"/>
   <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png"/>
@@ -20,7 +31,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
-    body { font-family: "Inter", sans-serif; background: #f0f2f5; padding-bottom: 70px; }
+    body { font-family: "Inter", sans-serif; padding-bottom: 70px; }
     .modal-overlay { background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; }
     .modal-overlay.active { display: flex; }
     .tab-active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
@@ -36,7 +47,7 @@
     }
   </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen bg-[#f0f2f5] dark:bg-gray-900 dark:text-white transition-colors duration-200">
 
   <header class="bg-white text-gray-800 p-4 flex justify-between items-center shadow-lg rounded-b-3xl">
     <button id="menu-btn" class="p-2 text-2xl text-blue-600 focus:outline-none" aria-label="Open navigation menu"><i class="fas fa-bars"></i></button>
@@ -260,6 +271,7 @@
 <script>
   const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000/api';
   let currentUser = {};
+  let analyticsChartInstance = null;
 
   async function isUserSubscribedToPush() {
     if (!('serviceWorker' in navigator)) return false;
@@ -414,11 +426,21 @@ async function unsubscribeUserFromPush() {
       delete headers['Content-Type'];
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers, credentials: 'include' });
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers, credentials: 'include' });    
     if (response.status === 401) {
       handleLogout();
       throw new Error('Unauthorized');
     }
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `Request failed with status ${response.status}` }));
+        throw new Error(errorData.message || 'An unknown error occurred');
+    }
+
+    if (response.status === 204) {
+        return null;
+    }
+
     return response.json();
   }
 
@@ -439,7 +461,7 @@ async function unsubscribeUserFromPush() {
     formData.append('profilePhoto', file);
     
     try {
-      await fetchWithAuth('/profile/upload', {
+      await fetchWithAuth('/profile/upload-photo', {
         method: 'POST',
         body: formData
       });
@@ -458,9 +480,9 @@ async function unsubscribeUserFromPush() {
     if(!name || !date) return showToast('Please fill required fields', 'error');
 
     try {
-      await fetchWithAuth('/assignments', {
+      await fetchWithAuth('/student/tasks', {
         method: 'POST',
-        body: JSON.stringify({ title: name, description: desc, dueDate: date })
+        body: JSON.stringify({ title: name, description: desc, due_date: date })
       });
       showToast('Assignment added', 'success');
       closeModal('add-assignment-modal');
@@ -490,7 +512,7 @@ async function unsubscribeUserFromPush() {
     if(!confirm('Mark this assignment as complete?')) return;
 
     try {
-        await fetchWithAuth(`/assignments/${id}`, { method: 'DELETE' });
+        await fetchWithAuth(`/student/tasks/${id}/complete`, { method: 'PATCH' });
 
         const completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]');
         completedTasks.push({
@@ -516,7 +538,7 @@ async function unsubscribeUserFromPush() {
     if(!name || !amount) return showToast('Please fill required fields', 'error');
 
     try {
-      await fetchWithAuth('/budget', {
+      await fetchWithAuth('/student/budget', {
         method: 'POST',
         body: JSON.stringify({ name, amount, category, date: new Date().toISOString() })
       });
@@ -536,7 +558,7 @@ async function unsubscribeUserFromPush() {
     if(!goal) return showToast('Please enter a goal', 'error');
 
     try {
-      await fetchWithAuth('/goals', {
+      await fetchWithAuth('/advanced-goals/add', {
         method: 'POST',
         body: JSON.stringify({ text: goal, targetDate: date, type })
       });
@@ -575,22 +597,43 @@ async function unsubscribeUserFromPush() {
     const loader = document.getElementById('assignments-loading');
     if(loader) loader.style.display = 'block';
     try {
-      const data = await fetchWithAuth('/assignments');
+      // Fetch both teacher assignments and personal tasks
+      const [assignments, tasks] = await Promise.all([
+        fetchWithAuth('/student/assignments').catch(() => []),
+        fetchWithAuth('/student/tasks').catch(() => [])
+      ]);
+      
+      const allItems = [
+        ...(assignments || []).map(a => ({ ...a, type: 'assignment' })), 
+        ...(tasks || []).filter(t => !t.is_completed).map(t => ({ ...t, type: 'task' }))
+      ];
+
       list.innerHTML = '';
-      if (!data || data.length === 0) {
+      if (allItems.length === 0) {
         list.innerHTML = '<p class="italic text-gray-500 text-center">No assignments added yet.</p>';
       } else {
-        data.forEach(a => {
+        allItems.forEach(a => {
           const div = document.createElement('div');
           div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center';
           
+          const isTask = a.type === 'task';
+          const icon = isTask ? '📝' : '📚';
+          const date = a.due_date || a.dueDate;
+          const displayDate = date ? new Date(date).toLocaleDateString() : 'No Due Date';
+
           const infoDiv = document.createElement('div');
-          infoDiv.innerHTML = `<h4 class="font-bold">${a.title}</h4><p class="text-sm text-gray-500">${new Date(a.dueDate).toLocaleDateString()}</p>`;
+          infoDiv.innerHTML = `<h4 class="font-bold">${icon} ${a.title}</h4><p class="text-sm text-gray-500">Due: ${displayDate}</p>`;
           
           const btn = document.createElement('button');
           btn.className = 'text-green-500 hover:text-green-700 transition-colors ml-4';
           btn.innerHTML = '<i class="fas fa-check-circle text-2xl"></i>';
-          btn.onclick = () => handleCompleteAssignment(a._id, a.title, a.description);
+          // Only allow completing personal tasks directly here for now, or implement submission logic for assignments
+          if(isTask) {
+            btn.onclick = () => handleCompleteAssignment(a._id, a.title, a.description);
+          } else {
+             btn.style.opacity = '0.5'; // Visual cue that teacher assignments are handled via submission
+             btn.title = "Submit via details";
+          }
           
           div.appendChild(infoDiv);
           div.appendChild(btn);
@@ -606,7 +649,7 @@ async function unsubscribeUserFromPush() {
     const loader = document.getElementById('budget-loading');
     if(loader) loader.style.display = 'block';
     try {
-      const data = await fetchWithAuth('/budget');
+      const data = await fetchWithAuth('/student/budget');
       list.innerHTML = '';
       if (!data || data.length === 0) {
         list.innerHTML = '<p class="italic text-gray-500 text-center">No budget entries yet.</p>';
@@ -658,13 +701,13 @@ async function unsubscribeUserFromPush() {
 
   async function fetchGoal() {
     try {
-      const goals = await fetchWithAuth('/goals');
+      const goals = await fetchWithAuth('/student/goals');
       const list = document.getElementById('saved-goals-list');
       list.innerHTML = '';
       if(goals && goals.length > 0) {
         goals.forEach(g => {
           const li = document.createElement('li');
-          li.textContent = `🎯 ${g.text}`;
+          li.textContent = `🎯 ${g.text || g.title}`;
           list.appendChild(li);
         });
       }
@@ -676,15 +719,16 @@ async function unsubscribeUserFromPush() {
     const loader = document.getElementById('quizzes-loading');
     if(loader) loader.style.display = 'block';
     try {
-      const data = await fetchWithAuth('/quizzes');
+      const data = await fetchWithAuth('/student/quizzes');
       list.innerHTML = '';
-      if (!data || data.length === 0) {
+      const quizzes = data.quizzes || [];
+      if (!quizzes || quizzes.length === 0) {
         list.innerHTML = '<p class="italic text-gray-500 text-center">No quizzes assigned yet.</p>';
       } else {
-        data.forEach(q => {
+        quizzes.forEach(q => {
           const div = document.createElement('div');
           div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm';
-          div.innerHTML = `<h4 class="font-bold">${q.title}</h4>`;
+          div.innerHTML = `<h4 class="font-bold">${q.title}</h4><a href="/student_quiz.html?quizId=${q._id}" class="text-blue-500 text-sm hover:underline">Take Quiz</a>`;
           list.appendChild(div);
         });
       }
@@ -696,20 +740,32 @@ async function unsubscribeUserFromPush() {
     const ctx = document.getElementById('analytics-chart');
     if(!ctx) return;
     
-    // Mock data or fetch real analytics
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        datasets: [{
-          label: 'Study Hours',
-          data: [2, 4, 3, 5, 4, 6, 3],
-          borderColor: '#3b82f6',
-          tension: 0.4
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
+    try {
+      const res = await fetchWithAuth('/student/analytics');
+      const analyticsData = res || { labels: [], data: [] };
+
+      if (analyticsChartInstance) {
+        analyticsChartInstance.destroy();
+      }
+
+      analyticsChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: analyticsData.labels,
+          datasets: [{
+            label: 'Activity (Tasks & Submissions)',
+            data: analyticsData.data,
+            borderColor: '#3b82f6',
+            tension: 0.4,
+            fill: true,
+            backgroundColor: 'rgba(59, 130, 246, 0.1)'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    } catch (e) {
+      console.error("Failed to load analytics", e);
+    }
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -823,6 +879,63 @@ async function unsubscribeUserFromPush() {
           };
           reader.readAsDataURL(file);
         }
+      });
+
+      // --- Pull-to-Refresh Logic ---
+      let touchStartY = 0;
+      let currentY = 0;
+      const ptrThreshold = 150;
+      const ptrElement = document.createElement('div');
+      ptrElement.id = 'ptr-indicator';
+      ptrElement.className = 'fixed top-0 left-0 w-full flex justify-center items-center pointer-events-none transition-transform duration-200 z-50';
+      ptrElement.style.height = '60px';
+      ptrElement.style.transform = 'translateY(-60px)';
+      ptrElement.innerHTML = '<div class="bg-white p-2 rounded-full shadow-md"><i class="fas fa-arrow-down text-blue-500"></i></div>';
+      document.body.appendChild(ptrElement);
+
+      window.addEventListener('touchstart', e => {
+          if (window.scrollY === 0) {
+              touchStartY = e.touches[0].clientY;
+          }
+      }, { passive: true });
+
+      window.addEventListener('touchmove', e => {
+          const y = e.touches[0].clientY;
+          if (window.scrollY === 0 && y > touchStartY) {
+              currentY = y - touchStartY;
+              if (currentY > ptrThreshold) currentY = ptrThreshold; // Cap the drag
+              ptrElement.style.transform = `translateY(${currentY - 60}px)`;
+              if (currentY > 60) {
+                   ptrElement.innerHTML = '<div class="bg-white p-2 rounded-full shadow-md"><i class="fas fa-arrow-up text-blue-500"></i></div>';
+              }
+          }
+      }, { passive: true });
+
+      window.addEventListener('touchend', async e => {
+          if (window.scrollY === 0 && currentY > 60) {
+              ptrElement.innerHTML = '<div class="bg-white p-2 rounded-full shadow-md"><i class="fas fa-spinner fa-spin text-blue-500"></i></div>';
+              ptrElement.style.transform = 'translateY(10px)'; // Hold position
+              
+              // Refresh all data
+              await Promise.all([
+                  fetchAssignments(),
+                  fetchBudget(),
+                  fetchGoal(),
+                  fetchQuizzes(),
+                  fetchMessages(),
+                  loadUserProfile(),
+                  renderChart()
+              ]);
+              
+              setTimeout(() => {
+                  ptrElement.style.transform = 'translateY(-60px)';
+                  ptrElement.innerHTML = '<div class="bg-white p-2 rounded-full shadow-md"><i class="fas fa-arrow-down text-blue-500"></i></div>';
+              }, 500);
+          } else {
+              ptrElement.style.transform = 'translateY(-60px)';
+          }
+          touchStartY = 0;
+          currentY = 0;
       });
     }
   });

@@ -45,16 +45,6 @@
                     transform: scale(1.04);
                     box-shadow: 0 4px 16px rgba(100,100,255,0.13);
                 }
-</style>
-</head>
-<body class="min-h-screen p-4 sm:p-6 lg:p-8">
-
-    <!-- Cute Back Button -->
-    <div class="w-full flex justify-start max-w-4xl mx-auto mt-4">
-        <a href="javascript:history.back()" class="cute-back-btn">
-            <span style="font-size:1.3em;">🐾</span> Back
-        </a>
-    </div>
 
         #addTreatForm { display: flex; flex-direction: column; gap: 1rem; }
         #newTreatInput {
@@ -363,12 +353,7 @@ function handleAddTreat(event) {
 
 
 async function fetchRewards() {
-  const studentId = window.localStorage.getItem('studentId');
-  if (!studentId) {
-    throw new Error("Student ID not found in localStorage.");
-  }
-
-  const response = await fetch(`/api/rewards/${studentId}`, {
+  const response = await fetch(`${window.API_BASE_URL}/student/rewards`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'

@@ -9,6 +9,20 @@
       tailwind.config = {
         darkMode: "class",
       };
+      function applyTheme() {
+        if (
+          localStorage.getItem("theme") === "dark" ||
+          (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      }
+      applyTheme();
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+        if (!("theme" in localStorage)) applyTheme();
+      });
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" defer></script>
@@ -75,6 +89,12 @@
           id="sidebar"
           class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl p-6 space-y-6 transform -translate-x-full sm:relative sm:translate-x-0 sm:shadow-md sm:flex-shrink-0 z-50 sidebar-menu"
         >
+          <button onclick="history.back()" class="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span data-i18n="backButton">Back</span>
+          </button>
           <h1
             class="text-2xl font-bold text-gray-800 dark:text-gray-100"
             data-i18n="mainTitle"
@@ -199,11 +219,15 @@
                       data-i18n="schoolNameLabel"
                       >School Name</label
                     >
-                    <input
-                      type="text"
-                      id="schoolName"
-                      class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
-                    />
+                    <div class="relative">
+                      <input
+                        type="text"
+                        id="schoolName"
+                        class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
+                        autocomplete="off"
+                      />
+                      <div id="school-autocomplete-results" class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-b-lg mt-1 hidden shadow-lg max-h-60 overflow-y-auto"></div>
+                    </div>
                   </div>
                   <div>
                     <label
@@ -249,11 +273,10 @@
                         data-i18n="gradeLabel"
                         >Grade</label
                       >
-                      <input
-                        type="text"
+                      <select
                         id="grade"
                         class="w-full border rounded-lg px-4 py-2 focus:ring focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors"
-                      />
+                      ></select>
                     </div>
                     <div id="university-fields" class="hidden space-y-6">
                       <div>
@@ -443,6 +466,23 @@
                   Log Out
                 </button>
               </div>
+              <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 sm:p-8 border border-red-200 dark:border-red-900"
+              >
+                <h2 class="text-xl font-semibold mb-4 text-red-600" data-i18n="deleteAccountTitle">
+                  ⚠️ Delete Account
+                </h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4" data-i18n="deleteAccountDescription">
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+                <button
+                  id="initDeleteAccountBtn"
+                  class="w-full sm:w-auto px-6 py-2.5 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
+                  data-i18n="deleteAccountBtn"
+                >
+                  Delete Account
+                </button>
+              </div>
             </section>
 
             <section id="section-preferences" class="space-y-6 hidden">
@@ -460,14 +500,14 @@
                 >
                   <span
                     class="text-gray-700 dark:text-gray-200 font-medium"
-                    data-i18n="darkModeLabel"
-                    >Dark Mode</span
+                    data-i18n="themeLabel"
+                    >Theme</span
                   >
-                  <input
-                    type="checkbox"
-                    id="darkModeToggle"
-                    class="h-6 w-11 rounded-full appearance-none bg-gray-300 checked:bg-blue-600 transition-all cursor-pointer relative after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:h-5 after:w-5 after:bg-white after:rounded-full after:transition-all after:shadow-sm checked:after:translate-x-5"
-                  />
+                  <select id="themeSelect" class="border rounded-lg px-2 py-1 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 transition-colors">
+                    <option value="light" data-i18n="themeLight">Light</option>
+                    <option value="dark" data-i18n="themeDark">Dark</option>
+                    <option value="system" data-i18n="themeSystem">System Default</option>
+                  </select>
                 </div>
                 <div
                   class="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
@@ -514,6 +554,21 @@
         <div class="flex justify-end gap-2 mt-4">
           <button id="cancel-crop-btn" type="button" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg">Cancel</button>
           <button id="crop-and-save-btn" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Crop & Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div id="delete-account-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] hidden">
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2" data-i18n="deleteModalTitle">Delete Account?</h3>
+        <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="deleteModalWarning">
+          This action is irreversible. All your data will be lost. To confirm, please type <span class="font-bold select-all">DELETE</span> below.
+        </p>
+        <input type="text" id="deleteConfirmationInput" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 mb-4 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" placeholder="Type DELETE">
+        <div class="flex justify-end gap-3">
+          <button id="cancelDeleteBtn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-i18n="cancelBtn">Cancel</button>
+          <button id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled data-i18n="confirmDeleteBtn">Delete Permanently</button>
         </div>
       </div>
     </div>
@@ -683,6 +738,7 @@
     if (profile.occupation === "student") {
       document.getElementById("educationLevel").value =
         profile.educationLevel || "";
+      populateGradeOptions(profile.educationLevel);
       document.getElementById("grade").value = profile.grade || "";
 
       if (profile.educationLevel === "university") {
@@ -730,6 +786,30 @@
     ) {
       showToast("❌ Please fill in both School Name and School Country", "error");
       return;
+    }
+
+    if (occupation === "student") {
+      const educationLevel = document.getElementById("educationLevel").value;
+      if (!educationLevel) {
+        showToast("❌ Please select an Education Level", "error");
+        return;
+      }
+
+      if (educationLevel === "junior" || educationLevel === "high") {
+        if (!document.getElementById("grade").value) {
+          showToast("❌ Please select a Grade", "error");
+          return;
+        }
+      } else if (educationLevel === "university") {
+        if (!document.getElementById("university").value.trim()) {
+          showToast("❌ Please enter University Name", "error");
+          return;
+        }
+        if (!document.getElementById("uniLevel").value) {
+          showToast("❌ Please select University Level", "error");
+          return;
+        }
+      }
     }
 
     const payload = {
@@ -913,6 +993,23 @@ if (occupation === "student") {
         }
       }
 
+      function populateGradeOptions(level) {
+        const gradeSelect = document.getElementById("grade");
+        gradeSelect.innerHTML = '<option value="">Select Grade</option>';
+        let start = 0, end = 0;
+        if (level === "junior") {
+          start = 1; end = 9;
+        } else if (level === "high") {
+          start = 10; end = 12;
+        }
+        for (let i = start; i <= end; i++) {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.textContent = `Grade ${i}`;
+          gradeSelect.appendChild(opt);
+        }
+      }
+
       function updateEducationFields() {
         const level = educationLevelSelect.value;
         gradeGroup.classList.add("hidden");
@@ -925,7 +1022,10 @@ if (occupation === "student") {
         }
       }
       occupationSelect.addEventListener("change", updateOccupationFields);
-      educationLevelSelect.addEventListener("change", updateEducationFields);
+      educationLevelSelect.addEventListener("change", (e) => {
+        updateEducationFields();
+        populateGradeOptions(e.target.value);
+      });
 
       async function handleLogout() {
         try {
@@ -965,20 +1065,122 @@ if (occupation === "student") {
         .addEventListener("click", handleLogout);
       checkAuthAndLoad();
 
-      if (localStorage.getItem("theme") === "dark") {
-        document.documentElement.classList.add("dark");
+      const themeSelect = document.getElementById("themeSelect");
+      if (themeSelect) {
+        // Initialize value
+        if (!("theme" in localStorage)) {
+          themeSelect.value = "system";
+        } else if (localStorage.getItem("theme") === "dark") {
+          themeSelect.value = "dark";
+        } else {
+          themeSelect.value = "light";
+        }
+
+        themeSelect.addEventListener("change", (e) => {
+          const val = e.target.value;
+          if (val === "system") {
+            localStorage.removeItem("theme");
+            applyTheme();
+          } else if (val === "dark") {
+            localStorage.setItem("theme", "dark");
+            document.documentElement.classList.add("dark");
+          } else {
+            localStorage.setItem("theme", "light");
+            document.documentElement.classList.remove("dark");
+          }
+        });
       }
 
-      const darkModeToggle = document.getElementById("darkModeToggle");
-      if (darkModeToggle) {
-        darkModeToggle.checked = localStorage.getItem("theme") === "dark";
-        darkModeToggle.addEventListener("change", () => {
-          if (darkModeToggle.checked) {
-            document.documentElement.classList.add("dark");
-            localStorage.setItem("theme", "dark");
-          } else {
-            document.documentElement.classList.remove("dark");
-            localStorage.setItem("theme", "light");
+      // School Autocomplete Logic
+      const schoolNameInput = document.getElementById("schoolName");
+      const schoolCountryInput = document.getElementById("schoolCountry");
+      const schoolAutocompleteResults = document.getElementById("school-autocomplete-results");
+      let searchTimeout;
+
+      schoolNameInput.addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+        const query = schoolNameInput.value.trim();
+
+        if (query.length < 2) {
+          schoolAutocompleteResults.classList.add("hidden");
+          return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/schools/search?q=${encodeURIComponent(query)}`, { credentials: "include" });
+            if (!res.ok) return;
+            const schools = await res.json();
+            
+            schoolAutocompleteResults.innerHTML = "";
+            if (schools.length > 0) {
+              schools.forEach(school => {
+                const div = document.createElement("div");
+                div.className = "p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer";
+                div.textContent = `${school.name} (${school.country})`;
+                div.addEventListener("click", () => {
+                  schoolNameInput.value = school.name;
+                  schoolCountryInput.value = school.country;
+                  schoolAutocompleteResults.classList.add("hidden");
+                });
+                schoolAutocompleteResults.appendChild(div);
+              });
+              schoolAutocompleteResults.classList.remove("hidden");
+            } else {
+              schoolAutocompleteResults.classList.add("hidden");
+            }
+          } catch (err) {
+            console.error("School search failed:", err);
+            schoolAutocompleteResults.classList.add("hidden");
+          }
+        }, 300); // Debounce for 300ms
+      });
+
+      // Delete Account Logic
+      const initDeleteAccountBtn = document.getElementById("initDeleteAccountBtn");
+      const deleteAccountModal = document.getElementById("delete-account-modal");
+      const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+      const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+      const deleteConfirmationInput = document.getElementById("deleteConfirmationInput");
+
+      if (initDeleteAccountBtn) {
+        initDeleteAccountBtn.addEventListener("click", () => {
+          deleteAccountModal.classList.remove("hidden");
+          deleteConfirmationInput.value = "";
+          confirmDeleteBtn.disabled = true;
+        });
+      }
+
+      if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener("click", () => {
+          deleteAccountModal.classList.add("hidden");
+        });
+      }
+
+      if (deleteConfirmationInput) {
+        deleteConfirmationInput.addEventListener("input", (e) => {
+          confirmDeleteBtn.disabled = e.target.value !== "DELETE";
+        });
+      }
+
+      if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener("click", async () => {
+          confirmDeleteBtn.disabled = true;
+          confirmDeleteBtn.textContent = "Deleting...";
+          try {
+            const res = await fetch(`${API_BASE_URL}/profile`, { method: "DELETE", credentials: "include" });
+            if (res.ok) {
+              window.location.href = "/login.html";
+            } else {
+              const data = await res.json();
+              showToast(data.message || "Failed to delete account", "error");
+              confirmDeleteBtn.disabled = false;
+              confirmDeleteBtn.textContent = "Delete Permanently";
+            }
+          } catch (err) {
+            showToast("An error occurred", "error");
+            confirmDeleteBtn.disabled = false;
+            confirmDeleteBtn.textContent = "Delete Permanently";
           }
         });
       }

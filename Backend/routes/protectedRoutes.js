@@ -784,7 +784,56 @@ protectedRouter.patch("/profile", authenticateJWT, validate(settingsSchema), asy
   }
 });
 
+protectedRouter.get("/schools/search", async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 2) {
+      return res.json([]);
+    }
 
+    const schools = await School.find({
+      schoolName: { $regex: `^${q}`, $options: "i" },
+    })
+      .limit(10)
+      .select("schoolName schoolCountry");
+
+    const formattedSchools = schools.map((school) => ({
+      name: school.schoolName,
+      country: fromIsoCountryCode(school.schoolCountry),
+    }));
+
+    res.status(200).json(formattedSchools);
+  } catch (error) {
+    logger.error("Error searching schools:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+protectedRouter.delete("/profile", authenticateJWT, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const isProd = process.env.NODE_ENV === "production";
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "None",
+      domain: isProd ? ".smartstudentact.com" : undefined,
+    };
+    res.clearCookie("token");
+    res.clearCookie("access_token", cookieOptions);
+    res.clearCookie("refresh_token", cookieOptions);
+
+    res.status(200).json({ message: "Account deleted successfully." });
+  } catch (error) {
+    logger.error("Error deleting account:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 protectedRouter.post(
   "/profile/upload-photo",
@@ -1651,6 +1700,125 @@ protectedRouter.get(
       res.status(200).json(assignments);
     } catch (error) {
       logger.error("Error fetching assignments:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.get(
+  "/student/goals",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
+    try {
+      const goals = await Goal.find({ user_id: req.userId }).sort({ createdAt: -1 });
+      res.status(200).json(goals);
+    } catch (error) {
+      logger.error("Error fetching student goals:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.get(
+  "/student/budget",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
+    try {
+      const budget = await Budget.find({ user_id: req.userId }).sort({ createdAt: -1 });
+      res.status(200).json(budget);
+    } catch (error) {
+      logger.error("Error fetching student budget:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.get(
+  "/student/rewards",
+  authenticateJWT,
+  async (req, res) => {
+    try {
+      const rewards = await Reward.find({ user_id: req.userId }).sort({ granted_at: -1 });
+      
+      // Calculate stats
+      const totalPoints = rewards.reduce((sum, r) => sum + (r.points || 0), 0);
+      const badges = [...new Set(rewards.filter(r => r.type === 'badge').map(r => r.description))];
+      
+      // Mock term summary for now or calculate based on logic
+      const termSummary = `You have earned ${totalPoints} points this term.`;
+      const termRewards = rewards.map(r => `${r.points > 0 ? '+' + r.points + ' pts' : 'Badge'}: ${r.description}`);
+
+      res.status(200).json({
+        totalPoints,
+        badges,
+        termSummary,
+        termRewards,
+        treatSuggestions: ["Watch a movie", "Buy a favorite snack", "Relax for an hour"] // Default suggestions
+      });
+    } catch (error) {
+      logger.error("Error fetching student rewards:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.get(
+  "/student/analytics",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
+    try {
+      const userId = req.userId;
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - 6);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+
+      const activityMap = {};
+      // Initialize map for last 7 days
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().split("T")[0];
+        activityMap[key] = { date: new Date(d), count: 0 };
+      }
+
+      // Tasks completed in range (assuming timestamps: true on model)
+      const tasks = await StudentTask.find({
+        student_id: userId,
+        is_completed: true,
+        updatedAt: { $gte: start, $lte: end },
+      });
+
+      // Submissions in range
+      const submissions = await Submission.find({
+        user_id: userId,
+        submitted_at: { $gte: start, $lte: end },
+      });
+
+      tasks.forEach((t) => {
+        const k = t.updatedAt.toISOString().split("T")[0];
+        if (activityMap[k]) activityMap[k].count++;
+      });
+
+      submissions.forEach((s) => {
+        const k = s.submitted_at.toISOString().split("T")[0];
+        if (activityMap[k]) activityMap[k].count++;
+      });
+
+      const labels = [];
+      const data = [];
+
+      Object.keys(activityMap).sort().forEach((key) => {
+        const entry = activityMap[key];
+        labels.push(entry.date.toLocaleDateString("en-US", { weekday: "short" }));
+        data.push(entry.count);
+      });
+
+      res.json({ labels, data });
+    } catch (error) {
+      logger.error("Error fetching student analytics:", error);
       res.status(500).json({ message: "Server error" });
     }
   }

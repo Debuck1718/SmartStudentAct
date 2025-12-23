@@ -38,8 +38,14 @@
             <option value="ar">العربية</option>
             <option value="ru">Русский</option>
         </select>
-      </div>
-    </header>
+    </nav>
+
+    <!-- Cute Back Button -->
+    <div class="w-full flex justify-start max-w-4xl mx-auto px-4">
+        <a href="./students.html" class="inline-flex items-center bg-gradient-to-r from-pink-400 to-blue-400 text-white font-semibold rounded-full px-6 py-2 shadow-md hover:scale-105 transition-transform">
+            <span style="font-size:1.3em; margin-right: 0.5rem;">🐾</span> Back
+        </a>
+    </div>
 
     <main class="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
         <h1 id="page-title" class="text-3xl sm:text-4xl font-bold text-center text-gray-800 my-8" data-i18n="completedTasksTitle">Your Completed Tasks</h1>
@@ -67,7 +73,34 @@
                 "loading": "Chargement des tâches terminées...",
                 "noTasks": "Vous n'avez encore terminé aucune tâche."
             },
-            // ... other languages
+            "es": {
+                "completedTasksTitle": "Tus Tareas Completadas",
+                "completedLabel": "Completado",
+                "gradedLabel": "Calificado",
+                "loading": "Cargando tareas...",
+                "noTasks": "No has completado ninguna tarea aún."
+            },
+            "tr": {
+                "completedTasksTitle": "Tamamlanan Görevleriniz",
+                "completedLabel": "Tamamlandı",
+                "gradedLabel": "Notlandırıldı",
+                "loading": "Görevler yükleniyor...",
+                "noTasks": "Henüz hiçbir görevi tamamlamadınız."
+            },
+            "ar": {
+                "completedTasksTitle": "مهامك المكتملة",
+                "completedLabel": "مكتمل",
+                "gradedLabel": "تم التقييم",
+                "loading": "جارٍ تحميل المهام...",
+                "noTasks": "لم تكمل أي مهام بعد."
+            },
+            "ru": {
+                "completedTasksTitle": "Ваши выполненные задачи",
+                "completedLabel": "Завершено",
+                "gradedLabel": "Оценено",
+                "loading": "Загрузка задач...",
+                "noTasks": "Вы еще не выполнили ни одной задачи."
+            }
         };
 
         const pageTitle = document.getElementById('page-title');

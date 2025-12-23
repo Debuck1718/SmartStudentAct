@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
-  <script src="https://kit.fontawesome.com/a2e0e9c6e2.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="api-config.js"></script>
     <script src="translate.js"></script>
         <style>
@@ -175,6 +175,7 @@
     const editAnswersBtn = document.getElementById('edit-answers-btn');
     const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
     const languageSelect = document.getElementById('language-select');
+    let quizData = null;
 
     let countdownInterval = null;
 
@@ -235,6 +236,7 @@
     };
 
     const renderQuiz = (quiz) => {
+        quizData = quiz;
         quizTitle.textContent = quiz.title;
         quizDesc.textContent = quiz.description || '';
 
@@ -279,6 +281,26 @@
         translateElements(questionsContainer);
     };
 
+    function getAnswersFromForm() {
+        const answers = {};
+        if (!quizData || !quizData.questions) return answers;
+
+        quizData.questions.forEach((q, idx) => {
+            const qId = q._id || idx;
+            if (q.type === 'multiple-choice') {
+                const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+                answers[qId] = selected ? selected.value : null;
+            } else if (q.type === 'checkboxes') {
+                const selected = Array.from(document.querySelectorAll(`input[name="q${idx}"]:checked`)).map(el => el.value);
+                answers[qId] = selected;
+            } else if (q.type === 'short-answer') {
+                const text = document.querySelector(`textarea[name="q${idx}"]`);
+                answers[qId] = text ? text.value.trim() : "";
+            }
+        });
+        return answers;
+    }
+
     const autoSubmitQuiz = async () => {
         submitButton.disabled = true;
         const answers = getAnswersFromForm();
@@ -311,7 +333,7 @@
 
     const showReviewScreen = () => {
         const answers = getAnswersFromForm();
-        const questions = quiz.questions;
+        const questions = quizData.questions;
 
         reviewAnswersContainer.innerHTML = ''; // Clear previous review
 
@@ -398,10 +420,10 @@
             div.querySelector('.warning').classList.add('hidden');
         });
 
-        const totalQuestions = document.querySelectorAll('[data-question-id]').length;
+        const totalQuestions = quizData.questions.length;
 
         for (let i = 0; i < totalQuestions; i++) {
-            const questionDiv = document.querySelector(`[data-question-id="${quiz.questions[i]._id || i}"]`);
+            const questionDiv = document.querySelector(`[data-question-id="${quizData.questions[i]._id || i}"]`);
             const questionType = questionDiv.dataset.questionType;
             let answered = false;
 
@@ -415,7 +437,7 @@
 
             if (!answered) {
                 allAnswered = false;
-                const div = document.querySelector(`[data-question-id="${quiz.questions[i]._id || i}"]`);
+                const div = document.querySelector(`[data-question-id="${quizData.questions[i]._id || i}"]`);
                 div.classList.add('border', 'border-red-500');
                 div.querySelector('.warning').classList.remove('hidden');
             }
