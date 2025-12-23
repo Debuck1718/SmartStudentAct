@@ -259,6 +259,7 @@
 
 <script>
   const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000/api';
+  let currentUser = {};
 
   async function isUserSubscribedToPush() {
     if (!('serviceWorker' in navigator)) return false;
@@ -387,19 +388,24 @@ async function unsubscribeUserFromPush() {
 
   // --- Auth & API ---
   async function checkAuthentication() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      window.location.href = '/login.html'; 
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/check`, { credentials: 'include' });
+      if (!res.ok) {
+        window.location.href = '/login.html';
+        return false;
+      }
+      const data = await res.json();
+      if (data.user) currentUser = data.user;
+      return true;
+    } catch (e) {
+      window.location.href = '/login.html';
       return false;
     }
-    return true;
   }
 
   async function fetchWithAuth(endpoint, options = {}) {
-    const token = localStorage.getItem('token');
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
       ...options.headers
     };
     
@@ -408,7 +414,7 @@ async function unsubscribeUserFromPush() {
       delete headers['Content-Type'];
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers, credentials: 'include' });
     if (response.status === 401) {
       handleLogout();
       throw new Error('Unauthorized');
@@ -418,9 +424,11 @@ async function unsubscribeUserFromPush() {
 
   // --- Handlers ---
   async function handleLogout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/index.html';
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+    } catch (e) { console.error(e); }
+    localStorage.clear();
+    window.location.href = '/login.html';
   }
 
   async function handleProfileUpload(event) {
@@ -545,6 +553,7 @@ async function unsubscribeUserFromPush() {
       const user = data.user;
       
       if (user) {
+        currentUser = { ...currentUser, ...user };
         const nameEl = document.getElementById('profile-name');
         if (nameEl) nameEl.textContent = `${user.firstname || ''} ${user.lastname || ''}`.trim();
 
@@ -623,7 +632,7 @@ async function unsubscribeUserFromPush() {
         list.innerHTML = '<p class="italic text-gray-500 text-center">No messages yet.</p>';
       } else {
         data.forEach(msg => {
-          const isMe = msg.sender._id === (JSON.parse(localStorage.getItem('user') || '{}').id);
+          const isMe = msg.sender._id === currentUser.id;
           const other = isMe ? msg.recipient : msg.sender;
           const div = document.createElement('li');
           div.className = `p-3 rounded-lg shadow-sm ${isMe ? 'bg-blue-50 ml-8' : 'bg-white mr-8 border border-gray-200'}`;

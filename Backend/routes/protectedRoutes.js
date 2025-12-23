@@ -1657,6 +1657,31 @@ protectedRouter.get(
 );
 
 protectedRouter.get(
+  "/student/submissions",
+  authenticateJWT,
+  hasRole("student"),
+  async (req, res) => {
+    try {
+      const submissions = await Submission.find({ user_id: req.userId })
+        .populate("assignment_id", "title")
+        .sort({ submitted_at: -1 });
+
+      const formatted = submissions.map((s) => ({
+        assignment: s.assignment_id,
+        submitted_at: s.submitted_at,
+        grade: s.feedback_grade,
+        feedback: s.feedback_comments,
+      }));
+
+      res.status(200).json(formatted);
+    } catch (error) {
+      logger.error("Error fetching student submissions:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+protectedRouter.get(
   "/teacher/submissions",
   authenticateJWT,
   hasRole("teacher"),

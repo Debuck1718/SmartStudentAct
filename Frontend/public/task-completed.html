@@ -136,7 +136,7 @@
                 if (!res.ok) throw new Error('Failed to fetch submissions.');
                 const submissions = await res.json();
                 const teacherTasks = submissions.map(s => ({
-                    title: s.assignment.title,
+                    title: s.assignment ? s.assignment.title : 'Deleted Assignment',
                     completedAt: s.submitted_at,
                     grade: s.grade,
                     type: 'teacher'
