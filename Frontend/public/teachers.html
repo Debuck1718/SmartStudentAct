@@ -1281,6 +1281,50 @@
         }
       }
 
+      function populateAssignmentFormForEdit(assignment) {
+        const form = document.getElementById('assignmentForm');
+        if (!form) return;
+
+        // Add a hidden input to store the assignment ID
+        let idInput = form.querySelector('input[name="assignmentId"]');
+        if (!idInput) {
+          idInput = document.createElement('input');
+          idInput.type = 'hidden';
+          idInput.name = 'assignmentId';
+          form.appendChild(idInput);
+        }
+        idInput.value = assignment._id;
+
+        document.getElementById('assignmentTitle').value = assignment.title || '';
+        const assignmentTextArea = document.getElementById('assignmentText');
+        assignmentTextArea.value = assignment.description || '';
+        // Manually trigger input event to update word count, etc.
+        assignmentTextArea.dispatchEvent(new Event('input', { bubbles: true }));
+
+        if (assignment.due_date) {
+          document.getElementById('assignmentDueDate').value = new Date(assignment.due_date).toISOString().slice(0, 16);
+        }
+
+        // Reset recipient checkboxes
+        document.querySelectorAll('input[name="assignmentRecipient"]').forEach(chk => chk.checked = false);
+
+        // Select assigned students
+        if (assignment.assigned_to && assignment.assigned_to.length > 0) {
+          document.querySelector('input[name="assignmentRecipient"][value="student"]').checked = true;
+          const studentSelect = document.getElementById('assignment-student-select');
+          Array.from(studentSelect.options).forEach(opt => {
+            opt.selected = assignment.assigned_to.includes(opt.value);
+          });
+          document.getElementById('assignment-student-select-group').classList.remove('hidden');
+        }
+
+        document.getElementById('sendAssignmentButton').textContent = 'Update Assignment';
+        document.getElementById('sendAssignmentButton').disabled = false;
+
+        // Scroll to the form
+        form.scrollIntoView({ behavior: 'smooth' });
+      }
+
       async function fetchQuizSummaries() {
         const container = document.getElementById('quizSummaries');
         if (!container) return;
@@ -2421,7 +2465,7 @@
           wireCalendar();
           hideLoadingOverlay();
           wireProfilePhotoUpload();
-          applyTranslations();
+          await applyTranslations(currentLang);
 
           const notificationBtn = document.getElementById('notification-btn');
           if (notificationBtn) {
