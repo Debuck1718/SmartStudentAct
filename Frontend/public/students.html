@@ -407,7 +407,10 @@ async function unsubscribeUserFromPush() {
         return false;
       }
       const data = await res.json();
-      if (data.user) currentUser = data.user;
+      if (data.user) {
+        // ensure we have a stable _id for sender/recipient comparisons
+        currentUser = { ...data.user, _id: data.user._id || data.user.id };
+      }
       return true;
     } catch (e) {
       window.location.href = '/login.html';
@@ -461,10 +464,16 @@ async function unsubscribeUserFromPush() {
     formData.append('profilePhoto', file);
     
     try {
-      await fetchWithAuth('/profile/upload-photo', {
+      const res = await fetchWithAuth('/profile/upload-photo', {
         method: 'POST',
         body: formData
       });
+      // If backend returns new URL, use it; otherwise reload profile
+      if (res && (res.photoUrl || res.imageUrl)) {
+        document.getElementById('profile-preview').src = res.photoUrl || res.imageUrl;
+      } else {
+        await loadUserProfile();
+      }
       showToast('Profile photo updated!', 'success');
     } catch (error) {
       console.error(error);
@@ -540,7 +549,7 @@ async function unsubscribeUserFromPush() {
     try {
       await fetchWithAuth('/student/budget', {
         method: 'POST',
-        body: JSON.stringify({ name, amount, category, date: new Date().toISOString() })
+        body: JSON.stringify({ name, amount: Number(amount), category, date: new Date().toISOString() })
       });
       showToast('Expense added', 'success');
       closeModal('budget-modal');
@@ -675,19 +684,23 @@ async function unsubscribeUserFromPush() {
         list.innerHTML = '<p class="italic text-gray-500 text-center">No messages yet.</p>';
       } else {
         data.forEach(msg => {
-          const isMe = msg.sender._id === currentUser.id;
+          const senderId = msg.sender && (msg.sender._id || msg.sender.id);
+          const myId = currentUser && (currentUser._id || currentUser.id);
+          const isMe = String(senderId) === String(myId);
           const other = isMe ? msg.recipient : msg.sender;
           const div = document.createElement('li');
           div.className = `p-3 rounded-lg shadow-sm ${isMe ? 'bg-blue-50 ml-8' : 'bg-white mr-8 border border-gray-200'}`;
           
           let actionBtn = '';
-          if (!isMe) {
-            actionBtn = `<button onclick="handleReply('${other._id}', '${other.firstname}')" class="text-xs text-blue-600 hover:underline mt-1 block">Reply</button>`;
+          if (!isMe && other && (other._id || other.id)) {
+            const otherId = other._id || other.id;
+            const otherFirst = other.firstname || '';
+            actionBtn = `<button onclick="handleReply('${otherId}', '${otherFirst}')" class="text-xs text-blue-600 hover:underline mt-1 block">Reply</button>`;
           }
 
           div.innerHTML = `
             <div class="flex justify-between text-xs text-gray-500 mb-1">
-              <span class="font-bold">${isMe ? 'You' : (other.firstname + ' ' + other.lastname + ' (' + other.role + ')')}</span>
+              <span class="font-bold">${isMe ? 'You' : ((other?.firstname || '') + ' ' + (other?.lastname || '') + (other?.role ? (' (' + other.role + ')') : ''))}</span>
               <span>${new Date(msg.createdAt).toLocaleString()}</span>
             </div>
             <p class="text-gray-800">${msg.content}</p>

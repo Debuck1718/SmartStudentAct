@@ -113,12 +113,21 @@ const addQuestionBtn = document.getElementById("addQuestionBtn");
 const quizList = document.getElementById("quizList");
 
 async function authFetch(endpoint, options = {}) {
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const init = {
         ...options,
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-    });
-    if (res.status === 401) window.location.href = '/login.html';
+        headers: { ...(options.headers || {}) },
+    };
+    // Default JSON header only if body is a JSON string/object and not FormData
+    const isFormData = (options && options.body && typeof FormData !== 'undefined' && options.body instanceof FormData);
+    if (!isFormData) {
+        init.headers['Content-Type'] = init.headers['Content-Type'] || 'application/json';
+    }
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, init);
+    if (res.status === 401) {
+        window.location.href = '/login.html';
+        return res;
+    }
     return res;
 }
 
@@ -330,23 +339,25 @@ document.getElementById("quizForm").addEventListener("submit", async e=>{
     const selectedGrades = Array.from(document.getElementById("assignGradeDropdown").selectedOptions).map(opt=>Number(opt.value));
     const selectedPrograms = Array.from(document.getElementById("assignProgramDropdown").selectedOptions).map(opt=>opt.value);
 
- 
+    const timeLimitRaw = document.getElementById("quizTimeLimit").value;
+    const timeLimitMinutes = timeLimitRaw ? Number(timeLimitRaw) : null;
+
     const quizData = {
         title: document.getElementById("quizTitle").value,
         description: document.getElementById("quizDescription").value,
         due_date: document.getElementById("quizDueDate").value,
-        timeLimitMinutes: document.getElementById("quizTimeLimit").value || null,
+        timeLimitMinutes,
         questions: [],
-        assigned_to_users: selectedStudents,
-        assigned_to_grades: selectedGrades,
-        assigned_to_programs: selectedPrograms,
+        assigned_to_users: selectedStudents,            // backend will convert to ObjectIds where valid
+        assigned_to_grades: selectedGrades,             // numbers
+        assigned_to_programs: selectedPrograms,         // strings
         assigned_to_schools: [],
-        assigned_to_other_grades: [] // Backend handles merging logic if needed, or we can split if UI demands
+        assigned_to_other_grades: []
     };
 
     let formIsValid = true;
     document.querySelectorAll("#questionsContainer > div").forEach(qDiv=>{
-        const questionText = qDiv.querySelector('input[name="questionText"]').value;
+        const questionText = qDiv.querySelector('input[name="questionText"]').value.trim();
         const questionType = qDiv.querySelector('select[name="questionType"]').value;
         const points = qDiv.querySelector('input[name="points"]').value;
 
@@ -363,16 +374,22 @@ document.getElementById("quizForm").addEventListener("submit", async e=>{
         if (questionType === 'multiple-choice' || questionType === 'checkboxes') {
             const optionDivs = qDiv.querySelectorAll('.options-list > div');
             optionDivs.forEach(optDiv => {
-                const optionText = optDiv.querySelector('input[name="optionText"]').value;
+                const optionText = optDiv.querySelector('input[name="optionText"]').value.trim();
                 if (optionText) {
                     questionPayload.options.push(optionText);
                     if (optDiv.querySelector('.correct-answer-check').checked) {
+                        // store exact option text as correct to match backend grading
                         questionPayload.correct.push(optionText);
                     }
                 }
             });
             if (questionPayload.options.length < 1 || questionPayload.correct.length === 0) formIsValid = false;
+            if (questionType === 'multiple-choice' && questionPayload.correct.length > 1) {
+                // enforce single correct for mcq
+                formIsValid = false;
+            }
         }
+        // short-answer has no options; manual grading will be handled
         quizData.questions.push(questionPayload);
     });
 
@@ -387,14 +404,14 @@ document.getElementById("quizForm").addEventListener("submit", async e=>{
             body:JSON.stringify(quizData)
         });
         const data = await res.json();
-        if(!res.ok) throw new Error(data.message || t('quizSaveErrorAlert'));
-        alert(t('quizSuccessAlert'));
+        if(!res.ok) throw new Error(data.message || t('quizSaveErrorAlert') || 'Failed to save quiz');
+        alert(t('quizSuccessAlert') || 'Quiz created and assigned successfully.');
         fetchQuizzes();
         document.getElementById("quizForm").reset();
         questionsContainer.innerHTML="";
         questionCount=0;
     } catch(err) {
-        alert(`${t('quizSaveErrorAlert')}: ${err.message}`);
+        alert(`${t('quizSaveErrorAlert') || 'Failed to save quiz'}: ${err.message}`);
     }
 });
 
@@ -486,6 +503,7 @@ async function fetchQuizSubmissions(quizId) {
             saveBtn.onclick = () => saveAllManualGrades(quizId, data.submissions);
         } else {
             saveBtn.classList.add('hidden');
+            saveBtn.onclick = null;
         }
 
         modal.classList.remove('hidden');
@@ -515,7 +533,10 @@ async function saveAllManualGrades(quizId, submissions) {
                     method: 'PATCH',
                     body: JSON.stringify({ gradedAnswers })
                 });
-                if (!res.ok) throw new Error(`Failed for ${sub.student.firstname}`);
+                if (!res.ok) {
+                    const errData = await res.json().catch(()=>({message:'Failed to save grades'}));
+                    throw new Error(errData.message || `Failed for ${sub.student?.firstname || 'student'}`);
+                }
             } catch (err) {
                 alert(`Error saving grades: ${err.message}`);
             }

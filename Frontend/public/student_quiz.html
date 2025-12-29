@@ -128,22 +128,25 @@
 
         async function fetchWithAuth(endpoint, options = {}) {
             const url = `${API_BASE}${endpoint}`;
+            const isFormData = options && options.body && typeof FormData !== 'undefined' && options.body instanceof FormData;
             const opts = {
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                headers: { ...(options.headers || {}) },
                 ...options,
             };
-
+            if (!isFormData) {
+                opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+            }
             const res = await fetch(url, opts);
             if (res.status === 401) {
                 window.location.href = '/login.html';
                 throw new Error('Unauthorized');
             }
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.message || `Request failed: ${res.status}`);
+                throw new Error(data.message || `Request failed: ${res.status}`);
             }
-            return res.json();
+            return data;
         }
 
         async function checkAuthentication() {
@@ -237,39 +240,41 @@
 
     const renderQuiz = (quiz) => {
         quizData = quiz;
-        quizTitle.textContent = quiz.title;
+        quizTitle.textContent = quiz.title || '';
         quizDesc.textContent = quiz.description || '';
 
         if (quiz.timeLimitMinutes) startCountdown(quiz.timeLimitMinutes);
 
+        // Maintain a mapping of rendered index -> questionId for safe answer collection
+        quizData._indexToId = [];
+
         questionsContainer.innerHTML = "";
-        quiz.questions.forEach((q, idx) => {
+        (quiz.questions || []).forEach((q, idx) => {
+            const qId = q._id || String(idx);
+            quizData._indexToId[idx] = qId;
+
             const div = document.createElement('div');
             div.className = "bg-gray-50 p-4 rounded-lg shadow-sm";
-            div.setAttribute("data-question-id", q._id || idx);
+            div.setAttribute("data-question-id", qId);
             div.setAttribute("data-question-type", q.type);
 
             let optionsHtml = '';
-            switch (q.type) {
-                case 'multiple-choice':
-                    optionsHtml = q.options.map(opt => `
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
-                            <input type="radio" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4">
-                            <span class="text-gray-700">${opt}</span>
-                        </label>
-                    `).join('');
-                    break;
-                case 'checkboxes':
-                    optionsHtml = q.options.map(opt => `
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
-                            <input type="checkbox" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4 rounded">
-                            <span class="text-gray-700">${opt}</span>
-                        </label>
-                    `).join('');
-                    break;
-                case 'short-answer':
-                    optionsHtml = `<textarea name="q${idx}" class="w-full border p-2 rounded mt-2" placeholder="Your answer..."></textarea>`;
-                    break;
+            if (q.type === 'multiple-choice') {
+                optionsHtml = (q.options || []).map(opt => `
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
+                        <input type="radio" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4">
+                        <span class="text-gray-700">${opt}</span>
+                    </label>
+                `).join('');
+            } else if (q.type === 'checkboxes') {
+                optionsHtml = (q.options || []).map(opt => `
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-200">
+                        <input type="checkbox" name="q${idx}" value="${opt}" class="text-blue-500 h-4 w-4 rounded">
+                        <span class="text-gray-700">${opt}</span>
+                    </label>
+                `).join('');
+            } else if (q.type === 'short-answer') {
+                optionsHtml = `<textarea name="q${idx}" class="w-full border p-2 rounded mt-2" placeholder="Your answer..."></textarea>`;
             }
 
             div.innerHTML = `
@@ -286,16 +291,18 @@
         if (!quizData || !quizData.questions) return answers;
 
         quizData.questions.forEach((q, idx) => {
-            const qId = q._id || idx;
-            if (q.type === 'multiple-choice') {
+            const qId = (q && (q._id || quizData._indexToId?.[idx])) || String(idx);
+            const type = q.type;
+            if (type === 'multiple-choice') {
                 const selected = document.querySelector(`input[name="q${idx}"]:checked`);
-                answers[qId] = selected ? selected.value : null;
-            } else if (q.type === 'checkboxes') {
+                if (selected) answers[qId] = selected.value;
+            } else if (type === 'checkboxes') {
                 const selected = Array.from(document.querySelectorAll(`input[name="q${idx}"]:checked`)).map(el => el.value);
-                answers[qId] = selected;
-            } else if (q.type === 'short-answer') {
+                if (selected.length) answers[qId] = selected;
+            } else if (type === 'short-answer') {
                 const text = document.querySelector(`textarea[name="q${idx}"]`);
-                answers[qId] = text ? text.value.trim() : "";
+                const val = text ? text.value.trim() : "";
+                if (val) answers[qId] = val;
             }
         });
         return answers;
@@ -308,7 +315,7 @@
         try {
             const result = await fetchWithAuth(`/student/quizzes/${quizId}/submit`, {
                 method: 'POST',
-                body: JSON.stringify({ answers, autoSubmit: true }),
+                body: JSON.stringify({ answers, autoSubmit: true, finalize: true }),
             });
             showResults(result.quiz, result.submission);
         } catch (err) {
@@ -333,12 +340,13 @@
 
     const showReviewScreen = () => {
         const answers = getAnswersFromForm();
-        const questions = quizData.questions;
+        const questions = quizData.questions || [];
 
-        reviewAnswersContainer.innerHTML = ''; // Clear previous review
+        reviewAnswersContainer.innerHTML = '';
 
         questions.forEach((q, idx) => {
-            const studentAnswer = answers[q._id];
+            const qId = q._id || quizData._indexToId?.[idx] || String(idx);
+            const studentAnswer = answers[qId];
             let studentAnswerDisplay = Array.isArray(studentAnswer) ? studentAnswer.join(', ') : studentAnswer;
             if (!studentAnswerDisplay || studentAnswerDisplay.length === 0) {
                 studentAnswerDisplay = `<i class="text-gray-500">${getTranslation('noAnswer') || 'Not Answered'}</i>`;
@@ -363,44 +371,53 @@
         quizForm.classList.add('hidden');
         reviewSection.classList.add('hidden');
         quizResult.classList.remove('hidden');
-        scoreText.textContent = `${getTranslation('youScored')} ${submission.score} / ${quiz.questions.length}`;
+        const totalQs = Array.isArray(quiz.questions) ? quiz.questions.length : (quiz.total || '');
+        scoreText.textContent = `${getTranslation('youScored') || 'You scored'} ${submission.score ?? 0} / ${totalQs}`;
+
+        // Build a map from questionId to detail if available
+        const details = Array.isArray(submission.answers) ? submission.answers : [];
+        const byQ = {};
+        details.forEach(d => {
+            const qid = d.questionId || d.question_id;
+            if (qid) byQ[String(qid)] = d;
+        });
 
         breakdownContainer.innerHTML = '';
-        quiz.questions.forEach((q, idx) => {
-            const studentAnswer = submission.answers[idx] || getTranslation('noAnswer');
-            let isCorrect = false;
-            let studentAnswerDisplay = Array.isArray(studentAnswer) ? studentAnswer.join(', ') : (studentAnswer || getTranslation('noAnswer'));
+        (quiz.questions || []).forEach((q, idx) => {
+            const qId = q._id || String(idx);
+            const d = byQ[String(qId)];
+            const studentAnswer = d ? d.answer : undefined;
+            const isCorrect = d && typeof d.isCorrect === 'boolean' ? d.isCorrect : null;
 
-            let correctDisplay = Array.isArray(q.correct) ? q.correct.join(', ') : q.correct;
-
-            if (q.type === 'multiple-choice') {
-                isCorrect = Array.isArray(q.correct) ? q.correct[0] === studentAnswer : q.correct === studentAnswer;
-            } else if (q.type === 'checkboxes') {
-                isCorrect = arraysEqual(q.correct, studentAnswer);
-            }
+            const studentAnswerDisplay = Array.isArray(studentAnswer)
+              ? (studentAnswer.length ? studentAnswer.join(', ') : (getTranslation('noAnswer') || 'Not Answered'))
+              : (studentAnswer || getTranslation('noAnswer') || 'Not Answered');
 
             const div = document.createElement('div');
-            div.className = `p-4 rounded-lg border ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`;
+            const statusClass = isCorrect === true ? 'bg-green-50 border-green-200' : (isCorrect === false ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200');
+            const icon = isCorrect === true
+                ? '<i class="fas fa-check-circle text-green-600 mr-2"></i>'
+                : (isCorrect === false ? '<i class="fas fa-times-circle text-red-600 mr-2"></i>' : '<i class="fas fa-hourglass-half text-yellow-600 mr-2"></i>');
 
-            const icon = isCorrect 
-                ? '<i class="fas fa-check-circle text-green-600 mr-2"></i>' 
-                : '<i class="fas fa-times-circle text-red-600 mr-2"></i>';
+            div.className = `p-4 rounded-lg border ${statusClass}`;
 
             let resultHtml = `<p class="font-semibold flex items-center">${icon} ${idx + 1}. ${q.question}</p>
                               <div class="pl-8 mt-2 space-y-1">
-                                <p><strong data-i18n="yourAnswer">Your answer</strong>: <span class="${isCorrect ? 'text-green-700' : 'text-red-700'} font-medium">${studentAnswerDisplay}</span></p>`;
+                                <p><strong data-i18n="yourAnswer">Your answer</strong>: <span class="${isCorrect ? 'text-green-700' : (isCorrect === false ? 'text-red-700' : 'text-gray-700')} font-medium">${studentAnswerDisplay}</span></p>`;
 
             if (q.type === 'short-answer') {
-                resultHtml += `<p class="mt-2 text-blue-600 text-sm font-semibold" data-i18n="shortAnswerGradingNote">${getTranslation('shortAnswerGradingNote')}</p>`;
+                resultHtml += `<p class="mt-2 text-blue-600 text-sm font-semibold" data-i18n="shortAnswerGradingNote">${getTranslation('shortAnswerGradingNote') || 'This question will be graded by your teacher.'}</p>`;
             } else {
-                if (!isCorrect) {
-                    resultHtml += `<p><strong data-i18n="correctAnswer">Correct answer</strong>: <span class="font-bold text-green-800">${correctDisplay}</span></p>`;
+                if (isCorrect === false) {
+                    // Do not reveal correct answer in student view
+                    resultHtml += `<p class="text-sm font-semibold text-red-700">${getTranslation('incorrectAnswerFeedback') || 'Incorrect'}</p>`;
+                } else if (isCorrect === true) {
+                    resultHtml += `<p class="text-sm font-semibold text-green-700">${getTranslation('correctAnswerFeedback') || 'Correct'}</p>`;
+                } else {
+                    resultHtml += `<p class="text-sm font-semibold text-yellow-700">${getTranslation('pendingGrading') || 'Pending grading'}</p>`;
                 }
-                resultHtml += `<p class="text-sm font-semibold ${isCorrect ? 'text-green-700' : 'text-red-700'}">${isCorrect ? getTranslation('correctAnswerFeedback') : getTranslation('incorrectAnswerFeedback')}</p>`;
             }
-            
             resultHtml += `</div>`;
-
             div.innerHTML = resultHtml;
             breakdownContainer.appendChild(div);
         });
@@ -456,31 +473,31 @@
     editAnswersBtn.addEventListener('click', () => {
         reviewSection.classList.add('hidden');
         quizForm.classList.remove('hidden');
-        if (quiz.timeLimitMinutes) {
-            const timeParts = timeRemainingSpan.textContent.split('m ');
-            const minutes = parseInt(timeParts[0], 10);
-            const seconds = parseInt(timeParts[1].replace('s', ''), 10);
+        if (quizData && quizData.timeLimitMinutes) {
+            const parts = (timeRemainingSpan.textContent || '').split('m ');
+            const minutes = parseInt(parts[0], 10) || 0;
+            const seconds = parseInt((parts[1] || '0s').replace('s', ''), 10) || 0;
             const remainingSeconds = (minutes * 60) + seconds;
-            startCountdownFrom(remainingSeconds);
+            if (remainingSeconds > 0) startCountdownFrom(remainingSeconds);
         }
     });
 
     confirmSubmitBtn.addEventListener('click', async () => {
         const answers = getAnswersFromForm();
         confirmSubmitBtn.disabled = true;
-        confirmSubmitBtn.textContent = getTranslation('submitting');
+        confirmSubmitBtn.textContent = getTranslation('submitting') || 'Submitting...';
 
         try {
             const result = await fetchWithAuth(`/student/quizzes/${quizId}/submit`, {
                 method: 'POST',
-                body: JSON.stringify({ answers, autoSubmit: false }),
+                body: JSON.stringify({ answers, autoSubmit: false, finalize: true }),
             });
             showResults(result.quiz, result.submission);
         } catch (err) {
             showToast(getTranslation('submittingError') || 'Submit failed', 'error');
             console.error(err);
             confirmSubmitBtn.disabled = false;
-            confirmSubmitBtn.textContent = getTranslation('confirmSubmit');
+            confirmSubmitBtn.textContent = getTranslation('confirmSubmit') || 'Confirm & Submit';
         }
     });
 

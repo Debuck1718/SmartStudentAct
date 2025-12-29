@@ -1027,7 +1027,15 @@
 
       async function checkAuth() {
         const res = await fetchAPI("/auth/check");
-        if (!res || !res.ok) window.location.href = "/login.html";
+        if (!res || !res.ok) {
+          window.location.href = "/login.html";
+          return;
+        }
+        const data = await res.json().catch(()=>null);
+        if (data && data.user && data.user.id) {
+          // store authenticated id for reliable comparisons later
+          currentUser._id = data.user.id;
+        }
       }
 
       async function fetchTeacherProfile() {
@@ -1308,12 +1316,12 @@
         // Reset recipient checkboxes
         document.querySelectorAll('input[name="assignmentRecipient"]').forEach(chk => chk.checked = false);
 
-        // Select assigned students
-        if (assignment.assigned_to && assignment.assigned_to.length > 0) {
+        // Select assigned students using backend/model field assigned_to_users
+        if (Array.isArray(assignment.assigned_to_users) && assignment.assigned_to_users.length > 0) {
           document.querySelector('input[name="assignmentRecipient"][value="student"]').checked = true;
           const studentSelect = document.getElementById('assignment-student-select');
           Array.from(studentSelect.options).forEach(opt => {
-            opt.selected = assignment.assigned_to.includes(opt.value);
+            opt.selected = assignment.assigned_to_users.some(id => String(id) === String(opt.value));
           });
           document.getElementById('assignment-student-select-group').classList.remove('hidden');
         }
@@ -1958,14 +1966,14 @@
           if (recipients.length === 0)
             return showToast("Please select a recipient.", "warning");
 
-          const formData = new FormData(assignmentForm);
+          const originalFormData = new FormData(assignmentForm);
           const fileInput = document.getElementById("assignmentFile");
           const file = fileInput.files[0];
 
           const assignmentData = {
-            title: formData.get("assignmentTitle"),
-            description: formData.get("assignmentText"),
-            due_date: formData.get("assignmentDueDate"),
+            title: originalFormData.get("assignmentTitle"),
+            description: originalFormData.get("assignmentText"),
+            due_date: originalFormData.get("assignmentDueDate"),
             assigned_to_users: recipients.includes("student")
               ? Array.from(
                   document.getElementById("assignment-student-select")
@@ -1975,11 +1983,11 @@
             assigned_to_other_grades: recipients.includes("otherGrade")
               ? [Number(document.getElementById("assignment-grade-select").value)]
               : [],
+            assigned_to_programs: recipients.includes("program")
+              ? [document.getElementById("assignment-program-select").value].filter(Boolean)
+              : [],
             recipientType: recipients.find(r => ["class","otherGrade","program","special_student","student"].includes(r)) || null,
             grade: recipients.includes("otherGrade") ? Number(document.getElementById("assignment-grade-select").value) : null,
-            assigned_to_programs: recipients.includes("program")
-              ? [document.getElementById("assignment-program-select").value]
-              : [],
             specialStudentIds: recipients.includes("special_student")
               ? Array.from(
                   document.getElementById("assignment-special-student-select")
@@ -1988,24 +1996,37 @@
               : [],
           };
 
-          // merge special student ids into assigned_to_users
-          if (assignmentData.specialStudentIds && assignmentData.specialStudentIds.length) {
+          // Merge special students into assigned_to_users
+          if (assignmentData.specialStudentIds?.length) {
             assignmentData.assigned_to_users = [
               ...(assignmentData.assigned_to_users || []),
               ...assignmentData.specialStudentIds,
             ];
-            delete assignmentData.specialStudentIds;
+          }
+          delete assignmentData.specialStudentIds;
+
+          // Normalize unsupported or missing recipientType to "student"
+          if (!assignmentData.recipientType && (assignmentData.assigned_to_users?.length || 0) > 0) {
+            assignmentData.recipientType = "student";
+          }
+          if (assignmentData.recipientType === "special_student") {
+            assignmentData.recipientType = "student";
           }
 
-          Object.entries(assignmentData).forEach(([key, val]) => {
-            if (Array.isArray(val)) {
-              val.forEach((v) => formData.append(key, v));
-            } else if (val) {
-              formData.append(key, val);
-            }
-          });
+          // Build a clean FormData matching backend expectations
+          const formData = new FormData();
+          if (assignmentData.title) formData.set("title", assignmentData.title);
+          if (assignmentData.description) formData.set("description", assignmentData.description);
+          if (assignmentData.due_date) formData.set("due_date", assignmentData.due_date);
+          if (assignmentData.recipientType) formData.set("recipientType", assignmentData.recipientType);
+          if (assignmentData.recipientType === "otherGrade" && typeof assignmentData.grade === "number" && !Number.isNaN(assignmentData.grade)) {
+            formData.set("grade", String(assignmentData.grade));
+          }
+          (assignmentData.assigned_to_users || []).forEach(v => formData.append("assigned_to_users", v));
+          (assignmentData.assigned_to_other_grades || []).forEach(v => formData.append("assigned_to_other_grades", String(v)));
+          (assignmentData.assigned_to_programs || []).forEach(v => formData.append("assigned_to_programs", v));
 
-          // Don't append file if not changed during edit
+          // Only include a new file if chosen
           if (file) {
             formData.append("file", file);
           }
@@ -2068,7 +2089,7 @@
           } else if (recipientType === "class") {
             studentIds = studentsCache
               .filter((s) => (currentUser.teacherGrade || []).includes(String(s.grade)))
-              .map((s) => s._id);
+              .map((s) => s._id || s.id);
             message = `You've been awarded ${points} points for ${
               reason || "general good performance"
             }.`;
@@ -2097,8 +2118,8 @@
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 assigned_to_users: studentIds,
-                assigned_to_grades: grade ? [grade] : [],
-                points,
+                assigned_to_grades: grade ? [Number(grade)] : [],
+                points: Number(points),
                 reason,
                 message,
                 recipientType,
@@ -2225,7 +2246,7 @@
           } else if (recipientType === "class") {
             studentIds = studentsCache
               .filter((s) => (currentUser.teacherGrade || []).includes(String(s.grade)))
-              .map((s) => s._id);
+              .map((s) => s._id || s.id);
           } else if (recipientType === "otherGrade") {
             grade = document.getElementById("message-grade-select").value;
           }
@@ -2248,7 +2269,7 @@
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 assigned_to_users: studentIds,
-                assigned_to_grades: grade ? [grade] : [],
+                assigned_to_grades: grade ? [Number(grade)] : [],
                 message,
                 recipientType,
               }),
@@ -2337,17 +2358,8 @@
       mobileLogoutBtn?.addEventListener('click', () => document.getElementById('logoutButton').click());
 
       document.getElementById("removeProfilePhotoBtn")?.addEventListener("click", async () => {
-        try {
-          const res = await fetchAPI("/profile/photo", { method: "DELETE" });
-          if (!res || !res.ok) {
-            const errData = await res.json().catch(() => ({ message: "Failed to remove photo" }));
-            throw new Error(errData.message);
-          }
-          showToast("Photo removed successfully!", "success");
-          fetchTeacherProfile(); // Reload to show default avatar
-        } catch (err) {
-          showToast(err.message || "Error removing photo", "error");
-        }
+        // Backend does not implement DELETE /profile/photo; avoid 404s
+        showToast("Removing profile photo is not available yet.", "info");
       });
 
       const langSelect = document.getElementById("language-switcher");
@@ -2427,7 +2439,7 @@
                   userVisibleOnly: true,
                   applicationServerKey: urlBase64ToUint8Array('BIiReZmmNOxbUaqVrIob40QBGzO_CN5FcDvUlyx8_13PRxIC0Ru46KDW3VYRjJUQquvud5FSvIhWgvtgbjuP0fA'),
               });
-              await fetchAPI('/push/subscribe', { method: 'POST', body: JSON.stringify(subscription) });
+              await fetchAPI('/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(subscription) });
               showToast('Subscribed to notifications!', 'success');
               updateNotificationBtn(true);
           } catch (err) {
