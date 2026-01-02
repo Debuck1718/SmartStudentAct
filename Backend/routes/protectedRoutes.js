@@ -3195,52 +3195,56 @@ protectedRouter.get(
   async (req, res) => {
     try {
       const { filename } = req.params;
+
+      // Prevent path traversal
+      if (!filename || filename !== path.basename(filename) || /[\/\\]/.test(filename)) {
+        return res.status(400).json({ message: "Invalid filename." });
+      }
+
       const filePath = path.join(dirs.assignments, filename);
       const userId = req.user.id;
       const userRole = req.user.role;
 
-      // Ensure file exists on disk
-      await fs.access(filePath);
+      // Look up assignment to determine authorization
+      const assignment = await Assignment.findOne({
+        $or: [
+          { file_path: `/uploads/assignments/${filename}` },
+          { attachment_file: `/uploads/assignments/${filename}` },
+        ],
+      });
 
       let isAuthorized = false;
       if (userRole === "global_overseer" || userRole === "admin") {
         isAuthorized = true;
-      } else {
-        const assignment = await Assignment.findOne({
-          $or: [
-            { file_path: `/uploads/assignments/${filename}` },
-            { attachment_file: `/uploads/assignments/${filename}` },
-          ],
-        });
-        if (assignment) {
-          if (userRole === "teacher" && String(assignment.teacher_id) === String(userId)) {
-            isAuthorized = true;
-          } else if (userRole === "student") {
-            // Use robust helper that considers direct recipients, grades, programs, and school
-            isAuthorized = isStudentAssignedToAssignment(assignment, req.user);
-          }
+      } else if (assignment) {
+        if (userRole === "teacher" && String(assignment.teacher_id) === String(userId)) {
+          isAuthorized = true;
+        } else if (userRole === "student") {
+          isAuthorized = isStudentAssignedToAssignment(assignment, req.user);
         }
       }
 
-      if (isAuthorized) {
-        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-        return res.sendFile(filePath);
-      } else {
+      if (!isAuthorized) {
         return res.status(403).json({
           message: "Forbidden. You do not have permission to view this file.",
         });
       }
+
+      // Ensure file exists on disk
+      await fs.access(filePath);
+
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.setHeader("Content-Type", "application/octet-stream");
+      return res.sendFile(filePath);
     } catch (error) {
       logger.error("Error serving assignment file:", error);
       if (error.code === "ENOENT") {
         return res.status(404).json({ message: "File not found." });
-      } else {
-        return res.status(500).json({ message: "Server error occurred while retrieving file." });
       }
+      return res.status(500).json({ message: "Server error occurred while retrieving file." });
     }
   }
 );
-
 protectedRouter.get(
   "/teacher/feedback/:filename",
   hasRole("student", "teacher", "admin", "global_overseer"),
