@@ -1564,16 +1564,25 @@ protectedRouter.post(
         assigned_to_other_grades = [],
         recipientType,
         grade,
+        // accept alias from frontend if present
+        assigned_to = [],
       } = req.body;
 
+      // Basic validation to avoid 500s
+      if (!title || !due_date) {
+        return res.status(400).json({ message: "Title and due_date are required." });
+      }
+
+      // Merge alias into primary field
+      assigned_to_users = toArray(assigned_to_users).concat(toArray(assigned_to));
+
       // Normalize arrays to prevent crashes
-      assigned_to_users = toArray(assigned_to_users);
       assigned_to_grades = toArray(assigned_to_grades);
       assigned_to_programs = toArray(assigned_to_programs);
       assigned_to_schools = toArray(assigned_to_schools);
       assigned_to_other_grades = toArray(assigned_to_other_grades).map(Number);
 
-      
+      // Resolve recipients
       if (recipientType === "class") {
         // assign to teacher's grades in their school
         const teacher = await User.findById(req.userId);
@@ -1590,13 +1599,22 @@ protectedRouter.post(
           assigned_to_other_grades.push(g);
         }
       } else {
-        // explicit user ids or schools provided
-        assigned_to_users = assigned_to_users
-          ? assigned_to_schools.map((id) => new mongoose.Types.ObjectId(id))
-          : [];
+        // explicit user ids provided: keep assigned_to_users as-is
+        // If schools were provided (rare in current UI), map them separately
+        assigned_to_schools = assigned_to_schools.map((id) => {
+          try { return new mongoose.Types.ObjectId(id); } catch { return id; }
+        });
       }
 
-      
+      // Convert assigned_to_users entries to ObjectIds where possible; keep strings (emails) as-is
+      assigned_to_users = assigned_to_users.map((val) => {
+        try {
+          return new mongoose.Types.ObjectId(val);
+        } catch {
+          return String(val);
+        }
+      });
+
       if (
         !assigned_to_users.length &&
         !assigned_to_grades.length &&
@@ -1610,7 +1628,6 @@ protectedRouter.post(
         });
       }
 
-     
       const newAssignment = new Assignment({
         teacher_id: teacherId,
         title,

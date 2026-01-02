@@ -39,10 +39,10 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" defer></script>
+    <link rel="stylesheet" href="/vendor/cropperjs/cropper.min.css" />
+    <script src="/vendor/cropperjs/cropper.min.js" defer></script>
 
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <script src="/vendor/fullcalendar/index.global.min.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
@@ -143,7 +143,9 @@
                 id="profileAvatar"
                 src="./images/default-avatar.png"
                 alt="Profile Avatar"
+                referrerpolicy="no-referrer"
                 class="h-10 w-10 rounded-full object-cover border border-slate-300"
+                onerror="this.onerror=null; this.src='./images/default-avatar.png';"
               />
               <span
                 id="profilePreviewName"
@@ -1450,6 +1452,12 @@
         const calendarEl = document.getElementById('calendar');
         if (!calendarEl) return;
 
+        if (typeof FullCalendar === 'undefined' || !FullCalendar.Calendar) {
+          console.warn('FullCalendar not available. Calendar will be disabled.');
+          calendarEl.innerHTML = '<div class="p-4 text-sm text-gray-500">Calendar unavailable.</div>';
+          return;
+        }
+
         const res = await fetchAPI("/teacher/assigned-tasks");
         let events = [];
         if (res && res.ok) {
@@ -1457,7 +1465,7 @@
           events = tasks.map(t => ({
             title: t.title,
             start: t.due_date,
-            url: '#' // or link to assignment details if available
+            url: '#'
           }));
         }
 
@@ -2028,7 +2036,15 @@
           if (assignmentData.recipientType === "otherGrade" && typeof assignmentData.grade === "number" && !Number.isNaN(assignmentData.grade)) {
             formData.set("grade", String(assignmentData.grade));
           }
-          (assignmentData.assigned_to_users || []).forEach(v => formData.append("assigned_to_users", v));
+          // Include both assigned_to_users and alias assigned_to for backend compatibility
+          (assignmentData.assigned_to_users || []).forEach(v => {
+            formData.append("assigned_to_users", v);
+            formData.append("assigned_to", v);
+          });
+          // Ensure these arrays exist in backend parsing even if empty
+          if (!assignmentData.assigned_to_grades) {
+            formData.append("assigned_to_grades", "");
+          }
           (assignmentData.assigned_to_other_grades || []).forEach(v => formData.append("assigned_to_other_grades", String(v)));
           (assignmentData.assigned_to_programs || []).forEach(v => formData.append("assigned_to_programs", v));
 
@@ -2076,8 +2092,21 @@
               fetchAssignedTasks();
             } else {
               let result = { message: "Network error" };
-              try { result = res ? await res.json() : result; } catch {}
-              console.error("Assignment submit error:", result);
+              try { result = res ? await res.json() : result; } catch {
+                // fallback to text if JSON parsing fails
+                try {
+                  const txt = await res.text();
+                  result = { message: txt || result.message };
+                } catch {}
+              }
+              console.error("Assignment submit error:", result, 
+                "\nPayload preview:", {
+                  title: assignmentData.title,
+                  description: assignmentData.description?.slice(0, 120),
+                  due_date: assignmentData.due_date,
+                  recipientType: assignmentData.recipientType,
+                  assigned_to_users: assignmentData.assigned_to_users
+                });
               showToast(result.message || "Failed to send assignment.", "error");
             }
           } catch (error) {
