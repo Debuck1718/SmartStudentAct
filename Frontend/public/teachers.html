@@ -2019,6 +2019,11 @@
           }
           delete assignmentData.specialStudentIds;
 
+          // De-duplicate recipients to avoid duplicates in backend
+          if (assignmentData.assigned_to_users?.length) {
+            assignmentData.assigned_to_users = Array.from(new Set(assignmentData.assigned_to_users.map(String)));
+          }
+
           // Normalize unsupported or missing recipientType to "student"
           if (!assignmentData.recipientType && (assignmentData.assigned_to_users?.length || 0) > 0) {
             assignmentData.recipientType = "student";

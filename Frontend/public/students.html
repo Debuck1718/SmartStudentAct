@@ -263,6 +263,30 @@
   </div>
 
   <div id="toast-container"></div>
+
+  <!-- Assignment Details & Submission Modal -->
+  <div id="assignment-details-modal" class="modal-overlay">
+    <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl p-6 modal-content relative">
+      <button class="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl"
+        onclick="closeModal('assignment-details-modal')">&times;</button>
+      <h3 id="ad-title" class="text-2xl font-bold mb-2">Assignment</h3>
+      <p id="ad-due" class="text-sm text-gray-600 mb-3"></p>
+      <div id="ad-desc" class="prose prose-sm max-w-none text-gray-800 mb-3"></div>
+      <div id="ad-attachment" class="mb-4"></div>
+
+      <form id="ad-submit-form" class="border-t pt-4 mt-4">
+        <input type="hidden" id="ad-assignment-id" />
+        <label class="block font-semibold mb-1">Your Response (optional)</label>
+        <textarea id="ad-submission-text" class="w-full border rounded-xl p-3 mb-3" rows="5" placeholder="Type your answer here..."></textarea>
+        <label class="block font-semibold mb-1">Attach File (optional)</label>
+        <input type="file" id="ad-submission-file" class="w-full border rounded-xl p-2 mb-4" />
+        <div class="flex justify-end gap-2">
+          <button type="button" class="px-4 py-2 rounded-full border" onclick="closeModal('assignment-details-modal')">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
   
   <script src="api-config.js"></script>
   <script src="translate.js"></script>
@@ -624,6 +648,79 @@ async function unsubscribeUserFromPush() {
     } catch (e) { console.error('Error loading profile:', e); }
   }
 
+  // Open assignment details and wire submission
+  window.openAssignmentDetails = function openAssignmentDetails(a) {
+    const modal = document.getElementById('assignment-details-modal');
+    const titleEl = document.getElementById('ad-title');
+    const dueEl = document.getElementById('ad-due');
+    const descEl = document.getElementById('ad-desc');
+    const attachEl = document.getElementById('ad-attachment');
+    const idInput = document.getElementById('ad-assignment-id');
+    const textInput = document.getElementById('ad-submission-text');
+    const fileInput = document.getElementById('ad-submission-file');
+
+    titleEl.textContent = a.title || 'Assignment';
+    const d = a.due_date || a.dueDate;
+    dueEl.textContent = d ? `Due: ${new Date(d).toLocaleString()}` : 'No Due Date';
+    descEl.textContent = a.description || 'No description provided.';
+    idInput.value = a._id;
+
+    // Attachment link
+    attachEl.innerHTML = '';
+    if (a.file_path) {
+      const filename = a.file_path.split('/').pop();
+      const link = document.createElement('a');
+      link.href = `${API_BASE_URL}/teacher/assignments/${encodeURIComponent(filename)}`;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.className = 'text-blue-600 hover:underline';
+      link.textContent = 'Download Attachment';
+      attachEl.appendChild(link);
+    }
+
+    // Reset form
+    textInput.value = '';
+    fileInput.value = '';
+
+    // Show modal
+    openModal('assignment-details-modal');
+  };
+
+  // Handle assignment submission
+  (function wireAssignmentSubmission(){
+    const form = document.getElementById('ad-submit-form');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const assignmentId = document.getElementById('ad-assignment-id').value;
+      const submissionText = document.getElementById('ad-submission-text').value;
+      const file = document.getElementById('ad-submission-file').files[0];
+
+      if (!assignmentId) {
+        showToast('Missing assignmentId', 'error');
+        return;
+      }
+      if (!submissionText && !file) {
+        showToast('Please provide text or attach a file.', 'error');
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append('assignmentId', assignmentId);
+      if (submissionText) fd.append('submissionText', submissionText);
+      if (file) fd.append('file', file);
+
+      try {
+        await fetchWithAuth('/student/submissions', { method: 'POST', body: fd });
+        showToast('Submission successful!', 'success');
+        closeModal('assignment-details-modal');
+      } catch (err) {
+        console.error('Submission error:', err);
+        showToast(err.message || 'Submission failed', 'error');
+      }
+    });
+  })();
+
   // --- Fetchers ---
   async function fetchAssignments() {
     const list = document.getElementById('assignments-list');
@@ -643,34 +740,42 @@ async function unsubscribeUserFromPush() {
       return div;
     }
 
-    function renderItems(container, items) {
-      items.forEach(a => {
-        const div = document.createElement('div');
-        div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center';
-        
-        const isTask = a.type === 'task';
-        const icon = isTask ? '📝' : '📚';
-        const date = a.due_date || a.dueDate;
-        const displayDate = date ? new Date(date).toLocaleDateString() : 'No Due Date';
+        function renderItems(container, items) {
+          items.forEach(a => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center';
+            
+            const isTask = a.type === 'task';
+            const icon = isTask ? '📝' : '📚';
+            const date = a.due_date || a.dueDate;
+            const displayDate = date ? new Date(date).toLocaleString() : 'No Due Date';
 
-        const infoDiv = document.createElement('div');
-        infoDiv.innerHTML = `<h4 class="font-bold">${icon} ${a.title || 'Untitled'}</h4><p class="text-sm text-gray-500">Due: ${displayDate}</p>`;
-        
-        const btn = document.createElement('button');
-        btn.className = 'text-green-500 hover:text-green-700 transition-colors ml-4';
-        btn.innerHTML = '<i class="fas fa-check-circle text-2xl"></i>';
-        if (isTask) {
-          btn.onclick = () => handleCompleteAssignment(a._id, a.title, a.description);
-        } else {
-          btn.style.opacity = '0.5';
-          btn.title = 'Submit via details';
+            const infoDiv = document.createElement('div');
+            infoDiv.innerHTML = `<h4 class="font-bold">${icon} ${a.title || 'Untitled'}</h4><p class="text-sm text-gray-500">Due: ${displayDate}</p>`;
+            
+            const actions = document.createElement('div');
+            actions.className = 'flex items-center gap-3';
+
+            const viewBtn = document.createElement('button');
+            viewBtn.className = 'text-blue-600 hover:text-blue-800 underline text-sm';
+            viewBtn.textContent = 'View / Submit';
+            viewBtn.onclick = () => openAssignmentDetails(a);
+
+            actions.appendChild(viewBtn);
+
+            if (isTask) {
+              const completeBtn = document.createElement('button');
+              completeBtn.className = 'text-green-500 hover:text-green-700 transition-colors';
+              completeBtn.innerHTML = '<i class="fas fa-check-circle text-2xl"></i>';
+              completeBtn.onclick = () => handleCompleteAssignment(a._id, a.title, a.description);
+              actions.appendChild(completeBtn);
+            }
+
+            div.appendChild(infoDiv);
+            div.appendChild(actions);
+            container.appendChild(div);
+          });
         }
-        
-        div.appendChild(infoDiv);
-        div.appendChild(btn);
-        container.appendChild(div);
-      });
-    }
 
     const CACHE_KEY = 'ssa_cached_assignments_v1';
 

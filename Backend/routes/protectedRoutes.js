@@ -1616,6 +1616,16 @@ protectedRouter.post(
         }
       });
 
+      // Ensure uniqueness to avoid duplicate recipients
+      const toKey = (v) => (v && v.toString ? v.toString() : String(v));
+      const seen = new Set();
+      assigned_to_users = assigned_to_users.filter((v) => {
+        const k = toKey(v);
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+
       if (
         !assigned_to_users.length &&
         !assigned_to_grades.length &&
