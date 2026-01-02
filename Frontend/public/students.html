@@ -421,7 +421,7 @@ async function unsubscribeUserFromPush() {
   async function fetchWithAuth(endpoint, options = {}) {
     const headers = {
       'Content-Type': 'application/json',
-      ...options.headers
+      ...(options.headers || {})
     };
     
     // Handle FormData (remove Content-Type to let browser set boundary)
@@ -429,24 +429,48 @@ async function unsubscribeUserFromPush() {
       delete headers['Content-Type'];
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers, credentials: 'include' });    
-    if (response.status === 401) {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers, credentials: 'include' });
+    if (res.status === 401) {
       handleLogout();
       throw new Error('Unauthorized');
     }
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `Request failed with status ${response.status}` }));
-        throw new Error(errorData.message || 'An unknown error occurred');
+    if (res.status === 204) {
+      return null;
     }
 
-    if (response.status === 204) {
+    const contentType = res.headers.get('content-type') || '';
+
+    if (!res.ok) {
+      let message = `Request failed with status ${res.status}`;
+      try {
+        if (contentType.includes('application/json')) {
+          const errData = await res.json();
+          message = errData?.message || message;
+        } else {
+          const text = await res.text();
+          if (text) message = text;
+        }
+      } catch {
+        // ignore parse errors, fallback to default message
+      }
+      throw new Error(message);
+    }
+
+    if (contentType.includes('application/json')) {
+      try {
+        return await res.json();
+      } catch {
         return null;
+      }
+    } else {
+      try {
+        return await res.text();
+      } catch {
+        return null;
+      }
     }
-
-    return response.json();
   }
-
   // --- Handlers ---
   async function handleLogout() {
     try {
@@ -604,55 +628,109 @@ async function unsubscribeUserFromPush() {
   async function fetchAssignments() {
     const list = document.getElementById('assignments-list');
     const loader = document.getElementById('assignments-loading');
+    if (!list) return;
+
+    // Small helpers
+    function buildBanner(text, color = 'blue') {
+      const div = document.createElement('div');
+      const colorMap = {
+        blue: 'bg-blue-50 border-blue-200 text-blue-700',
+        red: 'bg-red-50 border-red-200 text-red-700',
+        yellow: 'bg-yellow-50 border-yellow-200 text-yellow-700'
+      };
+      div.className = `border ${colorMap[color] || colorMap.blue} p-3 rounded-xl text-center mb-3`;
+      div.textContent = text;
+      return div;
+    }
+
+    function renderItems(container, items) {
+      items.forEach(a => {
+        const div = document.createElement('div');
+        div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center';
+        
+        const isTask = a.type === 'task';
+        const icon = isTask ? '📝' : '📚';
+        const date = a.due_date || a.dueDate;
+        const displayDate = date ? new Date(date).toLocaleDateString() : 'No Due Date';
+
+        const infoDiv = document.createElement('div');
+        infoDiv.innerHTML = `<h4 class="font-bold">${icon} ${a.title || 'Untitled'}</h4><p class="text-sm text-gray-500">Due: ${displayDate}</p>`;
+        
+        const btn = document.createElement('button');
+        btn.className = 'text-green-500 hover:text-green-700 transition-colors ml-4';
+        btn.innerHTML = '<i class="fas fa-check-circle text-2xl"></i>';
+        if (isTask) {
+          btn.onclick = () => handleCompleteAssignment(a._id, a.title, a.description);
+        } else {
+          btn.style.opacity = '0.5';
+          btn.title = 'Submit via details';
+        }
+        
+        div.appendChild(infoDiv);
+        div.appendChild(btn);
+        container.appendChild(div);
+      });
+    }
+
+    const CACHE_KEY = 'ssa_cached_assignments_v1';
+
     if(loader) loader.style.display = 'block';
     try {
-      // Fetch both teacher assignments and personal tasks
-      const [assignments, tasks] = await Promise.all([
-        fetchWithAuth('/student/assignments').catch(() => []),
-        fetchWithAuth('/student/tasks').catch(() => [])
+      // Prefer settled to preserve partial results
+      const [assignmentsRes, tasksRes] = await Promise.allSettled([
+        fetchWithAuth('/student/assignments'),
+        fetchWithAuth('/student/tasks')
       ]);
-      
+
+      const assignments = assignmentsRes.status === 'fulfilled' ? (assignmentsRes.value || []) : [];
+      const tasks = tasksRes.status === 'fulfilled' ? (tasksRes.value || []) : [];
+
       const allItems = [
         ...(assignments || []).map(a => ({ ...a, type: 'assignment' })), 
         ...(tasks || []).filter(t => !t.is_completed).map(t => ({ ...t, type: 'task' }))
       ];
 
+      // Update cache
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(allItems)); } catch (_) {}
+
       list.innerHTML = '';
       if (allItems.length === 0) {
-        list.innerHTML = '<p class="italic text-gray-500 text-center">No assignments added yet.</p>';
+        // Nothing from network; try cache
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
+        if (cached.length > 0) {
+          list.appendChild(buildBanner('Showing last saved assignments (offline).', 'yellow'));
+          renderItems(list, cached);
+        } else {
+          list.innerHTML = '<p class="italic text-gray-500 text-center">No assignments added yet.</p>';
+        }
       } else {
-        allItems.forEach(a => {
-          const div = document.createElement('div');
-          div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center';
-          
-          const isTask = a.type === 'task';
-          const icon = isTask ? '📝' : '📚';
-          const date = a.due_date || a.dueDate;
-          const displayDate = date ? new Date(date).toLocaleDateString() : 'No Due Date';
-
-          const infoDiv = document.createElement('div');
-          infoDiv.innerHTML = `<h4 class="font-bold">${icon} ${a.title}</h4><p class="text-sm text-gray-500">Due: ${displayDate}</p>`;
-          
-          const btn = document.createElement('button');
-          btn.className = 'text-green-500 hover:text-green-700 transition-colors ml-4';
-          btn.innerHTML = '<i class="fas fa-check-circle text-2xl"></i>';
-          // Only allow completing personal tasks directly here for now, or implement submission logic for assignments
-          if(isTask) {
-            btn.onclick = () => handleCompleteAssignment(a._id, a.title, a.description);
-          } else {
-             btn.style.opacity = '0.5'; // Visual cue that teacher assignments are handled via submission
-             btn.title = "Submit via details";
-          }
-          
-          div.appendChild(infoDiv);
-          div.appendChild(btn);
-          list.appendChild(div);
-        });
+        // If one source failed, hint to user but still render
+        if (assignmentsRes.status === 'rejected' || tasksRes.status === 'rejected') {
+          list.appendChild(buildBanner('Loaded partially due to a network issue.', 'yellow'));
+        }
+        renderItems(list, allItems);
       }
-    } catch (e) { console.error(e); }
-    finally { if(loader) loader.style.display = 'none'; }
+    } catch (e) {
+      console.error(e);
+      list.innerHTML = '';
+      const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
+      if (cached.length > 0) {
+        list.appendChild(buildBanner('Failed to refresh. Showing last saved assignments.', 'red'));
+        renderItems(list, cached);
+      } else {
+        list.innerHTML = `
+          <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-center">
+            <p class="mb-2">Failed to load assignments.</p>
+            <button id="retry-assignments" class="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600">Retry</button>
+          </div>
+        `;
+        document.getElementById('retry-assignments')?.addEventListener('click', fetchAssignments);
+      }
+      try { showToast('Failed to load assignments', 'error'); } catch(_) {}
+    } finally {
+      if(loader) loader.style.display = 'none';
+    }
   }
-
   async function fetchBudget() {
     const list = document.getElementById('budget-list');
     const loader = document.getElementById('budget-loading');
@@ -784,15 +862,14 @@ async function unsubscribeUserFromPush() {
   document.addEventListener("DOMContentLoaded", async () => {
     if (await checkAuthentication()) {
       // Load initial data
-      fetchAssignments();
-      fetchBudget();
-      fetchGoal();
-      fetchQuizzes();
-      fetchMessages();
-      loadUserProfile();
-      await renderChart();
+      try { await fetchAssignments(); } catch (e) { console.warn('fetchAssignments failed:', e); }
+      try { await fetchBudget(); } catch (e) { console.warn('fetchBudget failed:', e); }
+      try { await fetchGoal(); } catch (e) { console.warn('fetchGoal failed:', e); }
+      try { await fetchQuizzes(); } catch (e) { console.warn('fetchQuizzes failed:', e); }
+      try { await fetchMessages(); } catch (e) { console.warn('fetchMessages failed:', e); }
+      try { await loadUserProfile(); } catch (e) { console.warn('loadUserProfile failed:', e); }
+      try { await renderChart(); } catch (e) { console.warn('renderChart failed:', e); }
       subscribeUserToPush().catch(e => console.warn('Push subscription failed on load:', e));
-
       let currentLang = localStorage.getItem("lang") || "en";
       const dashboardName = "students";
 
