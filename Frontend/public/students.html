@@ -668,27 +668,29 @@ async function unsubscribeUserFromPush() {
     // Attachment link
     attachEl.innerHTML = '';
     if (a.file_path) {
-      const filename = a.file_path.split('/').pop();
-      const link = document.createElement('a');
-      link.href = `${API_BASE_URL}/teacher/assignments/${encodeURIComponent(filename)}`;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.className = 'text-blue-600 hover:underline';
-      link.textContent = 'Download Attachment';
-      link.addEventListener('click', async (ev) => {
-        try {
-          const res = await fetch(`${API_BASE_URL}/teacher/assignments/${encodeURIComponent(filename)}`, { credentials: 'include' });
-          if (!res.ok) {
+      const filename = (a.file_path || '').split('/').pop();
+      if (filename) {
+        const link = document.createElement('a');
+        link.href = `${API_BASE_URL}/teacher/assignments/${encodeURIComponent(filename)}`;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'text-blue-600 hover:underline';
+        link.textContent = 'Download Attachment';
+        link.addEventListener('click', async (ev) => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/teacher/assignments/${encodeURIComponent(filename)}`, { credentials: 'include' });
+            if (!res.ok) {
+              ev.preventDefault();
+              const data = await res.json().catch(()=>({message:'Attachment not available'}));
+              showToast(data.message || 'Attachment not available', 'error');
+            }
+          } catch {
             ev.preventDefault();
-            const data = await res.json().catch(()=>({message:'Attachment not available'}));
-            showToast(data.message || 'Attachment not available', 'error');
+            showToast('Unable to download attachment.', 'error');
           }
-        } catch {
-          ev.preventDefault();
-          showToast('Unable to download attachment.', 'error');
-        }
-      });
-      attachEl.appendChild(link);
+        });
+        attachEl.appendChild(link);
+      }
     }
 
     // Reset form

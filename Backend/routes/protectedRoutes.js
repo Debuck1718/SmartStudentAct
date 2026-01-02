@@ -3201,37 +3201,44 @@ protectedRouter.get(
         return res.status(400).json({ message: "Invalid filename." });
       }
 
-      const filePath = path.join(dirs.assignments, filename);
-      const userId = req.user.id;
-      const userRole = req.user.role;
-
-      // Look up assignment to determine authorization
+      // Find assignment by stored file_path to authorize access
       const assignment = await Assignment.findOne({
         $or: [
           { file_path: `/uploads/assignments/${filename}` },
           { attachment_file: `/uploads/assignments/${filename}` },
         ],
-      });
+      }).lean();
 
-      let isAuthorized = false;
-      if (userRole === "global_overseer" || userRole === "admin") {
-        isAuthorized = true;
-      } else if (assignment) {
-        if (userRole === "teacher" && String(assignment.teacher_id) === String(userId)) {
-          isAuthorized = true;
-        } else if (userRole === "student") {
-          isAuthorized = isStudentAssignedToAssignment(assignment, req.user);
-        }
+      if (!assignment) {
+        return res.status(404).json({ message: "File not found." });
       }
 
-      if (!isAuthorized) {
-        return res.status(403).json({
-          message: "Forbidden. You do not have permission to view this file.",
-        });
+      // Authorization
+      const userId = String(req.user.id);
+      const role = req.user.role;
+      let authorized = false;
+
+      if (role === "global_overseer" || role === "admin") {
+        authorized = true;
+      } else if (role === "teacher" && String(assignment.teacher_id) === userId) {
+        authorized = true;
+      } else if (role === "student") {
+        authorized = isStudentAssignedToAssignment(assignment, req.user);
       }
+
+      if (!authorized) {
+        return res.status(403).json({ message: "Forbidden. You do not have permission to view this file." });
+      }
+
+      // Build absolute path from configured uploads dir
+      const filePath = path.join(dirs.assignments, filename);
 
       // Ensure file exists on disk
-      await fs.access(filePath);
+      try {
+        await fs.access(filePath);
+      } catch {
+        return res.status(404).json({ message: "File not found." });
+      }
 
       res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
       res.setHeader("Content-Type", "application/octet-stream");
