@@ -3191,14 +3191,17 @@ protectedRouter.get(
 
 protectedRouter.get(
   "/teacher/assignments/:filename",
-  hasRole("student", "teacher", "admin", "global_overseer"),
+  hasRole(["student", "teacher", "admin", "global_overseer"]),
   async (req, res) => {
     try {
       const { filename } = req.params;
       const filePath = path.join(dirs.assignments, filename);
       const userId = req.user.id;
       const userRole = req.user.role;
+
+      // Ensure file exists on disk
       await fs.access(filePath);
+
       let isAuthorized = false;
       if (userRole === "global_overseer" || userRole === "admin") {
         isAuthorized = true;
@@ -3210,36 +3213,29 @@ protectedRouter.get(
           ],
         });
         if (assignment) {
-          if (
-            userRole === "teacher" &&
-            assignment.created_by.toString() === userId
-          ) {
+          if (userRole === "teacher" && String(assignment.teacher_id) === String(userId)) {
             isAuthorized = true;
           } else if (userRole === "student") {
-            // Use robust helper that considers grades, programs, and school
+            // Use robust helper that considers direct recipients, grades, programs, and school
             isAuthorized = isStudentAssignedToAssignment(assignment, req.user);
-          } else if (userRole === "student" && assignment.assigned_to_users.includes(req.user.email)) {
-            isAuthorized = true;
           }
         }
       }
+
       if (isAuthorized) {
-        res.sendFile(filePath);
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        return res.sendFile(filePath);
       } else {
-        res
-          .status(403)
-          .json({
-            message: "Forbidden. You do not have permission to view this file.",
-          });
+        return res.status(403).json({
+          message: "Forbidden. You do not have permission to view this file.",
+        });
       }
     } catch (error) {
       logger.error("Error serving assignment file:", error);
       if (error.code === "ENOENT") {
-        res.status(404).json({ message: "File not found." });
+        return res.status(404).json({ message: "File not found." });
       } else {
-        res
-          .status(500)
-          .json({ message: "Server error occurred while retrieving file." });
+        return res.status(500).json({ message: "Server error occurred while retrieving file." });
       }
     }
   }

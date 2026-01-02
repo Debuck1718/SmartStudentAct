@@ -675,6 +675,19 @@ async function unsubscribeUserFromPush() {
       link.rel = 'noopener';
       link.className = 'text-blue-600 hover:underline';
       link.textContent = 'Download Attachment';
+      link.addEventListener('click', async (ev) => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/teacher/assignments/${encodeURIComponent(filename)}`, { credentials: 'include' });
+          if (!res.ok) {
+            ev.preventDefault();
+            const data = await res.json().catch(()=>({message:'Attachment not available'}));
+            showToast(data.message || 'Attachment not available', 'error');
+          }
+        } catch {
+          ev.preventDefault();
+          showToast('Unable to download attachment.', 'error');
+        }
+      });
       attachEl.appendChild(link);
     }
 
