@@ -3191,21 +3191,23 @@ protectedRouter.get(
 
 protectedRouter.get(
   "/teacher/assignments/:filename",
+  authenticateJWT,
   hasRole(["student", "teacher", "admin", "global_overseer"]),
   async (req, res) => {
     try {
       const { filename } = req.params;
 
-      // Prevent path traversal
+      // Prevent path traversal and invalid names
       if (!filename || filename !== path.basename(filename) || /[\/\\]/.test(filename)) {
         return res.status(400).json({ message: "Invalid filename." });
       }
 
-      // Find assignment by stored file_path to authorize access
+      // Look up the assignment using the stored file_path format
+      const storedPath = `/uploads/assignments/${filename}`;
       const assignment = await Assignment.findOne({
         $or: [
-          { file_path: `/uploads/assignments/${filename}` },
-          { attachment_file: `/uploads/assignments/${filename}` },
+          { file_path: storedPath },
+          { attachment_file: storedPath },
         ],
       }).lean();
 
@@ -3213,9 +3215,9 @@ protectedRouter.get(
         return res.status(404).json({ message: "File not found." });
       }
 
-      // Authorization
-      const userId = String(req.user.id);
+      // Authorization: admin/global, owning teacher, or assigned student
       const role = req.user.role;
+      const userId = String(req.user.id);
       let authorized = false;
 
       if (role === "global_overseer" || role === "admin") {
@@ -3230,10 +3232,17 @@ protectedRouter.get(
         return res.status(403).json({ message: "Forbidden. You do not have permission to view this file." });
       }
 
-      // Build absolute path from configured uploads dir
-      const filePath = path.join(dirs.assignments, filename);
+      // Resolve absolute path to the uploads/assignments directory used by multer
+      let filePath;
+      if (typeof dirs !== "undefined" && dirs.assignments) {
+        filePath = path.join(dirs.assignments, filename);
+      } else {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        filePath = path.resolve(__dirname, "uploads", "assignments", filename);
+      }
 
-      // Ensure file exists on disk
+      // Ensure the file exists
       try {
         await fs.access(filePath);
       } catch {
@@ -3245,13 +3254,11 @@ protectedRouter.get(
       return res.sendFile(filePath);
     } catch (error) {
       logger.error("Error serving assignment file:", error);
-      if (error.code === "ENOENT") {
-        return res.status(404).json({ message: "File not found." });
-      }
       return res.status(500).json({ message: "Server error occurred while retrieving file." });
     }
   }
 );
+
 protectedRouter.get(
   "/teacher/feedback/:filename",
   hasRole("student", "teacher", "admin", "global_overseer"),

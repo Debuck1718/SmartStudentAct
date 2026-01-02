@@ -670,15 +670,16 @@ async function unsubscribeUserFromPush() {
     if (a.file_path) {
       const filename = (a.file_path || '').split('/').pop();
       if (filename) {
+        const url = `${API_BASE_URL}/teacher/assignments/${encodeURIComponent(filename)}`;
         const link = document.createElement('a');
-        link.href = `${API_BASE_URL}/teacher/assignments/${encodeURIComponent(filename)}`;
+        link.href = url;
         link.target = '_blank';
         link.rel = 'noopener';
         link.className = 'text-blue-600 hover:underline';
         link.textContent = 'Download Attachment';
         link.addEventListener('click', async (ev) => {
           try {
-            const res = await fetch(`${API_BASE_URL}/teacher/assignments/${encodeURIComponent(filename)}`, { credentials: 'include' });
+            const res = await fetch(url, { credentials: 'include' });
             if (!res.ok) {
               ev.preventDefault();
               const data = await res.json().catch(()=>({message:'Attachment not available'}));
