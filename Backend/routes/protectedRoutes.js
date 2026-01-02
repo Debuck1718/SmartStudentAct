@@ -3233,14 +3233,7 @@ protectedRouter.get(
       }
 
       // Resolve absolute path to the uploads/assignments directory used by multer
-      let filePath;
-      if (typeof dirs !== "undefined" && dirs.assignments) {
-        filePath = path.join(dirs.assignments, filename);
-      } else {
-        const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename);
-        filePath = path.resolve(__dirname, "uploads", "assignments", filename);
-      }
+      const filePath = path.join(dirs.assignments, filename);
 
       // Ensure the file exists
       try {
