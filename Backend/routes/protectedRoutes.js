@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs/promises";
 import crypto from "crypto";
 import Joi from "joi";
+import mongoose from "mongoose";
 import logger from "../utils/logger.js";
 import webpush from "web-push";
 import jwt from "jsonwebtoken";
@@ -1546,7 +1547,6 @@ protectedRouter.post(
   localUpload.single("file"),
   async (req, res) => {
     try {
-      // Helper to ensure value is an array
       const toArray = (val) => {
         if (val === undefined || val === null) return [];
         return Array.isArray(val) ? val : [val];
@@ -1564,27 +1564,28 @@ protectedRouter.post(
         assigned_to_other_grades = [],
         recipientType,
         grade,
-        // accept alias from frontend if present
         assigned_to = [],
       } = req.body;
 
-      // Basic validation to avoid 500s
       if (!title || !due_date) {
         return res.status(400).json({ message: "Title and due_date are required." });
       }
 
-      // Merge alias into primary field
-      assigned_to_users = toArray(assigned_to_users).concat(toArray(assigned_to));
+      // Normalize due_date to a valid ISO string or Date
+      const due = new Date(due_date);
+      if (isNaN(due.getTime())) {
+        return res.status(400).json({ message: "Invalid due_date format." });
+      }
 
-      // Normalize arrays to prevent crashes
+      // Merge alias into primary field, keep only truthy values
+      assigned_to_users = toArray(assigned_to_users).concat(toArray(assigned_to)).filter(Boolean);
+
       assigned_to_grades = toArray(assigned_to_grades);
       assigned_to_programs = toArray(assigned_to_programs);
       assigned_to_schools = toArray(assigned_to_schools);
       assigned_to_other_grades = toArray(assigned_to_other_grades).map(Number);
 
-      // Resolve recipients
       if (recipientType === "class") {
-        // assign to teacher's grades in their school
         const teacher = await User.findById(req.userId);
         if (teacher && Array.isArray(teacher.teacherGrade) && teacher.teacherGrade.length > 0) {
           const classQuery = { role: "student", grade: { $in: teacher.teacherGrade } };
@@ -1593,20 +1594,20 @@ protectedRouter.post(
           assigned_to_users = students.map((s) => new mongoose.Types.ObjectId(s._id));
         }
       } else if (recipientType === "otherGrade" && grade) {
-        // Assign to the grade number directly, so it applies to all students in that grade
         const g = Number(grade);
         if (!assigned_to_other_grades.includes(g)) {
           assigned_to_other_grades.push(g);
         }
+      } else if (recipientType === "student") {
+        // explicit student selection: leave assigned_to_users as provided
       } else {
-        // explicit user ids provided: keep assigned_to_users as-is
-        // If schools were provided (rare in current UI), map them separately
+        // leave as-is; map schools if provided
         assigned_to_schools = assigned_to_schools.map((id) => {
           try { return new mongoose.Types.ObjectId(id); } catch { return id; }
         });
       }
 
-      // Convert assigned_to_users entries to ObjectIds where possible; keep strings (emails) as-is
+      // Convert user entries to ObjectIds where possible; keep emails as strings
       assigned_to_users = assigned_to_users.map((val) => {
         try {
           return new mongoose.Types.ObjectId(val);
@@ -1633,7 +1634,7 @@ protectedRouter.post(
         title,
         description,
         file_path: req.file ? `/uploads/assignments/${req.file.filename}` : null,
-        due_date,
+        due_date: due,
         assigned_to_users,
         assigned_to_grades,
         assigned_to_programs,
@@ -1643,7 +1644,6 @@ protectedRouter.post(
 
       await newAssignment.save();
 
-      // ✅ Emit event for notifications + reminders (handled in eventBus.js)
       eventBus.emit("assignment_created", {
         assignmentId: newAssignment._id,
         title: newAssignment.title,

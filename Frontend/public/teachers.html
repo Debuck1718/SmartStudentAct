@@ -2041,10 +2041,7 @@
             formData.append("assigned_to_users", v);
             formData.append("assigned_to", v);
           });
-          // Ensure these arrays exist in backend parsing even if empty
-          if (!assignmentData.assigned_to_grades) {
-            formData.append("assigned_to_grades", "");
-          }
+          // Do not append empty assigned_to_grades; backend defaults this safely
           (assignmentData.assigned_to_other_grades || []).forEach(v => formData.append("assigned_to_other_grades", String(v)));
           (assignmentData.assigned_to_programs || []).forEach(v => formData.append("assigned_to_programs", v));
 
