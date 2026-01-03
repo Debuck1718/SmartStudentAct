@@ -2,9 +2,8 @@
 import express from 'express';
 import Joi from 'joi';
 import logger from '../utils/logger.js';
-import eventBus, { agenda, emailTemplates } from '../utils/eventBus.js';
-
-import StudentRewards from '../models/StudentRewards.js';
+import eventBus, { agenda } from '../utils/eventBus.js';
+import { TEMPLATE_IDS as EMAIL_TEMPLATES } from '../utils/email.js';import StudentRewards from '../models/StudentRewards.js';
 import User from '../models/User.js';
 import Reward from '../models/Reward.js';
 import BudgetEntry from '../models/BudgetEntry.js';
