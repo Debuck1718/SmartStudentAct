@@ -8,7 +8,7 @@ import smsApi from "./sms.js";
 import logger from "./logger.js";
 import mongoose from "mongoose";
 import Agenda from "agenda";
-import mailer from "./email.js";
+import mailer, { TEMPLATE_IDS as EMAIL_TEMPLATES } from "./email.js";
 
 const User = mongoose.models.User;
 const Assignment = mongoose.models.Assignment;
@@ -46,18 +46,7 @@ if (!process.env.MONGODB_URI) {
 // Shared event bus instance
 const eventBus = new EventEmitter();
 
-// ✅ Email template IDs
-export const emailTemplates = {
-  otp: 3,
-  welcome: 2,
-  passwordReset: 4,
-  assignmentNotification: 6,
-  quizNotification: 5,
-  feedbackReceived: 7,
-  gradedAssignment: 8,
-  rewardNotification: 9,
-  goalBudgetUpdate: 10,
-};
+// ✅ Email templates come from utils/email.js (Brevo)
 
 // ✅ Configure VAPID for push notifications safely
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
@@ -157,7 +146,7 @@ eventBus.on("assignment_created", async ({ assignmentId, title }) => {
         "New Assignment",
         `"${effectiveTitle}" is due on ${assignment.due_date?.toDateString?.() || ""}`,
         "/student/assignments",
-        emailTemplates.assignmentNotification,
+        EMAIL_TEMPLATES.assignmentNotification,
         {
           firstname: student.firstname,
           assignmentTitle: effectiveTitle,
@@ -197,7 +186,7 @@ agenda.define("assignment_reminder", async (job) => {
         "Assignment Reminder",
         `"${assignment.title}" is due in ${hoursBefore} hours.`,
         "/student/assignments",
-        emailTemplates.assignmentNotification,
+        EMAIL_TEMPLATES.assignmentNotification,
         {
           firstname: student.firstname,
           assignmentTitle: assignment.title,
@@ -299,7 +288,7 @@ eventBus.on("quiz_created", async ({ quizId, title }) => {
         "New Quiz",
         `"${title}" is now available!`,
         "/student/quizzes",
-        emailTemplates.quizNotification,
+        EMAIL_TEMPLATES.quizNotification,
         { firstname: student.firstname, quizTitle: title }
       );
     }
@@ -320,7 +309,7 @@ eventBus.on("feedback_given", async ({ assignmentId, studentId, feedback }) => {
       "Feedback Received",
       `You received feedback for "${assignment.title}"`,
       "/student/assignments",
-      emailTemplates.feedbackReceived,
+      EMAIL_TEMPLATES.feedbackReceived,
       {
         firstname: student.firstname,
         assignmentTitle: assignment.title,
@@ -343,7 +332,7 @@ eventBus.on("assignment_graded", async ({ assignmentId, studentId, grade }) => {
       "Assignment Graded",
       `Your grade: ${grade}`,
       "/student/assignments",
-      emailTemplates.gradedAssignment,
+      EMAIL_TEMPLATES.gradedAssignment,
       {
         firstname: student.firstname,
         assignmentTitle: assignment.title,
@@ -370,7 +359,7 @@ eventBus.on("reward_granted", async ({ userId, type, points, reason }) => {
       "Reward Update",
       message,
       "/student/rewards",
-      emailTemplates.rewardNotification,
+      EMAIL_TEMPLATES.rewardNotification,
       { firstname: user.firstname, rewardType: type, points, reason }
     );
   } catch (err) {
@@ -399,7 +388,7 @@ eventBus.on("goal_notification", async ({ userId, message }) => {
       "Goal Update",
       message,
       "/student/goals",
-      emailTemplates.goalBudgetUpdate,
+      EMAIL_TEMPLATES.goalBudgetUpdate,
       { firstname: user.firstname, message }
     );
   } catch (err) {
@@ -558,14 +547,43 @@ eventBus.on("new_submission", async ({ assignmentId, studentId, title }) => {
   try {
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) return;
-    const teacher = await User.findById(assignment.teacher_id).select("_id phone email firstname PushSub");
+    const teacher = await User.findById(assignment.teacher_id).select("_id phone email firstname lastname email PushSub");
     const student = await User.findById(studentId).select("_id firstname lastname email PushSub");
     if (!teacher || !student) return;
 
     const aTitle = title || assignment.title || "an assignment";
-    const message = `${student.firstname} ${student.lastname} submitted ${aTitle}`;
-    await notifyUser(teacher, "New Submission", message, "/teacher/feedback");
-    await notifyUser(student, "Submission Received", `Your submission for ${aTitle} was received.`, "/student/submissions");
+    const submittedAt = new Date().toLocaleString();
+
+    // Notify teacher with Brevo template 15
+    await notifyUser(
+      teacher,
+      "New Submission",
+      `${student.firstname} ${student.lastname} submitted ${aTitle}`,
+      "/teacher/feedback",
+      EMAIL_TEMPLATES.assignmentSubmittedTeacher,
+      {
+        teacherName: `${teacher.firstname || ""} ${teacher.lastname || ""}`.trim(),
+        studentName: `${student.firstname} ${student.lastname}`,
+        assignmentTitle: aTitle,
+        submittedAt,
+        reviewLink: `${process.env.APP_BASE_URL || ""}/teacher/feedback`
+      }
+    );
+
+    // Notify student with Brevo template 14
+    await notifyUser(
+      student,
+      "Submission Received",
+      `Your submission for ${aTitle} was received.`,
+      "/student/submissions",
+      EMAIL_TEMPLATES.assignmentSubmittedStudent,
+      {
+        firstname: student.firstname,
+        assignmentTitle: aTitle,
+        submittedAt,
+        dashboardLink: `${process.env.APP_BASE_URL || ""}/student/submissions`
+      }
+    );
   } catch (err) {
     logger.error(`new_submission handler failed: ${err.message}`);
   }

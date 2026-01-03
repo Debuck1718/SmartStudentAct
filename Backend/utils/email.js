@@ -33,10 +33,12 @@ export const TEMPLATE_IDS = {
   goalBudgetUpdate: 10,
   paymentReceipt: 11,
   subscriptionRenewal: 12,
-  specialLink: 13, // new template for special link request
+  specialLink: 13,
+  assignmentSubmittedStudent: 14,
+  assignmentSubmittedTeacher: 15, 
 };
 
-// --- Helper delay ---
+
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -216,12 +218,51 @@ export const sendSubscriptionRenewalEmail = (
     link,
   });
 
+  export const sendAssignmentSubmissionStudentEmail = (
+  email,
+  firstname,
+  assignmentTitle,
+  submittedAt,
+  dashboardLink
+) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.assignmentSubmittedStudent, {
+    firstname,
+    assignmentTitle,
+    submittedAt,
+    dashboardLink,
+  });
+
+// Teacher notification (Template 15)
+export const sendAssignmentSubmissionTeacherEmail = (
+  email,
+  teacherName,
+  studentName,
+  assignmentTitle,
+  submittedAt,
+  reviewLink
+) =>
+  sendTemplateEmail(email, TEMPLATE_IDS.assignmentSubmittedTeacher, {
+    teacherName,
+    studentName,
+    assignmentTitle,
+    submittedAt,
+    reviewLink,
+  });
+
+
 // --- NEW: Special Link Request Email ---
-export const sendSpecialLinkEmail = (email, firstname, linkType, link) =>
+export const sendSpecialLinkEmail = ({
+  email,
+  firstname,
+  requesterRole,   // "student" | "teacher"
+  actionLink,
+}) =>
   sendTemplateEmail(email, TEMPLATE_IDS.specialLink, {
     firstname,
-    link_type: linkType,
-    link,
+    requester_role:
+      requesterRole === "teacher" ? "Teacher" : "Student",
+    connection_type: "Special Connection",
+    action_link: actionLink,
   });
 
 // ✅ Default export (for import mailer from "./email.js")
@@ -238,6 +279,8 @@ export default {
   sendGoalBudgetUpdateEmail,
   sendPaymentReceiptEmail,
   sendSubscriptionRenewalEmail,
+  sendAssignmentSubmissionStudentEmail,
+  sendAssignmentSubmissionTeacherEmail,
   sendSpecialLinkEmail,
 };
 
