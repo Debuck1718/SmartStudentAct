@@ -1,8 +1,7 @@
 import express from "express";
 import Joi from "joi";
 import logger from "../utils/logger.js";
-import eventBus, { agenda, emailTemplates } from '../utils/eventBus.js';
-import { authenticateJWT } from "../middlewares/auth.js";
+import eventBus, { agenda } from '../utils/eventBus.js';import { authenticateJWT } from "../middlewares/auth.js";
 import checkSubscription from "../middlewares/checkSubscription.js";
 import BudgetEntry from "../models/BudgetEntry.js";
 
