@@ -6,11 +6,10 @@ import fs from "fs/promises";
 import crypto from "crypto";
 import Joi from "joi";
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 import logger from "../utils/logger.js";
 import webpush from "web-push";
 import jwt from "jsonwebtoken";
-import eventBus, { emailTemplates, agenda } from '../utils/eventBus.js';
+import eventBus, { agenda } from '../utils/eventBus.js';
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { authenticateJWT } from "../middlewares/auth.js";
 import checkSubscription from "../middlewares/checkSubscription.js";
@@ -634,7 +633,13 @@ protectedRouter.patch(
       }
 
      
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      let isMatch = false;
+      try {
+        const bcrypt = await import("bcryptjs");
+        isMatch = await bcrypt.compare(currentPassword, user.password);
+      } catch (e) {
+        logger.error("bcryptjs not available, cannot compare password:", e.message);
+      }
       if (!isMatch) {
         return res.status(401).json({ message: "Invalid current password." });
       }
@@ -3176,60 +3181,7 @@ protectedRouter.post(
   }
 );
 
-protectedRouter.get(
-  "/student/submissions/:filename",
-  authenticateJWT,
-  hasRole(["student", "teacher", "admin", "global_overseer"]),
-  async (req, res) => {
-    try {
-      const { filename } = req.params;
-      if (!filename || filename !== path.basename(filename) || /[\/\\]/.test(filename)) {
-        return res.status(400).json({ message: "Invalid filename." });
-      }
-
-      const storedPath = `/uploads/submissions/${filename}`;
-      const submission = await Submission.findOne({ submission_file: storedPath }).populate("user_id assignment_id");
-      if (!submission) {
-        return res.status(404).json({ message: "File not found." });
-      }
-
-      const role = req.user.role;
-      const userId = String(req.user.id);
-      let isAuthorized = false;
-
-      if (role === "global_overseer" || role === "admin") {
-        isAuthorized = true;
-      } else if (role === "student" && String(submission.user_id?._id) === userId) {
-        isAuthorized = true;
-      } else if (role === "teacher") {
-        const assignment = await Assignment.findById(submission.assignment_id).select("teacher_id");
-        if (assignment && String(assignment.teacher_id) === userId) {
-          isAuthorized = true;
-        }
-      }
-
-      if (!isAuthorized) {
-        return res.status(403).json({ message: "Forbidden. You do not have permission to view this file." });
-      }
-
-      const filePath = path.join(dirs.submissions, filename);
-      try {
-        await fs.access(filePath);
-      } catch {
-        return res.status(404).json({ message: "File not found." });
-      }
-
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-      return res.sendFile(filePath);
-    } catch (error) {
-      logger.error("Error serving student submission file:", error);
-      if (error.code === "ENOENT") {
-        return res.status(404).json({ message: "File not found." });
-      }
-      return res.status(500).json({ message: "Server error occurred while retrieving file." });
-    }
-  }
-);
+/* duplicate route removed to avoid re-declaration; unified route kept later in file */
 
 protectedRouter.get(
   "/teacher/assignments/:filename",
