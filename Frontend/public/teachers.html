@@ -1513,8 +1513,8 @@
             const filePath = s.submission_file || s.file_path || "";
             const filename = filePath ? filePath.split("/").pop() : "";
 
-            // Decide the secure download URL for student submissions
-            const dlUrl = filename ? `${API_BASE_URL}/student/submissions/${encodeURIComponent(filename)}` : null;
+            // Use teacher-authorized secure download route for student submissions
+            const dlUrl = filename ? `${API_BASE_URL}/teacher/submissions/files/${encodeURIComponent(filename)}` : null;
 
             const fileLink = dlUrl ? `<a href="${dlUrl}" target="_blank" rel="noopener" class="text-blue-600 hover:underline submission-download" data-filename="${encodeURIComponent(filename)}">Download Attachment</a>` : '';
 
