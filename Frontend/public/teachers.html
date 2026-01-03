@@ -825,6 +825,16 @@
           </h2>
           <div id="feedbackList" class="divide-y divide-slate-200"></div>
         </section>
+
+        <section
+          class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100"
+        >
+          <h2 class="text-2xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">
+            📥 Student Submissions
+          </h2>
+          <div id="teacherSubmissionsList" class="divide-y divide-slate-200"></div>
+        </section>
+
         <section
           class="bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-100 md:col-span-2 lg:col-span-3"
         >
@@ -1476,6 +1486,77 @@
         calendar.render();
       }
 
+      async function fetchTeacherSubmissions() {
+        const container = document.getElementById("teacherSubmissionsList");
+        if (!container) return;
+        container.innerHTML = `<div class="p-4 text-gray-500">${translateText("loading") || "Loading..."}...</div>`;
+
+        try {
+          // Backend route expected: returns submissions for assignments owned by teacher
+          const res = await fetchAPI("/teacher/submissions");
+          if (!res || !res.ok) {
+            const err = res ? await res.json().catch(()=>({message:"Failed to load submissions."})) : { message: "Network error" };
+            container.innerHTML = `<div class="p-4 text-red-600">${err.message || "Failed to load submissions."}</div>`;
+            return;
+          }
+          const submissions = await res.json();
+          if (!Array.isArray(submissions) || submissions.length === 0) {
+            container.innerHTML = `<div class="p-4 text-gray-500">No submissions yet.</div>`;
+            return;
+          }
+
+          container.innerHTML = submissions.map(s => {
+            const student = s.student || s.user || {};
+            const assign = s.assignment || {};
+            const submittedAt = s.submitted_at || s.createdAt || s.updatedAt;
+            const text = s.submission_text || "";
+            const filePath = s.submission_file || s.file_path || "";
+            const filename = filePath ? filePath.split("/").pop() : "";
+
+            // Decide the secure download URL for student submissions
+            const dlUrl = filename ? `${API_BASE_URL}/student/submissions/${encodeURIComponent(filename)}` : null;
+
+            const fileLink = dlUrl ? `<a href="${dlUrl}" target="_blank" rel="noopener" class="text-blue-600 hover:underline submission-download" data-filename="${encodeURIComponent(filename)}">Download Attachment</a>` : '';
+
+            return `
+              <div class="p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="font-semibold">${assign.title || "Assignment"}</p>
+                    <p class="text-sm text-gray-600">By: ${student.firstname || ''} ${student.lastname || ''} (${student.email || ''})</p>
+                    <p class="text-xs text-gray-500">Submitted: ${submittedAt ? new Date(submittedAt).toLocaleString() : 'N/A'}</p>
+                  </div>
+                </div>
+                ${text ? `<div class="mt-2 text-gray-800 whitespace-pre-line">${text}</div>` : ''}
+                ${fileLink ? `<div class="mt-2">${fileLink}</div>` : ''}
+              </div>
+            `;
+          }).join("");
+
+          // Preflight download links for availability and authorization
+          container.querySelectorAll('.submission-download').forEach(link => {
+            link.addEventListener('click', async (ev) => {
+              const url = link.getAttribute('href');
+              try {
+                const resp = await fetch(url, { credentials: 'include' });
+                if (!resp.ok) {
+                  ev.preventDefault();
+                  const data = await resp.json().catch(()=>({message:"Attachment not available"}));
+                  showToast(data.message || "Attachment not available", "error");
+                }
+              } catch {
+                ev.preventDefault();
+                showToast("Unable to download attachment.", "error");
+              }
+            });
+          });
+
+        } catch (err) {
+          console.error("Submissions fetch error:", err);
+          container.innerHTML = `<div class="p-4 text-red-600">Failed to load submissions.</div>`;
+        }
+      }
+
       async function fetchOverdueTasks() {
         const container = document.getElementById("overdueTasksList");
         if (!container) return;
@@ -2092,6 +2173,8 @@
                 document.getElementById('sendAssignmentButton').textContent = 'Send Assignment';
               }
               fetchAssignedTasks();
+              // refresh submissions view in case students submit quickly after
+              fetchTeacherSubmissions();
             } else {
               let result = { message: "Network error" };
               try { result = res ? await res.json() : result; } catch {
@@ -2522,6 +2605,7 @@
           await fetchFeedback();
           await fetchOverdueTasks();
           await fetchMessages();
+          await fetchTeacherSubmissions();
           initCalendar();
           wireDashboardForms();
           wireCalendar();

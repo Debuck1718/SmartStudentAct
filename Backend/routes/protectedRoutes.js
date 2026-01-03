@@ -1882,23 +1882,45 @@ protectedRouter.get(
   hasRole("teacher"),
   async (req, res) => {
     try {
-      const teacherId = req.userId;
-      const assignments = await Assignment.find({ teacher_id: teacherId }).select('_id');
-      const assignmentIds = assignments.map(a => a._id);
+      const teacherId = req.userId || (req.user && req.user.id);
+
+      const assignments = await Assignment.find({ teacher_id: teacherId })
+        .select("_id title due_date")
+        .lean();
+      const assignmentIds = assignments.map((a) => a._id);
+
+      if (assignmentIds.length === 0) {
+        return res.status(200).json([]);
+      }
 
       const submissions = await Submission.find({ assignment_id: { $in: assignmentIds } })
-        .populate('user_id', 'firstname lastname email')
-        .populate('assignment_id', 'title due_date')
-        .sort({ submitted_at: -1 });
+        .populate({ path: "user_id", select: "firstname lastname email" })
+        .populate({ path: "assignment_id", select: "title due_date" })
+        .sort({ submitted_at: -1 })
+        .lean();
 
-      res.status(200).json(submissions);
-    } catch (error) {
-      logger.error("Error fetching teacher submissions:", error);
-      res.status(500).json({ message: "Server error" });
+      const payload = submissions.map((s) => ({
+        _id: s._id,
+        assignment: s.assignment_id
+          ? { _id: s.assignment_id._id, title: s.assignment_id.title, due_date: s.assignment_id.due_date }
+          : null,
+        student: s.user_id
+          ? { _id: s.user_id._id, firstname: s.user_id.firstname, lastname: s.user_id.lastname, email: s.user_id.email }
+          : null,
+        submission_text: s.submission_text || "",
+        submission_file: s.submission_file || "",
+        submitted_at: s.submitted_at || s.createdAt || null,
+        feedback_grade: s.feedback_grade ?? null,
+        feedback_comments: s.feedback_comments ?? null,
+      }));
+
+      return res.status(200).json(payload);
+    } catch (err) {
+      logger.error("Error fetching teacher submissions:", err);
+      return res.status(500).json({ message: "Server error" });
     }
   }
 );
-
 protectedRouter.post(
   "/teacher/submissions/:submissionId/grade",
   authenticateJWT,
@@ -3202,7 +3224,7 @@ protectedRouter.get(
         return res.status(400).json({ message: "Invalid filename." });
       }
 
-      // Look up the assignment using the stored file_path format
+      // Find assignment using stored file path (exact match)
       const storedPath = `/uploads/assignments/${filename}`;
       const assignment = await Assignment.findOne({
         $or: [
@@ -3215,7 +3237,7 @@ protectedRouter.get(
         return res.status(404).json({ message: "File not found." });
       }
 
-      // Authorization: admin/global, owning teacher, or assigned student
+      // Authorization
       const role = req.user.role;
       const userId = String(req.user.id);
       let authorized = false;
@@ -3232,10 +3254,8 @@ protectedRouter.get(
         return res.status(403).json({ message: "Forbidden. You do not have permission to view this file." });
       }
 
-      // Resolve absolute path to the uploads/assignments directory used by multer
+      // Serve file from local uploads directory
       const filePath = path.join(dirs.assignments, filename);
-
-      // Ensure the file exists
       try {
         await fs.access(filePath);
       } catch {
@@ -3252,6 +3272,55 @@ protectedRouter.get(
   }
 );
 
+// Secure download of student submission files for teachers/admins
+protectedRouter.get(
+  "/teacher/submissions/files/:filename",
+  authenticateJWT,
+  hasRole(["teacher", "admin", "global_overseer"]),
+  async (req, res) => {
+    try {
+      const { filename } = req.params;
+
+      // Prevent path traversal
+      if (!filename || filename !== path.basename(filename) || /[\/\\]/.test(filename)) {
+        return res.status(400).json({ message: "Invalid filename." });
+      }
+
+      // Ensure the submission exists and belongs to one of the teacher's assignments
+      const storedPath = `/uploads/submissions/${filename}`;
+      const submission = await Submission.findOne({ submission_file: storedPath }).select("assignment_id");
+      if (!submission) {
+        return res.status(404).json({ message: "File not found." });
+      }
+
+      const assignment = await Assignment.findById(submission.assignment_id).select("teacher_id").lean();
+      if (!assignment) {
+        return res.status(404).json({ message: "File not found." });
+      }
+
+      const role = req.user.role;
+      const teacherId = String(req.user.id);
+      if (!(role === "global_overseer" || role === "admin" || String(assignment.teacher_id) === teacherId)) {
+        return res.status(403).json({ message: "Forbidden. You do not have permission to view this file." });
+      }
+
+      // Build absolute path to submissions directory and stream file
+      const filePath = path.join(dirs.submissions, filename);
+      try {
+        await fs.access(filePath);
+      } catch {
+        return res.status(404).json({ message: "File not found." });
+      }
+
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.setHeader("Content-Type", "application/octet-stream");
+      return res.sendFile(filePath);
+    } catch (err) {
+      logger.error("Error serving teacher submission file:", err);
+      return res.status(500).json({ message: "Server error occurred while retrieving file." });
+    }
+  }
+);
 protectedRouter.get(
   "/teacher/feedback/:filename",
   hasRole("student", "teacher", "admin", "global_overseer"),
