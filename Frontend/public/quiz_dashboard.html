@@ -135,7 +135,7 @@ async function loadTranslations() {
     try {
         const res = await fetch("/locales/quiz-dashboard.json");
         translations = res.ok ? await res.json() : {};
-        // Add new translations if not present in file
+        // Add new/required translations if not present in file
         const defaultNew = {
             multipleChoice: { en: "Multiple Choice", fr: "Choix Multiple" },
             checkboxes: { en: "Checkboxes", fr: "Cases à cocher" },
@@ -151,7 +151,10 @@ async function loadTranslations() {
             grade: { en: "Grade", fr: "Niveau" },
             loading: { en: "Loading...", fr: "Chargement..." },
             due: { en: "Due", fr: "Pour le" },
-            noQuizzesYet: { en: "No quizzes yet.", fr: "Aucun quiz pour le moment." }
+            noQuizzesYet: { en: "No quizzes yet.", fr: "Aucun quiz pour le moment." },
+            questionLabel: { en: "Question", fr: "Question" },
+            questionPlaceholder: { en: "Type your question...", fr: "Saisissez votre question..." },
+            questionsCount: { en: "Questions", fr: "Questions" }
         };
         for (const key in defaultNew) {
             if (!translations[key]) translations[key] = defaultNew[key];
@@ -242,6 +245,7 @@ function renderOptionsForQuestionType(type, container, questionId) {
     if (type === 'multiple-choice' || type === 'checkboxes') {
         const optionInputType = type === 'multiple-choice' ? 'radio' : 'checkbox';
         container.innerHTML = `
+            <div class="text-sm text-gray-600">${type === 'multiple-choice' ? 'Select one correct answer' : 'Select all correct answers'}</div>
             <div class="options-list space-y-2 mt-2">
                 <div class="flex items-center gap-2">
                     <input type="${optionInputType}" name="${name}" class="correct-answer-check h-5 w-5 text-blue-600 focus:ring-blue-500"/>
