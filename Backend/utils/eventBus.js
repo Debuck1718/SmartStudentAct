@@ -280,20 +280,56 @@ eventBus.on("quiz_created", async ({ quizId, title }) => {
     const quiz = await Quiz.findById(quizId);
     if (!quiz) return;
 
+    const effectiveTitle = title || quiz.title || "New Quiz";
     const students = await fetchStudentsForAssignmentOrQuiz(quiz);
 
     for (const student of students) {
       await notifyUser(
         student,
         "New Quiz",
-        `"${title}" is now available!`,
+        `"${effectiveTitle}" is now available!`,
         "/student/quizzes",
         EMAIL_TEMPLATES.quizNotification,
-        { firstname: student.firstname, quizTitle: title }
+        { firstname: student.firstname, quizTitle: effectiveTitle }
       );
+    }
+
+    // Optional reminders based on due_date
+    if (quiz.due_date) {
+      const reminderHours = [6, 2];
+      for (const hoursBefore of reminderHours) {
+        const remindTime = new Date(quiz.due_date);
+        remindTime.setHours(remindTime.getHours() - hoursBefore);
+        if (remindTime > new Date()) {
+          await agenda.schedule(remindTime, "quiz_reminder", { quizId, hoursBefore });
+        }
+      }
     }
   } catch (err) {
     logger.error(`quiz_created event failed: ${err.message}`);
+  }
+});
+
+// Agenda job: send quiz reminders
+agenda.define("quiz_reminder", async (job) => {
+  const { quizId, hoursBefore } = job.attrs.data;
+  try {
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) return;
+    const students = await fetchStudentsForAssignmentOrQuiz(quiz);
+
+    for (const student of students) {
+      await notifyUser(
+        student,
+        "Quiz Reminder",
+        `"${quiz.title}" is due in ${hoursBefore} hours.`,
+        "/student/quizzes",
+        EMAIL_TEMPLATES.quizNotification,
+        { firstname: student.firstname, quizTitle: quiz.title, hoursBefore }
+      );
+    }
+  } catch (err) {
+    logger.error(`quiz_reminder job failed: ${err.message}`);
   }
 });
 
@@ -406,7 +442,7 @@ eventBus.on("budget_notification", async ({ userId, message }) => {
       "Budget Update",
       message,
       "/student/budget",
-      emailTemplates.goalBudgetUpdate,
+      EMAIL_TEMPLATES.goalBudgetUpdate,
       { firstname: user.firstname, message }
     );
   } catch (err) {
@@ -471,7 +507,7 @@ agenda.define("worker_reminder", async (job) => {
       "Reminder",
       `Reminder: ${title} is due on ${new Date(due_date).toLocaleString()}`,
       "/worker/reminders",
-      emailTemplates.assignmentNotification,
+      EMAIL_TEMPLATES.assignmentNotification,
       { firstname: worker.firstname, reminderTitle: title, dueDate: new Date(due_date).toDateString() }
     );
   } catch (err) {
