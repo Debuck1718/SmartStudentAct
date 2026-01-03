@@ -6,6 +6,7 @@ import fs from "fs/promises";
 import crypto from "crypto";
 import Joi from "joi";
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import logger from "../utils/logger.js";
 import webpush from "web-push";
 import jwt from "jsonwebtoken";
@@ -82,7 +83,8 @@ async function notifyUser(userId, title, message, url) {
 const protectedRouter = express.Router();
 
 const hasRole = (allowedRoles) => (req, res, next) => {
-  if (!req.user || !allowedRoles.includes(req.user.role)) {
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  if (!req.user || !roles.includes(req.user.role)) {
     return res.status(403).json({
       status: false,
       message: "Sorry, you are not authorized to view this resource.",
@@ -97,15 +99,39 @@ protectedRouter.use(authenticateJWT);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Centralize absolute directories for uploads
+const dirs = {
+  root: path.resolve(__dirname, ".."),
+  uploads: path.resolve(__dirname, "..", "uploads"),
+  assignments: path.resolve(__dirname, "..", "uploads", "assignments"),
+  submissions: path.resolve(__dirname, "..", "uploads", "submissions"),
+  feedback: path.resolve(__dirname, "..", "uploads", "feedback"),
+  other: path.resolve(__dirname, "..", "uploads", "other"),
+};
+
+// Ensure upload directories exist
+(async () => {
+  for (const d of Object.values(dirs)) {
+    try {
+      await fs.mkdir(d, { recursive: true });
+      logger.info(`Ensured upload directory exists: ${d}`);
+    } catch (error) {
+      logger.error(`Failed to create upload directory ${d}: ${error.message}`);
+    }
+  }
+})();
+
 const localDiskStorage = multer.diskStorage({
   destination: (req, _file, cb) => {
     let dest;
     if (req.path.includes("/teacher/assignments")) {
-      dest = path.join(__dirname, "uploads", "assignments");
+      dest = dirs.assignments;
     } else if (req.path.includes("/student/submissions")) {
-      dest = path.join(__dirname, "uploads", "submissions");
+      dest = dirs.submissions;
+    } else if (req.path.includes("/teacher/feedback")) {
+      dest = dirs.feedback;
     } else {
-      dest = path.join(__dirname, "uploads", "other");
+      dest = dirs.other;
     }
     cb(null, dest);
   },
@@ -185,21 +211,6 @@ const createUploadMiddleware = (storageEngine) =>
 const localUpload = createUploadMiddleware(localDiskStorage);
 const cloudinaryUpload = createUploadMiddleware(cloudinaryStorage);
 const profileUpload = multer({ storage: profilePictureStorage });
-
-const dirs = {
-  assignments: path.join(__dirname, "uploads", "assignments"),
-  submissions: path.join(__dirname, "uploads", "submissions"),
-  feedback: path.join(__dirname, "uploads", "feedback"),
-  other: path.join(__dirname, "uploads", "other"),
-};
-Object.values(dirs).forEach(async (d) => {
-  try {
-    await fs.mkdir(d, { recursive: true });
-    logger.info(`Ensured upload directory exists: ${d}`);
-  } catch (error) {
-    logger.error(`Failed to create upload directory ${d}: ${error.message}`);
-  }
-});
 
 // Helper to compute profile picture URL with a default fallback
 function getProfileUrl(req, storedUrl) {
@@ -3251,7 +3262,7 @@ protectedRouter.get(
       }
 
       if (!authorized) {
-        return res.status(403).json({ message: "Forbidden. You do not have permission to view this file." });
+        return res.status(403).json({ status: false, message: "Sorry, you are not authorized to view this resource." });
       }
 
       // Serve file from local uploads directory
@@ -3271,7 +3282,6 @@ protectedRouter.get(
     }
   }
 );
-
 // Secure download of student submission files for teachers/admins
 protectedRouter.get(
   "/teacher/submissions/files/:filename",
@@ -3320,8 +3330,7 @@ protectedRouter.get(
       return res.status(500).json({ message: "Server error occurred while retrieving file." });
     }
   }
-);
-protectedRouter.get(
+);protectedRouter.get(
   "/teacher/feedback/:filename",
   hasRole("student", "teacher", "admin", "global_overseer"),
   async (req, res) => {
