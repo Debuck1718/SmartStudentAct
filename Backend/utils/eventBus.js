@@ -148,18 +148,20 @@ eventBus.on("assignment_created", async ({ assignmentId, title }) => {
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) return;
 
+    const effectiveTitle = title || assignment.title || "New Assignment";
+
     const students = await fetchStudentsForAssignmentOrQuiz(assignment);
     for (const student of students) {
       await notifyUser(
         student,
         "New Assignment",
-        `"${title}" is due on ${assignment.due_date.toDateString()}`,
+        `"${effectiveTitle}" is due on ${assignment.due_date?.toDateString?.() || ""}`,
         "/student/assignments",
         emailTemplates.assignmentNotification,
         {
           firstname: student.firstname,
-          assignmentTitle: title,
-          dueDate: assignment.due_date.toDateString(),
+          assignmentTitle: effectiveTitle,
+          dueDate: assignment.due_date?.toDateString?.() || "",
         }
       );
     }
@@ -552,7 +554,7 @@ eventBus.on("teacher_message", async ({ userId, message, teacherName }) => {
 });
 
 // Notify teacher/student when a new assignment submission is created
-eventBus.on("new_submission", async ({ assignmentId, studentId }) => {
+eventBus.on("new_submission", async ({ assignmentId, studentId, title }) => {
   try {
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) return;
@@ -560,9 +562,10 @@ eventBus.on("new_submission", async ({ assignmentId, studentId }) => {
     const student = await User.findById(studentId).select("_id firstname lastname email PushSub");
     if (!teacher || !student) return;
 
-    const message = `${student.firstname} ${student.lastname} submitted ${assignment.title}`;
+    const aTitle = title || assignment.title || "an assignment";
+    const message = `${student.firstname} ${student.lastname} submitted ${aTitle}`;
     await notifyUser(teacher, "New Submission", message, "/teacher/feedback");
-    await notifyUser(student, "Submission Received", `Your submission for ${assignment.title} was received.`, "/student/submissions");
+    await notifyUser(student, "Submission Received", `Your submission for ${aTitle} was received.`, "/student/submissions");
   } catch (err) {
     logger.error(`new_submission handler failed: ${err.message}`);
   }
