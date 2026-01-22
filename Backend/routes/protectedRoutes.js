@@ -3282,57 +3282,59 @@ protectedRouter.get(
       return res.status(500).json({ message: "Server error occurred while retrieving file." });
     }
   }
-);protectedRouter.get(
+);
+protectedRouter.get(
   "/teacher/feedback/:filename",
-  hasRole("student", "teacher", "admin", "global_overseer"),
+  authenticateJWT,
+  hasRole(["student", "teacher", "admin", "global_overseer"]),
   async (req, res) => {
     try {
       const { filename } = req.params;
-      const filePath = path.join(dirs.feedback, filename);
-      const userId = req.user.id;
+      if (!filename || filename !== path.basename(filename) || /[\/\\]/.test(filename)) {
+        return res.status(400).json({ message: "Invalid filename." });
+      }
+
+      const storedPath = `/uploads/feedback/${filename}`;
+      const submission = await Submission.findOne({ feedback_file: storedPath }).select("assignment_id user_id");
+      if (!submission) {
+        return res.status(404).json({ message: "File not found." });
+      }
+
+      const userId = String(req.user.id);
       const userRole = req.user.role;
-      await fs.access(filePath);
       let isAuthorized = false;
+
       if (userRole === "global_overseer" || userRole === "admin") {
         isAuthorized = true;
-      } else {
-        const submission = await Submission.findOne({
-          feedback_file: `/uploads/feedback/${filename}`,
-        });
-        if (submission) {
-          if (userRole === "teacher") {
-            const assignment = await Assignment.findById(
-              submission.assignment_id
-            );
-            if (assignment && assignment.created_by.toString() === userId) {
-              isAuthorized = true;
-            }
-          } else if (
-            userRole === "student" &&
-            submission.user_id.toString() === userId
-          ) {
-            isAuthorized = true;
-          }
+      } else if (userRole === "teacher") {
+        const assignment = await Assignment.findById(submission.assignment_id).select("teacher_id");
+        if (assignment && String(assignment.teacher_id) === userId) {
+          isAuthorized = true;
         }
+      } else if (userRole === "student") {
+        // student who owns the submission can view their feedback file
+        isAuthorized = submission.user_id && String(submission.user_id) === userId;
       }
-      if (isAuthorized) {
-        res.sendFile(filePath);
-      } else {
-        res
-          .status(403)
-          .json({
-            message: "Forbidden. You do not have permission to view this file.",
-          });
+
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Forbidden. You do not have permission to view this file." });
       }
+
+      const filePath = path.join(dirs.feedback, filename);
+      try {
+        await fs.access(filePath);
+      } catch {
+        return res.status(404).json({ message: "File not found." });
+      }
+
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      return res.sendFile(filePath);
     } catch (error) {
       logger.error("Error serving feedback file:", error);
       if (error.code === "ENOENT") {
-        res.status(404).json({ message: "File not found." });
-      } else {
-        res
-          .status(500)
-          .json({ message: "Server error occurred while retrieving file." });
+        return res.status(404).json({ message: "File not found." });
       }
+      return res.status(500).json({ message: "Server error occurred while retrieving file." });
     }
   }
 );

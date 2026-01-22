@@ -964,8 +964,8 @@
         try {
           const res = await fetch(`/locales/teachers.json`);
           if (!res.ok) throw new Error("Failed to load translations");
-          const allTranslations = await res.json();
-          translations = allTranslations[lang] || {};
+          // File is a map of keys -> { en, fr, ... }
+          translations = await res.json();
         } catch (err) {
           console.error("Translation load error:", err);
           translations = {};
@@ -973,20 +973,22 @@
       }
 
       function translateText(key) {
-        return translations[key] || (defaultTranslations[key] ? defaultTranslations[key][currentLang] : key);
+        // prefer loaded translations.json, fall back to defaultTranslations
+        const entry = translations[key];
+        if (entry && entry[currentLang]) return entry[currentLang];
+        if (defaultTranslations[key] && defaultTranslations[key][currentLang]) return defaultTranslations[key][currentLang];
+        return key;
       }
 
       function applyTranslations() {
         document.querySelectorAll("[data-i18n]").forEach((el) => {
           const key = el.getAttribute("data-i18n");
-          if (translations[key]) {
-            const translatedText = translations[key][currentLang];
-            if (translatedText) {
-              if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
-                el.placeholder = translatedText;
-              } else {
-                el.innerHTML = translatedText;
-              }
+          const translatedText = translateText(key);
+          if (translatedText && translatedText !== key) {
+            if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+              el.placeholder = translatedText;
+            } else {
+              el.innerHTML = translatedText;
             }
           }
         });
@@ -1541,8 +1543,14 @@
                 const resp = await fetch(url, { credentials: 'include' });
                 if (!resp.ok) {
                   ev.preventDefault();
-                  const data = await resp.json().catch(()=>({message:"Attachment not available"}));
-                  showToast(data.message || "Attachment not available", "error");
+                  let msg = "Attachment not available";
+                  try {
+                    const data = await resp.json();
+                    msg = data.message || msg;
+                  } catch {}
+                  if (resp.status === 403) msg = "You are not authorized to view this file.";
+                  if (resp.status === 404) msg = "File not found on server.";
+                  showToast(msg, "error");
                 }
               } catch {
                 ev.preventDefault();
@@ -2599,6 +2607,10 @@
       window.addEventListener("load", async () => {
           await checkAuth();
           await fetchTeacherProfile();
+          // Load translations first, then apply to static labels
+          await loadTranslations(currentLang);
+          applyTranslations();
+
           await fetchStudents();
           await fetchAssignedTasks();
           await fetchQuizSummaries();
@@ -2611,7 +2623,6 @@
           wireCalendar();
           hideLoadingOverlay();
           wireProfilePhotoUpload();
-          await applyTranslations(currentLang);
 
           const notificationBtn = document.getElementById('notification-btn');
           if (notificationBtn) {
