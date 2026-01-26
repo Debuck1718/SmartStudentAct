@@ -200,3 +200,341 @@
     "ru": "Ошибка: Не удалось загрузить викторины"
   }
 }
+{
+  "pageTitle": {
+    "en": "SmartStudentAct | Quiz Dashboard",
+    "fr": "SmartStudentAct | Tableau des Quiz",
+    "es": "SmartStudentAct | Panel de Quiz",
+    "tr": "SmartStudentAct | Quiz Panosu",
+    "ar": "SmartStudentAct | لوحة الاختبارات",
+    "ru": "SmartStudentAct | Панель Викторин"
+  },
+  "backToTeacherDashboard": {
+    "en": "Back to Teacher Dashboard",
+    "fr": "Retour au tableau de bord enseignant",
+    "es": "Volver al panel del profesor",
+    "tr": "Öğretmen Panosuna Geri Dön",
+    "ar": "العودة إلى لوحة المعلم",
+    "ru": "Вернуться на панель преподавателя"
+  },
+  "createNewQuiz": {
+    "en": "Create New Quiz",
+    "fr": "Créer un nouveau quiz",
+    "es": "Crear nuevo cuestionario",
+    "tr": "Yeni Quiz Oluştur",
+    "ar": "إنشاء اختبار جديد",
+    "ru": "Создать новую викторину"
+  },
+  "quizTitlePlaceholder": {
+    "en": "Quiz Title",
+    "fr": "Titre du quiz",
+    "es": "Título del cuestionario",
+    "tr": "Quiz Başlığı",
+    "ar": "عنوان الاختبار",
+    "ru": "Название викторины"
+  },
+  "quizDescriptionPlaceholder": {
+    "en": "Quiz Description",
+    "fr": "Description du quiz",
+    "es": "Descripción del cuestionario",
+    "tr": "Quiz Açıklaması",
+    "ar": "وصف الاختبار",
+    "ru": "Описание викторины"
+  },
+  "addQuestion": {
+    "en": "➕ Add Question",
+    "fr": "➕ Ajouter une question",
+    "es": "➕ Agregar pregunta",
+    "tr": "➕ Soru Ekle",
+    "ar": "➕ إضافة سؤال",
+    "ru": "➕ Добавить вопрос"
+  },
+  "assignTo": {
+    "en": "Assign To:",
+    "fr": "Attribuer à :",
+    "es": "Asignar a:",
+    "tr": "Atanacak:",
+    "ar": "تعيين إلى:",
+    "ru": "Назначить для:"
+  },
+  "studentEmailsPlaceholder": {
+    "en": "Student Emails (comma separated)",
+    "fr": "Emails des étudiants (séparés par des virgules)",
+    "es": "Correos de estudiantes (separados por comas)",
+    "tr": "Öğrenci E-postaları (virgülle ayrılmış)",
+    "ar": "البريد الإلكتروني للطلاب (مفصول بفواصل)",
+    "ru": "Email студентов (через запятую)"
+  },
+  "gradePlaceholder": {
+    "en": "Grade (optional)",
+    "fr": "Niveau (optionnel)",
+    "es": "Grado (opcional)",
+    "tr": "Sınıf (isteğe bağlı)",
+    "ar": "الصف (اختياري)",
+    "ru": "Класс (необязательно)"
+  },
+  "schoolNamePlaceholder": {
+    "en": "School Name (optional)",
+    "fr": "Nom de l'école (optionnel)",
+    "es": "Nombre de la escuela (opcional)",
+    "tr": "Okul Adı (isteğe bağlı)",
+    "ar": "اسم المدرسة (اختياري)",
+    "ru": "Название школы (необязательно)"
+  },
+  "saveAndAssign": {
+    "en": "📤 Save & Assign Quiz",
+    "fr": "📤 Enregistrer et attribuer le quiz",
+    "es": "📤 Guardar y asignar cuestionario",
+    "tr": "📤 Kaydet ve Quiz Ata",
+    "ar": "📤 حفظ وتعيين الاختبار",
+    "ru": "📤 Сохранить и назначить викторину"
+  },
+  "myQuizzes": {
+    "en": "My Quizzes",
+    "fr": "Mes Quiz",
+    "es": "Mis cuestionarios",
+    "tr": "Quizlerim",
+    "ar": "اختباراتي",
+    "ru": "Мои викторины"
+  },
+  "loading": {
+    "en": "Loading...",
+    "fr": "Chargement...",
+    "es": "Cargando...",
+    "tr": "Yükleniyor...",
+    "ar": "جارٍ التحميل...",
+    "ru": "Загрузка..."
+  },
+  "noQuizzesYet": {
+    "en": "No quizzes yet.",
+    "fr": "Aucun quiz pour le moment.",
+    "es": "No hay cuestionarios todavía.",
+    "tr": "Henüz quiz yok.",
+    "ar": "لا توجد اختبارات حتى الآن.",
+    "ru": "Пока нет викторин."
+  },
+  "questionsCount": {
+    "en": "Questions",
+    "fr": "Questions",
+    "es": "Preguntas",
+    "tr": "Sorular",
+    "ar": "أسئلة",
+    "ru": "Вопросы"
+  },
+  "questionLabel": {
+    "en": "Question",
+    "fr": "Question",
+    "es": "Pregunta",
+    "tr": "Soru",
+    "ar": "السؤال",
+    "ru": "Вопрос"
+  },
+  "questionPlaceholder": {
+    "en": "Enter question",
+    "fr": "Entrez la question",
+    "es": "Ingrese la pregunta",
+    "tr": "Soruyu girin",
+    "ar": "أدخل السؤال",
+    "ru": "Введите вопрос"
+  },
+  "optionA": {
+    "en": "Option A",
+    "fr": "Option A",
+    "es": "Opción A",
+    "tr": "Seçenek A",
+    "ar": "الخيار أ",
+    "ru": "Вариант A"
+  },
+  "optionB": {
+    "en": "Option B",
+    "fr": "Option B",
+    "es": "Opción B",
+    "tr": "Seçenek B",
+    "ar": "الخيار ب",
+    "ru": "Вариант B"
+  },
+  "optionC": {
+    "en": "Option C",
+    "fr": "Option C",
+    "es": "Opción C",
+    "tr": "Seçenek C",
+    "ar": "الخيار ج",
+    "ru": "Вариант C"
+  },
+  "optionD": {
+    "en": "Option D",
+    "fr": "Option D",
+    "es": "Opción D",
+    "tr": "Seçenek D",
+    "ar": "الخيار د",
+    "ru": "Вариант D"
+  },
+  "correctAnswer": {
+    "en": "Correct Answer:",
+    "fr": "Réponse correcte :",
+    "es": "Respuesta correcta:",
+    "tr": "Doğru Cevap:",
+    "ar": "الإجابة الصحيحة:",
+    "ru": "Правильный ответ:"
+  },
+  "quizSuccessAlert": {
+    "en": "✅ Quiz created successfully!",
+    "fr": "✅ Quiz créé avec succès !",
+    "es": "✅ ¡Cuestionario creado con éxito!",
+    "tr": "✅ Quiz başarıyla oluşturuldu!",
+    "ar": "✅ تم إنشاء الاختبار بنجاح!",
+    "ru": "✅ Викторина успешно создана!"
+  },
+  "quizSaveErrorAlert": {
+    "en": "❌ Error: Failed to save quiz",
+    "fr": "❌ Erreur : Échec de l'enregistrement du quiz",
+    "es": "❌ Error: No se pudo guardar el cuestionario",
+    "tr": "❌ Hata: Quiz kaydedilemedi",
+    "ar": "❌ خطأ: فشل حفظ الاختبار",
+    "ru": "❌ Ошибка: Не удалось сохранить викторину"
+  },
+  "quizLoadErrorAlert": {
+    "en": "Error: Failed to load quizzes",
+    "fr": "Erreur : Échec du chargement des quiz",
+    "es": "Error: No se pudieron cargar los cuestionarios",
+    "tr": "Hata: Quizler yüklenemedi",
+    "ar": "خطأ: فشل تحميل الاختبارات",
+    "ru": "Ошибка: Не удалось загрузить викторины"
+  },
+  "title": {
+    "en": "Quiz Dashboard",
+    "fr": "Tableau de Quiz",
+    "es": "Panel de Cuestionarios",
+    "tr": "Quiz Paneli",
+    "ar": "لوحة الاختبارات",
+    "ru": "Панель викторин"
+  },
+  "multipleChoice": {
+    "en": "Multiple Choice",
+    "fr": "Choix Multiple",
+    "es": "Elección múltiple",
+    "tr": "Çoktan Seçmeli",
+    "ar": "اختيار من متعدد",
+    "ru": "Множественный выбор"
+  },
+  "checkboxes": {
+    "en": "Checkboxes",
+    "fr": "Cases à cocher",
+    "es": "Casillas de verificación",
+    "tr": "Onay kutuları",
+    "ar": "خانات اختيار",
+    "ru": "Флажки"
+  },
+  "shortAnswer": {
+    "en": "Short Answer",
+    "fr": "Réponse courte",
+    "es": "Respuesta corta",
+    "tr": "Kısa Yanıt",
+    "ar": "إجابة قصيرة",
+    "ru": "Краткий ответ"
+  },
+  "points": {
+    "en": "Points",
+    "fr": "Points",
+    "es": "Puntos",
+    "tr": "Puan",
+    "ar": "النقاط",
+    "ru": "Баллы"
+  },
+  "addOption": {
+    "en": "Add Option",
+    "fr": "Ajouter une option",
+    "es": "Agregar opción",
+    "tr": "Seçenek Ekle",
+    "ar": "إضافة خيار",
+    "ru": "Добавить вариант"
+  },
+  "removeOption": {
+    "en": "Remove",
+    "fr": "Supprimer",
+    "es": "Eliminar",
+    "tr": "Kaldır",
+    "ar": "إزالة",
+    "ru": "Удалить"
+  },
+  "optionPlaceholder": {
+    "en": "Option",
+    "fr": "Option",
+    "es": "Opción",
+    "tr": "Seçenek",
+    "ar": "خيار",
+    "ru": "Вариант"
+  },
+  "selectOneCorrect": {
+    "en": "Select one correct answer",
+    "fr": "Sélectionnez une réponse correcte",
+    "es": "Seleccione una respuesta correcta",
+    "tr": "Bir doğru yanıt seçin",
+    "ar": "اختر إجابة صحيحة واحدة",
+    "ru": "Выберите один правильный ответ"
+  },
+  "selectAllCorrect": {
+    "en": "Select all correct answers",
+    "fr": "Sélectionnez toutes les réponses correctes",
+    "es": "Seleccione todas las respuestas correctas",
+    "tr": "Tüm doğru yanıtları seçin",
+    "ar": "اختر جميع الإجابات الصحيحة",
+    "ru": "Выберите все правильные ответы"
+  },
+  "shortAnswerGradingNote": {
+    "en": "Short answers require manual grading.",
+    "fr": "Les réponses courtes nécessitent une correction manuelle.",
+    "es": "Las respuestas cortas requieren calificación manual.",
+    "tr": "Kısa cevaplar manuel notlandırma gerektirir.",
+    "ar": "تتطلب الإجابات القصيرة تصحيحًا يدويًا.",
+    "ru": "Короткие ответы требуют ручной оценки."
+  },
+  "timeLimitPlaceholder": {
+    "en": "Time limit (minutes, optional)",
+    "fr": "Limite de temps (minutes, optionnel)",
+    "es": "Límite de tiempo (minutos, opcional)",
+    "tr": "Süre sınırı (dakika, isteğe bağlı)",
+    "ar": "الحد الزمني (بالدقائق، اختياري)",
+    "ru": "Лимит времени (минуты, необязательно)"
+  },
+  "importCsv": {
+    "en": "Import CSV",
+    "fr": "Importer CSV",
+    "es": "Importar CSV",
+    "tr": "CSV İçe Aktar",
+    "ar": "استيراد CSV",
+    "ru": "Импорт CSV"
+  },
+  "importCsvHint": {
+    "en": "Import questions from CSV file",
+    "fr": "Importer des questions depuis un fichier CSV",
+    "es": "Importar preguntas desde archivo CSV",
+    "tr": "Soruları CSV dosyasından içe aktar",
+    "ar": "استيراد أسئلة من ملف CSV",
+    "ru": "Импортировать вопросы из файла CSV"
+  },
+  "assignByGrade": {
+    "en": "Assign by Grade",
+    "fr": "Assigner par classe",
+    "es": "Asignar por grado",
+    "tr": "Sınıfa göre ata",
+    "ar": "التعيين حسب الصف",
+    "ru": "Назначить по классу"
+  },
+  "assignByProgram": {
+    "en": "Assign by Program",
+    "fr": "Assigner par programme",
+    "es": "Asignar por programa",
+    "tr": "Programa göre ata",
+    "ar": "التعيين حسب البرنامج",
+    "ru": "Назначить по программе"
+  },
+  "assignByStudent": {
+    "en": "Assign to Students",
+    "fr": "Assigner aux étudiants",
+    "es": "Asignar a estudiantes",
+    "tr": "Öğrencilere ata",
+    "ar": "التعيين للطلاب",
+    "ru": "Назначить студентам"
+  }
+}

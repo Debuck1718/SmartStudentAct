@@ -53,7 +53,19 @@
     "menu_profile": "👤 Profile",
     "menu_logout": "👋 Logout",
     "alert_confirm_btn": "Confirm",
-    "alert_cancel_btn": "Cancel"
+    "alert_cancel_btn": "Cancel",
+    "dashboardTitle": "🎓 Student Dashboard",
+    "assignments": "Assignments",
+    "viewSubmit": "View / Submit",
+    "downloadAttachment": "Download Attachment",
+    "noAssignments": "No assignments found.",
+    "due": "Due",
+    "submissionTitle": "Submit Assignment",
+    "yourResponseOptional": "Your Response (optional)",
+    "attachFileOptional": "Attach File (optional)",
+    "submit": "Submit",
+    "submissionSuccess": "Submission successful!",
+    "attachmentNotAvailable": "Attachment not available"
   },
   "fr": {
     "title": "SmartStudentAct - Tableau de Bord",
@@ -109,7 +121,19 @@
     "menu_profile": "👤 Profil",
     "menu_logout": "👋 Se Déconnecter",
     "alert_confirm_btn": "Confirmer",
-    "alert_cancel_btn": "Annuler"
+    "alert_cancel_btn": "Annuler",
+    "dashboardTitle": "🎓 Tableau de bord étudiant",
+    "assignments": "Devoirs",
+    "viewSubmit": "Voir / Soumettre",
+    "downloadAttachment": "Télécharger la pièce jointe",
+    "noAssignments": "Aucun devoir trouvé.",
+    "due": "Dû",
+    "submissionTitle": "Soumettre le devoir",
+    "yourResponseOptional": "Votre réponse (optionnel)",
+    "attachFileOptional": "Joindre un fichier (optionnel)",
+    "submit": "Soumettre",
+    "submissionSuccess": "Soumission réussie !",
+    "attachmentNotAvailable": "Pièce jointe non disponible"
   },
   "es": {
     "title": "SmartStudentAct - Panel de Control",
@@ -165,7 +189,19 @@
     "menu_profile": "👤 Perfil",
     "menu_logout": "👋 Cerrar Sesión",
     "alert_confirm_btn": "Confirmar",
-    "alert_cancel_btn": "Cancelar"
+    "alert_cancel_btn": "Cancelar",
+    "dashboardTitle": "🎓 Panel de Estudiante",
+    "assignments": "Tareas",
+    "viewSubmit": "Ver / Enviar",
+    "downloadAttachment": "Descargar adjunto",
+    "noAssignments": "No se encontraron tareas.",
+    "due": "Vence",
+    "submissionTitle": "Enviar tarea",
+    "yourResponseOptional": "Tu respuesta (opcional)",
+    "attachFileOptional": "Adjuntar archivo (opcional)",
+    "submit": "Enviar",
+    "submissionSuccess": "¡Envío exitoso!",
+    "attachmentNotAvailable": "Adjunto no disponible"
   },
   "tr": {
     "title": "SmartStudentAct - Kontrol Paneli",
@@ -221,7 +257,19 @@
     "menu_profile": "👤 Profil",
     "menu_logout": "👋 Çıkış Yap",
     "alert_confirm_btn": "Onayla",
-    "alert_cancel_btn": "İptal"
+    "alert_cancel_btn": "İptal",
+    "dashboardTitle": "🎓 Öğrenci Paneli",
+    "assignments": "Ödevler",
+    "viewSubmit": "Görüntüle / Gönder",
+    "downloadAttachment": "Eki İndir",
+    "noAssignments": "Ödev bulunamadı.",
+    "due": "Son tarih",
+    "submissionTitle": "Ödevi Gönder",
+    "yourResponseOptional": "Yanıtınız (isteğe bağlı)",
+    "attachFileOptional": "Dosya Ekle (isteğe bağlı)",
+    "submit": "Gönder",
+    "submissionSuccess": "Gönderim başarılı!",
+    "attachmentNotAvailable": "Ek mevcut değil"
   },
   "ar": {
     "title": "SmartStudentAct - لوحة القيادة",
@@ -277,7 +325,19 @@
     "menu_profile": "👤 الملف الشخصي",
     "menu_logout": "👋 تسجيل الخروج",
     "alert_confirm_btn": "تأكيد",
-    "alert_cancel_btn": "إلغاء"
+    "alert_cancel_btn": "إلغاء",
+    "dashboardTitle": "🎓 لوحة تحكم الطالب",
+    "assignments": "الواجبات",
+    "viewSubmit": "عرض / إرسال",
+    "downloadAttachment": "تنزيل المرفق",
+    "noAssignments": "لم يتم العثور على واجبات.",
+    "due": "مستحق",
+    "submissionTitle": "إرسال الواجب",
+    "yourResponseOptional": "ردك (اختياري)",
+    "attachFileOptional": "إرفاق ملف (اختياري)",
+    "submit": "إرسال",
+    "submissionSuccess": "تم الإرسال بنجاح!",
+    "attachmentNotAvailable": "المرفق غير متاح"
   },
   "ru": {
     "title": "SmartStudentAct - Панель Управления",
@@ -333,6 +393,18 @@
     "menu_profile": "👤 Профиль",
     "menu_logout": "👋 Выйти",
     "alert_confirm_btn": "Подтвердить",
-    "alert_cancel_btn": "Отмена"
+    "alert_cancel_btn": "Отмена",
+    "dashboardTitle": "🎓 Панель студента",
+    "assignments": "Задания",
+    "viewSubmit": "Просмотр / Отправить",
+    "downloadAttachment": "Скачать вложение",
+    "noAssignments": "Заданий не найдено.",
+    "due": "Срок",
+    "submissionTitle": "Отправить задание",
+    "yourResponseOptional": "Ваш ответ (необязательно)",
+    "attachFileOptional": "Прикрепить файл (необязательно)",
+    "submit": "Отправить",
+    "submissionSuccess": "Отправка успешна!",
+    "attachmentNotAvailable": "Вложение недоступно"
   }
 }

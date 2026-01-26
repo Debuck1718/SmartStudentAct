@@ -673,3 +673,863 @@
     "ru": "Отправить сообщение"
   }
 }
+{
+  "dashboardTitle": {
+    "en": "📚 Teacher Dashboard",
+    "fr": "📚 Tableau de bord enseignant",
+    "es": "📚 Panel de Profesor",
+    "tr": "📚 Öğretmen Kontrol Paneli",
+    "ar": "📚 لوحة تحكم المعلم",
+    "ru": "📚 Панель учителя"
+  },
+  "loadingMessage": {
+    "en": "Loading teacher dashboard...",
+    "fr": "Chargement du tableau de bord enseignant...",
+    "es": "Cargando panel de profesor...",
+    "tr": "Öğretmen paneli yükleniyor...",
+    "ar": "جارٍ تحميل لوحة تحكم المعلم...",
+    "ru": "Загрузка панели учителя..."
+  },
+  "ok": {
+    "en": "OK",
+    "fr": "OK",
+    "es": "OK",
+    "tr": "Tamam",
+    "ar": "حسناً",
+    "ru": "ОК"
+  },
+  "cancel": {
+    "en": "Cancel",
+    "fr": "Annuler",
+    "es": "Cancelar",
+    "tr": "İptal",
+    "ar": "إلغاء",
+    "ru": "Отмена"
+  },
+  "send": {
+    "en": "Send",
+    "fr": "Envoyer",
+    "es": "Enviar",
+    "tr": "Gönder",
+    "ar": "إرسال",
+    "ru": "Отправить"
+  },
+  "aiEssayChecker": {
+    "en": "🤖 AI Essay Checker",
+    "fr": "🤖 Vérificateur de dissertation IA",
+    "es": "🤖 Corrector de Ensayos IA",
+    "tr": "🤖 Yapay Zeka Deneme Kontrolü",
+    "ar": "🤖 مدقق مقالات الذكاء الاصطناعي",
+    "ru": "🤖 Проверка эссе ИИ"
+  },
+  "quizDashboard": {
+    "en": "📝 Quiz Dashboard",
+    "fr": "📝 Tableau de Quiz",
+    "es": "📝 Panel de Cuestionarios",
+    "tr": "📝 Quiz Kontrol Paneli",
+    "ar": "📝 لوحة الاختبارات",
+    "ru": "📝 Панель викторин"
+  },
+  "yourProfile": {
+    "en": "Your Profile",
+    "fr": "Votre profil",
+    "es": "Tu perfil",
+    "tr": "Profiliniz",
+    "ar": "ملفك الشخصي",
+    "ru": "Ваш профиль"
+  },
+  "settings": {
+    "en": "Settings",
+    "fr": "Paramètres",
+    "es": "Configuración",
+    "tr": "Ayarlar",
+    "ar": "الإعدادات",
+    "ru": "Настройки"
+  },
+  "signOut": {
+    "en": "🚪 Sign out",
+    "fr": "🚪 Se déconnecter",
+    "es": "🚪 Cerrar sesión",
+    "tr": "🚪 Çıkış Yap",
+    "ar": "🚪 تسجيل الخروج",
+    "ru": "🚪 Выйти"
+  },
+  "myClass": {
+    "en": "👨‍🎓 My Class",
+    "fr": "👨‍🎓 Ma classe",
+    "es": "👨‍🎓 Mi clase",
+    "tr": "👨‍🎓 Sınıfım",
+    "ar": "👨‍🎓 صفي",
+    "ru": "👨‍🎓 Мой класс"
+  },
+  "completedTasks": {
+    "en": "✅ Completed Tasks",
+    "fr": "✅ Tâches terminées",
+    "es": "✅ Tareas completadas",
+    "tr": "✅ Tamamlanan Görevler",
+    "ar": "✅ المهام المكتملة",
+    "ru": "✅ Выполненные задания"
+  },
+  "aiChecker": {
+    "en": "🤖 AI Checker",
+    "fr": "🤖 Vérificateur IA",
+    "es": "🤖 Verificador IA",
+    "tr": "🤖 Yapay Zeka Kontrolü",
+    "ar": "🤖 مدقق الذكاء الاصطناعي",
+    "ru": "🤖 Проверка ИИ"
+  },
+  "studentsInClass": {
+    "en": "🎓 Students in Your Class",
+    "fr": "🎓 Étudiants dans votre classe",
+    "es": "🎓 Estudiantes en tu clase",
+    "tr": "🎓 Sınıfınızdaki öğrenciler",
+    "ar": "🎓 الطلاب في صفك",
+    "ru": "🎓 Студенты в вашем классе"
+  },
+  "createAssignment": {
+    "en": "✏️ Create and Send Assignment",
+    "fr": "✏️ Créer et envoyer une mission",
+    "es": "✏️ Crear y enviar tarea",
+    "tr": "✏️ Ödev Oluştur ve Gönder",
+    "ar": "✏️ إنشاء وإرسال الواجب",
+    "ru": "✏️ Создать и отправить задание"
+  },
+  "selectStudent": {
+    "en": "Select Student:",
+    "fr": "Sélectionnez un étudiant :",
+    "es": "Seleccionar estudiante:",
+    "tr": "Öğrenci seçin:",
+    "ar": "اختر الطالب:",
+    "ru": "Выберите студента:"
+  },
+  "assignmentTitle": {
+    "en": "Assignment Title:",
+    "fr": "Titre de l'affectation :",
+    "es": "Título de la tarea:",
+    "tr": "Ödev Başlığı:",
+    "ar": "عنوان الواجب:",
+    "ru": "Название задания:"
+  },
+  "assignmentPlaceholder": {
+    "en": "e.g., History Essay on World War II",
+    "fr": "ex : Essai d'histoire sur la Seconde Guerre mondiale",
+    "es": "p. ej., Ensayo de historia sobre la Segunda Guerra Mundial",
+    "tr": "örn., II. Dünya Savaşı hakkında tarih denemesi",
+    "ar": "مثال: مقال تاريخي عن الحرب العالمية الثانية",
+    "ru": "например, эссе по истории Второй мировой войны"
+  },
+  "dueDate": {
+    "en": "Due Date:",
+    "fr": "Date limite :",
+    "es": "Fecha de entrega:",
+    "tr": "Son Tarih:",
+    "ar": "تاريخ التسليم:",
+    "ru": "Срок сдачи:"
+  },
+  "assignmentDetails": {
+    "en": "Assignment Details (max 1000 words or attach file):",
+    "fr": "Détails de la mission (max 1000 mots ou joindre un fichier) :",
+    "es": "Detalles de la tarea (máx. 1000 palabras o adjunte un archivo):",
+    "tr": "Ödev Detayları (maks 1000 kelime veya dosya ekleyin):",
+    "ar": "تفاصيل الواجب (بحد أقصى 1000 كلمة أو إرفاق ملف):",
+    "ru": "Детали задания (макс. 1000 слов или прикрепите файл):"
+  },
+  "assignmentTextPlaceholder": {
+    "en": "Type your assignment here...",
+    "fr": "Tapez votre mission ici...",
+    "es": "Escribe tu tarea aquí...",
+    "tr": "Ödevinizi buraya yazın...",
+    "ar": "اكتب واجبك هنا...",
+    "ru": "Введите задание здесь..."
+  },
+  "wordCount": {
+    "en": "Word count: 0",
+    "fr": "Nombre de mots : 0",
+    "es": "Conteo de palabras: 0",
+    "tr": "Kelime sayısı: 0",
+    "ar": "عدد الكلمات: 0",
+    "ru": "Количество слов: 0"
+  },
+  "pickDocument": {
+    "en": "📎 Pick Document/File",
+    "fr": "📎 Choisir un document/fichier",
+    "es": "📎 Seleccionar documento/archivo",
+    "tr": "📎 Belge/Dosya Seç",
+    "ar": "📎 اختر مستند/ملف",
+    "ru": "📎 Выберите документ/файл"
+  },
+  "noFileSelected": {
+    "en": "No file selected.",
+    "fr": "Aucun fichier sélectionné.",
+    "es": "Ningún archivo seleccionado.",
+    "tr": "Hiçbir dosya seçilmedi.",
+    "ar": "لم يتم تحديد أي ملف.",
+    "ru": "Файл не выбран."
+  },
+  "clear": {
+    "en": "Clear",
+    "fr": "Effacer",
+    "es": "Limpiar",
+    "tr": "Temizle",
+    "ar": "مسح",
+    "ru": "Очистить"
+  },
+  "sendAssignment": {
+    "en": "Send Assignment",
+    "fr": "Envoyer la mission",
+    "es": "Enviar tarea",
+    "tr": "Ödevi Gönder",
+    "ar": "إرسال الواجب",
+    "ru": "Отправить задание"
+  },
+  "addPointsTitle": {
+    "en": "➕ Add Student Points",
+    "fr": "➕ Ajouter des points à l'élève",
+    "es": "➕ Agregar puntos al estudiante",
+    "tr": "➕ Öğrenci Puanı Ekle",
+    "ar": "➕ إضافة نقاط للطالب",
+    "ru": "➕ Добавить баллы студенту"
+  },
+  "pointsToAdd": {
+    "en": "Points to Add:",
+    "fr": "Points à ajouter :",
+    "es": "Puntos a agregar:",
+    "tr": "Eklenecek Puanlar:",
+    "ar": "النقاط المراد إضافتها:",
+    "ru": "Баллы для добавления:"
+  },
+  "pointsPlaceholder": {
+    "en": "e.g., 10",
+    "fr": "ex : 10",
+    "es": "p. ej., 10",
+    "tr": "örn., 10",
+    "ar": "مثال: 10",
+    "ru": "например, 10"
+  },
+  "reasonOptional": {
+    "en": "Reason (Optional):",
+    "fr": "Raison (facultatif) :",
+    "es": "Razón (opcional):",
+    "tr": "Sebep (Opsiyonel):",
+    "ar": "السبب (اختياري):",
+    "ru": "Причина (необязательно):"
+  },
+  "reasonPlaceholder": {
+    "en": "e.g., Great participation in class discussion.",
+    "fr": "ex : Excellente participation en classe.",
+    "es": "p. ej., Gran participación en la discusión en clase.",
+    "tr": "örn., Sınıf tartışmasına harika katılım.",
+    "ar": "مثال: مشاركة رائعة في مناقشة الصف.",
+    "ru": "например, Отличное участие в обсуждении класса."
+  },
+  "addPointsButton": {
+    "en": "Add Points",
+    "fr": "Ajouter des points",
+    "es": "Agregar puntos",
+    "tr": "Puan Ekle",
+    "ar": "إضافة نقاط",
+    "ru": "Добавить баллы"
+  },
+  "grantRewardsTitle": {
+    "en": "🎖️ Grant Rewards",
+    "fr": "🎖️ Attribuer des récompenses",
+    "es": "🎖️ Otorgar recompensas",
+    "tr": "🎖️ Ödülleri Ver",
+    "ar": "🎖️ منح الجوائز",
+    "ru": "🎖️ Назначить награды"
+  },
+  "grantTypeLabel": {
+    "en": "Reward Type:",
+    "fr": "Type de récompense :",
+    "es": "Tipo de recompensa:",
+    "tr": "Ödül Türü:",
+    "ar": "نوع الجائزة:",
+    "ru": "Тип награды:"
+  },
+  "grantPointsLabel": {
+    "en": "Points (optional):",
+    "fr": "Points (optionnel) :",
+    "es": "Puntos (opcional):",
+    "tr": "Puanlar (isteğe bağlı):",
+    "ar": "النقاط (اختياري):",
+    "ru": "Баллы (необязательно):"
+  },
+  "grantDescriptionLabel": {
+    "en": "Description (optional):",
+    "fr": "Description (optionnelle) :",
+    "es": "Descripción (opcional):",
+    "tr": "Açıklama (isteğe bağlı):",
+    "ar": "الوصف (اختياري):",
+    "ru": "Описание (необязательно):"
+  },
+  "grantRewardsButton": {
+    "en": "Grant Rewards",
+    "fr": "Attribuer",
+    "es": "Otorgar",
+    "tr": "Ver",
+    "ar": "منح الجوائز",
+    "ru": "Назначить"
+  },
+  "rewardGrantedSuccess": {
+    "en": "Rewards granted successfully!",
+    "fr": "Récompenses attribuées avec succès !",
+    "es": "¡Recompensas otorgadas con éxito!",
+    "tr": "Ödüller başarıyla verildi!",
+    "ar": "تم منح الجوائز بنجاح!",
+    "ru": "Награды успешно присвоены!"
+  },
+  "rewardGrantedError": {
+    "en": "Failed to grant rewards.",
+    "fr": "Échec de l'attribution des récompenses.",
+    "es": "Error al otorgar recompensas.",
+    "tr": "Ödülleri vermek başarısız oldu.",
+    "ar": "فشل في منح الجوائز.",
+    "ru": "Не удалось назначить награды."
+  },
+  "overdueTasks": {
+    "en": "📌 Overdue Tasks",
+    "fr": "📌 Tâches en retard",
+    "es": "📌 Tareas atrasadas",
+    "tr": "📌 Gecikmiş Görevler",
+    "ar": "📌 المهام المتأخرة",
+    "ru": "📌 Просроченные задания"
+  },
+  "assignedTasks": {
+    "en": "📝 Assigned Tasks & Feedback",
+    "fr": "📝 Tâches assignées et retours",
+    "es": "📝 Tareas asignadas y comentarios",
+    "tr": "📝 Atanan Görevler ve Geri Bildirim",
+    "ar": "📝 المهام المعينة والتغذية الراجعة",
+    "ru": "📝 Назначенные задания и отзывы"
+  },
+  "studentFeedback": {
+    "en": "💬 Student Feedback Overview",
+    "fr": "💬 Aperçu des retours des étudiants",
+    "es": "💬 Resumen de comentarios de estudiantes",
+    "tr": "💬 Öğrenci Geri Bildirim Özeti",
+    "ar": "💬 نظرة عامة على ملاحظات الطلاب",
+    "ru": "💬 Обзор отзывов студентов"
+  },
+  "academicCalendar": {
+    "en": "📅 Academic Calendar",
+    "fr": "📅 Calendrier académique",
+    "es": "📅 Calendario académico",
+    "tr": "📅 Akademik Takvim",
+    "ar": "📅 التقويم الأكاديمي",
+    "ru": "📅 Академический календарь"
+  },
+  "termStart": {
+    "en": "Start of Term (YYYY-MM-DD)",
+    "fr": "Début du trimestre (AAAA-MM-JJ)",
+    "es": "Inicio del trimestre (AAAA-MM-DD)",
+    "tr": "Dönem Başlangıcı (YYYY-AA-GG)",
+    "ar": "بداية الفصل الدراسي (YYYY-MM-DD)",
+    "ru": "Начало семестра (ГГГГ-ММ-ДД)"
+  },
+  "termEnd": {
+    "en": "End of Term (YYYY-MM-DD)",
+    "fr": "Fin du trimestre (AAAA-MM-JJ)",
+    "es": "Fin del trimestre (AAAA-MM-DD)",
+    "tr": "Dönem Sonu (YYYY-AA-GG)",
+    "ar": "نهاية الفصل الدراسي (YYYY-MM-DD)",
+    "ru": "Конец семестра (ГГГГ-ММ-ДД)"
+  },
+  "resultsTitle": {
+    "en": "Term Results",
+    "fr": "Résultats du trimestre",
+    "es": "Resultados del período",
+    "tr": "Dönem Sonuçları",
+    "ar": "نتائج الفصل",
+    "ru": "Результаты учебного периода"
+  },
+  "selectTerm": {
+    "en": "Select Term",
+    "fr": "Sélectionnez un trimestre",
+    "es": "Seleccionar período",
+    "tr": "Dönemi Seçin",
+    "ar": "اختر الفصل",
+    "ru": "Выберите период"
+  },
+  "fetchingResults": {
+    "en": "Loading results...",
+    "fr": "Chargement des résultats...",
+    "es": "Cargando resultados...",
+    "tr": "Sonuçlar yükleniyor...",
+    "ar": "جارٍ تحميل النتائج...",
+    "ru": "Загрузка результатов..."
+  },
+  "noResults": {
+    "en": "No results for selected term.",
+    "fr": "Aucun résultat pour le trimestre sélectionné.",
+    "es": "No hay resultados para el período seleccionado.",
+    "tr": "Seçili dönem için sonuç yok.",
+    "ar": "لا توجد نتائج للفترة المحددة.",
+    "ru": "Нет результатов за выбранный период."
+  },
+  "position": {
+    "en": "Pos",
+    "fr": "Pos",
+    "es": "Pos",
+    "tr": "Poz",
+    "ar": "المرتبة",
+    "ru": "Место"
+  },
+  "student": {
+    "en": "Student",
+    "fr": "Étudiant",
+    "es": "Estudiante",
+    "tr": "Öğrenci",
+    "ar": "الطالب",
+    "ru": "Студент"
+  },
+  "assignmentAvg": {
+    "en": "Assignment Avg",
+    "fr": "Moyenne devoirs",
+    "es": "Promedio tareas",
+    "tr": "Ödev Ort",
+    "ar": "متوسط الواجب",
+    "ru": "Средняя по заданиям"
+  },
+  "quizAvg": {
+    "en": "Quiz Avg",
+    "fr": "Moyenne quiz",
+    "es": "Promedio cuestionarios",
+    "tr": "Quiz Ort",
+    "ar": "متوسط الاختبار",
+    "ru": "Средняя по викторинам"
+  },
+  "rewardPoints": {
+    "en": "Reward Points",
+    "fr": "Points de récompense",
+    "es": "Puntos de recompensa",
+    "tr": "Ödül Puanları",
+    "ar": "نقاط المكافأة",
+    "ru": "Баллы вознаграждения"
+  },
+  "activity": {
+    "en": "Activity",
+    "fr": "Activité",
+    "es": "Actividad",
+    "tr": "Aktivite",
+    "ar": "النشاط",
+    "ru": "Активность"
+  },
+  "score": {
+    "en": "Score",
+    "fr": "Score",
+    "es": "Puntuación",
+    "tr": "Skor",
+    "ar": "النتيجة",
+    "ru": "Баллы"
+  },
+
+  "saveCalendar": {
+    "en": "Save Calendar",
+    "fr": "Enregistrer le calendrier",
+    "es": "Guardar calendario",
+    "tr": "Takvimi Kaydet",
+    "ar": "حفظ التقويم",
+    "ru": "Сохранить календарь"
+  },
+  "copyright": {
+    "en": "© <span id=\"currentYear\"></span> SmartStudentAct",
+    "fr": "© <span id=\"currentYear\"></span> SmartStudentAct",
+    "es": "© <span id=\"currentYear\"></span> SmartStudentAct",
+    "tr": "© <span id=\"currentYear\"></span> SmartStudentAct",
+    "ar": "© <span id=\"currentYear\"></span> SmartStudentAct",
+    "ru": "© <span id=\"currentYear\"></span> SmartStudentAct"
+  },
+  "contactUs": {
+    "en": "📩 Contact Us",
+    "fr": "📩 Contactez-nous",
+    "es": "📩 Contáctanos",
+    "tr": "📩 Bize Ulaşın",
+    "ar": "📩 تواصل معنا",
+    "ru": "📩 Связаться с нами"
+  },
+  "yourName": {
+    "en": "Your Name",
+    "fr": "Votre nom",
+    "es": "Tu nombre",
+    "tr": "Adınız",
+    "ar": "اسمك",
+    "ru": "Ваше имя"
+  },
+  "yourEmail": {
+    "en": "Your Email",
+    "fr": "Votre e-mail",
+    "es": "Tu correo electrónico",
+    "tr": "E-posta adresiniz",
+    "ar": "بريدك الإلكتروني",
+    "ru": "Ваш email"
+  },
+  "message": {
+    "en": "Message",
+    "fr": "Message",
+    "es": "Mensaje",
+    "tr": "Mesaj",
+    "ar": "رسالة",
+    "ru": "Сообщение"
+  },
+  "singleStudent": {
+    "en": "Single Student",
+    "fr": "Un Seul Étudiant",
+    "es": "Un solo estudiante",
+    "tr": "Tek Öğrenci",
+    "ar": "طالب واحد",
+    "ru": "Один студент"
+  },
+  "multipleStudents": {
+    "en": "Multiple Students",
+    "fr": "Plusieurs Étudiants",
+    "es": "Múltiples estudiantes",
+    "tr": "Birden Çok Öğrenci",
+    "ar": "عدة طلاب",
+    "ru": "Несколько студентов"
+  },
+  "entireClass": {
+    "en": "Entire Class",
+    "fr": "Toute la Classe",
+    "es": "Toda la clase",
+    "tr": "Tüm Sınıf",
+    "ar": "الصف بالكامل",
+    "ru": "Весь класс"
+  },
+  "otherGrade": {
+    "en": "Another Grade",
+    "fr": "Une Autre Classe",
+    "es": "Otro grado",
+    "tr": "Başka Bir Sınıf",
+    "ar": "صف آخر",
+    "ru": "Другой класс"
+  },
+  "selectRecipient": {
+    "en": "Select Recipient:",
+    "fr": "Sélectionner le Destinataire :",
+    "es": "Seleccionar destinatario:",
+    "tr": "Alıcı Seçin:",
+    "ar": "اختر المستلم:",
+    "ru": "Выберите получателя:"
+  },
+  "contact": {
+    "en": "📩 Contact",
+    "fr": "📩 Contact",
+    "es": "📩 Contacto",
+    "tr": "📩 İletişim",
+    "ar": "📩 تواصل",
+    "ru": "📩 Контакты"
+  },
+  "select_grade": {
+    "en": "Select Grade",
+    "fr": "Sélectionnez une classe",
+    "es": "Seleccionar grado",
+    "tr": "Sınıf Seçin",
+    "ar": "اختر الصف",
+    "ru": "Выберите класс"
+  },
+  "no_students": {
+    "en": "No students found.",
+    "fr": "Aucun étudiant trouvé.",
+    "es": "No se encontraron estudiantes.",
+    "tr": "Öğrenci bulunamadı.",
+    "ar": "لم يتم العثور على أي طالب.",
+    "ru": "Студенты не найдены."
+  },
+  "grade": {
+    "en": "Grade",
+    "fr": "Classe",
+    "es": "Grado",
+    "tr": "Sınıf",
+    "ar": "الصف",
+    "ru": "Класс"
+  },
+  "other_students": {
+    "en": "Other Students",
+    "fr": "Autres Étudiants",
+    "es": "Otros estudiantes",
+    "tr": "Diğer Öğrenciler",
+    "ar": "طلاب آخرون",
+    "ru": "Другие студенты"
+  },
+  "loading": {
+    "en": "Loading...",
+    "fr": "Chargement...",
+    "es": "Cargando...",
+    "tr": "Yükleniyor...",
+    "ar": "جارٍ التحميل...",
+    "ru": "Загрузка..."
+  },
+  "no_assigned_tasks": {
+    "en": "No assigned tasks.",
+    "fr": "Aucune tâche assignée.",
+    "es": "No hay tareas asignadas.",
+    "tr": "Atanmış görev yok.",
+    "ar": "لا توجد مهام معينة.",
+    "ru": "Нет назначенных заданий."
+  },
+  "failed_load_tasks": {
+    "en": "Failed to load assigned tasks.",
+    "fr": "Échec du chargement des tâches assignées.",
+    "es": "No se pudieron cargar las tareas asignadas.",
+    "tr": "Atanan görevler yüklenemedi.",
+    "ar": "فشل في تحميل المهام المعينة.",
+    "ru": "Не удалось загрузить назначенные задания."
+  },
+  "due": {
+    "en": "Due",
+    "fr": "Dû",
+    "es": "Vence",
+    "tr": "Son tarih",
+    "ar": "مستحق",
+    "ru": "Срок"
+  },
+  "no_feedback": {
+    "en": "No feedback found.",
+    "fr": "Aucun commentaire trouvé.",
+    "es": "No se encontraron comentarios.",
+    "tr": "Geri bildirim bulunamadı.",
+    "ar": "لم يتم العثور على ملاحظات.",
+    "ru": "Отзывы не найдены."
+  },
+  "failed_load_feedback": {
+    "en": "Failed to load feedback.",
+    "fr": "Échec du chargement des commentaires.",
+    "es": "No se pudieron cargar los comentarios.",
+    "tr": "Geri bildirim yüklenemedi.",
+    "ar": "فشل في تحميل الملاحظات.",
+    "ru": "Не удалось загрузить отзывы."
+  },
+  "no_overdue_tasks": {
+    "en": "No overdue tasks.",
+    "fr": "Aucune tâche en retard.",
+    "es": "No hay tareas atrasadas.",
+    "tr": "Gecikmiş görev yok.",
+    "ar": "لا توجد مهام متأخرة.",
+    "ru": "Нет просроченных заданий."
+  },
+  "failed_load_overdue": {
+    "en": "Failed to load overdue tasks.",
+    "fr": "Échec du chargement des tâches en retard.",
+    "es": "No se pudieron cargar las tareas atrasadas.",
+    "tr": "Gecikmiş görevler yüklenemedi.",
+    "ar": "فشل في تحميل المهام المتأخرة.",
+    "ru": "Не удалось загрузить просроченные задания."
+  },
+  "enter_academic_year": {
+    "en": "Please enter the academic year.",
+    "fr": "Veuillez entrer l'année académique.",
+    "es": "Por favor, introduzca el año académico.",
+    "tr": "Lütfen akademik yılı girin.",
+    "ar": "يرجى إدخال العام الأكاديمي.",
+    "ru": "Пожалуйста, введите учебный год."
+  },
+  "sendMessageTitle": {
+    "en": "💌 Send Message to Student",
+    "fr": "💌 Envoyer un message à l'élève",
+    "es": "💌 Enviar mensaje al estudiante",
+    "tr": "💌 Öğrenciye Mesaj Gönder",
+    "ar": "💌 إرسال رسالة إلى الطالب",
+    "ru": "💌 Отправить сообщение студенту"
+  },
+  "messageText": {
+    "en": "Message:",
+    "fr": "Message :",
+    "es": "Mensaje:",
+    "tr": "Mesaj:",
+    "ar": "رسالة:",
+    "ru": "Сообщение:"
+  },
+  "sendMessage": {
+    "en": "Send Message",
+    "fr": "Envoyer le message",
+    "es": "Enviar mensaje",
+    "tr": "Mesaj Gönder",
+    "ar": "إرسال رسالة",
+    "ru": "Отправить сообщение"
+  },
+
+  "subscribe": {
+    "en": "Subscribe",
+    "fr": "S'abonner",
+    "es": "Suscribirse",
+    "tr": "Abone Ol",
+    "ar": "اشترك",
+    "ru": "Подписаться"
+  },
+  "subscribed": {
+    "en": "Subscribed",
+    "fr": "Abonné",
+    "es": "Suscrito",
+    "tr": "Abone Olundu",
+    "ar": "مشترك",
+    "ru": "Подписан"
+  },
+  "welcomeBannerTitle": {
+    "en": "Welcome back, Teacher! 👋",
+    "fr": "Bon retour, Enseignant ! 👋",
+    "es": "¡Bienvenido de nuevo, Profesor! 👋",
+    "tr": "Tekrar hoş geldiniz, Öğretmen! 👋",
+    "ar": "مرحبًا بعودتك، معلمنا! 👋",
+    "ru": "С возвращением, преподаватель! 👋"
+  },
+  "welcomeBannerSubtitle": {
+    "en": "Manage your classroom, assignments, and student progress all in one place.",
+    "fr": "Gérez votre classe, vos devoirs et la progression des étudiants en un seul endroit.",
+    "es": "Administra tu clase, tareas y progreso de los estudiantes en un solo lugar.",
+    "tr": "Sınıfınızı, ödevlerinizi ve öğrenci ilerlemesini tek bir yerden yönetin.",
+    "ar": "أدر صفك وواجباتك وتقدم الطلاب في مكان واحد.",
+    "ru": "Управляйте классом, заданиями и прогрессом учащихся в одном месте."
+  },
+  "selectStudents": {
+    "en": "Specific Students",
+    "fr": "Étudiants spécifiques",
+    "es": "Estudiantes específicos",
+    "tr": "Belirli Öğrenciler",
+    "ar": "طلاب محددون",
+    "ru": "Конкретные студенты"
+  },
+  "selectStudentsLabel": {
+    "en": "Select Student(s):",
+    "fr": "Sélectionnez des étudiant(s) :",
+    "es": "Seleccionar estudiante(s):",
+    "tr": "Öğrenci(leri) Seçin:",
+    "ar": "اختر الطالب/الطلاب:",
+    "ru": "Выберите студента(ов):"
+  },
+  "selectGrade": {
+    "en": "Select Grade:",
+    "fr": "Sélectionner la classe :",
+    "es": "Seleccionar grado:",
+    "tr": "Sınıf Seçin:",
+    "ar": "اختر الصف:",
+    "ru": "Выберите класс:"
+  },
+  "selectProgram": {
+    "en": "Select Program:",
+    "fr": "Sélectionner le programme :",
+    "es": "Seleccionar programa:",
+    "tr": "Program Seçin:",
+    "ar": "اختر البرنامج:",
+    "ru": "Выберите программу:"
+  },
+  "program": {
+    "en": "Program",
+    "fr": "Programme",
+    "es": "Programa",
+    "tr": "Program",
+    "ar": "البرنامج",
+    "ru": "Программа"
+  },
+  "messagesNoData": {
+    "en": "No messages found.",
+    "fr": "Aucun message trouvé.",
+    "es": "No se encontraron mensajes.",
+    "tr": "Mesaj bulunamadı.",
+    "ar": "لم يتم العثور على رسائل.",
+    "ru": "Сообщений не найдено."
+  },
+  "viewSubmit": {
+    "en": "View / Submit",
+    "fr": "Voir / Soumettre",
+    "es": "Ver / Enviar",
+    "tr": "Görüntüle / Gönder",
+    "ar": "عرض / إرسال",
+    "ru": "Просмотр / Отправить"
+  },
+  "downloadAttachment": {
+    "en": "Download Attachment",
+    "fr": "Télécharger la pièce jointe",
+    "es": "Descargar adjunto",
+    "tr": "Eki İndir",
+    "ar": "تنزيل المرفق",
+    "ru": "Скачать вложение"
+  },
+  "calendarUnavailable": {
+    "en": "Calendar unavailable.",
+    "fr": "Calendrier indisponible.",
+    "es": "Calendario no disponible.",
+    "tr": "Takvim kullanılamıyor.",
+    "ar": "التقويم غير متاح.",
+    "ru": "Календарь недоступен."
+  },
+  "remove": {
+    "en": "Remove",
+    "fr": "Supprimer",
+    "es": "Eliminar",
+    "tr": "Kaldır",
+    "ar": "إزالة",
+    "ru": "Удалить"
+  },
+  "updateAssignment": {
+    "en": "Update Assignment",
+    "fr": "Mettre à jour le devoir",
+    "es": "Actualizar tarea",
+    "tr": "Ödevi Güncelle",
+    "ar": "تحديث الواجب",
+    "ru": "Обновить задание"
+  },
+  "pleaseSelectRecipient": {
+    "en": "Please select a recipient.",
+    "fr": "Veuillez sélectionner un destinataire.",
+    "es": "Por favor seleccione un destinatario.",
+    "tr": "Lütfen bir alıcı seçin.",
+    "ar": "يرجى اختيار مستلم.",
+    "ru": "Пожалуйста, выберите получателя."
+  },
+  "pleaseEnterTitle": {
+    "en": "Please enter an assignment title.",
+    "fr": "Veuillez saisir un titre de devoir.",
+    "es": "Por favor ingrese un título de tarea.",
+    "tr": "Lütfen bir ödev başlığı girin.",
+    "ar": "يرجى إدخال عنوان الواجب.",
+    "ru": "Пожалуйста, введите название задания."
+  },
+  "pleaseSelectDueDate": {
+    "en": "Please select a valid due date.",
+    "fr": "Veuillez sélectionner une date d'échéance valide.",
+    "es": "Por favor seleccione una fecha de entrega válida.",
+    "tr": "Lütfen geçerli bir son tarih seçin.",
+    "ar": "يرجى اختيار تاريخ تسليم صالح.",
+    "ru": "Пожалуйста, выберите действительную дату сдачи."
+  },
+  "pleaseAddDetailsOrFile": {
+    "en": "Please add details or attach a file.",
+    "fr": "Veuillez ajouter des détails ou joindre un fichier.",
+    "es": "Por favor agregue detalles o adjunte un archivo.",
+    "tr": "Lütfen detay ekleyin veya dosya ekleyin.",
+    "ar": "يرجى إضافة تفاصيل أو إرفاق ملف.",
+    "ru": "Пожалуйста, добавьте детали или прикрепите файл."
+  },
+  "pointsAddedSuccess": {
+    "en": "Points added successfully!",
+    "fr": "Points ajoutés avec succès !",
+    "es": "¡Puntos agregados con éxito!",
+    "tr": "Puanlar başarıyla eklendi!",
+    "ar": "تمت إضافة النقاط بنجاح!",
+    "ru": "Баллы успешно добавлены!"
+  },
+  "messageSentSuccess": {
+    "en": "Message sent successfully!",
+    "fr": "Message envoyé avec succès !",
+    "es": "¡Mensaje enviado con éxito!",
+    "tr": "Mesaj başarıyla gönderildi!",
+    "ar": "تم إرسال الرسالة بنجاح!",
+    "ru": "Сообщение успешно отправлено!"
+  },
+  "logoutFailed": {
+    "en": "Logout failed. Please try again.",
+    "fr": "Échec de la déconnexion. Veuillez réessayer.",
+    "es": "Error al cerrar sesión. Por favor, inténtalo de nuevo.",
+    "tr": "Çıkış başarısız. Lütfen tekrar deneyin.",
+    "ar": "فشل تسجيل الخروج. حاول مرة أخرى.",
+    "ru": "Не удалось выйти. Повторите попытку."
+  },
+  "removePhotoNotAvailable": {
+    "en": "Removing profile photo is not available yet.",
+    "fr": "La suppression de la photo de profil n'est pas encore disponible.",
+    "es": "Eliminar la foto de perfil aún no está disponible.",
+    "tr": "Profil fotoğrafını kaldırma henüz mevcut değil.",
+    "ar": "إزالة صورة الملف الشخصي غير متاحة بعد.",
+    "ru": "Удаление фото профиля пока недоступно."
+  }
+}
