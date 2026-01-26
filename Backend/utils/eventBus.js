@@ -61,6 +61,23 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 }
 
 // ===== Utility functions =====
+async function withRetry(fn, { attempts = 3, baseDelayMs = 500, factor = 2, jitter = true, label = "op" } = {}) {
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return await fn(i);
+    } catch (err) {
+      lastErr = err;
+      const delay = Math.min(15000, baseDelayMs * Math.pow(factor, i - 1)) * (jitter ? (0.7 + Math.random() * 0.6) : 1);
+      logger.warn(`[Retry] ${label} attempt ${i}/${attempts} failed: ${err.message}. Retrying in ${Math.round(delay)}ms`);
+      if (i < attempts) {
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function sendSMS(phone, message) {
   if (!phone) return;
   if (!process.env.BREVO_API_KEY) {
@@ -70,48 +87,93 @@ async function sendSMS(phone, message) {
 
   const recipient = phone.startsWith("+") ? phone : `+${phone}`;
   try {
-    await smsApi.sendTransacSms({
-      sender: process.env.BREVO_SMS_SENDER || "SmartStudentAct",
-      recipient,
-      content: message,
-    });
-    logger.info(`[Brevo SMS] Sent to ${recipient}: ${message}`);
+    await withRetry(
+      async (attempt) => {
+        await smsApi.sendTransacSms({
+          sender: process.env.BREVO_SMS_SENDER || "SmartStudentAct",
+          recipient,
+          content: message,
+        });
+        logger.info(`[Brevo SMS] Sent to ${recipient} (attempt ${attempt})`);
+      },
+      { attempts: 3, baseDelayMs: 800, label: "brevo_sms" }
+    );
+    return { ok: true };
   } catch (err) {
     logger.error(`[Brevo SMS] Failed to send to ${recipient}: ${err.message}`);
+    return { ok: false, error: err.message };
   }
 }
 
 async function sendPushToUser(pushSub, payload) {
+  if (!pushSub?.subscription) return { ok: false, error: "missing_subscription" };
   try {
-    if (pushSub?.subscription) {
-      await webpush.sendNotification(pushSub.subscription, JSON.stringify(payload));
-    }
+    await withRetry(
+      async (attempt) => {
+        await webpush.sendNotification(pushSub.subscription, JSON.stringify(payload));
+        logger.info(`[WebPush] Sent push (attempt ${attempt})`);
+      },
+      { attempts: 3, baseDelayMs: 500, label: "webpush" }
+    );
+    return { ok: true };
   } catch (err) {
-    logger.error(`Push notification failed: ${err.message}`);
+    logger.error(`[WebPush] Failed: ${err.message}`);
+    return { ok: false, error: err.message };
   }
 }
 
 async function notifyUser(user, title, message, url, emailTemplateId, templateVariables = {}) {
+  const result = { email: { ok: false }, sms: { ok: false }, push: { ok: false } };
   try {
+    // Ensure we have PushSub if not attached
     if (!user.PushSub && user._id && PushSubModel) {
       const found = await PushSubModel.findOne({ user_id: user._id }).lean();
       if (found) user.PushSub = found;
     }
+
+    // Push
     if (user.PushSub) {
-      await sendPushToUser(user.PushSub, { title, body: message, url });
+      const pushRes = await sendPushToUser(user.PushSub, { title, body: message, url });
+      result.push = pushRes;
+    } else {
+      result.push = { ok: false, error: "no_push_subscription" };
     }
 
+    // SMS
     if (user.phone) {
-      await sendSMS(user.phone, `${title}: ${message}`);
+      const smsRes = await sendSMS(user.phone, `${title}: ${message}`);
+      result.sms = smsRes || { ok: true }; // sendSMS returns {ok:true} now
+    } else {
+      result.sms = { ok: false, error: "no_phone" };
     }
 
+    // Email (Brevo)
     if (user.email && emailTemplateId) {
-      await mailer.sendTemplateEmail(user.email, emailTemplateId, templateVariables);
-      logger.info(`[Brevo Email] Sent "${title}" to ${user.email}`);
+      try {
+        await withRetry(
+          async (attempt) => {
+            await mailer.sendTemplateEmail(user.email, emailTemplateId, templateVariables);
+            logger.info(`[Brevo Email] Sent "${title}" to ${user.email} (attempt ${attempt})`);
+          },
+          { attempts: 3, baseDelayMs: 800, label: "brevo_email" }
+        );
+        result.email = { ok: true };
+      } catch (err) {
+        logger.error(`[Brevo Email] Failed to send "${title}" to ${user.email}: ${err.message}`);
+        result.email = { ok: false, error: err.message };
+      }
+    } else {
+      result.email = { ok: false, error: !user.email ? "no_email" : "no_template" };
     }
+
+    // Consolidated per-user notification log
+    logger.info(
+      `[Notify] user=${user._id || user.email} title="${title}" email=${result.email.ok} sms=${result.sms.ok} push=${result.push.ok}`
+    );
   } catch (err) {
-    logger.error(`notifyUser failed for ${user._id}: ${err.message}`);
+    logger.error(`notifyUser failed for ${user._id || user.email}: ${err.message}`);
   }
+  return result;
 }
 
 async function fetchStudentsForAssignmentOrQuiz(item) {
@@ -140,8 +202,9 @@ eventBus.on("assignment_created", async ({ assignmentId, title }) => {
     const effectiveTitle = title || assignment.title || "New Assignment";
 
     const students = await fetchStudentsForAssignmentOrQuiz(assignment);
+    let emailOk = 0, emailFail = 0, smsOk = 0, smsFail = 0, pushOk = 0, pushFail = 0;
     for (const student of students) {
-      await notifyUser(
+      const r = await notifyUser(
         student,
         "New Assignment",
         `"${effectiveTitle}" is due on ${assignment.due_date?.toDateString?.() || ""}`,
@@ -153,7 +216,11 @@ eventBus.on("assignment_created", async ({ assignmentId, title }) => {
           dueDate: assignment.due_date?.toDateString?.() || "",
         }
       );
+      if (r.email?.ok) emailOk++; else emailFail++;
+      if (r.sms?.ok) smsOk++; else smsFail++;
+      if (r.push?.ok) pushOk++; else pushFail++;
     }
+    logger.info(`[EventBus] assignment_created assignmentId=${assignmentId} notifiedStudents=${students.length} email_ok=${emailOk}/${students.length} sms_ok=${smsOk}/${students.length} push_ok=${pushOk}/${students.length}`);
 
     // Schedule reminders
     const reminderHours = [6, 2];
@@ -283,8 +350,9 @@ eventBus.on("quiz_created", async ({ quizId, title }) => {
     const effectiveTitle = title || quiz.title || "New Quiz";
     const students = await fetchStudentsForAssignmentOrQuiz(quiz);
 
+    let emailOk = 0, emailFail = 0, pushOk = 0, pushFail = 0, smsOk = 0, smsFail = 0;
     for (const student of students) {
-      await notifyUser(
+      const r = await notifyUser(
         student,
         "New Quiz",
         `"${effectiveTitle}" is now available!`,
@@ -292,7 +360,11 @@ eventBus.on("quiz_created", async ({ quizId, title }) => {
         EMAIL_TEMPLATES.quizNotification,
         { firstname: student.firstname, quizTitle: effectiveTitle }
       );
+      if (r.email?.ok) emailOk++; else emailFail++;
+      if (r.push?.ok) pushOk++; else pushFail++;
+      if (r.sms?.ok) smsOk++; else smsFail++;
     }
+    logger.info(`[EventBus] quiz_created quizId=${quizId} notifiedStudents=${students.length} email_ok=${emailOk}/${students.length} sms_ok=${smsOk}/${students.length} push_ok=${pushOk}/${students.length}`);
 
     // Optional reminders based on due_date
     if (quiz.due_date) {
@@ -590,8 +662,7 @@ eventBus.on("new_submission", async ({ assignmentId, studentId, title }) => {
     const aTitle = title || assignment.title || "an assignment";
     const submittedAt = new Date().toLocaleString();
 
-    // Notify teacher with Brevo template 15
-    await notifyUser(
+    const teacherRes = await notifyUser(
       teacher,
       "New Submission",
       `${student.firstname} ${student.lastname} submitted ${aTitle}`,
@@ -606,8 +677,7 @@ eventBus.on("new_submission", async ({ assignmentId, studentId, title }) => {
       }
     );
 
-    // Notify student with Brevo template 14
-    await notifyUser(
+    const studentRes = await notifyUser(
       student,
       "Submission Received",
       `Your submission for ${aTitle} was received.`,
@@ -620,6 +690,8 @@ eventBus.on("new_submission", async ({ assignmentId, studentId, title }) => {
         dashboardLink: `${process.env.APP_BASE_URL || ""}/student/submissions`
       }
     );
+
+    logger.info(`[EventBus] new_submission assignmentId=${assignmentId} teacherEmail=${teacherRes.email.ok} studentEmail=${studentRes.email.ok}`);
   } catch (err) {
     logger.error(`new_submission handler failed: ${err.message}`);
   }
