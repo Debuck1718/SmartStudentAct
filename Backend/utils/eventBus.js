@@ -10,6 +10,19 @@ import mongoose from "mongoose";
 import Agenda from "agenda";
 import mailer, { TEMPLATE_IDS as EMAIL_TEMPLATES } from "./email.js";
 
+// In-memory ring buffer for recent notification logs (diagnostics)
+const NOTIFY_LOG_BUFFER_SIZE = 500;
+const notifyLogs = [];
+function pushNotifyLog(entry) {
+  try {
+    notifyLogs.push({ ts: new Date().toISOString(), ...entry });
+    if (notifyLogs.length > NOTIFY_LOG_BUFFER_SIZE) notifyLogs.shift();
+  } catch {}
+}
+export function getNotifyLogs() {
+  return [...notifyLogs];
+}
+
 const User = mongoose.models.User;
 const Assignment = mongoose.models.Assignment;
 const StudentTask = mongoose.models.StudentTask;
@@ -135,6 +148,7 @@ async function notifyUser(user, title, message, url, emailTemplateId, templateVa
     if (user.PushSub) {
       const pushRes = await sendPushToUser(user.PushSub, { title, body: message, url });
       result.push = pushRes;
+      pushNotifyLog({ channel: "push", user: user.email || user._id, ok: !!pushRes.ok, error: pushRes.error || null, title });
     } else {
       result.push = { ok: false, error: "no_push_subscription" };
     }
@@ -142,7 +156,8 @@ async function notifyUser(user, title, message, url, emailTemplateId, templateVa
     // SMS
     if (user.phone) {
       const smsRes = await sendSMS(user.phone, `${title}: ${message}`);
-      result.sms = smsRes || { ok: true }; // sendSMS returns {ok:true} now
+      result.sms = smsRes || { ok: true };
+      pushNotifyLog({ channel: "sms", user: user.email || user._id, ok: !!result.sms.ok, error: result.sms.error || null, title });
     } else {
       result.sms = { ok: false, error: "no_phone" };
     }
@@ -158,6 +173,7 @@ async function notifyUser(user, title, message, url, emailTemplateId, templateVa
           { attempts: 3, baseDelayMs: 800, label: "brevo_email" }
         );
         result.email = { ok: true };
+        pushNotifyLog({ channel: "email", user: user.email || user._id, ok: true, error: null, title, template: emailTemplateId });
       } catch (err) {
         logger.error(`[Brevo Email] Failed to send "${title}" to ${user.email}: ${err.message}`);
         result.email = { ok: false, error: err.message };
