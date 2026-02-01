@@ -1,0 +1,282 @@
+{
+  "abroad_title": {
+    "en": "🎓 Study Abroad & Scholarships",
+    "fr": "🎓 Étudier à l'étranger & Bourses",
+    "es": "🎓 Estudia en el extranjero y Becas",
+    "tr": "🎓 Yurtdışında Eğitim & Burslar",
+    "ar": "🎓 الدراسة في الخارج والمنح الدراسية",
+    "ru": "🎓 Обучение за рубежом и стипендии"
+  },
+  "nav_students": {
+    "en": "Students",
+    "fr": "Étudiants",
+    "es": "Estudiantes",
+    "tr": "Öğrenciler",
+    "ar": "الطلاب",
+    "ru": "Студенты"
+  },
+  "nav_teachers": {
+    "en": "Teachers",
+    "fr": "Enseignants",
+    "es": "Profesores",
+    "tr": "Öğretmenler",
+    "ar": "المعلمون",
+    "ru": "Преподаватели"
+  },
+  "nav_opportunities": {
+    "en": "Opportunities",
+    "fr": "Opportunités",
+    "es": "Oportunidades",
+    "tr": "Fırsatlar",
+    "ar": "فرص",
+    "ru": "Возможности"
+  },
+  "nav_consult": {
+    "en": "Consultation",
+    "fr": "Consultation",
+    "es": "Consulta",
+    "tr": "Danışmanlık",
+    "ar": "استشارة",
+    "ru": "Консультация"
+  },
+  "cta_apply_now": {
+    "en": "Apply / Consult",
+    "fr": "Postuler / Consulter",
+    "es": "Aplicar / Consultar",
+    "tr": "Başvur / Danış",
+    "ar": "قدّم / استشر",
+    "ru": "Подать заявку / Консультация"
+  },
+  "abroad_hero_title": {
+    "en": "Explore Global Educational Opportunities",
+    "fr": "Explorez les opportunités éducatives mondiales",
+    "es": "Explora oportunidades educativas globales",
+    "tr": "Küresel Eğitim Fırsatlarını Keşfet",
+    "ar": "استكشف الفرص التعليمية العالمية",
+    "ru": "Изучайте мировые образовательные возможности"
+  },
+  "abroad_hero_subtitle": {
+    "en": "Scholarships, grants, and programs to study abroad. We advise, consult, and guide you end‑to‑end. T&C applies.",
+    "fr": "Bourses, subventions et programmes pour étudier à l'étranger. Nous conseillons et guidons de bout en bout. T&C s'applique.",
+    "es": "Becas, subvenciones y programas para estudiar en el extranjero. Asesoramos y guiamos de principio a fin. Aplican T&C.",
+    "tr": "Yurtdışında eğitim için burslar, hibeler ve programlar. Baştan sona danışmanlık ve rehberlik sağlıyoruz. Şartlar geçerlidir.",
+    "ar": "منح وبرامج للدراسة في الخارج. نقدم الاستشارة والإرشاد من البداية حتى النهاية. تطبق الشروط والأحكام.",
+    "ru": "Стипендии, гранты и программы для обучения за рубежом. Мы консультируем и сопровождаем вас на всех этапах. Применяются условия."
+  },
+  "browse_opportunities": {
+    "en": "Browse Opportunities",
+    "fr": "Parcourir les opportunités",
+    "es": "Explorar oportunidades",
+    "tr": "Fırsatları İncele",
+    "ar": "تصفح الفرص",
+    "ru": "Просмотреть возможности"
+  },
+  "book_consultation": {
+    "en": "Book a Consultation",
+    "fr": "Réserver une consultation",
+    "es": "Reservar una consulta",
+    "tr": "Danışmanlık Al",
+    "ar": "احجز استشارة",
+    "ru": "Записаться на консультацию"
+  },
+  "featured_scholarships": {
+    "en": "Featured Scholarships",
+    "fr": "Bourses à l'honneur",
+    "es": "Becas destacadas",
+    "tr": "Öne Çıkan Burslar",
+    "ar": "المنح المميزة",
+    "ru": "Избранные стипендии"
+  },
+  "filter_country": {
+    "en": "Country",
+    "fr": "Pays",
+    "es": "País",
+    "tr": "Ülke",
+    "ar": "الدولة",
+    "ru": "Страна"
+  },
+  "filter_level": {
+    "en": "Study Level",
+    "fr": "Niveau d'études",
+    "es": "Nivel de estudios",
+    "tr": "Eğitim Seviyesi",
+    "ar": "المستوى الدراسي",
+    "ru": "Уровень обучения"
+  },
+  "filter_deadline": {
+    "en": "Deadline (before)",
+    "fr": "Date limite (avant)",
+    "es": "Fecha límite (antes de)",
+    "tr": "Son Tarih (öncesi)",
+    "ar": "الموعد النهائي (قبل)",
+    "ru": "Крайний срок (до)"
+  },
+  "any": {
+    "en": "Any",
+    "fr": "Tous",
+    "es": "Cualquiera",
+    "tr": "Hepsi",
+    "ar": "أي",
+    "ru": "Любой"
+  },
+  "level_undergrad": {
+    "en": "Undergraduate",
+    "fr": "Licence",
+    "es": "Pregrado",
+    "tr": "Lisans",
+    "ar": "مرحلة البكالوريوس",
+    "ru": "Бакалавриат"
+  },
+  "level_masters": {
+    "en": "Masters",
+    "fr": "Master",
+    "es": "Maestría",
+    "tr": "Yüksek Lisans",
+    "ar": "ماجستير",
+    "ru": "Магистратура"
+  },
+  "level_phd": {
+    "en": "PhD",
+    "fr": "Doctorat",
+    "es": "Doctorado",
+    "tr": "Doktora",
+    "ar": "دكتوراه",
+    "ru": "Аспирантура"
+  },
+  "apply_filters": {
+    "en": "Apply Filters",
+    "fr": "Appliquer les filtres",
+    "es": "Aplicar filtros",
+    "tr": "Filtreleri Uygula",
+    "ar": "تطبيق المرشحات",
+    "ru": "Применить фильтры"
+  },
+  "no_results": {
+    "en": "No opportunities match your filters.",
+    "fr": "Aucune opportunité ne correspond à vos filtres.",
+    "es": "No hay oportunidades que coincidan con tus filtros.",
+    "tr": "Filtrelerinize uygun fırsat bulunamadı.",
+    "ar": "لا توجد فرص مطابقة لمرشحاتك.",
+    "ru": "Нет возможностей, соответствующих вашим фильтрам."
+  },
+  "malta_spotlight_title": {
+    "en": "Spotlight: Study & Work in Malta",
+    "fr": "À la une : Étudier et travailler à Malte",
+    "es": "Destacado: Estudia y trabaja en Malta",
+    "tr": "Gündem: Malta’da Eğitim ve Çalışma",
+    "ar": "تسليط الضوء: الدراسة والعمل في مالطا",
+    "ru": "В фокусе: Учёба и работа на Мальте"
+  },
+  "updated_label": {
+    "en": "Updated",
+    "fr": "Mis à jour",
+    "es": "Actualizado",
+    "tr": "Güncellendi",
+    "ar": "تم التحديث",
+    "ru": "Обновлено"
+  },
+  "malta_intro": {
+    "en": "We are excited to share opportunities for Work and Study in Malta at selected institutions. Explore programs, eligibility, and application requirements below. T&C applies.",
+    "fr": "Nous sommes ravis de partager des opportunités pour travailler et étudier à Malte dans des établissements sélectionnés. Découvrez les programmes, l'éligibilité et les exigences ci-dessous. T&C s’applique.",
+    "es": "Nos complace compartir oportunidades para trabajar y estudiar en Malta en instituciones seleccionadas. Explora programas, elegibilidad y requisitos de solicitud a continuación. Aplican T&C.",
+    "tr": "Seçili kurumlarda Malta’da Çalışma ve Eğitim fırsatlarını paylaşıyoruz. Programları, uygunluk ve başvuru gerekliliklerini aşağıda keşfedin. Şartlar geçerlidir.",
+    "ar": "يسعدنا مشاركة فرص للعمل والدراسة في مالطا لدى مؤسسات مختارة. استكشف البرامج والأهلية ومتطلبات التقديم أدناه. تطبق الشروط والأحكام.",
+    "ru": "Мы рады поделиться возможностями для работы и учёбы на Мальте в выбранных учреждениях. Ознакомьтесь с программами, условиями и требованиями ниже. Применяются условия."
+  },
+  "deadline_label": {
+    "en": "Deadline",
+    "fr": "Date limite",
+    "es": "Fecha límite",
+    "tr": "Son Tarih",
+    "ar": "الموعد النهائي",
+    "ru": "Крайний срок"
+  },
+  "learn_more": {
+    "en": "Learn More",
+    "fr": "En savoir plus",
+    "es": "Saber más",
+    "tr": "Daha Fazla Bilgi",
+    "ar": "معرفة المزيد",
+    "ru": "Узнать больше"
+  },
+  "consult_title": {
+    "en": "Expert Consultation & Guidance",
+    "fr": "Consultation et accompagnement d'experts",
+    "es": "Consultoría y guía experta",
+    "tr": "Uzman Danışmanlık ve Rehberlik",
+    "ar": "استشارة وإرشاد خبراء",
+    "ru": "Экспертная консультация и сопровождение"
+  },
+  "consult_text": {
+    "en": "Work with our experienced advisors to craft winning applications, essays, and scholarship strategies.",
+    "fr": "Travaillez avec nos conseillers expérimentés pour élaborer des candidatures, des essais et des stratégies de bourses gagnants.",
+    "es": "Trabaja con nuestros asesores expertos para crear solicitudes, ensayos y estrategias de becas exitosas.",
+    "tr": "Deneyimli danışmanlarımızla kazandıran başvurular, denemeler ve burs stratejileri oluşturun.",
+    "ar": "اعمل مع مستشارينا ذوي الخبرة لصياغة طلبات ومقالات واستراتيجيات منح ناجحة.",
+    "ru": "Работайте с нашими опытными консультантами над заявками, эссе и стратегиями получения стипендий."
+  },
+  "consult_benefit1": {
+    "en": "Personalized school & program matching",
+    "fr": "Aiguillage personnalisé école & programme",
+    "es": "Correspondencia personalizada de escuela y programa",
+    "tr": "Kişiselleştirilmiş okul ve program eşleştirme",
+    "ar": "مطابقة مخصصة للمدرسة والبرنامج",
+    "ru": "Персональный подбор школ и программ"
+  },
+  "consult_benefit2": {
+    "en": "Scholarship and funding roadmap",
+    "fr": "Feuille de route bourses et financements",
+    "es": "Hoja de ruta de becas y financiación",
+    "tr": "Burs ve finansman yol haritası",
+    "ar": "خارطة طريق للمنح والتمويل",
+    "ru": "Дорожная карта стипендий и финансирования"
+  },
+  "consult_benefit3": {
+    "en": "Essay review & interview prep",
+    "fr": "Relecture d'essai & préparation d'entretien",
+    "es": "Revisión de ensayos y preparación de entrevistas",
+    "tr": "Kompozisyon değerlendirme & mülakat hazırlığı",
+    "ar": "مراجعة المقالات والتحضير للمقابلات",
+    "ru": "Проверка эссе и подготовка к собеседованию"
+  },
+  "consult_benefit4": {
+    "en": "End-to-end guidance till decision",
+    "fr": "Accompagnement de bout en bout jusqu'à la décision",
+    "es": "Orientación de extremo a extremo hasta la decisión",
+    "tr": "Karara kadar uçtan uca rehberlik",
+    "ar": "إرشاد شامل حتى اتخاذ القرار",
+    "ru": "Сопровождение до принятия решения"
+  },
+  "target_country": {
+    "en": "Target Country",
+    "fr": "Pays cible",
+    "es": "País objetivo",
+    "tr": "Hedef Ülke",
+    "ar": "البلد المستهدف",
+    "ru": "Целевая страна"
+  },
+  "tnc_note": {
+    "en": "By submitting, you agree to our consultation Terms & Conditions.",
+    "fr": "En soumettant, vous acceptez nos Conditions générales de consultation.",
+    "es": "Al enviar, aceptas nuestros Términos y Condiciones de consulta.",
+    "tr": "Göndererek, danışmanlık Şartlar ve Koşullarımızı kabul etmiş olursunuz.",
+    "ar": "من خلال الإرسال، فإنك توافق على شروط وأحكام الاستشارة لدينا.",
+    "ru": "Отправляя, вы соглашаетесь с нашими Условиями консультации."
+  },
+  "submit_request": {
+    "en": "Submit Request",
+    "fr": "Soumettre la demande",
+    "es": "Enviar solicitud",
+    "tr": "Talebi Gönder",
+    "ar": "إرسال الطلب",
+    "ru": "Отправить запрос"
+  },
+  "abroad_footer": {
+    "en": "© 2025 SmartStudentAct — Empowering Global Learners.",
+    "fr": "© 2025 SmartStudentAct — Autonomiser les apprenants du monde.",
+    "es": "© 2025 SmartStudentAct — Empoderando a los estudiantes globales.",
+    "tr": "© 2025 SmartStudentAct — Küresel Öğrencileri Güçlendiriyoruz.",
+    "ar": "© 2025 SmartStudentAct — تمكين المتعلمين حول العالم.",
+    "ru": "© 2025 SmartStudentAct — Расширяем возможности учащихся по всему миру."
+  }
+}

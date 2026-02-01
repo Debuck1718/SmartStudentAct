@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title data-i18n="abroad_title">🎓 Study Abroad & Scholarships</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: "class" };
+    if (localStorage.getItem("theme") === "dark" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  </script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="./images/icon.png"/>
+  <link rel="icon" type="image/png" sizes="16x16" href="./images/icon.png"/>
+  <link rel="manifest" href="/site.webmanifest"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+    body { font-family: "Inter", sans-serif; }
+    .glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-950 dark:text-white">
+  <header class="sticky top-0 z-40 glass dark:bg-white/10 shadow">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="./students.html" class="flex items-center gap-2 text-blue-600 font-extrabold text-lg">
+        <img src="./images/icon.png" class="h-6 w-6" alt="logo"/><span>SmartStudentAct</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-6 text-sm">
+        <a href="./students.html" class="hover:text-blue-600" data-i18n="nav_students">Students</a>
+        <a href="./teachers.html" class="hover:text-blue-600" data-i18n="nav_teachers">Teachers</a>
+        <a href="#opportunities" class="hover:text-blue-600" data-i18n="nav_opportunities">Opportunities</a>
+        <a href="#consult" class="hover:text-blue-600" data-i18n="nav_consult">Consultation</a>
+      </nav>
+      <div>
+        <a href="#consult" class="px-4 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700" data-i18n="cta_apply_now">Apply / Consult</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?q=80&w=1920&auto=format&fit=crop')] bg-cover bg-center opacity-30 dark:opacity-20"></div>
+    <div class="relative max-w-6xl mx-auto px-4 py-16 md:py-24">
+      <div class="max-w-3xl">
+        <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4" data-i18n="abroad_hero_title">
+          Explore Global Educational Opportunities
+        </h1>
+        <p class="text-slate-700 dark:text-slate-200 text-lg mb-6" data-i18n="abroad_hero_subtitle">
+          Scholarships, grants, and programs to study abroad. We advise, consult, and guide you end‑to‑end. T&C applies.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a href="#opportunities" class="px-5 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700" data-i18n="browse_opportunities">Browse Opportunities</a>
+          <a href="#consult" class="px-5 py-3 rounded-xl bg-white text-blue-700 font-bold border border-blue-200 hover:bg-blue-50 dark:bg-transparent dark:border-slate-600 dark:text-white" data-i18n="book_consultation">Book a Consultation</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters + Opportunities -->
+  <main id="opportunities" class="max-w-6xl mx-auto px-4 py-10 space-y-8">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow p-5">
+      <h2 class="text-2xl font-bold mb-4" data-i18n="featured_scholarships">Featured Scholarships</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="featured-list">
+        <!-- dynamic cards -->
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow p-5">
+      <div class="flex flex-col md:flex-row gap-4 items-end">
+        <div class="flex-1">
+          <label class="block text-sm mb-1" data-i18n="filter_country">Country</label>
+          <select id="filter-country" class="w-full border rounded-xl p-2 dark:bg-gray-900">
+            <option value="" data-i18n="any">Any</option>
+            <option value="USA">USA</option>
+            <option value="UK">UK</option>
+            <option value="Canada">Canada</option>
+            <option value="Germany">Germany</option>
+            <option value="Australia">Australia</option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm mb-1" data-i18n="filter_level">Study Level</label>
+          <select id="filter-level" class="w-full border rounded-xl p-2 dark:bg-gray-900">
+            <option value="" data-i18n="any">Any</option>
+            <option value="Undergrad" data-i18n="level_undergrad">Undergraduate</option>
+            <option value="Masters" data-i18n="level_masters">Masters</option>
+            <option value="PhD" data-i18n="level_phd">PhD</option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm mb-1" data-i18n="filter_deadline">Deadline (before)</label>
+          <input type="date" id="filter-deadline" class="w-full border rounded-xl p-2 dark:bg-gray-900"/>
+        </div>
+        <button id="filter-apply" class="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700" data-i18n="apply_filters">Apply Filters</button>
+      </div>
+
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="opps-list">
+        <!-- dynamic results -->
+      </div>
+      <p id="opps-empty" class="text-center text-gray-500 mt-4 hidden" data-i18n="no_results">No opportunities match your filters.</p>
+    </div>
+
+    <!-- Malta Spotlight Section -->
+    <section class="bg-white dark:bg-gray-800 rounded-3xl shadow p-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold" data-i18n="malta_spotlight_title">Spotlight: Study & Work in Malta</h2>
+        <span class="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200" data-i18n="updated_label">Updated</span>
+      </div>
+      <p class="text-gray-600 dark:text-gray-300 mt-2" data-i18n="malta_intro">
+        We are excited to share opportunities for Work and Study in Malta at selected institutions. Explore programs, eligibility, and application requirements below. T&C applies.
+      </p>
+
+      <div class="mt-4 space-y-3" id="malta-accordion">
+        <!-- Institution 1 -->
+        <div class="border rounded-xl overflow-hidden">
+          <button class="w-full text-left px-4 py-3 bg-slate-50 dark:bg-gray-900 hover:bg-slate-100 dark:hover:bg-gray-800 font-semibold flex items-center justify-between toggle-acc">
+            <span>1) European College of Innovation Malta <span class="text-xs text-blue-600">(50% tuition discount)</span></span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="p-4 hidden acc-panel">
+            <p class="font-semibold mb-2">Programs (MQF Levels 5 & 7):</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Diploma in Information Technology (MQF level 5)</li>
+              <li>Diploma in Tourism and Hospitality Management (MQF level 5 and 7)</li>
+              <li>Diploma in Business Management (MQF Level 5)</li>
+              <li>Diploma in Strategic Management and Leadership (MQF level 7)</li>
+              <li>Diploma in Health and Social Care Management (MQF level 5 and 7)</li>
+              <li>Award MQF level 6 in Nursing and Health Studies (bridging course, 6 months)</li>
+            </ul>
+            <div class="mt-3 grid md:grid-cols-2 gap-4">
+              <div>
+                <p class="font-semibold mb-1">Eligibility (MQF Level 5 Diploma):</p>
+                <p>Senior secondary school certificate, WASSCE, Diploma/Advanced Diploma, or HND.</p>
+                <p class="text-sm text-gray-600 mt-1">Documents: copies of results/certificates, passport + photo, contact & emergency info, college application form, signed agency contract.</p>
+              </div>
+              <div>
+                <p class="font-semibold mb-1">Eligibility (MQF Level 7 Diploma – Masters equivalent):</p>
+                <p>Bachelor’s, postgraduate diploma, or master’s holders.</p>
+                <p class="text-sm text-gray-600 mt-1">Documents: copies of senior secondary/WASSCE, BSc/postgrad/master’s results, passport + photo, contacts, application form, signed agency contract.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Institution 2 -->
+        <div class="border rounded-xl overflow-hidden">
+          <button class="w-full text-left px-4 py-3 bg-slate-50 dark:bg-gray-900 hover:bg-slate-100 dark:hover:bg-gray-800 font-semibold flex items-center justify-between toggle-acc">
+            <span>2) BESC Graduate College, Malta</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="p-4 hidden acc-panel">
+            <p class="font-semibold mb-2">Postgraduate Programs:</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>PG Diploma in Neuroscience for Business — Tuition: €3500</li>
+              <li>MSc in Sports Neuroscience & Human Performance — Tuition: €4000</li>
+              <li>PG Diploma in Neuromarketing & Artificial Intelligence — 30 ECTS — 12 months — Tuition: €3000</li>
+              <li>PG Diploma in Multidisciplinary Applied Neuroscience — 30 ECTS — 12 months — Tuition: €3000</li>
+            </ul>
+            <p class="text-sm text-gray-600 mt-2">Requirements include WASSCE/senior secondary certificates and HND or Bachelor’s (for PG diplomas/MSc), financial declaration, authorization form, and signed agency contract.</p>
+          </div>
+        </div>
+
+        <!-- Institution 3 -->
+        <div class="border rounded-xl overflow-hidden">
+          <button class="w-full text-left px-4 py-3 bg-slate-50 dark:bg-gray-900 hover:bg-slate-100 dark:hover:bg-gray-800 font-semibold flex items-center justify-between toggle-acc">
+            <span>3) 21 Academy Malta</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="p-4 hidden acc-panel">
+            <p class="font-semibold mb-2">One-year Programs (Discounted Tuition):</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Master’s in Human Resources Management — €5000 (full tuition due upon visa approval)</li>
+              <li>Undergraduate Diploma in Human Resources Management</li>
+              <li>Undergraduate Diploma in Occupational Health & Safety — €3750</li>
+              <li>Undergraduate Diploma in Digital Marketing — €3750 (full tuition due upon visa approval)</li>
+              <li>Undergraduate Diploma in Business Management — €3750 (full tuition due upon visa approval)</li>
+            </ul>
+            <p class="font-semibold mt-2">Eligibility:</p>
+            <p class="text-sm text-gray-600">Undergraduate diplomas: Senior secondary/WASSCE/Diploma/Advanced Diploma/HND. Master’s HR: Senior secondary/WASSCE and Bachelor’s results/certificates.</p>
+          </div>
+        </div>
+
+        <!-- Institution 4 -->
+        <div class="border rounded-xl overflow-hidden">
+          <button class="w-full text-left px-4 py-3 bg-slate-50 dark:bg-gray-900 hover:bg-slate-100 dark:hover:bg-gray-800 font-semibold flex items-center justify-between toggle-acc">
+            <span>4) Cross College Malta — OTHM Programs (Levels 5, 6, 7)</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="p-4 hidden acc-panel">
+            <p class="font-semibold mb-2">Level 5:</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Diploma in Accounting & Business</li>
+              <li>Diploma in Business Management</li>
+              <li>Diploma in Information Technology</li>
+              <li>Diploma in Logistics & Supply Chain Management</li>
+              <li>Diploma in Tourism & Hospitality Management</li>
+            </ul>
+            <p class="font-semibold mt-3 mb-1">Level 6:</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Diploma in Accounting & Business</li>
+              <li>Diploma in Information Technology</li>
+              <li>Diploma in Logistics & Supply Chain Management</li>
+            </ul>
+            <p class="font-semibold mt-3 mb-1">Level 7:</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Diploma in Data Science</li>
+              <li>Diploma in Immersive Software Engineering</li>
+              <li>Diploma in Strategic Management & Leadership</li>
+              <li>Diploma in Tourism & Hospitality Management</li>
+            </ul>
+            <p class="font-semibold mt-3">Admission Requirements:</p>
+            <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700 dark:text-gray-300">
+              <li>Level 5: Secondary school leavers; OND, WASSCE, NECO holders.</li>
+              <li>Level 6: HND holders (various disciplines).</li>
+              <li>Level 7: Bachelor’s degree holders.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Institution 5 -->
+        <div class="border rounded-xl overflow-hidden">
+          <button class="w-full text-left px-4 py-3 bg-slate-50 dark:bg-gray-900 hover:bg-slate-100 dark:hover:bg-gray-800 font-semibold flex items-center justify-between toggle-acc">
+            <span>5) Novaric Academy Albania — Diploma in Touristic Guide</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="p-4 hidden acc-panel">
+            <p class="text-sm text-gray-700 dark:text-gray-300">
+              Offers a specialized Diploma in Touristic Guide.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5">
+        <p class="text-sm text-gray-600 dark:text-gray-300">
+          To help us tailor further information to your needs, please indicate which of these programs are of interest to you.
+        </p>
+        <p class="mt-2 font-semibold">Sincerely,<br/>Global Education Systems Inc.</p>
+      </div>
+    </section>
+
+    <!-- Consultation CTA -->
+    <section id="consult" class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 text-white shadow">
+      <div class="grid md:grid-cols-2 gap-6 items-center">
+        <div>
+          <h3 class="text-2xl font-extrabold mb-2" data-i18n="consult_title">Expert Consultation & Guidance</h3>
+          <p class="text-blue-100 mb-3" data-i18n="consult_text">
+            Work with our experienced advisors to craft winning applications, essays, and scholarship strategies.
+          </p>
+          <ul class="list-disc pl-5 space-y-1 text-blue-100">
+            <li data-i18n="consult_benefit1">Personalized school & program matching</li>
+            <li data-i18n="consult_benefit2">Scholarship and funding roadmap</li>
+            <li data-i18n="consult_benefit3">Essay review & interview prep</li>
+            <li data-i18n="consult_benefit4">End-to-end guidance till decision</li>
+          </ul>
+        </div>
+        <form id="consult-form" class="bg-white/10 backdrop-blur rounded-2xl p-5 space-y-3">
+          <div>
+            <label class="block text-sm mb-1" data-i18n="yourName">Your Name</label>
+            <input type="text" id="c-name" class="w-full p-3 rounded-xl border-0 focus:ring-2 focus:ring-white/70 bg-white/90 text-slate-900" placeholder="Jane Doe"/>
+          </div>
+          <div>
+            <label class="block text-sm mb-1" data-i18n="yourEmail">Your Email</label>
+            <input type="email" id="c-email" class="w-full p-3 rounded-xl border-0 focus:ring-2 focus:ring-white/70 bg-white/90 text-slate-900" placeholder="jane@example.com"/>
+          </div>
+          <div>
+            <label class="block text-sm mb-1" data-i18n="target_country">Target Country</label>
+            <select id="c-country" class="w-full p-3 rounded-xl border-0 bg-white/90 text-slate-900">
+              <option>USA</option><option>UK</option><option>Canada</option><option>Germany</option><option>Australia</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm mb-1" data-i18n="message">Message</label>
+            <textarea id="c-message" class="w-full p-3 rounded-xl border-0 bg-white/90 text-slate-900" rows="3" placeholder="Tell us about your goals"></textarea>
+          </div>
+          <p class="text-white/80 text-xs" data-i18n="tnc_note">By submitting, you agree to our consultation Terms & Conditions.</p>
+          <button class="w-full py-3 rounded-xl bg-white text-blue-700 font-extrabold hover:bg-blue-50" id="consult-submit" type="button" data-i18n="submit_request">Submit Request</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-sm text-gray-500">
+    <p data-i18n="abroad_footer">&copy; 2025 SmartStudentAct — Empowering Global Learners.</p>
+  </footer>
+
+  <div id="toast" class="hidden fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-2 rounded-xl shadow-lg"></div>
+
+  <script src="api-config.js"></script>
+  <script src="translate.js"></script>
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(()=> t.classList.add('hidden'), 3000);
+    }
+
+    const ALL_OPPS = [
+      { id: 1, title: "Fulbright Scholarship (USA)", country: "USA", level: "Masters", deadline: "2026-02-28", url: "https://foreign.fulbrightonline.org/" },
+      { id: 2, title: "Chevening Scholarship (UK)", country: "UK", level: "Masters", deadline: "2025-11-01", url: "https://www.chevening.org/scholarships/" },
+      { id: 3, title: "DAAD Study Scholarships (Germany)", country: "Germany", level: "Masters", deadline: "2025-12-15", url: "https://www.daad.de/en/study-and-research-in-germany/scholarships/" },
+      { id: 4, title: "Australia Awards", country: "Australia", level: "Masters", deadline: "2026-04-30", url: "https://www.dfat.gov.au/people-to-people/australia-awards" },
+      { id: 5, title: "Vanier CGS (Canada)", country: "Canada", level: "PhD", deadline: "2025-11-01", url: "https://vanier.gc.ca/en/home-accueil.html" }
+    ];
+
+    function renderFeatured() {
+      const el = document.getElementById('featured-list');
+      el.innerHTML = ALL_OPPS.slice(0,3).map(o => `
+        <a href="${o.url}" target="_blank" rel="noopener" class="block p-5 rounded-2xl border hover:shadow-lg transition bg-white dark:bg-gray-900">
+          <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">${o.country} • ${o.level}</div>
+          <div class="font-bold text-slate-800 dark:text-white">${o.title}</div>
+          <div class="text-sm text-gray-500 mt-1" data-i18n="deadline_label">Deadline</div>
+          <div class="text-sm">${new Date(o.deadline).toLocaleDateString()}</div>
+        </a>
+      `).join('');
+    }
+
+    function renderOpps() {
+      const country = document.getElementById('filter-country').value;
+      const level = document.getElementById('filter-level').value;
+      const deadline = document.getElementById('filter-deadline').value;
+
+      const list = document.getElementById('opps-list');
+      const empty = document.getElementById('opps-empty');
+
+      const filtered = ALL_OPPS.filter(o => {
+        const okCountry = country ? o.country === country : true;
+        const okLevel = level ? o.level === level : true;
+        const okDeadline = deadline ? (new Date(o.deadline) <= new Date(deadline)) : true;
+        return okCountry && okLevel && okDeadline;
+      });
+
+      if (!filtered.length) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      list.innerHTML = filtered.map(o => `
+        <div class="p-5 rounded-2xl border hover:shadow-lg transition bg-white dark:bg-gray-900 flex flex-col">
+          <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">${o.country} • ${o.level}</div>
+          <div class="font-bold text-slate-800 dark:text-white mb-1">${o.title}</div>
+          <div class="text-sm text-gray-500" data-i18n="deadline_label">Deadline</div>
+          <div class="text-sm mb-3">${new Date(o.deadline).toLocaleDateString()}</div>
+          <div class="mt-auto">
+            <a href="${o.url}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700" data-i18n="learn_more">
+              Learn More <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('filter-apply').addEventListener('click', renderOpps);
+
+    // Translation glue (reuse translate.js)
+    (function initI18n() {
+      try {
+        if (typeof translatePage === "function") {
+          const lang = localStorage.getItem("lang") || "en";
+          translatePage("abroad", lang);
+          document.addEventListener("change", (e) => {
+            if (e.target.id === "lang-select" || e.target.id === "language-switcher") {
+              translatePage("abroad", e.target.value);
+            }
+          });
+        }
+      } catch (_) {}
+    })();
+
+    renderFeatured();
+    renderOpps();
+
+    document.getElementById('consult-submit').addEventListener('click', () => {
+      const name = document.getElementById('c-name').value.trim();
+      const email = document.getElementById('c-email').value.trim();
+      if (!name || !email) return showToast('Please enter your name and email.');
+      showToast('Thanks! Our team will contact you shortly.');
+    });
+  </script>
+</body>
+</html>
