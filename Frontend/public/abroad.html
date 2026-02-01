@@ -358,31 +358,85 @@
       `).join('');
     }
 
-    document.getElementById('filter-apply').addEventListener('click', renderOpps);
+    document.addEventListener('DOMContentLoaded', () => {
+      const filterBtn = document.getElementById('filter-apply');
+      if (filterBtn) filterBtn.addEventListener('click', renderOpps);
 
-    // Translation glue (reuse translate.js)
-    (function initI18n() {
+      // Wire Malta accordion toggles
+      function wireAccordions() {
+        const toggles = document.querySelectorAll('#malta-accordion .toggle-acc');
+        toggles.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const container = btn.closest('div.border');
+            if (!container) return;
+            const panel = container.querySelector('.acc-panel');
+            if (!panel) return;
+
+            const willOpen = panel.classList.contains('hidden');
+
+            // Close all panels first
+            document.querySelectorAll('#malta-accordion .acc-panel').forEach(p => p.classList.add('hidden'));
+            // Reset all icons to down
+            document.querySelectorAll('#malta-accordion .toggle-acc i.fa-solid').forEach(i => {
+              i.classList.remove('fa-chevron-up');
+              i.classList.add('fa-chevron-down');
+            });
+
+            // Open the clicked one if it was closed
+            if (willOpen) {
+              panel.classList.remove('hidden');
+              const icon = btn.querySelector('i.fa-solid');
+              if (icon) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+              }
+            }
+          });
+        });
+      }
+
+      // Translation glue (reuse translate.js)
       try {
         if (typeof translatePage === "function") {
           const lang = localStorage.getItem("lang") || "en";
           translatePage("abroad", lang);
           document.addEventListener("change", (e) => {
-            if (e.target.id === "lang-select" || e.target.id === "language-switcher") {
+            if (e.target && (e.target.id === "lang-select" || e.target.id === "language-switcher")) {
               translatePage("abroad", e.target.value);
             }
           });
         }
       } catch (_) {}
-    })();
 
-    renderFeatured();
-    renderOpps();
+      renderFeatured();
+      renderOpps();
+      wireAccordions();
 
-    document.getElementById('consult-submit').addEventListener('click', () => {
-      const name = document.getElementById('c-name').value.trim();
-      const email = document.getElementById('c-email').value.trim();
-      if (!name || !email) return showToast('Please enter your name and email.');
-      showToast('Thanks! Our team will contact you shortly.');
+      // Redirect to site contact page with prefilled fields
+      const consultBtn = document.getElementById('consult-submit');
+      if (consultBtn) {
+        consultBtn.addEventListener('click', () => {
+          const name = (document.getElementById('c-name')?.value || '').trim();
+          const email = (document.getElementById('c-email')?.value || '').trim();
+          const country = (document.getElementById('c-country')?.value || '').trim();
+          const msg = (document.getElementById('c-message')?.value || '').trim();
+
+          if (!name || !email) {
+            showToast('Please enter your name and email.');
+            return;
+          }
+
+          const subject = encodeURIComponent('Study Abroad Consultation Request');
+          const rawMessage =
+            `Name: ${name}\nEmail: ${email}\nTarget Country: ${country}\n\nMessage:\n${msg}\n\n--\nSent from SmartStudentAct / abroad`;
+          // Avoid overly long query strings
+          const maxLen = 1500;
+          const clipped = rawMessage.length > maxLen ? (rawMessage.slice(0, maxLen) + '...') : rawMessage;
+          const body = encodeURIComponent(clipped);
+
+          window.location.href = `/contact.html?subject=${subject}&message=${body}`;
+        });
+      }
     });
   </script>
 </body>
